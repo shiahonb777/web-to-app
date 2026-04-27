@@ -198,7 +198,8 @@ fun ShellContentRouter(
                                 config.extensionModuleIds,
                                 config.embeddedExtensionModules,
                                 config.extensionFabIcon, allowGlobalModuleFallback = false,
-                                browserDisguiseConfig = config.browserDisguiseConfig)
+                                browserDisguiseConfig = config.browserDisguiseConfig,
+                                deviceDisguiseConfig = config.deviceDisguiseConfig)
 
                             // 添加长按监听器
                             // 持续跟踪触摸位置，确保长按时使用最新坐标
@@ -221,7 +222,12 @@ fun ShellContentRouter(
 
                             onWebViewCreated(this)
                             onWebViewRefUpdated(this)
-                            loadUrl(resolvedUrl)
+                            // restoreState 只恢复导航历史，不恢复页面渲染内容，必须 reload
+                            if (tag == "state_restored") {
+                                reload()
+                            } else {
+                                loadUrl(resolvedUrl)
+                            }
                         }
                         swipeChildWebView = createdWebView
                         addView(createdWebView)
@@ -296,7 +302,8 @@ fun ShellLocalFileWebView(
                         config.extensionModuleIds,
                         config.embeddedExtensionModules,
                         config.extensionFabIcon, allowGlobalModuleFallback = false,
-                        browserDisguiseConfig = config.browserDisguiseConfig)
+                        browserDisguiseConfig = config.browserDisguiseConfig,
+                        deviceDisguiseConfig = config.deviceDisguiseConfig)
                     // 然后覆盖本地文件特定的设置（必须在 configureWebView 之后）
                     // 因为 configureWebView 会将 allowFileAccessFromFileURLs 设为 false
                     settings.apply {
@@ -334,7 +341,12 @@ fun ShellLocalFileWebView(
 
                     onWebViewCreated(this)
                     onWebViewRefUpdated(this)
-                    loadUrl(targetUrl)
+                    // restoreState 只恢复导航历史，不恢复页面渲染内容，必须 reload
+                    if (tag == "state_restored") {
+                        reload()
+                    } else {
+                        loadUrl(targetUrl)
+                    }
                 }
                 swipeChildWebView = createdWebView
                 addView(createdWebView)

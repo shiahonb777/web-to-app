@@ -34,6 +34,8 @@ import com.webtoapp.ui.viewmodel.CommunityViewModel
 import com.webtoapp.ui.viewmodel.OperationFailureReport
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.auth.TokenManager
+import org.koin.compose.koinInject
 
 /**
  * 通知与动态 — Jobs-style: 毛玻璃 Tab + 弹簧物理滑动指示器 + 精致入场动画
@@ -48,7 +50,9 @@ fun NotificationsScreen(
 ) {
     val notifications by communityViewModel.notifications.collectAsStateWithLifecycle()
     val notificationsLoading by communityViewModel.notificationsLoading.collectAsStateWithLifecycle()
+    @Suppress("DEPRECATION")
     val feed by communityViewModel.activityFeed.collectAsStateWithLifecycle()
+    @Suppress("DEPRECATION")
     val feedLoading by communityViewModel.activityFeedLoading.collectAsStateWithLifecycle()
     val unreadCount by communityViewModel.unreadCount.collectAsStateWithLifecycle()
     val message by communityViewModel.message.collectAsStateWithLifecycle()
@@ -56,10 +60,14 @@ fun NotificationsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var selectedTab by remember { mutableIntStateOf(0) }
 
-    LaunchedEffect(Unit) {
-        communityViewModel.loadNotifications()
-        communityViewModel.loadUnreadCount()
-        communityViewModel.loadFeed()
+    val tokenManager: TokenManager = koinInject()
+    val resumeKey = rememberResumeKey()
+    LaunchedEffect(resumeKey) {
+        if (tokenManager.isLoggedIn()) {
+            communityViewModel.loadNotifications()
+            communityViewModel.loadUnreadCount()
+            communityViewModel.loadFeed()
+        }
     }
     LaunchedEffect(message) { message?.let { snackbarHostState.showSnackbar(it); communityViewModel.clearMessage() } }
 
@@ -256,7 +264,7 @@ private fun NotificationFailureReportDialog(
                     ) {
                         Icon(Icons.Outlined.ContentCopy, null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("复制")
+                        Text(Strings.copy)
                     }
                 }
             }

@@ -73,6 +73,7 @@ fun CreateAppScreen(
     val hasUnsavedChanges by viewModel.hasUnsavedChanges.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
     var showDiscardDialog by remember { mutableStateOf(false) }
+    var showPermissionConfig by remember { mutableStateOf(false) }
 
     // Handle保存结果
     LaunchedEffect(uiState) {
@@ -481,7 +482,8 @@ fun CreateAppScreen(
                 config = editState.webViewConfig,
                 onConfigChange = { viewModel.updateEditState { copy(webViewConfig = it) } },
                 apkExportConfig = editState.apkExportConfig,
-                onApkExportConfigChange = { viewModel.updateEditState { copy(apkExportConfig = it) } }
+                onApkExportConfigChange = { viewModel.updateEditState { copy(apkExportConfig = it) } },
+                onOpenPermissionConfig = { showPermissionConfig = true }
             )
 
             // Error提示
@@ -543,6 +545,21 @@ fun CreateAppScreen(
             }
         )
     }
+
+    // Permission Configuration full-screen overlay
+    if (showPermissionConfig) {
+        ThemedBackgroundBox {
+            PermissionConfigScreen(
+                permissions = editState.apkExportConfig.runtimePermissions,
+                onPermissionsChange = { newPermissions ->
+                    viewModel.updateEditState {
+                        copy(apkExportConfig = apkExportConfig.copy(runtimePermissions = newPermissions))
+                    }
+                },
+                onBack = { showPermissionConfig = false }
+            )
+        }
+    }
 }
 
 private fun hasConfiguredLegacyAds(editState: EditState): Boolean {
@@ -574,7 +591,7 @@ private fun LegacyAdCapabilityWarningCard() {
             )
             Spacer(modifier = Modifier.width(10.dp))
             Text(
-                text = "广告 SDK 尚未集成，当前广告配置不会生效。",
+                text = Strings.adSdkNotIntegrated,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onTertiaryContainer
             )

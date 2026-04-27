@@ -146,9 +146,9 @@ fun AboutScreen(
                     showUpdateDialog = true
                 }.onFailure { error ->
                     showUpdateFailureReport(
-                        title = "检查更新失败",
-                        stage = "手动检查更新",
-                        summary = "更新服务请求失败，已停止继续处理。",
+                        title = Strings.updateCheckFailedTitle,
+                        stage = Strings.updateCheckManualStage,
+                        summary = Strings.updateCheckRequestFailed,
                         throwable = error,
                         extraContext = """
                             trigger: manual
@@ -159,9 +159,9 @@ fun AboutScreen(
                 }
             } catch (error: Exception) {
                 showUpdateFailureReport(
-                    title = "检查更新失败",
-                    stage = "手动检查更新",
-                    summary = "更新检查过程发生未捕获异常，已停止继续处理。",
+                    title = Strings.updateCheckFailedTitle,
+                    stage = Strings.updateCheckManualStage,
+                    summary = Strings.updateCheckUncaughtException,
                     throwable = error,
                     extraContext = """
                         trigger: manual
@@ -1149,38 +1149,25 @@ fun AboutScreen(
                             // 1. 软件性质声明
                             LegalSection(
                                 title = Strings.legalDisclaimerTitle1,
-                                content = "本软件为开源技术研究与教育演示工具，所有功能均基于Android系统公开API实现，" +
-                                        "旨在展示移动应用开发技术。本软件不鼓励、不支持任何非法用途。"
+                                content = Strings.legalDisclaimerContent1
                             )
                             
                             // 2. 用户责任
                             LegalSection(
                                 title = Strings.legalDisclaimerTitle2,
-                                content = "用户应确保在合法、正当的场景下使用本软件，包括但不限于：\n" +
-                                        "• 自我管理：用于个人专注力训练、学习时间管理\n" +
-                                        "• 企业展示：用于展会、商场等场景的展示终端\n" +
-                                        "• 家长监护：在未成年人知情同意下的合理使用\n" +
-                                        "• 教育研究：用于技术学习和安全研究\n\n" +
-                                        "严禁将本软件用于任何侵犯他人人身自由、隐私权、财产权等合法权益的行为。"
+                                content = Strings.legalDisclaimerContent2
                             )
                             
                             // 3. 特殊功能声明
                             LegalSection(
                                 title = Strings.legalDisclaimerTitle3,
-                                content = "本软件包含的「强制运行」及相关硬件控制功能（以下简称「高级功能」）属于技术演示性质：\n\n" +
-                                        "1. 【知情同意原则】高级功能仅应在设备所有者或使用者完全知情并明确同意的情况下启用\n\n" +
-                                        "2. 【自主控制原则】所有功能均提供紧急退出机制，用户可通过密码随时终止\n\n" +
-                                        "3. 【技术中立原则】功能本身不具有违法性，其合法性取决于使用者的具体使用方式和目的\n\n" +
-                                        "4. 【风险自担原则】启用高级功能可能造成设备发热、电池消耗加快等情况，用户需自行承担相关风险"
+                                content = Strings.legalDisclaimerContent3
                             )
                             
                             // 4. 免责条款
                             LegalSection(
                                 title = Strings.legalDisclaimerTitle4,
-                                content = "1. 本软件按「现状」提供，开发者不对软件的适用性、可靠性、安全性作任何明示或暗示的保证\n\n" +
-                                        "2. 用户因违反法律法规或本声明使用本软件所产生的一切法律责任，由用户自行承担，与开发者无关\n\n" +
-                                        "3. 开发者不对因使用本软件导致的任何直接、间接、偶然、特殊或惩罚性损害承担责任\n\n" +
-                                        "4. 任何第三方利用本软件源代码进行的修改、分发行为，其法律责任由该第三方自行承担"
+                                content = Strings.legalDisclaimerContent4
                             )
                             
                             // 5. 合规使用
@@ -1277,9 +1264,9 @@ fun AboutScreen(
                     if (downloadId == -1L) {
                         isDownloading = false
                         showUpdateFailureReport(
-                            title = "更新下载启动失败",
-                            stage = "启动更新下载",
-                            summary = "系统下载任务创建失败，未继续执行安装流程。",
+                            title = Strings.updateDownloadStartFailedTitle,
+                            stage = Strings.updateDownloadStartStage,
+                            summary = Strings.updateDownloadCreateFailed,
                             extraContext = """
                                 current_version_name: v$currentVersionName
                                 current_version_code: $currentVersionCode
@@ -1293,9 +1280,9 @@ fun AboutScreen(
                     }
                 } else {
                     showUpdateFailureReport(
-                        title = "更新下载启动失败",
-                        stage = "准备更新下载",
-                        summary = "更新响应缺少有效下载链接，未继续执行下载流程。",
+                        title = Strings.updateDownloadStartFailedTitle,
+                        stage = Strings.updateDownloadPrepareStage,
+                        summary = Strings.updateDownloadNoLink,
                         extraContext = """
                             current_version_name: v$currentVersionName
                             current_version_code: $currentVersionCode
@@ -1485,7 +1472,7 @@ private fun buildUpdateFailureReport(
 
         appendLine()
         appendLine("error:")
-        appendLine(throwable?.message ?: "未返回异常对象")
+        appendLine(throwable?.message ?: Strings.noExceptionObject)
 
         throwable?.let {
             appendLine()
@@ -1551,7 +1538,7 @@ private fun UpdateFailureReportDialog(
                     ) {
                         Icon(Icons.Outlined.ContentCopy, null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("复制")
+                        Text(Strings.copy)
                     }
                 }
             }

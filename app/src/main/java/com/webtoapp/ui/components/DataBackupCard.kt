@@ -64,13 +64,13 @@ fun DataBackupCard() {
                 result.onSuccess { exportResult ->
                     Toast.makeText(
                         context,
-                        "导出成功！共 ${exportResult.appCount} 个应用，${exportResult.resourceCount} 个资源文件",
+                        Strings.exportSuccess.format(exportResult.appCount, exportResult.resourceCount),
                         Toast.LENGTH_LONG
                     ).show()
                 }.onFailure { e ->
                     Toast.makeText(
                         context,
-                        "导出失败: ${e.message}",
+                        Strings.exportFailed.format(e.message),
                         Toast.LENGTH_LONG
                     ).show()
                 }
@@ -101,13 +101,13 @@ fun DataBackupCard() {
                 result.onSuccess { importResult ->
                     Toast.makeText(
                         context,
-                        "导入成功！共导入 ${importResult.importedCount}/${importResult.totalCount} 个应用",
+                        Strings.importSuccess.format(importResult.importedCount, importResult.totalCount),
                         Toast.LENGTH_LONG
                     ).show()
                 }.onFailure { e ->
                     Toast.makeText(
                         context,
-                        "导入失败: ${e.message}",
+                        Strings.importFailed.format(e.message),
                         Toast.LENGTH_LONG
                     ).show()
                 }

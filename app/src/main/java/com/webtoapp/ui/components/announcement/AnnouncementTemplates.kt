@@ -45,20 +45,44 @@ import com.webtoapp.data.model.AnnouncementTemplateType
  */
 enum class AnnouncementTemplate(
     val type: AnnouncementTemplateType,
-    val displayName: String,
-    val description: String,
     val icon: ImageVector
 ) {
-    MINIMAL(AnnouncementTemplateType.MINIMAL, "极简风", "简洁克制的留白排版", Icons.Outlined.CropSquare),
-    XIAOHONGSHU(AnnouncementTemplateType.XIAOHONGSHU, "小红书风", "鲜明活泼的社交卡片风格", Icons.AutoMirrored.Outlined.MenuBook),
-    GRADIENT(AnnouncementTemplateType.GRADIENT, "渐变风", "柔和梦幻的渐变视觉层次", Icons.Outlined.Gradient),
-    GLASSMORPHISM(AnnouncementTemplateType.GLASSMORPHISM, "毛玻璃风", "通透模糊与悬浮质感", Icons.Outlined.PhoneIphone),
-    NEON(AnnouncementTemplateType.NEON, "霓虹风", "高对比度的醒目提示效果", Icons.Outlined.Bolt),
-    CUTE(AnnouncementTemplateType.CUTE, "可爱风", "轻松俏皮的趣味表达", Icons.Outlined.FavoriteBorder),
-    ELEGANT(AnnouncementTemplateType.ELEGANT, "优雅风", "柔和细腻的高级感呈现", Icons.Outlined.Diamond),
-    FESTIVE(AnnouncementTemplateType.FESTIVE, "节日风", "热闹明快的庆典氛围", Icons.Outlined.Celebration),
-    DARK(AnnouncementTemplateType.DARK, "暗黑风", "深色高对比的信息聚焦", Icons.Outlined.DarkMode),
-    NATURE(AnnouncementTemplateType.NATURE, "自然风", "舒缓清新的平衡表达", Icons.Outlined.Park)
+    MINIMAL(AnnouncementTemplateType.MINIMAL, Icons.Outlined.CropSquare),
+    XIAOHONGSHU(AnnouncementTemplateType.XIAOHONGSHU, Icons.AutoMirrored.Outlined.MenuBook),
+    GRADIENT(AnnouncementTemplateType.GRADIENT, Icons.Outlined.Gradient),
+    GLASSMORPHISM(AnnouncementTemplateType.GLASSMORPHISM, Icons.Outlined.PhoneIphone),
+    NEON(AnnouncementTemplateType.NEON, Icons.Outlined.Bolt),
+    CUTE(AnnouncementTemplateType.CUTE, Icons.Outlined.FavoriteBorder),
+    ELEGANT(AnnouncementTemplateType.ELEGANT, Icons.Outlined.Diamond),
+    FESTIVE(AnnouncementTemplateType.FESTIVE, Icons.Outlined.Celebration),
+    DARK(AnnouncementTemplateType.DARK, Icons.Outlined.DarkMode),
+    NATURE(AnnouncementTemplateType.NATURE, Icons.Outlined.Park);
+
+    val displayName: String get() = when (this) {
+        MINIMAL -> Strings.templateMinimal
+        XIAOHONGSHU -> Strings.templateXiaohongshu
+        GRADIENT -> Strings.templateGradient
+        GLASSMORPHISM -> Strings.templateGlassmorphism
+        NEON -> Strings.templateNeon
+        CUTE -> Strings.templateCute
+        ELEGANT -> Strings.templateElegant
+        FESTIVE -> Strings.templateFestive
+        DARK -> Strings.templateDark
+        NATURE -> Strings.templateNature
+    }
+
+    val description: String get() = when (this) {
+        MINIMAL -> Strings.templateMinimalDesc
+        XIAOHONGSHU -> Strings.templateXiaohongshuDesc
+        GRADIENT -> Strings.templateGradientDesc
+        GLASSMORPHISM -> Strings.templateGlassmorphismDesc
+        NEON -> Strings.templateNeonDesc
+        CUTE -> Strings.templateCuteDesc
+        ELEGANT -> Strings.templateElegantDesc
+        FESTIVE -> Strings.templateFestiveDesc
+        DARK -> Strings.templateDarkDesc
+        NATURE -> Strings.templateNatureDesc
+    }
 }
 
 /**
@@ -1031,9 +1055,31 @@ private fun NatureTemplate(
 /**
  * AnnouncementTemplate 本地化扩展函数
  */
-fun AnnouncementTemplate.getLocalizedDisplayName(): String = this.displayName
+fun AnnouncementTemplate.getLocalizedDisplayName(): String = when (this) {
+    AnnouncementTemplate.MINIMAL -> Strings.annTemplateMinimal
+    AnnouncementTemplate.XIAOHONGSHU -> Strings.annTemplateXiaohongshu
+    AnnouncementTemplate.GRADIENT -> Strings.annTemplateGradient
+    AnnouncementTemplate.GLASSMORPHISM -> Strings.annTemplateGlassmorphism
+    AnnouncementTemplate.NEON -> Strings.annTemplateNeon
+    AnnouncementTemplate.CUTE -> Strings.annTemplateCute
+    AnnouncementTemplate.ELEGANT -> Strings.annTemplateElegant
+    AnnouncementTemplate.FESTIVE -> Strings.annTemplateFestive
+    AnnouncementTemplate.DARK -> Strings.annTemplateDark
+    AnnouncementTemplate.NATURE -> Strings.annTemplateNature
+}
 
-fun AnnouncementTemplate.getLocalizedDescription(): String = this.description
+fun AnnouncementTemplate.getLocalizedDescription(): String = when (this) {
+    AnnouncementTemplate.MINIMAL -> Strings.annTemplateMinimalDesc
+    AnnouncementTemplate.XIAOHONGSHU -> Strings.annTemplateXiaohongshuDesc
+    AnnouncementTemplate.GRADIENT -> Strings.annTemplateGradientDesc
+    AnnouncementTemplate.GLASSMORPHISM -> Strings.annTemplateGlassmorphismDesc
+    AnnouncementTemplate.NEON -> Strings.annTemplateNeonDesc
+    AnnouncementTemplate.CUTE -> Strings.annTemplateCuteDesc
+    AnnouncementTemplate.ELEGANT -> Strings.annTemplateElegantDesc
+    AnnouncementTemplate.FESTIVE -> Strings.annTemplateFestiveDesc
+    AnnouncementTemplate.DARK -> Strings.annTemplateDarkDesc
+    AnnouncementTemplate.NATURE -> Strings.annTemplateNatureDesc
+}
 
 /**
  * 通用的进出场动画扩展 — 弹簧缩放 + 淡入

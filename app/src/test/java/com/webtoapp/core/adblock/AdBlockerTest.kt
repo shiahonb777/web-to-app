@@ -73,14 +73,13 @@ class AdBlockerTest {
     }
 
     @Test
-    fun `stats reflect compiled wildcard cache after matching`() {
+    fun `stats reflect network filter count after adding rules`() {
         adBlocker.initialize(useDefaultRules = false)
         adBlocker.setEnabled(true)
         adBlocker.addRule("*adunit*")
 
-        assertThat(adBlocker.getStats()["compiledPatterns"]).isEqualTo(0)
+        assertThat(adBlocker.getStats()["networkBlock"]).isEqualTo(1)
         assertThat(adBlocker.shouldBlock("https://example.com/adunit.js")).isTrue()
-        assertThat(adBlocker.getStats()["compiledPatterns"]).isEqualTo(1)
     }
 }
 

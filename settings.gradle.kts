@@ -18,3 +18,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "WebToApp"
 include(":app")
+include(":shell")

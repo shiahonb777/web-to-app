@@ -43,92 +43,9 @@ class AxmlRebuilder {
         // Pre-compiled regex for class name detection (avoid creating per string pool entry)
         private val CLASS_NAME_REGEX = Regex("^[A-Z][a-zA-Z0-9]*$")
         
-        /**
-         * 所有需要确保存在的权限列表（全面覆盖常见 Web API 和 Android 功能所需权限）
-         */
-        private val ALL_REQUIRED_PERMISSIONS = listOf(
-            // 网络
+        private val BASELINE_RUNTIME_PERMISSIONS = listOf(
             "android.permission.INTERNET",
-            "android.permission.ACCESS_NETWORK_STATE",
-            // 摄像头 & 麦克风 (WebRTC)
-            "android.permission.CAMERA",
-            "android.permission.RECORD_AUDIO",
-            "android.permission.MODIFY_AUDIO_SETTINGS",
-            // 存储
-            "android.permission.READ_EXTERNAL_STORAGE",
-            "android.permission.WRITE_EXTERNAL_STORAGE",
-            "android.permission.READ_MEDIA_IMAGES",
-            "android.permission.READ_MEDIA_VIDEO",
-            "android.permission.READ_MEDIA_AUDIO",
-            "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
-            // 位置
-            "android.permission.ACCESS_FINE_LOCATION",
-            "android.permission.ACCESS_COARSE_LOCATION",
-            "android.permission.ACCESS_BACKGROUND_LOCATION",
-            // 蓝牙（Web Bluetooth API / 周围设备配对）
-            "android.permission.BLUETOOTH",
-            "android.permission.BLUETOOTH_ADMIN",
-            "android.permission.BLUETOOTH_SCAN",
-            "android.permission.BLUETOOTH_CONNECT",
-            "android.permission.BLUETOOTH_ADVERTISE",
-            // NFC（Web NFC API）
-            "android.permission.NFC",
-            // 附近设备 & WiFi
-            "android.permission.NEARBY_WIFI_DEVICES",
-            "android.permission.ACCESS_WIFI_STATE",
-            "android.permission.CHANGE_WIFI_STATE",
-            "android.permission.CHANGE_NETWORK_STATE",
-            // 传感器（Sensor API / 运动检测）
-            "android.permission.BODY_SENSORS",
-            "android.permission.BODY_SENSORS_BACKGROUND",
-            "android.permission.ACTIVITY_RECOGNITION",
-            "android.permission.HIGH_SAMPLING_RATE_SENSORS",
-            // 电话
-            "android.permission.READ_PHONE_STATE",
-            "android.permission.CALL_PHONE",
-            "android.permission.READ_PHONE_NUMBERS",
-            "android.permission.ANSWER_PHONE_CALLS",
-            "android.permission.READ_CALL_LOG",
-            // 联系人（Contact Picker API）
-            "android.permission.READ_CONTACTS",
-            "android.permission.WRITE_CONTACTS",
-            // 日历
-            "android.permission.READ_CALENDAR",
-            "android.permission.WRITE_CALENDAR",
-            // SMS
-            "android.permission.SEND_SMS",
-            "android.permission.RECEIVE_SMS",
-            "android.permission.READ_SMS",
-            // 生物识别
-            "android.permission.USE_BIOMETRIC",
-            "android.permission.USE_FINGERPRINT",
-            // 通知
-            "android.permission.POST_NOTIFICATIONS",
-            // 悬浮窗 & 系统
-            "android.permission.SYSTEM_ALERT_WINDOW",
-            "android.permission.VIBRATE",
-            "android.permission.WAKE_LOCK",
-            "android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS",
-            "android.permission.ACCESS_NOTIFICATION_POLICY",
-            // 前台服务类型（Android 14+）
-            "android.permission.FOREGROUND_SERVICE",
-            "android.permission.FOREGROUND_SERVICE_DATA_SYNC",
-            "android.permission.FOREGROUND_SERVICE_LOCATION",
-            "android.permission.FOREGROUND_SERVICE_CAMERA",
-            "android.permission.FOREGROUND_SERVICE_MICROPHONE",
-            "android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE",
-            "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK",
-            "android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION",
-            "android.permission.FOREGROUND_SERVICE_PHONE_CALL",
-            "android.permission.FOREGROUND_SERVICE_HEALTH",
-            "android.permission.FOREGROUND_SERVICE_REMOTE_MESSAGING",
-            "android.permission.FOREGROUND_SERVICE_SPECIAL_USE",
-            // 其他
-            "android.permission.RECEIVE_BOOT_COMPLETED",
-            "android.permission.SCHEDULE_EXACT_ALARM",
-            "android.permission.USE_EXACT_ALARM",
-            "android.permission.REQUEST_INSTALL_PACKAGES",
-            "android.permission.DOWNLOAD_WITHOUT_NOTIFICATION"
+            "android.permission.ACCESS_NETWORK_STATE"
         )
     }
 
@@ -147,7 +64,8 @@ class AxmlRebuilder {
         originalPackage: String,
         newPackage: String,
         aliasCount: Int = 0,
-        appName: String = ""
+        appName: String = "",
+        permissions: List<String> = BASELINE_RUNTIME_PERMISSIONS
     ): ByteArray {
         return try {
             val parsed = parseAxml(axmlData)
@@ -169,7 +87,7 @@ class AxmlRebuilder {
             replacePackageString(parsed, originalPackage, newPackage)
             
             // 步骤3.5：确保关键权限存在
-            ensureUsesPermissions(parsed, ALL_REQUIRED_PERMISSIONS)
+            ensureUsesPermissions(parsed, permissions)
             
             // 步骤4：添加 activity-alias（多桌面图标）
             if (aliasCount > 0) {
@@ -564,6 +482,184 @@ class AxmlRebuilder {
             parsed.chunks.addAll(currentEndIndex, newChunks)
             AppLogger.d(TAG, "Inserted ${newChunks.size} chunks for deep link intent-filter")
         }
+    }
+
+    /**
+     * 导出后的独立 APK 不应再通过 MainActivity 作为桌面入口。
+     *
+     * 原因：
+     * 1. MainActivity 在模板 manifest 中是 singleTask。
+     * 2. 当用户按 Home 后再次点桌面图标，系统会把 launcher Intent 重新投递给 MainActivity。
+     * 3. singleTask 根 Activity 会清掉它上方的 ShellActivity，再重新跳转，用户体感就是“后台回来网页重载”。
+     *
+     * 修复策略：
+     * - 将 MainActivity 标记为 exported=false，使导出 APK 的 launcher 不再命中它
+     * - 在没有多图标 alias 的情况下，直接给 ShellActivity 添加 MAIN/LAUNCHER intent-filter
+     * - 始终确保 ShellActivity exported=true，便于 launcher / deep link 正常进入壳实例
+     */
+    private fun rewireLauncherToShellActivity(parsed: ParsedAxml, addDirectLauncherToShell: Boolean) {
+        val resourceMap = parsed.resourceMap ?: run {
+            AppLogger.e(TAG, "No resource map found, cannot rewire launcher")
+            return
+        }
+
+        val exportedAttrIndex = resourceMap.indexOf(ATTR_EXPORTED)
+        if (exportedAttrIndex < 0) {
+            AppLogger.e(TAG, "android:exported not found in resource map, cannot rewire launcher")
+            return
+        }
+
+        setExistingBooleanAttributeOnActivity(
+            parsed = parsed,
+            activityClassName = "com.webtoapp.ui.MainActivity",
+            attrIndex = exportedAttrIndex,
+            value = false
+        )
+
+        setExistingBooleanAttributeOnActivity(
+            parsed = parsed,
+            activityClassName = "com.webtoapp.ui.shell.ShellActivity",
+            attrIndex = exportedAttrIndex,
+            value = true
+        )
+
+        if (addDirectLauncherToShell) {
+            addLauncherIntentFilterToShellActivity(parsed)
+        }
+    }
+
+    /**
+     * 仅更新 manifest 里已经存在的布尔属性值（这里用于 exported）。
+     */
+    private fun setExistingBooleanAttributeOnActivity(
+        parsed: ParsedAxml,
+        activityClassName: String,
+        attrIndex: Int,
+        value: Boolean
+    ) {
+        val activityStartIndex = findActivityStartIndex(parsed, activityClassName)
+        if (activityStartIndex < 0) {
+            AppLogger.w(TAG, "Cannot find <$activityClassName> START_ELEMENT for boolean attribute patch")
+            return
+        }
+
+        val chunk = parsed.chunks[activityStartIndex]
+        val buffer = ByteBuffer.wrap(chunk.data).order(ByteOrder.LITTLE_ENDIAN)
+        buffer.position(16)
+        buffer.int // namespaceUri
+        buffer.int // elementName
+        val attrStart = buffer.short.toInt() and 0xFFFF
+        val attrSize = buffer.short.toInt() and 0xFFFF
+        val attrCount = buffer.short.toInt() and 0xFFFF
+
+        for (i in 0 until attrCount) {
+            val attrOffset = 36 + i * attrSize
+            if (attrOffset + 20 > chunk.data.size) break
+            buffer.position(attrOffset)
+            buffer.int // attrNs
+            val attrName = buffer.int
+            if (attrName != attrIndex) continue
+
+            // rawValue = -1, valueType = TYPE_INT_BOOLEAN, valueData = true/false
+            buffer.putInt(attrOffset + 8, -1)
+            buffer.putShort(attrOffset + 12, 8)
+            buffer.put(attrOffset + 14, 0)
+            buffer.put(attrOffset + 15, 0x12.toByte())
+            buffer.putInt(attrOffset + 16, if (value) -1 else 0)
+            AppLogger.d(TAG, "Patched boolean attr index=$attrIndex on $activityClassName to $value")
+            return
+        }
+
+        AppLogger.w(TAG, "Attribute index=$attrIndex not found on $activityClassName, skip patch")
+    }
+
+    /**
+     * 给 ShellActivity 直接添加 MAIN/LAUNCHER 入口。
+     * 仅在没有多图标 alias 时使用，避免生成重复桌面图标。
+     */
+    private fun addLauncherIntentFilterToShellActivity(parsed: ParsedAxml) {
+        val resourceMap = parsed.resourceMap ?: run {
+            AppLogger.e(TAG, "No resource map found, cannot add launcher intent-filter")
+            return
+        }
+
+        val nameAttrIndex = resourceMap.indexOf(ATTR_NAME)
+        if (nameAttrIndex < 0) {
+            AppLogger.e(TAG, "android:name not in resource map, cannot add launcher intent-filter")
+            return
+        }
+
+        val shellActivityEndIndex = findActivityEndIndex(parsed, "com.webtoapp.ui.shell.ShellActivity")
+        if (shellActivityEndIndex < 0) {
+            AppLogger.e(TAG, "Cannot find ShellActivity </activity> element for launcher intent-filter")
+            return
+        }
+
+        val androidNsIndex = getOrAddString(parsed.stringPool, "http://schemas.android.com/apk/res/android")
+        val intentFilterNameIndex = getOrAddString(parsed.stringPool, "intent-filter")
+        val actionNameIndex = getOrAddString(parsed.stringPool, "action")
+        val categoryNameIndex = getOrAddString(parsed.stringPool, "category")
+        val mainActionIndex = getOrAddString(parsed.stringPool, "android.intent.action.MAIN")
+        val launcherCategoryIndex = getOrAddString(parsed.stringPool, "android.intent.category.LAUNCHER")
+
+        val newChunks = mutableListOf<Chunk>()
+        newChunks.add(buildSimpleStartElement(androidNsIndex, intentFilterNameIndex, 0))
+        newChunks.add(buildActionOrCategoryElement(androidNsIndex, actionNameIndex, nameAttrIndex, mainActionIndex))
+        newChunks.add(buildEndElement(androidNsIndex, actionNameIndex))
+        newChunks.add(buildActionOrCategoryElement(androidNsIndex, categoryNameIndex, nameAttrIndex, launcherCategoryIndex))
+        newChunks.add(buildEndElement(androidNsIndex, categoryNameIndex))
+        newChunks.add(buildEndElement(androidNsIndex, intentFilterNameIndex))
+
+        val currentEndIndex = findActivityEndIndex(parsed, "com.webtoapp.ui.shell.ShellActivity")
+        if (currentEndIndex >= 0) {
+            parsed.chunks.addAll(currentEndIndex, newChunks)
+            AppLogger.d(TAG, "Inserted launcher intent-filter into ShellActivity")
+        }
+    }
+
+    /**
+     * Find the <activity> START_ELEMENT index for a specific activity class name.
+     */
+    private fun findActivityStartIndex(parsed: ParsedAxml, activityClassName: String): Int {
+        val nameAttrIndex = parsed.resourceMap?.indexOf(ATTR_NAME) ?: return -1
+
+        for (i in parsed.chunks.indices) {
+            val chunk = parsed.chunks[i]
+            if (chunk.type != CHUNK_START_ELEMENT) continue
+
+            val buffer = ByteBuffer.wrap(chunk.data).order(ByteOrder.LITTLE_ENDIAN)
+            buffer.position(16)
+            buffer.int // namespaceUri
+            val elementName = buffer.int
+            val attrStart = buffer.short.toInt() and 0xFFFF
+            val attrSize = buffer.short.toInt() and 0xFFFF
+            val attrCount = buffer.short.toInt() and 0xFFFF
+
+            val elementNameStr = parsed.stringPool.strings.getOrNull(elementName) ?: continue
+            if (elementNameStr != "activity") continue
+
+            for (j in 0 until attrCount) {
+                val attrOffset = 36 + j * attrSize
+                if (attrOffset + 20 > chunk.data.size) break
+                buffer.position(attrOffset)
+                buffer.int // attrNs
+                val attrName = buffer.int
+                buffer.int // rawValue
+                buffer.short // valueSize
+                buffer.get() // res0
+                val attrValueType = buffer.get().toInt() and 0xFF
+                val attrValueData = buffer.int
+
+                if (attrName == nameAttrIndex && attrValueType == 0x03) {
+                    val valueStr = parsed.stringPool.strings.getOrNull(attrValueData)
+                    if (valueStr == activityClassName) {
+                        return i
+                    }
+                }
+            }
+        }
+
+        return -1
     }
     
     /**
@@ -1053,7 +1149,8 @@ class AxmlRebuilder {
         versionName: String,
         aliasCount: Int = 0,
         appName: String = "",
-        deepLinkHosts: List<String> = emptyList()
+        deepLinkHosts: List<String> = emptyList(),
+        permissions: List<String> = BASELINE_RUNTIME_PERMISSIONS
     ): ByteArray {
         return try {
             val parsed = parseAxml(axmlData)
@@ -1081,13 +1178,17 @@ class AxmlRebuilder {
             stripTestOnlyFlag(parsed)
             
             // 步骤5.5：确保关键权限存在（避免模板缺失导致功能不可用）
-            ensureUsesPermissions(parsed, ALL_REQUIRED_PERMISSIONS)
+            ensureUsesPermissions(parsed, permissions)
             
             // 步骤6：添加 activity-alias（多桌面图标）
             if (aliasCount > 0 && appName.isNotEmpty()) {
                 addActivityAliases(parsed, newPackage, aliasCount, appName)
                 AppLogger.d(TAG, "Added $aliasCount activity-alias entries for multi-launcher-icons")
             }
+
+            // 步骤6.5：将导出 APK 的桌面入口切到 ShellActivity，避免 MainActivity(singleTask)
+            // 在用户从桌面再次点开时清掉当前 ShellActivity，导致网页重新加载。
+            rewireLauncherToShellActivity(parsed, addDirectLauncherToShell = aliasCount == 0)
             
             // 步骤7：添加 Deep Link intent-filter（链接打开）
             if (deepLinkHosts.isNotEmpty()) {
@@ -1122,7 +1223,8 @@ class AxmlRebuilder {
         originalPackage: String, 
         newPackage: String,
         versionCode: Int,
-        versionName: String
+        versionName: String,
+        permissions: List<String> = BASELINE_RUNTIME_PERMISSIONS
     ): ByteArray {
         return try {
             val parsed = parseAxml(axmlData)
@@ -1150,7 +1252,7 @@ class AxmlRebuilder {
             stripTestOnlyFlag(parsed)
             
             // 步骤5.5：确保关键权限存在
-            ensureUsesPermissions(parsed, ALL_REQUIRED_PERMISSIONS)
+            ensureUsesPermissions(parsed, permissions)
             
             // 步骤6：重建 AXML
             val result = rebuildAxml(parsed)

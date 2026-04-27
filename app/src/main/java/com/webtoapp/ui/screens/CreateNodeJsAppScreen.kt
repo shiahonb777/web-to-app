@@ -362,14 +362,14 @@ fun CreateNodeJsAppScreen(
                         }
                         
                         // 复制项目文件到内部存储
-                        creationPhase = "正在复制项目文件..."
+                        creationPhase = Strings.copyingProjectFiles
                         val newProjectId = java.util.UUID.randomUUID().toString()
                         runtime.createProject(newProjectId, projectDir)
                         projectId = newProjectId
                         creationPhase = Strings.njsProjectReady
                     }
                 } catch (e: Exception) {
-                    errorMessage = e.message ?: "项目导入失败"
+                    errorMessage = e.message ?: Strings.projectImportFailed
                 } finally {
                     isCreating = false
                 }
@@ -448,7 +448,7 @@ fun CreateNodeJsAppScreen(
                                             "AURORA"
                                         )
                                     } catch (e: Exception) {
-                                        errorMessage = e.message ?: "项目同步失败"
+                                        errorMessage = e.message ?: Strings.projectSyncFailed
                                     } finally {
                                         isCreating = false
                                     }
@@ -1027,12 +1027,12 @@ fun CreateNodeJsAppScreen(
                             )
                         }
                         is NodeDependencyManager.DownloadState.Extracting -> {
-                            Text("正在解压 ${state.fileName}...")
+                            Text(Strings.extracting.format(state.fileName))
                             Spacer(modifier = Modifier.height(12.dp))
                             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                         }
                         is NodeDependencyManager.DownloadState.Verifying -> {
-                            Text("正在验证 ${state.fileName}...")
+                            Text(Strings.verifying.format(state.fileName))
                             Spacer(modifier = Modifier.height(12.dp))
                             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                         }

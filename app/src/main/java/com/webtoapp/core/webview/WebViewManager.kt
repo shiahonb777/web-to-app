@@ -81,18 +81,34 @@ class WebViewManager(
         private val SKIP_HEADERS = setOf("host", "connection")
 
         // Local cleartext hosts allowed by network security config
-        private val LOCAL_CLEARTEXT_HOSTS = setOf("localhost", "127.0.0.1", "10.0.2.2")
+        // Includes RFC 1918 private network IPs so router/admin pages (e.g. http://192.168.1.1)
+        // are not auto-upgraded to HTTPS (which would cause 403/SSL errors)
+        private fun isLocalCleartextHost(host: String): Boolean {
+            if (host == "localhost" || host == "127.0.0.1" || host == "10.0.2.2") return true
+            // RFC 1918: 10.0.0.0/8
+            if (host.startsWith("10.") && host.count { it == '.' } == 3) return true
+            // RFC 1918: 172.16.0.0/12 (172.16.x.x – 172.31.x.x)
+            if (host.startsWith("172.")) {
+                val second = host.removePrefix("172.").substringBefore('.').toIntOrNull()
+                if (second != null && second in 16..31) return true
+            }
+            // RFC 1918: 192.168.0.0/16
+            if (host.startsWith("192.168.")) return true
+            // IPv6 loopback
+            if (host == "::1" || host == "[::1]") return true
+            // .local mDNS hostnames
+            if (host.endsWith(".local")) return true
+            return false
+        }
 
         // CAPTCHA / bot-verification service hosts — must NEVER be blocked by
         // tracker or ad filters, otherwise login flows and form submissions break.
         // These services load in cross-origin iframes and require cookies + JS.
         private val CAPTCHA_HOST_SUFFIXES = setOf(
             // Google reCAPTCHA v2/v3/Enterprise
-            "www.google.com",         // /recaptcha/* iframe
-            "www.gstatic.com",        // /recaptcha/* assets
+            // www.google.com, www.gstatic.com, apis.google.com → path-restricted in isCaptchaServiceRequest()
             "recaptcha.net",          // CN-accessible mirror
             "www.recaptcha.net",
-            "apis.google.com",        // reCAPTCHA API loader
             // hCaptcha
             "hcaptcha.com",
             "js.hcaptcha.com",
@@ -361,6 +377,20 @@ class WebViewManager(
             var rawPushState=history.pushState?history.pushState.bind(history):null;
             var rawReplaceState=history.replaceState?history.replaceState.bind(history):null;
 
+            // ★ 用户交互守卫：防止在用户主动滚动/触摸时执行恢复，避免"秒拉回"
+            var userInteracting=false;
+            var interactionTimer=null;
+            var INTERACTION_COOLDOWN=1500; // 用户停止触摸后 1.5s 才允许恢复
+
+            function markUserInteraction(){
+                userInteracting=true;
+                clearRestoreTimers(); // 立即取消所有待执行的恢复定时器
+                clearTimeout(interactionTimer);
+                interactionTimer=setTimeout(function(){
+                    userInteracting=false;
+                },INTERACTION_COOLDOWN);
+            }
+
             function getKey(url){
                 return PREFIX+(url||location.href);
             }
@@ -416,23 +446,30 @@ class WebViewManager(
             }
 
             function restorePos(maxAttempts){
+                // ★ 用户正在交互时，跳过恢复，避免"秒拉回"
+                if(userInteracting)return false;
                 var y=readSavedY();
                 if(y<0)return false;
+                // ★ 如果当前滚动位置已经 >= 保存的位置，说明用户已经滚到了更远处，不需要恢复
+                var currentY=getScrollY();
+                if(currentY>0&&currentY>=y-5)return false;
                 if('scrollRestoration' in history){
                     try{history.scrollRestoration='manual';}catch(e3){}
                 }
                 var attempts=maxAttempts||60;
                 function apply(remaining){
+                    // ★ 每次递归前检查用户交互状态
+                    if(userInteracting)return;
                     if(remaining<=0)return;
                     var docH=getDocumentHeight();
                     var maxY=Math.max(0,docH-window.innerHeight);
                     var targetY=Math.min(y,maxY);
                     window.scrollTo(0,targetY);
-                    var currentY=getScrollY();
-                    if(Math.abs(currentY-targetY)<=2&&(targetY===0||docH>=y+window.innerHeight*0.2)){
-                        setTimeout(function(){window.scrollTo(0,targetY);},60);
-                        setTimeout(function(){window.scrollTo(0,targetY);},180);
-                        setTimeout(function(){window.scrollTo(0,targetY);},360);
+                    var nowY=getScrollY();
+                    if(Math.abs(nowY-targetY)<=2&&(targetY===0||docH>=y+window.innerHeight*0.2)){
+                        setTimeout(function(){if(!userInteracting)window.scrollTo(0,targetY);},60);
+                        setTimeout(function(){if(!userInteracting)window.scrollTo(0,targetY);},180);
+                        setTimeout(function(){if(!userInteracting)window.scrollTo(0,targetY);},360);
                         return;
                     }
                     setTimeout(function(){apply(remaining-1);},120);
@@ -443,6 +480,13 @@ class WebViewManager(
 
             function scheduleRestore(){
                 clearRestoreTimers();
+                // ★ 用户正在交互时，延迟调度恢复而非立即执行
+                if(userInteracting){
+                    restoreTimers.push(setTimeout(function(){
+                        if(!userInteracting)restorePos(60);
+                    },INTERACTION_COOLDOWN+200));
+                    return;
+                }
                 var delays=[0,60,180,420,900,1600,2600];
                 for(var i=0;i<delays.length;i++){
                     (function(delayMs){
@@ -477,7 +521,19 @@ class WebViewManager(
                 }
             });
             document.addEventListener('click',function(){savePos();},true);
-            window.addEventListener('scroll',saveSoon,{passive:true});
+            // ★ 用户滚动时标记交互 + 保存位置，取消恢复定时器
+            window.addEventListener('scroll',function(){
+                markUserInteraction();
+                saveSoon();
+            },{passive:true});
+            // ★ 触摸开始时立即标记交互，防止恢复定时器抢占
+            window.addEventListener('touchstart',function(){
+                markUserInteraction();
+            },{passive:true});
+            // ★ 触摸结束时延长冷却期，防止恢复在手指刚抬起时抢跑
+            window.addEventListener('touchend',function(){
+                markUserInteraction();
+            },{passive:true});
 
             if(rawPushState){
                 history.pushState=function(){
@@ -935,6 +991,16 @@ class WebViewManager(
             }
         }
         
+        // ============ DNS-over-HTTPS 配置 ============
+        if (config.dnsMode != "SYSTEM") {
+            AppLogger.d("WebViewManager", "Applying DoH DNS: mode=${config.dnsMode}, provider=${config.dnsConfig.provider}")
+            // WebView DNS: 通过 DnsManager 管理 OkHttp DoH 解析
+            val dnsManager = com.webtoapp.core.dns.DnsManager(context)
+            dnsManager.applyDnsConfig(config.dnsConfig)
+            // GeckoView DNS: 通过 TRR (Trusted Recursive Resolver) 配置
+            com.webtoapp.core.engine.GeckoViewEngine.applyDnsConfig(config.dnsConfig)
+        }
+        
         // Track this WebView
         managedWebViews[webView] = true
         
@@ -1230,10 +1296,6 @@ class WebViewManager(
                 request?.let {
                     val url = it.url?.toString() ?: ""
                     diagRequestCount++
-                    // ★ DIAG: 每50个请求输出一次进度
-                    if (diagRequestCount % 50 == 0) {
-                        android.util.Log.w("DIAG", "Request progress: total=$diagRequestCount blocked=$diagBlockedCount errors=$diagErrorCount elapsed=${System.currentTimeMillis() - diagPageStartTime}ms")
-                    }
 
                     // OAuth header sanitization is handled globally by
                     // BrowserKernel.configureWebView() which removes X-Requested-With for all requests.
@@ -1355,7 +1417,7 @@ class WebViewManager(
                         if (trackerCategory != null) {
                             shields.stats.recordTrackerBlocked(trackerCategory)
                             diagBlockedCount++
-                            android.util.Log.w("DIAG", "TRACKER_BLOCKED [$trackerCategory]: ${url.take(120)}")
+                            AppLogger.d("WebViewManager", "Tracker blocked [$trackerCategory]: ${url.take(80)}")
                             return WebResourceResponse("text/plain", "UTF-8", ByteArrayInputStream(ByteArray(0)))
                         }
                     }
@@ -1372,7 +1434,7 @@ class WebViewManager(
                         if (adBlocker.shouldBlock(url, pageHost, adResType, isThirdParty)) {
                             if (::shields.isInitialized) shields.stats.recordAdBlocked()
                             diagBlockedCount++
-                            android.util.Log.w("DIAG", "AD_BLOCKED [${if (isThirdParty) "3P" else "1P"}/$adResType]: ${url.take(120)}")
+                            AppLogger.d("WebViewManager", "Ad blocked [${if (isThirdParty) "3P" else "1P"}/$adResType]: ${url.take(80)}")
                             return adBlocker.createEmptyResponse(adResType)
                         }
                     }
@@ -1381,18 +1443,27 @@ class WebViewManager(
                     // Google, Facebook, Apple, Microsoft SSO pages have strict CSP policies
                     // (frame-ancestors, base-uri) that break when COEP/COOP headers are injected.
                     val isOAuthRequest = if (isHttpOrHttps) isOAuthServiceRequest(url) else false
+                    // ★ Also check if the MAIN FRAME is an OAuth page — when accounts.google.com
+                    // is the top-level page, ALL its subresource requests (content.googleapis.com,
+                    // ssl.gstatic.com, etc.) must skip CO isolation, not just the OAuth domain itself.
+                    // COEP/COOP on any subresource violates Google's strict CSP base-uri 'self'.
+                    val mainFrameUrl = currentMainFrameUrl
+                    val isOAuthPageSubResource = !isOAuthRequest && isHttpOrHttps &&
+                        mainFrameUrl != null && isOAuthServiceRequest(mainFrameUrl)
 
                     // Cross-Origin Isolation support (for SharedArrayBuffer / FFmpeg.wasm)
                     // ★ Skip for CAPTCHA services — COEP: require-corp breaks cross-origin
                     //   iframes from google.com/gstatic.com that don't serve CORP headers.
                     // ★ Skip for OAuth/SSO services — COOP: same-origin breaks frame-ancestors
                     //   CSP checks on login pages (Issue #69)
+                    // ★ Skip subresources of OAuth pages — their CSP also rejects COEP/COOP
                     if (!bypassAggressiveNetworkHooks &&
                         config.enableCrossOriginIsolation &&
                         isHttpOrHttps &&
                         !isCaptchaRequest &&
-                        !isOAuthRequest) {
-                        android.util.Log.w("DIAG", "CROSS_ORIGIN_PROXY: ${url.take(120)}")
+                        !isOAuthRequest &&
+                        !isOAuthPageSubResource) {
+                        AppLogger.d("WebViewManager", "Cross-origin proxy: ${url.take(80)}")
                         return fetchWithCrossOriginHeaders(it)
                     }
 
@@ -1409,7 +1480,7 @@ class WebViewManager(
                     // Local requests don't need cleartext proxying since they are not external HTTP.
                     if (url.startsWith("http://")) {
                         val httpHost = extractHostFromUrl(url)
-                        if (httpHost != null && httpHost !in LOCAL_CLEARTEXT_HOSTS) {
+                        if (httpHost != null && !isLocalCleartextHost(httpHost)) {
                             val cleartextResponse = fetchCleartextResource(it)
                             if (cleartextResponse != null) {
                                 return cleartextResponse
@@ -1466,30 +1537,16 @@ class WebViewManager(
                     // Let it load normally — anti-detection JS will be injected in onPageStarted
                 }
                 
-                // Security baseline: block/upgrade insecure remote HTTP regardless of Shields settings
-                // Skip upgrade for same-origin navigation to avoid breaking HTTP-only sites
-                // Also skip when disableShields is true (Shell mode default) - respect user's config choice
-                // (initial page loads via webView.loadUrl() which bypasses shouldOverrideUrlLoading,
-                //  so subsequent same-origin navigations should keep the same protocol)
-                val isSameOriginHttp = run {
-                    val currentUrl = currentMainFrameUrl
-                    if (currentUrl != null && currentUrl.startsWith("http://", ignoreCase = true)) {
-                        val currentHost = runCatching { Uri.parse(currentUrl).host?.lowercase() }.getOrNull()
-                        val targetHost = runCatching { Uri.parse(url).host?.lowercase() }.getOrNull()
-                        currentHost != null && targetHost != null && currentHost == targetHost
-                    } else false
-                }
-                if (!isSameOriginHttp && !config.disableShields) {
-                    val secureUrl = upgradeInsecureHttpUrl(url)
-                    if (secureUrl != null) {
-                        view?.loadUrl(secureUrl)
-                        AppLogger.d("WebViewManager", "Auto-upgraded insecure HTTP navigation: $url -> $secureUrl")
-                        return true
-                    }
-                }
+                // ★ No baseline HTTP auto-upgrade — user's URL choice is fully respected.
+                // If the user navigates to an HTTP URL (by entering it or clicking a link), we load it as-is.
+                // HTTPS upgrade is only available as an opt-in Shields feature (httpsUpgrade config).
+                // This is critical for: router admin pages, NAS, local servers, legacy HTTP-only sites, etc.
                 
-                // Shields: HTTPS auto-upgrade (skip when disableShields is true)
-                if (!config.disableShields && ::shields.isInitialized && shields.isEnabled() && shields.getConfig().httpsUpgrade) {
+                // Shields: HTTPS auto-upgrade (opt-in only — requires both disableShields=false AND httpsUpgrade=true)
+                // Skip for private network hosts — they typically don't support HTTPS
+                val targetHost = runCatching { Uri.parse(url).host?.lowercase() }.getOrNull()
+                val isPrivateNetworkHost = targetHost != null && isLocalCleartextHost(targetHost)
+                if (!config.disableShields && !isPrivateNetworkHost && ::shields.isInitialized && shields.isEnabled() && shields.getConfig().httpsUpgrade) {
                     val upgradedUrl = shields.httpsUpgrader.tryUpgrade(url)
                     if (upgradedUrl != null) {
                         shields.stats.recordHttpsUpgrade()
@@ -1537,12 +1594,6 @@ class WebViewManager(
                 diagRequestCount = 0
                 diagBlockedCount = 0
                 diagErrorCount = 0
-                android.util.Log.w("DIAG", "═══ PAGE_STARTED ═══ url=$url")
-                android.util.Log.w("DIAG", "  config: disableShields=${config.disableShields} adBlockEnabled=${adBlocker.isEnabled()} crossOriginIsolation=${config.enableCrossOriginIsolation}")
-                android.util.Log.w("DIAG", "  shields: initialized=${::shields.isInitialized} enabled=${if (::shields.isInitialized) shields.isEnabled().toString() else "N/A"}")
-                if (::shields.isInitialized && shields.isEnabled()) {
-                    android.util.Log.w("DIAG", "  shields config: trackerBlocking=${shields.getConfig().trackerBlocking} httpsUpgrade=${shields.getConfig().httpsUpgrade}")
-                }
                 
                 // OAuth anti-detection injection:
                 // When navigating to OAuth provider domains, inject provider-specific
@@ -1615,7 +1666,7 @@ class WebViewManager(
                 super.onPageCommitVisible(view, url)
                 currentMainFrameUrl = url ?: currentMainFrameUrl
                 val elapsed = System.currentTimeMillis() - diagPageStartTime
-                android.util.Log.w("DIAG", "═══ PAGE_COMMIT_VISIBLE ═══ +${elapsed}ms requests=$diagRequestCount blocked=$diagBlockedCount url=$url")
+                AppLogger.d("WebViewManager", "Page commit visible: +${elapsed}ms blocked=$diagBlockedCount")
                 callbacks.onPageCommitVisible(url)
                 // ★ 提前注入滚动恢复脚本 — onPageCommitVisible 比 onPageFinished 更早触发
                 // 此时页面 DOM 已可交互但可能未完全加载，早期恢复可减少用户可感知的闪烁
@@ -1635,7 +1686,7 @@ class WebViewManager(
                 super.onPageFinished(view, url)
                 currentMainFrameUrl = url ?: currentMainFrameUrl
                 val elapsed = System.currentTimeMillis() - diagPageStartTime
-                android.util.Log.w("DIAG", "═══ PAGE_FINISHED ═══ +${elapsed}ms requests=$diagRequestCount blocked=$diagBlockedCount errors=$diagErrorCount url=$url")
+                AppLogger.d("WebViewManager", "Page finished: +${elapsed}ms blocked=$diagBlockedCount errors=$diagErrorCount")
                 // Clear file retry state on successful page load
                 if (url != null && url.startsWith("file://")) {
                     fileRetryCount = 0
@@ -1812,7 +1863,7 @@ class WebViewManager(
                 val errDesc = error?.description?.toString() ?: "unknown"
                 val isMain = request?.isForMainFrame == true
                 diagErrorCount++
-                android.util.Log.w("DIAG", "RECV_ERROR [${if (isMain) "MAIN" else "sub"}] code=$errCode desc=$errDesc url=${errUrl.take(120)}")
+                AppLogger.d("WebViewManager", "Load error [${if (isMain) "main" else "sub"}] code=$errCode")
                 if (request?.isForMainFrame == true) {
                     val errorCode = error?.errorCode ?: -1
                     val rawDescription = error?.description?.toString() ?: "Unknown error"
@@ -2173,7 +2224,7 @@ class WebViewManager(
         if (request.isForMainFrame) return false
 
         val requestHost = extractHostFromUrl(request.url?.toString()) ?: return false
-        if (requestHost in LOCAL_CLEARTEXT_HOSTS) return false
+        if (isLocalCleartextHost(requestHost)) return false
 
         // IMPORTANT: shouldInterceptRequest may run on WebView background thread.
         // Never call WebView APIs (e.g. view.url) here; use cached main-frame URL + headers.
@@ -2210,8 +2261,8 @@ class WebViewManager(
     private fun isCaptchaServiceRequest(url: String): Boolean {
         val host = extractHostFromUrl(url) ?: return false
         // Broad domains that serve BOTH CAPTCHA and non-CAPTCHA content:
-        // only safelist when the path is /recaptcha
-        if (host == "www.google.com" || host == "www.gstatic.com") {
+        // only safelist when the path contains /recaptcha
+        if (host == "www.google.com" || host == "www.gstatic.com" || host == "apis.google.com") {
             val pathStart = url.indexOf('/', url.indexOf(host) + host.length)
             if (pathStart >= 0) {
                 return url.regionMatches(pathStart, "/recaptcha", 0, 10, ignoreCase = true)
@@ -2290,7 +2341,7 @@ class WebViewManager(
         val scheme = uri.scheme?.lowercase() ?: return false
         if (scheme != "http" && scheme != "https") return false
         val host = uri.host?.lowercase() ?: return false
-        return host !in LOCAL_CLEARTEXT_HOSTS
+        return !isLocalCleartextHost(host)
     }
 
     /**
@@ -2795,7 +2846,7 @@ class WebViewManager(
     private fun upgradeInsecureHttpUrl(url: String): String? {
         if (!url.startsWith("http://", ignoreCase = true)) return null
         val host = runCatching { Uri.parse(url).host?.lowercase() }.getOrNull() ?: return null
-        if (host in LOCAL_CLEARTEXT_HOSTS) return null
+        if (isLocalCleartextHost(host)) return null
         return url.replaceFirst(Regex("(?i)^http://"), "https://")
     }
 
@@ -3804,7 +3855,9 @@ class WebViewManager(
             // CSS -webkit-touch-callout only works on iOS.
             // We suppress it by: blocking contextmenu on links, removing title attrs,
             // and intercepting selection start events on anchor elements.
-            if (!conservativeMode) {
+            // ★ Only inject when explicitly enabled — this script blocks contextmenu/selectstart
+            // which breaks long-press menus, text selection, and accessibility.
+            if (config.hideUrlPreview && !conservativeMode) {
                 scripts.add("""
                 // Hide link URL preview for privacy
                 (function() {
@@ -3969,12 +4022,26 @@ class WebViewManager(
                             // Block conditions
                             var shouldBlock = false;
                             
-                            // Block about:blank and javascript: URLs (common popup tricks)
-                            if (!url || url === 'about:blank' || url.indexOf('javascript:') === 0) {
+                            // ★ FIX: Same-origin window.open is always legitimate (menus, search, navigation)
+                            // Never block it — many websites use window.open for UI interactions
+                            if (isSameOrigin) {
+                                shouldBlock = false;
+                            }
+                            // Block javascript: URLs (common popup tricks, but rarely legitimate)
+                            else if (url && url.indexOf('javascript:') === 0) {
                                 shouldBlock = true;
                             }
-                            // Block suspicious URLs
-                            else if (isSuspiciousUrl(url) && !isSameOrigin && !isDomainAllowed(url)) {
+                            // Block about:blank only when clearly a popup trick (no target name, no features)
+                            else if (!url || url === 'about:blank') {
+                                // about:blank with target/features is often legitimate (iframe containers, etc.)
+                                if (target || features) {
+                                    shouldBlock = false;
+                                } else {
+                                    shouldBlock = true;
+                                }
+                            }
+                            // Block suspicious cross-origin URLs
+                            else if (isSuspiciousUrl(url) && !isDomainAllowed(url)) {
                                 shouldBlock = true;
                             }
                             
@@ -4013,8 +4080,9 @@ class WebViewManager(
                         var originalSetInterval = window.setInterval;
                         
                         window.setTimeout = function(fn, delay) {
-                            // Block immediate timeouts that might be popup triggers
-                            if (delay === 0 && typeof fn === 'string' && fn.indexOf('open(') !== -1) {
+                            // Block immediate timeouts that are clearly popup triggers
+                            // Only block string-based eval with window.open, not function callbacks
+                            if (delay === 0 && typeof fn === 'string' && fn.indexOf('window.open(') !== -1) {
                                 console.log('[WebToApp PopupBlocker] Blocked setTimeout popup trigger');
                                 return 0;
                             }

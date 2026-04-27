@@ -75,6 +75,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.core.logging.AppLogger
+import com.webtoapp.data.model.ApkRuntimePermissions
 import com.webtoapp.ui.components.themedBackground
 import com.webtoapp.ui.screens.community.CommunityScreen
 import com.webtoapp.ui.screens.AiSettingsScreen
@@ -93,9 +94,12 @@ import com.webtoapp.ui.screens.CreatePhpAppScreen
 import com.webtoapp.ui.screens.CreatePythonAppScreen
 import com.webtoapp.ui.screens.CreateGoAppScreen
 import com.webtoapp.ui.screens.CreateMultiWebAppScreen
+import com.webtoapp.ui.screens.CreateOfflinePackScreen
 import com.webtoapp.ui.screens.RuntimeDepsScreen
 import com.webtoapp.ui.screens.PortManagerScreen
 import com.webtoapp.ui.screens.LinuxEnvironmentScreen
+import com.webtoapp.ui.screens.PermissionConfigScreen
+import com.webtoapp.ui.screens.DocsScreen
 import com.webtoapp.ui.screens.HomeScreen
 import com.webtoapp.ui.screens.MoreScreen
 import com.webtoapp.ui.screens.AboutScreen
@@ -104,6 +108,7 @@ import com.webtoapp.ui.screens.AiHtmlCodingScreen
 import com.webtoapp.ui.screens.AiCodingScreen
 
 import com.webtoapp.ui.screens.ExtensionModuleScreen
+import com.webtoapp.ui.screens.FeatureToggleSettingsScreen
 import com.webtoapp.ui.screens.ModuleEditorScreen
 import com.webtoapp.ui.screens.AuthScreen
 import com.webtoapp.ui.screens.ProfileScreen
@@ -111,7 +116,6 @@ import com.webtoapp.ui.screens.ActivationCodeScreen
 import com.webtoapp.ui.screens.DeviceManagementScreen
 import com.webtoapp.ui.screens.SubscriptionScreen
 
-import com.webtoapp.ui.screens.TeamScreen
 import com.webtoapp.ui.screens.aimodule.AiModuleDeveloperScreen
 import com.webtoapp.ui.screens.community.FavoritesScreen
 import com.webtoapp.ui.screens.community.ModuleDetailScreen
@@ -189,6 +193,7 @@ object Routes {
     const val EDIT_GO_APP = "edit_go_app/{appId}"
     const val CREATE_MULTI_WEB_APP = "create_multi_web_app"
     const val EDIT_MULTI_WEB_APP = "edit_multi_web_app/{appId}"
+    const val CREATE_OFFLINE_PACK = "create_offline_pack"
     
     const val PREVIEW = "preview/{appId}"
     const val APP_MODIFIER = "app_modifier"
@@ -204,7 +209,9 @@ object Routes {
     const val AI_MODULE_DEVELOPER = "ai_module_developer"
     const val RUNTIME_DEPS = "runtime_deps"
     const val PORT_MANAGER = "port_manager"
+    const val PERMISSION_CONFIG = "permission_config"
     const val STATS = "stats"
+    const val FEATURE_TOGGLE = "feature_toggle"
     const val ABOUT = "about"
     const val AUTH = "auth"
     const val PROFILE = "profile"
@@ -212,14 +219,13 @@ object Routes {
     const val DEVICE_MANAGEMENT = "device_management"
     const val MODULE_STORE = "module_store"
     const val SUBSCRIPTION = "subscription"
-    const val TEAMS = "teams"
-
     // 社区页面
     const val COMMUNITY_POST_DETAIL = "community_post/{postId}"
     const val MODULE_DETAIL = "module_detail/{moduleId}"
     const val USER_PROFILE = "community_user/{userId}"
     const val FAVORITES = "favorites"
     const val NOTIFICATIONS = "notifications"
+    const val DOCS = "docs"
 
     /** 顶层 Tab 路由集合，用于判断是否显示底部导航 */
     val TAB_ROUTES = setOf(HOME, APP_STORE, COMMUNITY, PROFILE_TAB, MORE)
@@ -302,9 +308,9 @@ fun AppNavigation() {
                     }
                 }.onFailure { error ->
                     showAutoUpdateFailureReport(
-                        title = "自动检查更新失败",
-                        stage = "应用启动自动检查更新",
-                        summary = "自动更新检查失败，已停止继续处理。",
+                        title = Strings.autoUpdateCheckFailed,
+                        stage = Strings.autoUpdateCheckStage,
+                        summary = Strings.autoUpdateCheckFailedSummary,
                         throwable = error,
                         extraContext = """
                             trigger: auto
@@ -315,9 +321,9 @@ fun AppNavigation() {
                 }
             } catch (error: Exception) {
                 showAutoUpdateFailureReport(
-                    title = "自动检查更新失败",
-                    stage = "应用启动自动检查更新",
-                    summary = "自动更新检查发生未捕获异常，已停止继续处理。",
+                    title = Strings.autoUpdateCheckFailed,
+                    stage = Strings.autoUpdateCheckStage,
+                    summary = Strings.autoUpdateUncatchedSummary,
                     throwable = error,
                     extraContext = """
                         trigger: auto
@@ -432,9 +438,9 @@ fun AppNavigation() {
                                 isAutoDownloading = false
                                 showAutoUpdateDialog = false
                                 showAutoUpdateFailureReport(
-                                    title = "自动更新下载启动失败",
-                                    stage = "启动自动更新下载",
-                                    summary = "系统下载任务创建失败，未继续执行安装流程。",
+                                    title = Strings.autoUpdateDownloadStartFailed,
+                                    stage = Strings.startAutoUpdateDownloadStage,
+                                    summary = Strings.downloadTaskCreateFailed,
                                     extraContext = """
                                         trigger: auto
                                         current_version_name: v$currentVersionName
@@ -449,9 +455,9 @@ fun AppNavigation() {
                         } else {
                             showAutoUpdateDialog = false
                             showAutoUpdateFailureReport(
-                                title = "自动更新下载启动失败",
-                                stage = "准备自动更新下载",
-                                summary = "更新响应缺少有效下载链接，未继续执行下载流程。",
+                                title = Strings.autoUpdateDownloadStartFailed,
+                                stage = Strings.prepareAutoUpdateDownloadStage,
+                                summary = Strings.noValidDownloadLink,
                                 extraContext = """
                                     trigger: auto
                                     current_version_name: v$currentVersionName
@@ -584,6 +590,7 @@ fun AppNavigation() {
                 onCreatePythonApp = { navController.navigate(Routes.CREATE_PYTHON_APP) },
                 onCreateGoApp = { navController.navigate(Routes.CREATE_GO_APP) },
                 onCreateMultiWebApp = { navController.navigate(Routes.CREATE_MULTI_WEB_APP) },
+                onCreateOfflinePack = { navController.navigate(Routes.CREATE_OFFLINE_PACK) },
                 onEditApp = { webApp ->
                     viewModel.editApp(webApp)
                     navController.navigate(Routes.editApp(webApp.id))
@@ -617,6 +624,7 @@ fun AppNavigation() {
                 onOpenAiHtmlCoding = { navController.navigate(Routes.AI_HTML_CODING) },
                 onOpenExtensionModules = { navController.navigate(Routes.EXTENSION_MODULES) },
                 onOpenLinuxEnvironment = { navController.navigate(Routes.LINUX_ENVIRONMENT) },
+                onOpenDocs = { navController.navigate(Routes.DOCS) },
             )
         }
 
@@ -651,6 +659,7 @@ fun AppNavigation() {
                             .importFromShareCode(shareCode)
                     }
                 },
+                onNavigateToModule = { moduleId -> navController.navigate(Routes.moduleDetail(moduleId)) },
                 downloadManager = downloadManager
             )
         }
@@ -712,7 +721,6 @@ fun AppNavigation() {
                         onLogout = { /* authState → LoggedOut → shows AuthScreen */ },
                         onNavigateDevices = { navController.navigate(Routes.DEVICE_MANAGEMENT) },
                         onNavigateActivationCode = { navController.navigate(Routes.ACTIVATION_CODE) },
-                        onNavigateTeams = { navController.navigate(Routes.TEAMS) },
                         onNavigateSubscription = { navController.navigate(Routes.SUBSCRIPTION) }
                     )
                 }
@@ -756,8 +764,10 @@ fun AppNavigation() {
                 onOpenLinuxEnvironment = { navController.navigate(Routes.LINUX_ENVIRONMENT) },
                 onOpenRuntimeDeps = { navController.navigate(Routes.RUNTIME_DEPS) },
                 onOpenPortManager = { navController.navigate(Routes.PORT_MANAGER) },
+                onOpenPermissionConfig = { navController.navigate(Routes.PERMISSION_CONFIG) },
                 onOpenStats = { navController.navigate(Routes.STATS) },
-                onOpenAbout = { navController.navigate(Routes.ABOUT) }
+                onOpenAbout = { navController.navigate(Routes.ABOUT) },
+                onOpenFeatureToggles = { navController.navigate(Routes.FEATURE_TOGGLE) }
             )
         }
 
@@ -1119,6 +1129,28 @@ fun AppNavigation() {
             )
         }
         
+        // Create 离线打包
+        composable(Routes.CREATE_OFFLINE_PACK) {
+            CreateOfflinePackScreen(
+                onBack = { navController.popBackStack() },
+                onStartScrape = { name, url, maxDepth, downloadCdn, followLinks, maxFiles, maxTotalSizeMb, skipPatterns, timeoutSeconds, onProgress ->
+                    viewModel.saveScrapedWebsiteApp(
+                        name = name,
+                        url = url,
+                        iconUri = null,
+                        maxDepth = maxDepth,
+                        downloadCdnResources = downloadCdn,
+                        followLinks = followLinks,
+                        maxFiles = maxFiles,
+                        maxTotalSizeMb = maxTotalSizeMb,
+                        skipPatterns = skipPatterns,
+                        timeoutSeconds = timeoutSeconds,
+                        onProgress = onProgress
+                    )
+                }
+            )
+        }
+        
         // Linux 环境管理
         composable(Routes.LINUX_ENVIRONMENT) {
             LinuxEnvironmentScreen(
@@ -1378,9 +1410,32 @@ fun AppNavigation() {
             )
         }
         
+        // 权限配置
+        composable(Routes.PERMISSION_CONFIG) {
+            PermissionConfigScreen(
+                permissions = ApkRuntimePermissions(),
+                onPermissionsChange = { /* Standalone view - no-op, changes saved via edit flow */ },
+                onBack = { navController.popBackStack() }
+            )
+        }
+        
+        // 功能开关设置页面
+        composable(Routes.FEATURE_TOGGLE) {
+            FeatureToggleSettingsScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
         // 关于页面
         composable(Routes.ABOUT) {
             AboutScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // 文档中心
+        composable(Routes.DOCS) {
+            DocsScreen(
                 onBack = { navController.popBackStack() }
             )
         }
@@ -1486,14 +1541,6 @@ fun AppNavigation() {
         }
         
         
-        // 团队管理
-        composable(Routes.TEAMS) {
-            TeamScreen(
-                onBack = { navController.popBackStack() }
-            )
-        }
-
-
         // ─── 社区页面 ───
 
         // 模块详情（评论区、投票、收藏）
@@ -1607,7 +1654,7 @@ private fun buildAutoUpdateFailureReport(
 
         appendLine()
         appendLine("error:")
-        appendLine(throwable?.message ?: "未返回异常对象")
+        appendLine(throwable?.message ?: Strings.noExceptionReturned)
 
         throwable?.let {
             appendLine()
@@ -1673,7 +1720,7 @@ private fun AutoUpdateFailureReportDialog(
                     ) {
                         Icon(Icons.Outlined.ContentCopy, null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("复制")
+                        Text(Strings.copy)
                     }
                 }
             }

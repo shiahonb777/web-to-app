@@ -8,27 +8,21 @@ import com.webtoapp.ui.data.converter.Converters
 import androidx.compose.runtime.Stable
 import com.webtoapp.util.toFileSizeString
 
-/**
- * 应用类型
- */
 enum class AppType {
-    WEB,        // Web page应用（默认）
-    IMAGE,      // Image展示应用（单图片，兼容旧版）
-    VIDEO,      // Video播放应用（单视频，兼容旧版）
-    HTML,       // LocalHTML应用（支持HTML+CSS+JS）
-    GALLERY,    // Media画廊应用（多图片/视频、分类、排序、连续播放）
-    FRONTEND,   // 前端项目应用（Vue/React/Vite 等构建产物）
-    WORDPRESS,  // WordPress 离线应用（PHP + SQLite）
-    NODEJS_APP, // Node.js 后端应用（Express/Fastify/Nest.js 等）
-    PHP_APP,    // 通用 PHP 应用（Laravel/ThinkPHP/CodeIgniter 等）
-    PYTHON_APP, // Python Web 应用（Flask/Django/FastAPI 等）
-    GO_APP,     // Go Web 服务（Gin/Fiber/Echo 等）
-    MULTI_WEB   // 多站点聚合应用（多链接合并为一个 APP）
+    WEB,
+    IMAGE,
+    VIDEO,
+    HTML,
+    GALLERY,
+    FRONTEND,
+    WORDPRESS,
+    NODEJS_APP,
+    PHP_APP,
+    PYTHON_APP,
+    GO_APP,
+    MULTI_WEB
 }
 
-/**
- * WebApp实体类 - 存储用户创建的应用配置
- */
 @Entity(
     tableName = "web_apps",
     indices = [
@@ -42,121 +36,80 @@ enum class AppType {
 data class WebApp(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-
-    // 基本信息
     val name: String,
-    val url: String,                           // WEB类型为URL，IMAGE/VIDEO类型为媒体文件路径
+    val url: String,
     val iconPath: String? = null,
     val packageName: String? = null,
-    val appType: AppType = AppType.WEB,        // App类型
-    
-    // Media应用配置（仅 IMAGE/VIDEO 类型，兼容旧版）
+    val appType: AppType = AppType.WEB,
     val mediaConfig: MediaConfig? = null,
-    
-    // Media画廊配置（仅 GALLERY 类型，支持多媒体）
     val galleryConfig: GalleryConfig? = null,
-    
-    // HTML应用配置（仅 HTML 类型）
     val htmlConfig: HtmlConfig? = null,
-    
-    // WordPress应用配置（仅 WORDPRESS 类型）
     val wordpressConfig: WordPressConfig? = null,
-    
-    // Node.js应用配置（仅 NODEJS_APP 类型）
     val nodejsConfig: NodeJsConfig? = null,
-    
-    // 通用 PHP 应用配置（仅 PHP_APP 类型）
     val phpAppConfig: PhpAppConfig? = null,
-    
-    // Python Web 应用配置（仅 PYTHON_APP 类型）
     val pythonAppConfig: PythonAppConfig? = null,
-    
-    // Go Web 服务配置（仅 GO_APP 类型）
     val goAppConfig: GoAppConfig? = null,
-    
-    // 多站点聚合配置（仅 MULTI_WEB 类型）
     val multiWebConfig: MultiWebConfig? = null,
 
-    // Activation码配置
+    // Activation
     val activationEnabled: Boolean = false,
-    val activationCodes: List<String> = emptyList(),  // 旧格式（兼容性）
-    val activationCodeList: List<com.webtoapp.core.activation.ActivationCode> = emptyList(),  // 新格式
-    val activationRequireEveryTime: Boolean = false,  // Yes否每次启动都需要验证
+    val activationCodes: List<String> = emptyList(),
+    val activationCodeList: List<com.webtoapp.core.activation.ActivationCode> = emptyList(),
+    val activationRequireEveryTime: Boolean = false,
     val isActivated: Boolean = false,
 
-    // Ad配置
+    // Ads
     val adsEnabled: Boolean = false,
     val adConfig: AdConfig? = null,
 
-    // Announcement配置
+    // Announcement
     val announcementEnabled: Boolean = false,
     val announcement: Announcement? = null,
 
-    // Ad拦截配置
+    // Ad block
     val adBlockEnabled: Boolean = false,
     val adBlockRules: List<String> = emptyList(),
 
-    // WebView配置
+    // WebView
     val webViewConfig: WebViewConfig = WebViewConfig(),
 
-    // Start画面配置
+    // Splash
     val splashEnabled: Boolean = false,
     val splashConfig: SplashConfig? = null,
 
-    // Background music配置
+    // BGM
     val bgmEnabled: Boolean = false,
     val bgmConfig: BgmConfig? = null,
-    
-    // APK 导出配置（仅打包APK时生效）
+
+    // APK export
     val apkExportConfig: ApkExportConfig? = null,
-    
-    // Theme配置（用于导出的应用 UI 风格）
+
+    // Theme
     val themeType: String = "AURORA",
-    
-    // Web page自动翻译配置
+
+    // Translate
     val translateEnabled: Boolean = false,
     val translateConfig: TranslateConfig? = null,
-    
-    // 扩展模块配置
-    val extensionEnabled: Boolean = false,  // 扩展模块功能开关（独立持久化）
-    val extensionModuleIds: List<String> = emptyList(),  // Enable的扩展模块ID列表
-    val extensionFabIcon: String? = null,  // 扩展模块悬浮按钮自定义图标（emoji，空=默认🧩）
-    
-    // 自启动配置
+
+    // Extensions
+    val extensionEnabled: Boolean = false,
+    val extensionModuleIds: List<String> = emptyList(),
+    val extensionFabIcon: String? = null,
+
     val autoStartConfig: AutoStartConfig? = null,
-    
-    // 强制运行配置
     val forcedRunConfig: com.webtoapp.core.forcedrun.ForcedRunConfig? = null,
-    
-    // 黑科技功能配置（独立模块）
     val blackTechConfig: com.webtoapp.core.blacktech.BlackTechConfig? = null,
-    
-    // App伪装配置（独立模块）
     val disguiseConfig: com.webtoapp.core.disguise.DisguiseConfig? = null,
-    
-    // 浏览器伪装配置（反指纹引擎）
     val browserDisguiseConfig: com.webtoapp.core.disguise.BrowserDisguiseConfig? = null,
-    
-    // 设备伪装配置（设备类型/品牌/型号 UA 伪装）
     val deviceDisguiseConfig: com.webtoapp.core.disguise.DeviceDisguiseConfig? = null,
-    
-    // 激活码对话框自定义文本
     val activationDialogConfig: ActivationDialogConfig? = null,
-    
-    // 分类ID（关联 AppCategory）
     val categoryId: Long? = null,
-    
-    // 云 SDK 配置（关联云项目，启用更新检查/公告/远程配置等）
     val cloudConfig: CloudAppConfig? = null,
 
-    // 元数据
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 )
 
-/**
- * 广告配置
- */
 data class AdConfig(
     val bannerEnabled: Boolean = false,
     val bannerId: String = "",
@@ -164,37 +117,28 @@ data class AdConfig(
     val interstitialId: String = "",
     val splashEnabled: Boolean = false,
     val splashId: String = "",
-    val splashDuration: Int = 3 // 秒
+    val splashDuration: Int = 3
 )
 
-/**
- * 公告模板类型
- */
 enum class AnnouncementTemplateType {
-    MINIMAL,        // 极简风格
-    XIAOHONGSHU,    // 小红书风格
-    GRADIENT,       // 渐变风格
-    GLASSMORPHISM,  // 毛玻璃风格
-    NEON,           // 霓虹风格
-    CUTE,           // 可爱风格
-    ELEGANT,        // 优雅风格
-    FESTIVE,        // 节日风格
-    DARK,           // 暗黑风格
-    NATURE          // 自然风格
+    MINIMAL,
+    XIAOHONGSHU,
+    GRADIENT,
+    GLASSMORPHISM,
+    NEON,
+    CUTE,
+    ELEGANT,
+    FESTIVE,
+    DARK,
+    NATURE
 }
 
-/**
- * 公告触发模式
- */
 enum class AnnouncementTriggerMode {
-    ON_LAUNCH,      // Start时触发
-    ON_INTERVAL,    // 定时间隔触发
-    ON_NO_NETWORK   // 无网络时触发
+    ON_LAUNCH,
+    ON_INTERVAL,
+    ON_NO_NETWORK
 }
 
-/**
- * 公告配置
- */
 data class Announcement(
     val title: String = "",
     val content: String = "",
@@ -202,60 +146,40 @@ data class Announcement(
     val linkText: String? = null,
     val showOnce: Boolean = true,
     val enabled: Boolean = true,
-    val version: Int = 1, // 用于判断是否显示过
-    val template: AnnouncementTemplateType = AnnouncementTemplateType.XIAOHONGSHU, // Announcement模板
-    val showEmoji: Boolean = true, // Yes否显示表情
-    val animationEnabled: Boolean = true, // Yes否启用动画
-    // 新增：需要勾选同意/已阅读才能关闭
+    val version: Int = 1,
+    val template: AnnouncementTemplateType = AnnouncementTemplateType.XIAOHONGSHU,
+    val showEmoji: Boolean = true,
+    val animationEnabled: Boolean = true,
     val requireConfirmation: Boolean = false,
-    // 新增：允许用户勾选不再显示
     val allowNeverShow: Boolean = true,
-    
-    // ==================== 触发机制 ====================
-    // Start时触发（默认开启，保持backward compatible）
     val triggerOnLaunch: Boolean = true,
-    // 无网络时触发
     val triggerOnNoNetwork: Boolean = false,
-    // 定时间隔触发（分钟，0=禁用）
-    val triggerIntervalMinutes: Int = 0,
-    // 定时触发是否在启动时也立即触发一次
+    val triggerIntervalMinutes: Int = 0, // 0=disabled
     val triggerIntervalIncludeLaunch: Boolean = false
 )
 
-/**
- * 状态栏颜色模式
- */
 enum class StatusBarColorMode {
-    THEME,      // 跟随主题色（默认）
-    TRANSPARENT,// 完全透明
-    CUSTOM      // Custom颜色
+    THEME,
+    TRANSPARENT,
+    CUSTOM
 }
 
-/**
- * Status bar background类型
- */
 enum class StatusBarBackgroundType {
-    COLOR,  // 纯色背景（使用 statusBarColor）
-    IMAGE   // Image背景
+    COLOR,
+    IMAGE
 }
 
 
-/**
- * 长按菜单样式
- */
 enum class LongPressMenuStyle {
-    DISABLED,       // Disable长按菜单
-    SIMPLE,         // 简洁模式：仅保存图片、复制链接
-    FULL,           // 完整模式：所有功能
-    IOS,            // iOS 风格：类似 iPhone 的模糊背景菜单
-    FLOATING,       // 悬浮气泡：在点击位置显示小气泡
-    CONTEXT         // 右键菜单：类似桌面端右键菜单
+    DISABLED,
+    SIMPLE,
+    FULL,
+    IOS,
+    FLOATING,
+    CONTEXT
 }
 
-/**
- * User-Agent 模式
- * 用于伪装浏览器身份，绕过网站对 WebView 的检测
- */
+/** User-Agent mode for browser identity spoofing */
 enum class UserAgentMode(
     val displayName: String,
     val description: String,
@@ -313,19 +237,13 @@ enum class UserAgentMode(
     )
 }
 
-/**
- * 浏览器版本号集中管理
- * 更新时只需修改这里，所有 UA 字符串自动同步
- */
+/** Centralized browser version numbers for UA strings */
 object UserAgentVersions {
     const val CHROME = "131"
     const val FIREFOX = "133"
     const val SAFARI = "18"
 }
 
-/**
- * WebView configuration
- */
 @Stable
 data class WebViewConfig(
     val javaScriptEnabled: Boolean = true,
@@ -334,297 +252,256 @@ data class WebViewConfig(
     val allowContentAccess: Boolean = true,
     val cacheEnabled: Boolean = true,
     val userAgent: String? = null,
-    val userAgentMode: UserAgentMode = UserAgentMode.DEFAULT, // User-Agent 模式
-    val customUserAgent: String? = null, // Custom User-Agent（仅 CUSTOM 模式使用）
-    val desktopMode: Boolean = false, // Keep forbackward compatible
+    val userAgentMode: UserAgentMode = UserAgentMode.DEFAULT,
+    val customUserAgent: String? = null,
+    val desktopMode: Boolean = false, // [DEPRECATED] backward compat
     val zoomEnabled: Boolean = true,
     val swipeRefreshEnabled: Boolean = true,
     val fullscreenEnabled: Boolean = true,
     val downloadEnabled: Boolean = true,
-    val openExternalLinks: Boolean = false, // External链接是否在浏览器打开
-    val hideBrowserToolbar: Boolean = false, // 仅隐藏浏览器工具栏（不触发沉浸式全屏，保留系统状态栏和导航栏）
-    val hideToolbar: Boolean = false, // Hide工具栏（全屏模式，无浏览器特征）
-    val showStatusBarInFullscreen: Boolean = false, // Fullscreen模式下是否显示状态栏
-    val showNavigationBarInFullscreen: Boolean = false, // Fullscreen模式下是否显示导航栏
-    val showToolbarInFullscreen: Boolean = false, // Fullscreen模式下是否显示顶部导航栏
-    val landscapeMode: Boolean = false, // [已废弃] 向后兼容，使用 orientationMode 代替
-    val orientationMode: OrientationMode = OrientationMode.PORTRAIT, // 屏幕方向模式（不要使用 computed default，否则 copy() 会覆盖用户设置）
-    val injectScripts: List<UserScript> = emptyList(), // User自定义注入脚本
-    val statusBarColorMode: StatusBarColorMode = StatusBarColorMode.THEME, // Status bar颜色模式
-    val statusBarColor: String? = null, // Custom状态栏颜色（仅 CUSTOM 模式生效，如 "#FF5722"）
-    val statusBarDarkIcons: Boolean? = null, // Status bar图标颜色：true=深色图标，false=浅色图标，null=自动
-    // Status bar背景配置（新增）
-    val statusBarBackgroundType: StatusBarBackgroundType = StatusBarBackgroundType.COLOR, // Background type
-    val statusBarBackgroundImage: String? = null, // Cropped image path
-    val statusBarBackgroundAlpha: Float = 1.0f, // Alpha 0.0-1.0
-    val statusBarHeightDp: Int = 0, // Custom高度dp（0=系统默认）
-    val longPressMenuEnabled: Boolean = true, // Yes否启用长按菜单
-    val longPressMenuStyle: LongPressMenuStyle = LongPressMenuStyle.FULL, // Long press menu style
-    val adBlockToggleEnabled: Boolean = false, // Allow用户在运行时切换广告拦截开关
-    val popupBlockerEnabled: Boolean = true, // 启用弹窗拦截器（拦截 window.open 等弹窗广告）
-    val popupBlockerToggleEnabled: Boolean = false, // Allow用户在运行时切换弹窗拦截开关
-    
-    // ============ 浏览器兼容性增强配置 ============
-    val initialScale: Int = 0, // Initial scale (0-200, 0=自动)，解决 CSS zoom 不生效问题
-    val viewportMode: ViewportMode = ViewportMode.DEFAULT, // 视口模式（解决 Unity/Canvas 游戏放大裁切问题）
-    val customViewportWidth: Int = 0, // 自定义视口宽度（像素），0=自动。仅 CUSTOM 模式生效。有效范围：320-3840
-    val newWindowBehavior: NewWindowBehavior = NewWindowBehavior.SAME_WINDOW, // window.open / target="_blank" 行为
-    val enablePaymentSchemes: Boolean = true, // Enable支付宝、微信等支付 scheme 拦截
-    val enableShareBridge: Boolean = true, // Enable navigator.share 桥接
-    val enableZoomPolyfill: Boolean = true, // Enable CSS zoom polyfill（自动转换为 transform）
-    
-    // ============ 高级功能配置 ============
-    val enableCrossOriginIsolation: Boolean = false, // 启用跨域隔离（SharedArrayBuffer/FFmpeg.wasm 支持）
-    val disableShields: Boolean = false, // 禁用 BrowserShields（允许第三方 Cookie、跳过跟踪器拦截等，适用于游戏/需要完整网络功能的应用）
-    val keepScreenOn: Boolean = false, // [向后兼容] 保持屏幕常亮
-    val screenAwakeMode: ScreenAwakeMode = ScreenAwakeMode.OFF, // 屏幕常亮模式：OFF / ALWAYS / TIMED
-    val screenAwakeTimeoutMinutes: Int = 30, // 定时常亮时长（分钟），仅 TIMED 模式有效
-    val screenBrightness: Int = -1, // 屏幕亮度：-1=跟随系统, 0-100=自定义百分比
-    val keyboardAdjustMode: KeyboardAdjustMode = KeyboardAdjustMode.RESIZE, // 键盘调整模式（RESIZE=推起内容，NOTHING=覆盖页面）
-    
-    // ============ 安全配置 ============
-    // SECURITY: These should only be true for local HTML/FRONTEND apps.
-    // For WEB apps loading remote URLs, these MUST be false to prevent
+    val openExternalLinks: Boolean = false,
+    val hideBrowserToolbar: Boolean = false,
+    val hideToolbar: Boolean = false,
+    val showStatusBarInFullscreen: Boolean = false,
+    val showNavigationBarInFullscreen: Boolean = false,
+    val showToolbarInFullscreen: Boolean = false,
+    val landscapeMode: Boolean = false, // [DEPRECATED] Use orientationMode
+    val orientationMode: OrientationMode = OrientationMode.PORTRAIT,
+    val injectScripts: List<UserScript> = emptyList(),
+    val statusBarColorMode: StatusBarColorMode = StatusBarColorMode.THEME,
+    val statusBarColor: String? = null,
+    val statusBarDarkIcons: Boolean? = null,
+    val statusBarBackgroundType: StatusBarBackgroundType = StatusBarBackgroundType.COLOR,
+    val statusBarBackgroundImage: String? = null,
+    val statusBarBackgroundAlpha: Float = 1.0f,
+    val statusBarHeightDp: Int = 0,
+    val longPressMenuEnabled: Boolean = true,
+    val longPressMenuStyle: LongPressMenuStyle = LongPressMenuStyle.FULL,
+    val adBlockToggleEnabled: Boolean = false,
+    val popupBlockerEnabled: Boolean = false,
+    val popupBlockerToggleEnabled: Boolean = false,
+
+    val initialScale: Int = 0,
+    val viewportMode: ViewportMode = ViewportMode.DEFAULT,
+    val customViewportWidth: Int = 0,
+    val newWindowBehavior: NewWindowBehavior = NewWindowBehavior.SAME_WINDOW,
+    val enablePaymentSchemes: Boolean = true,
+    val enableShareBridge: Boolean = true,
+    val enableZoomPolyfill: Boolean = true,
+    val enableCrossOriginIsolation: Boolean = false,
+    val hideUrlPreview: Boolean = false,
+    val disableShields: Boolean = true,
+    val keepScreenOn: Boolean = false, // [DEPRECATED] Use screenAwakeMode
+    val screenAwakeMode: ScreenAwakeMode = ScreenAwakeMode.OFF,
+    val screenAwakeTimeoutMinutes: Int = 30,
+    val screenBrightness: Int = -1, // -1=system, 0-100=custom
+    val keyboardAdjustMode: KeyboardAdjustMode = KeyboardAdjustMode.RESIZE,
+
+    // SECURITY: Only true for local HTML/FRONTEND apps.
+    // For WEB apps loading remote URLs, MUST be false to prevent
     // malicious web pages from reading local files via file:// URLs.
     val allowFileAccessFromFileURLs: Boolean = false,
     val allowUniversalAccessFromFileURLs: Boolean = false,
-    
-    // ============ 网络错误页配置 ============
+
     val errorPageConfig: com.webtoapp.core.errorpage.ErrorPageConfig = com.webtoapp.core.errorpage.ErrorPageConfig(),
-    
-    // ============ 性能优化 ============
-    val performanceOptimization: Boolean = false,  // 运行时性能优化脚本注入（懒加载/预连接/滚动优化/内存管理）
-    
-    // ============ PWA 离线支持 ============
-    val pwaOfflineEnabled: Boolean = false,  // 启用 Service Worker 离线缓存
-    val pwaOfflineStrategy: String = "NETWORK_FIRST",  // 缓存策略: CACHE_FIRST / NETWORK_FIRST / STALE_WHILE_REVALIDATE
-    
-    // ============ 悬浮返回按钮 ============
-    val showFloatingBackButton: Boolean = true, // 全屏模式下是否显示悬浮返回按钮
-
-    // ============ 系统导航手势屏蔽 ============
-    val blockSystemNavigationGesture: Boolean = false, // 是否屏蔽系统导航手势（全屏模式下生效，默认关闭）
-
-    // ============ 悬浮小窗配置 ============
+    val performanceOptimization: Boolean = false,
+    val pwaOfflineEnabled: Boolean = false,
+    val pwaOfflineStrategy: String = "NETWORK_FIRST",
+    val showFloatingBackButton: Boolean = true,
     val floatingWindowConfig: FloatingWindowConfig = FloatingWindowConfig(),
-    
-    // ============ 代理配置（PAC / Static / None）============
-    val proxyMode: String = "NONE",              // NONE, STATIC, PAC
-    val proxyHost: String = "",                   // 固定代理主机（STATIC 模式）
-    val proxyPort: Int = 0,                       // 固定代理端口（STATIC 模式）
-    val proxyType: String = "HTTP",               // 代理协议: HTTP, HTTPS, SOCKS5（STATIC 模式）
-    val pacUrl: String = "",                      // PAC 脚本 URL（PAC 模式，如 http://proxy.example.com/proxy.pac）
-    val proxyBypassRules: List<String> = emptyList() // 代理绕过规则（不经过代理的域名/IP 列表）
+    val proxyMode: String = "NONE",
+    val proxyHost: String = "",
+    val proxyPort: Int = 0,
+    val proxyType: String = "HTTP",
+    val pacUrl: String = "",
+    val proxyBypassRules: List<String> = emptyList(),
+
+    // DNS 配置
+    val dnsMode: String = "SYSTEM",
+    val dnsConfig: DnsConfig = DnsConfig()
 )
 
-/**
- * 悬浮小窗配置
- * 支持以悬浮窗模式显示应用，可自由调整大小和透明度
- */
 data class FloatingWindowConfig(
-    val enabled: Boolean = false,              // 是否启用悬浮窗模式
-    val windowSizePercent: Int = 80,            // [向后兼容] 窗口大小百分比 (50-100)
-    val widthPercent: Int = 80,                 // 窗口宽度百分比 (30-100)
-    val heightPercent: Int = 80,                // 窗口高度百分比 (30-100)
-    val lockAspectRatio: Boolean = true,        // 锁定宽高比（同步调整宽高）
-    val opacity: Int = 100,                     // 透明度百分比 (30-100)
-    val cornerRadius: Int = 16,                 // 圆角半径 dp (0-32)
-    val borderStyle: FloatingBorderStyle = FloatingBorderStyle.SUBTLE, // 边框样式
-    val showTitleBar: Boolean = true,           // 是否显示标题栏（用于拖拽移动）
-    val autoHideTitleBar: Boolean = false,       // 空闲后自动隐藏标题栏
-    val startMinimized: Boolean = false,        // 启动时最小化为悬浮按钮
-    val rememberPosition: Boolean = true,       // 记住上次窗口位置
-    val edgeSnapping: Boolean = true,           // 边缘吸附（拖拽到屏幕边缘自动贴边）
-    val showResizeHandle: Boolean = true,       // 显示右下角缩放手柄
-    val lockPosition: Boolean = false           // 锁定位置（禁止拖拽）
+    val enabled: Boolean = false,
+    val windowSizePercent: Int = 80,            // [backward compat]
+    val widthPercent: Int = 80,
+    val heightPercent: Int = 80,
+    val lockAspectRatio: Boolean = true,
+    val opacity: Int = 100,
+    val cornerRadius: Int = 16,
+    val borderStyle: FloatingBorderStyle = FloatingBorderStyle.SUBTLE,
+    val showTitleBar: Boolean = true,
+    val autoHideTitleBar: Boolean = false,
+    val startMinimized: Boolean = false,
+    val rememberPosition: Boolean = true,
+    val edgeSnapping: Boolean = true,
+    val showResizeHandle: Boolean = true,
+    val lockPosition: Boolean = false
 )
 
-/**
- * 悬浮窗边框样式
- */
 enum class FloatingBorderStyle {
-    NONE,      // 无边框
-    SUBTLE,    // 细微边框（默认）
-    GLOW,      // 发光边框
-    ACCENT     // 主题色边框
+    NONE,
+    SUBTLE,
+    GLOW,
+    ACCENT
 }
 
-/**
- * User custom script (Tampermonkey style)
- */
-data class UserScript(
-    val name: String = "",           // Script名称
-    val code: String = "",           // JavaScript 代码
-    val enabled: Boolean = true,     // Yes否启用
-    val runAt: ScriptRunTime = ScriptRunTime.DOCUMENT_END // 运行时机
-)
+/** DNS-over-HTTPS 预设提供商 */
+enum class DnsProvider(val key: String, val dohUrl: String, val displayName: String) {
+    @com.google.gson.annotations.SerializedName("cloudflare")
+    CLOUDFLARE("cloudflare", "https://cloudflare-dns.com/dns-query", "Cloudflare"),
+    @com.google.gson.annotations.SerializedName("google")
+    GOOGLE("google", "https://dns.google/dns-query", "Google"),
+    @com.google.gson.annotations.SerializedName("adguard")
+    ADGUARD("adguard", "https://dns.adguard-dns.com/dns-query", "AdGuard"),
+    @com.google.gson.annotations.SerializedName("nextdns")
+    NEXTDNS("nextdns", "https://dns.nextdns.io/", "NextDNS"),
+    @com.google.gson.annotations.SerializedName("cleanbrowsing")
+    CLEANBROWSING("cleanbrowsing", "https://doh.cleanbrowsing.org/doh/family-filter/", "CleanBrowsing"),
+    @com.google.gson.annotations.SerializedName("quad9")
+    QUAD9("quad9", "https://dns.quad9.net/dns-query", "Quad9"),
+    @com.google.gson.annotations.SerializedName("mullvad")
+    MULLVAD("mullvad", "https://dns.mullvad.net/dns-query", "Mullvad"),
+    @com.google.gson.annotations.SerializedName("custom")
+    CUSTOM("custom", "", "Custom");
 
-/**
- * Script run timing
- */
-enum class ScriptRunTime {
-    DOCUMENT_START, // Page开始加载时（DOM 未就绪）
-    DOCUMENT_END,   // DOM 就绪后（推荐）
-    DOCUMENT_IDLE   // Page完全加载后
-}
-
-/**
- * New window open behavior（window.open / target="_blank"）
- */
-enum class NewWindowBehavior {
-    SAME_WINDOW,    // 在当前窗口打开（默认）
-    EXTERNAL_BROWSER, // Open in external browser
-    POPUP_WINDOW,   // 弹出新窗口（需要处理）
-    BLOCK           // Block opening
-}
-
-/**
- * Splash screen configuration
- */
-data class SplashConfig(
-    val type: SplashType = SplashType.IMAGE,  // Class型：图片或视频
-    val mediaPath: String? = null,             // Media文件路径
-    val duration: Int = 3,                     // Image显示时长（秒，1-5秒）
-    val clickToSkip: Boolean = true,           // Yes否允许点击跳过
-    val orientation: SplashOrientation = SplashOrientation.PORTRAIT, // Show方向
-    val fillScreen: Boolean = true,            // Yes否自动放大铺满屏幕
-    val enableAudio: Boolean = false,          // Yes否启用视频音频
-    
-    // Video裁剪配置
-    val videoStartMs: Long = 0,                // Video裁剪起始时间（毫秒）
-    val videoEndMs: Long = 5000,               // Video裁剪结束时间（毫秒）
-    val videoDurationMs: Long = 0              // 原视频总时长（毫秒）
-)
-
-/**
- * 启动画面类型
- */
-enum class SplashType {
-    IMAGE,  // Image
-    VIDEO   // Video
-}
-
-/**
- * 启动画面显示方向
- */
-enum class SplashOrientation {
-    PORTRAIT,   // Portrait
-    LANDSCAPE   // Landscape
-}
-
-/**
- * 键盘调整模式 — 控制软键盘弹出时的页面行为
- *
- * - RESIZE: 页面自动调整大小，键盘会推起内容（确保输入框可见，可能有轻微卡顿）
- * - NOTHING: 键盘覆盖页面，不调整布局（更流畅，但可能遮挡输入框）
- */
-enum class KeyboardAdjustMode {
-    RESIZE,      // 页面调整大小（键盘推起内容）
-    NOTHING      // 键盘覆盖页面（无布局调整）
-}
-
-/**
- * 屏幕方向模式 — 用于 WebApp / 各类应用配置
- *
- * 支持七种模式：
- * - PORTRAIT: 锁定竖屏（正向）
- * - LANDSCAPE: 锁定横屏（正向）
- * - REVERSE_PORTRAIT: 锁定反向竖屏（倒置）
- * - REVERSE_LANDSCAPE: 锁定反向横屏
- * - SENSOR_PORTRAIT: 竖屏 + 重力感应（允许正向/反向竖屏切换）
- * - SENSOR_LANDSCAPE: 横屏 + 重力感应（允许正向/反向横屏切换）
- * - AUTO: 全方向自动旋转（跟随重力感应，平板友好）
- */
-enum class OrientationMode {
-    PORTRAIT,            // 锁定竖屏（正向）
-    LANDSCAPE,           // 锁定横屏（正向）
-    REVERSE_PORTRAIT,    // 锁定反向竖屏（倒置）
-    REVERSE_LANDSCAPE,   // 锁定反向横屏
-    SENSOR_PORTRAIT,     // 竖屏 + 重力感应（正向/反向竖屏自动切换）
-    SENSOR_LANDSCAPE,    // 横屏 + 重力感应（正向/反向横屏自动切换）
-    AUTO                 // 全方向自动旋转（重力感应）
-}
-
-/**
- * 屏幕常亮模式
- */
-enum class ScreenAwakeMode {
-    OFF,       // 关闭：跟随系统超时
-    ALWAYS,    // 始终常亮：适用于 code-server、数字相框等
-    TIMED      // 定时常亮：在指定时间后恢复系统超时（节省电量）
-}
-
-/**
- * 视口适配模式 — 控制 WebView 如何处理页面的视口缩放
- *
- * 问题背景：Unity WebGL 游戏、Canvas 应用等使用固定尺寸渲染，
- * Android WebView 默认的 DPI 缩放会导致内容放大，UI 元素被裁切到屏幕外。
- *
- * - DEFAULT: 标准行为，适合大多数网页
- * - FIT_SCREEN: 强制内容适配屏幕（注入 viewport meta + CSS 缩放），解决 Unity/Canvas 放大裁切问题
- * - DESKTOP: 桌面视口（980px 宽），适合桌面端网页
- * - CUSTOM: 用户自定义视口宽度
- */
-enum class ViewportMode {
-    DEFAULT,       // 标准模式（适合大多数网页）
-    FIT_SCREEN,    // 适配屏幕（强制缩放至可见范围，适合 Unity/Canvas/游戏）
-    DESKTOP,       // 桌面视口（980px 宽度，适合桌面端网页）
-    CUSTOM         // 自定义视口宽度
-}
-
-/**
- * Media app configuration（图片/视频转APP）- 兼容旧版单媒体模式
- */
-data class MediaConfig(
-    val mediaPath: String,                         // Media文件路径
-    val enableAudio: Boolean = true,               // Video是否启用音频
-    val loop: Boolean = true,                      // Yes否循环播放（视频）
-    val autoPlay: Boolean = true,                  // Yes否自动播放（视频）
-    val fillScreen: Boolean = true,                // Yes否铺满屏幕
-    val orientation: SplashOrientation = SplashOrientation.PORTRAIT, // Show方向
-    val backgroundColor: String = "#000000",       // 背景颜色
-    val keepScreenOn: Boolean = true               // 保持屏幕常亮
-)
-
-// ==================== 媒体画廊配置（新版多媒体支持）====================
-
-/**
- * Media gallery configuration - 支持多图片/视频、分类、排序、连续播放
- */
-@Stable
-data class GalleryConfig(
-    val items: List<GalleryItem> = emptyList(),                      // Media项列表
-    val categories: List<GalleryCategory> = emptyList(),             // 分类列表
-    val playMode: GalleryPlayMode = GalleryPlayMode.SEQUENTIAL,      // Play模式
-    val imageInterval: Int = 3,                                      // Image播放间隔（秒，1-60）
-    val loop: Boolean = true,                                        // Yes否循环播放
-    val autoPlay: Boolean = false,                                   // 进入后是否自动播放
-    val shuffleOnLoop: Boolean = false,                              // Loop时是否打乱顺序
-    val defaultView: GalleryViewMode = GalleryViewMode.GRID,         // Default视图模式
-    val gridColumns: Int = 3,                                        // 网格列数（2-5）
-    val sortOrder: GallerySortOrder = GallerySortOrder.CUSTOM,       // Sort方式
-    val backgroundColor: String = "#000000",                         // Play器背景颜色
-    val showThumbnailBar: Boolean = true,                            // Play时显示底部缩略图栏
-    val showMediaInfo: Boolean = true,                               // Show媒体信息（名称、索引等）
-    val orientation: SplashOrientation = SplashOrientation.PORTRAIT, // 屏幕方向
-    val enableAudio: Boolean = true,                                 // Video是否启用音频
-    val videoAutoNext: Boolean = true,                               // Video播放完自动下一个
-    val rememberPosition: Boolean = false                            // 记住上次播放位置
-) {
-    /**
-     * Get media items by category
-     */
-    fun getItemsByCategory(categoryId: String?): List<GalleryItem> {
-        return if (categoryId == null) {
-            items
-        } else {
-            items.filter { it.categoryId == categoryId }
+    companion object {
+        fun fromKey(key: String): DnsProvider {
+            return entries.find { it.key == key } ?: CLOUDFLARE
         }
     }
-    
-    /**
-     * Get sorted media items
-     */
+}
+
+/** DNS 配置 */
+data class DnsConfig(
+    /** DNS 提供商预设 */
+    val provider: String = "cloudflare",
+    /** 自定义 DoH URL（仅 provider=CUSTOM 时使用） */
+    val customDohUrl: String = "",
+    /** DoH 模式: off, automatic, strict (对应 Android WebView DoH 模式) */
+    val dohMode: String = "automatic",
+    /** 是否绕过系统 DNS（强制所有请求走 DoH） */
+    val bypassSystemDns: Boolean = false
+) {
+    /** 获取实际 DoH URL */
+    val effectiveDohUrl: String
+        get() = when (provider) {
+            "custom" -> customDohUrl
+            else -> DnsProvider.entries.find { it.key == provider }?.dohUrl ?: ""
+        }
+}
+
+data class UserScript(
+    val name: String = "",
+    val code: String = "",
+    val enabled: Boolean = true,
+    val runAt: ScriptRunTime = ScriptRunTime.DOCUMENT_END
+)
+
+/** Script run timing */
+enum class ScriptRunTime {
+    DOCUMENT_START,
+    DOCUMENT_END,
+    DOCUMENT_IDLE
+}
+
+/** window.open / target="_blank" behavior */
+enum class NewWindowBehavior {
+    SAME_WINDOW,
+    EXTERNAL_BROWSER,
+    POPUP_WINDOW,
+    BLOCK
+}
+
+data class SplashConfig(
+    val type: SplashType = SplashType.IMAGE,
+    val mediaPath: String? = null,
+    val duration: Int = 3,
+    val clickToSkip: Boolean = true,
+    val orientation: SplashOrientation = SplashOrientation.PORTRAIT,
+    val fillScreen: Boolean = true,
+    val enableAudio: Boolean = false,
+    val videoStartMs: Long = 0,
+    val videoEndMs: Long = 5000,
+    val videoDurationMs: Long = 0
+)
+
+enum class SplashType {
+    IMAGE,
+    VIDEO
+}
+
+enum class SplashOrientation {
+    PORTRAIT,
+    LANDSCAPE
+}
+
+enum class KeyboardAdjustMode {
+    RESIZE,
+    NOTHING
+}
+
+enum class OrientationMode {
+    PORTRAIT,
+    LANDSCAPE,
+    REVERSE_PORTRAIT,
+    REVERSE_LANDSCAPE,
+    SENSOR_PORTRAIT,
+    SENSOR_LANDSCAPE,
+    AUTO
+}
+
+enum class ScreenAwakeMode {
+    OFF,
+    ALWAYS,
+    TIMED
+}
+
+enum class ViewportMode {
+    DEFAULT,
+    FIT_SCREEN,
+    DESKTOP,
+    CUSTOM
+}
+
+/** Legacy single-media config (IMAGE/VIDEO) */
+data class MediaConfig(
+    val mediaPath: String,
+    val enableAudio: Boolean = true,
+    val loop: Boolean = true,
+    val autoPlay: Boolean = true,
+    val fillScreen: Boolean = true,
+    val orientation: SplashOrientation = SplashOrientation.PORTRAIT,
+    val backgroundColor: String = "#000000",
+    val keepScreenOn: Boolean = true
+)
+
+
+@Stable
+data class GalleryConfig(
+    val items: List<GalleryItem> = emptyList(),
+    val categories: List<GalleryCategory> = emptyList(),
+    val playMode: GalleryPlayMode = GalleryPlayMode.SEQUENTIAL,
+    val imageInterval: Int = 3,
+    val loop: Boolean = true,
+    val autoPlay: Boolean = false,
+    val shuffleOnLoop: Boolean = false,
+    val defaultView: GalleryViewMode = GalleryViewMode.GRID,
+    val gridColumns: Int = 3,
+    val sortOrder: GallerySortOrder = GallerySortOrder.CUSTOM,
+    val backgroundColor: String = "#000000",
+    val showThumbnailBar: Boolean = true,
+    val showMediaInfo: Boolean = true,
+    val orientation: SplashOrientation = SplashOrientation.PORTRAIT,
+    val enableAudio: Boolean = true,
+    val videoAutoNext: Boolean = true,
+    val rememberPosition: Boolean = false
+) {
+    fun getItemsByCategory(categoryId: String?): List<GalleryItem> {
+        return if (categoryId == null) items
+        else items.filter { it.categoryId == categoryId }
+    }
+
     fun getSortedItems(categoryId: String? = null): List<GalleryItem> {
         val filtered = getItemsByCategory(categoryId)
         return when (sortOrder) {
@@ -636,35 +513,26 @@ data class GalleryConfig(
             GallerySortOrder.TYPE -> filtered.sortedBy { it.type.ordinal }
         }
     }
-    
-    /**
-     * Statistics
-     */
+
     val imageCount: Int get() = items.count { it.type == GalleryItemType.IMAGE }
     val videoCount: Int get() = items.count { it.type == GalleryItemType.VIDEO }
     val totalCount: Int get() = items.size
 }
 
-/**
- * Gallery media item
- */
 data class GalleryItem(
     val id: String = java.util.UUID.randomUUID().toString(),
-    val path: String,                                // Media文件路径
-    val type: GalleryItemType,                       // Media类型
-    val name: String = "",                           // Show名称
-    val categoryId: String? = null,                  // 所属分类ID
-    val duration: Long = 0,                          // Video时长（毫秒）
-    val thumbnailPath: String? = null,               // 缩略图路径
-    val sortIndex: Int = 0,                          // 手动排序索引
-    val createdAt: Long = System.currentTimeMillis(),// 添加时间
-    val width: Int = 0,                              // Media宽度
-    val height: Int = 0,                             // Media高度
-    val fileSize: Long = 0                           // File大小（字节）
+    val path: String,
+    val type: GalleryItemType,
+    val name: String = "",
+    val categoryId: String? = null,
+    val duration: Long = 0,
+    val thumbnailPath: String? = null,
+    val sortIndex: Int = 0,
+    val createdAt: Long = System.currentTimeMillis(),
+    val width: Int = 0,
+    val height: Int = 0,
+    val fileSize: Long = 0
 ) {
-    /**
-     * 格式化的时长显示（视频）
-     */
     val formattedDuration: String
         get() {
             if (type != GalleryItemType.VIDEO || duration <= 0) return ""
@@ -677,240 +545,178 @@ data class GalleryItem(
                 String.format(java.util.Locale.getDefault(), "%d:%02d", minutes, seconds)
             }
         }
-    
-    /**
-     * 格式化的文件大小显示
-     * 复用 Extensions.kt 中的 Long.toFileSizeString()
-     */
+
     val formattedFileSize: String
         get() = if (fileSize <= 0) "" else fileSize.toFileSizeString()
 }
 
-/**
- * 画廊分类
- */
 data class GalleryCategory(
     val id: String = java.util.UUID.randomUUID().toString(),
-    val name: String,                                // 分类名称
-    val icon: String = "folder",                        // 分类图标（icon ID）
-    val color: String = "#6200EE",                   // 分类颜色
-    val sortIndex: Int = 0                           // Sort索引
+    val name: String,
+    val icon: String = "folder",
+    val color: String = "#6200EE",
+    val sortIndex: Int = 0
 )
 
-/**
- * 媒体项类型
- */
 enum class GalleryItemType {
-    IMAGE,  // Image
-    VIDEO   // Video
+    IMAGE,
+    VIDEO
 }
 
-/**
- * 画廊播放模式
- */
 enum class GalleryPlayMode {
-    SEQUENTIAL,   // Sequential播放
-    SHUFFLE,      // Shuffle播放
-    SINGLE_LOOP   // 单个循环
+    SEQUENTIAL,
+    SHUFFLE,
+    SINGLE_LOOP
 }
 
-/**
- * 画廊视图模式
- */
 enum class GalleryViewMode {
-    GRID,         // 网格视图
-    LIST,         // List视图
-    TIMELINE      // Time线视图
+    GRID,
+    LIST,
+    TIMELINE
 }
 
-/**
- * 画廊排序方式
- */
 enum class GallerySortOrder {
-    CUSTOM,       // Custom排序（手动拖拽）
-    NAME_ASC,     // Name升序
-    NAME_DESC,    // Name降序
-    DATE_ASC,     // Date升序（最早在前）
-    DATE_DESC,    // Date降序（最新在前）
-    TYPE          // 按类型分组（图片在前/视频在前）
+    CUSTOM,
+    NAME_ASC,
+    NAME_DESC,
+    DATE_ASC,
+    DATE_DESC,
+    TYPE
 }
 
-/**
- * Node.js 应用构建模式
- */
 enum class NodeJsBuildMode {
-    STATIC,         // 纯静态前端（dist 目录）
-    SSR,            // 服务端渲染（Next.js/Nuxt.js）
-    API_BACKEND,    // API 后端（Express/Fastify/Koa）
-    FULLSTACK       // 全栈应用（前端 + API）
+    STATIC,
+    SSR,
+    API_BACKEND,
+    FULLSTACK
 }
 
-/**
- * Node.js 应用配置（Node.js 后端项目转 APP）
- */
+/** Node.js backend project config */
 data class NodeJsConfig(
-    val projectId: String = "",                      // 项目ID
-    val projectName: String = "",                     // 项目名称
-    val sourceProjectPath: String = "",              // 源项目目录（用于后续自动同步新增/修改的文件）
-    val framework: String = "",                       // 框架名称（express, fastify, koa, nest 等）
-    val buildMode: NodeJsBuildMode = NodeJsBuildMode.API_BACKEND,  // 构建模式
-    val entryFile: String = "index.js",              // 入口文件（如 server.js, index.js, app.js）
-    val serverPort: Int = 0,                         // 服务器端口（0=自动分配）
-    val envVars: Map<String, String> = emptyMap(),   // 环境变量
-    val hasNodeModules: Boolean = false,             // 是否包含 node_modules
-    val nodeVersion: String = "",                    // Node.js 版本要求
-    val landscapeMode: Boolean = false               // 横屏模式
+    val projectId: String = "",
+    val projectName: String = "",
+    val sourceProjectPath: String = "",
+    val framework: String = "",
+    val buildMode: NodeJsBuildMode = NodeJsBuildMode.API_BACKEND,
+    val entryFile: String = "index.js",
+    val serverPort: Int = 0,
+    val envVars: Map<String, String> = emptyMap(),
+    val hasNodeModules: Boolean = false,
+    val nodeVersion: String = "",
+    val landscapeMode: Boolean = false
 )
 
-/**
- * WordPress 应用配置（离线 WordPress 站点转 APP）
- */
 data class WordPressConfig(
-    val projectId: String = "",                    // 项目ID（用于定位 WordPress 文件目录）
-    val siteTitle: String = "My Site",              // 站点标题
-    val adminUser: String = "admin",                // 管理员用户名
-    val adminEmail: String = "",                    // 管理员邮箱
-    val themeName: String = "",                     // 主题目录名
-    val plugins: List<String> = emptyList(),        // 已安装的插件列表
-    val phpPort: Int = 0,                           // PHP 服务器端口（0=自动分配）
-    val landscapeMode: Boolean = false              // 横屏模式
+    val projectId: String = "",
+    val siteTitle: String = "My Site",
+    val adminUser: String = "admin",
+    val adminEmail: String = "",
+    val themeName: String = "",
+    val plugins: List<String> = emptyList(),
+    val phpPort: Int = 0,
+    val landscapeMode: Boolean = false
 )
 
-/**
- * 通用 PHP 应用配置（Laravel/ThinkPHP/CodeIgniter 等转 APP）
- */
 data class PhpAppConfig(
-    val projectId: String = "",                      // 项目ID
-    val projectName: String = "",                     // 项目名称
-    val framework: String = "",                       // 框架名称（laravel, thinkphp, codeigniter, slim, raw）
-    val documentRoot: String = "",                    // 相对于项目根的 Web 根目录（如 public/）
-    val entryFile: String = "index.php",             // 入口文件
-    val phpPort: Int = 0,                            // PHP 服务器端口（0=自动分配）
-    val envVars: Map<String, String> = emptyMap(),   // 环境变量
-    val hasComposerJson: Boolean = false,            // 是否有 composer.json
-    val landscapeMode: Boolean = false               // 横屏模式
+    val projectId: String = "",
+    val projectName: String = "",
+    val framework: String = "",
+    val documentRoot: String = "",
+    val entryFile: String = "index.php",
+    val phpPort: Int = 0,
+    val envVars: Map<String, String> = emptyMap(),
+    val hasComposerJson: Boolean = false,
+    val landscapeMode: Boolean = false
 )
 
-/**
- * Python Web 应用配置（Flask/Django/FastAPI 等转 APP）
- */
 data class PythonAppConfig(
-    val projectId: String = "",                      // 项目ID
-    val projectName: String = "",                     // 项目名称
-    val framework: String = "",                       // 框架名称（flask, django, fastapi, tornado, raw）
-    val entryFile: String = "app.py",               // 入口文件
-    val entryModule: String = "",                    // WSGI/ASGI module（如 "myapp.wsgi:application"）
-    val serverType: String = "builtin",             // 服务器类型（builtin, gunicorn, uvicorn）
-    val serverPort: Int = 0,                         // 服务器端口（0=自动分配）
-    val envVars: Map<String, String> = emptyMap(),   // 环境变量
-    val pythonVersion: String = "",                  // Python 版本要求
-    val requirementsFile: String = "requirements.txt", // 依赖文件
-    val hasPipDeps: Boolean = false,                 // 是否有 pip 依赖
-    val landscapeMode: Boolean = false               // 横屏模式
+    val projectId: String = "",
+    val projectName: String = "",
+    val framework: String = "",
+    val entryFile: String = "app.py",
+    val entryModule: String = "",
+    val serverType: String = "builtin",
+    val serverPort: Int = 0,
+    val envVars: Map<String, String> = emptyMap(),
+    val pythonVersion: String = "",
+    val requirementsFile: String = "requirements.txt",
+    val hasPipDeps: Boolean = false,
+    val landscapeMode: Boolean = false
 )
 
-/**
- * Go Web 服务配置（Gin/Fiber/Echo 等转 APP）
- */
 data class GoAppConfig(
-    val projectId: String = "",                      // 项目ID
-    val projectName: String = "",                     // 项目名称
-    val framework: String = "",                       // 框架名称（gin, fiber, echo, chi, net_http, raw）
-    val binaryName: String = "",                     // 预编译二进制文件名
-    val serverPort: Int = 0,                         // 服务器端口（0=自动分配）
-    val envVars: Map<String, String> = emptyMap(),   // 环境变量
-    val staticDir: String = "",                      // 静态文件目录（如 static/, public/）
-    val hasBuildFromSource: Boolean = false,         // 是否从源码构建
-    val landscapeMode: Boolean = false               // 横屏模式
+    val projectId: String = "",
+    val projectName: String = "",
+    val framework: String = "",
+    val binaryName: String = "",
+    val serverPort: Int = 0,
+    val envVars: Map<String, String> = emptyMap(),
+    val staticDir: String = "",
+    val hasBuildFromSource: Boolean = false,
+    val landscapeMode: Boolean = false
 )
 
-/**
- * 多站点聚合应用配置（多链接合并为一个 APP）
- * 支持三种显示模式：Tabs（底部标签页）、Cards（卡片首页）、Feed（聚合信息流）
- */
 data class MultiWebConfig(
-    val sites: List<MultiWebSite> = emptyList(),      // 站点列表
-    val displayMode: String = "TABS",                  // 显示模式: TABS, CARDS, FEED, DRAWER
-    val refreshInterval: Int = 30,                     // 自动刷新间隔（分钟，仅 FEED 模式）
-    val showSiteIcons: Boolean = true,                 // 是否显示站点图标
-    val landscapeMode: Boolean = false                 // 横屏模式
+    val sites: List<MultiWebSite> = emptyList(),
+    val displayMode: String = "TABS", // TABS, CARDS, FEED, DRAWER
+    val refreshInterval: Int = 30,
+    val showSiteIcons: Boolean = true,
+    val landscapeMode: Boolean = false
 )
 
-/**
- * 多站点聚合中的单个站点配置
- */
 data class MultiWebSite(
-    val id: String = "",                               // 站点唯一ID
-    val name: String = "",                             // 站点名称
-    val url: String = "",                              // 站点URL
-    val iconEmoji: String = "",                        // 站点图标（Emoji）
-    val faviconUrl: String = "",                       // Favicon URL（自动获取）
-    val themeColor: String = "",                       // 主题色（自动获取）
-    val category: String = "",                         // 分类标签
-    val cssSelector: String = "",                      // CSS 选择器（Feed 模式用于提取文章）
-    val linkSelector: String = "",                     // 链接选择器（Feed 模式用于提取链接）
-    val enabled: Boolean = true,                       // 是否启用
-    val sortIndex: Int = 0                             // 排序索引（用于拖拽重排序）
+    val id: String = "",
+    val name: String = "",
+    val url: String = "",
+    val iconEmoji: String = "",
+    val faviconUrl: String = "",
+    val themeColor: String = "",
+    val category: String = "",
+    val cssSelector: String = "",
+    val linkSelector: String = "",
+    val enabled: Boolean = true,
+    val sortIndex: Int = 0
 )
 
-/**
- * HTML应用配置（本地HTML+CSS+JS转APP）
- */
 data class HtmlConfig(
-    val projectId: String = "",                    // 项目ID（用于定位文件目录）
-    val projectDir: String? = null,                // 项目目录路径（用于遍历嵌入）
-    val entryFile: String = "index.html",          // 入口HTML文件名
-    val files: List<HtmlFile> = emptyList(),       // 所有文件列表（HTML/CSS/JS等）
-    val enableJavaScript: Boolean = true,          // Yes否启用JavaScript
-    val enableLocalStorage: Boolean = true,        // Yes否启用本地存储
-    val allowFileAccess: Boolean = true,           // Yes否允许文件访问
-    val backgroundColor: String = "#FFFFFF",       // 背景颜色
-    val landscapeMode: Boolean = false             // Landscape模式
+    val projectId: String = "",
+    val projectDir: String? = null,
+    val entryFile: String = "index.html",
+    val files: List<HtmlFile> = emptyList(),
+    val enableJavaScript: Boolean = true,
+    val enableLocalStorage: Boolean = true,
+    val allowFileAccess: Boolean = true,
+    val backgroundColor: String = "#FFFFFF",
+    val landscapeMode: Boolean = false
 ) {
-    /**
-     * 获取有效的入口文件名
-     * 验证 entryFile 必须有文件名部分（不能只是 .html 或空字符串）
-     */
     fun getValidEntryFile(): String {
-        return entryFile.takeIf { 
-            it.isNotBlank() && it.substringBeforeLast(".").isNotBlank() 
+        return entryFile.takeIf {
+            it.isNotBlank() && it.substringBeforeLast(".").isNotBlank()
         } ?: "index.html"
     }
 }
 
-/**
- * HTML项目中的单个文件
- */
 data class HtmlFile(
-    val name: String,                              // File名（含相对路径，如 "css/style.css"）
-    val path: String,                              // Local绝对路径
-    val type: HtmlFileType = HtmlFileType.OTHER    // File类型
+    val name: String,
+    val path: String,
+    val type: HtmlFileType = HtmlFileType.OTHER
 )
 
-/**
- * HTML文件类型
- */
 enum class HtmlFileType {
-    HTML,   // HTML文件
-    CSS,    // CSS样式文件
-    JS,     // JavaScript文件
-    IMAGE,  // Image资源
-    FONT,   // 字体文件
-    OTHER   // 其他文件
+    HTML,
+    CSS,
+    JS,
+    IMAGE,
+    FONT,
+    OTHER
 }
 
-/**
- * 背景音乐播放模式
- */
 enum class BgmPlayMode {
-    LOOP,       // 单曲循环
-    SEQUENTIAL, // Sequential播放
-    SHUFFLE     // Shuffle播放
+    LOOP,
+    SEQUENTIAL,
+    SHUFFLE
 }
 
-/**
- * 音乐标签 - 用于分类
- */
 enum class BgmTag {
     PURE_MUSIC,
     POP,
@@ -957,19 +763,13 @@ enum class BgmTag {
     }
 }
 
-/**
- * LRC 字幕元素
- */
 data class LrcLine(
-    val startTime: Long,    // Start时间（毫秒）
-    val endTime: Long,      // End时间（毫秒）
-    val text: String,       // Lyrics文本
-    val translation: String? = null  // 翻译（可选）
+    val startTime: Long,
+    val endTime: Long,
+    val text: String,
+    val translation: String? = null
 )
 
-/**
- * LRC 字幕数据
- */
 data class LrcData(
     val lines: List<LrcLine> = emptyList(),
     val title: String? = null,
@@ -978,9 +778,6 @@ data class LrcData(
     val language: String? = null
 )
 
-/**
- * 字幕主题样式
- */
 data class LrcTheme(
     val id: String,
     val name: String,
@@ -997,9 +794,6 @@ data class LrcTheme(
     val showTranslation: Boolean = true
 )
 
-/**
- * 字幕动画类型
- */
 enum class LrcAnimationType {
     NONE, FADE, SLIDE_UP, SLIDE_LEFT, SCALE, TYPEWRITER, KARAOKE;
     
@@ -1014,9 +808,6 @@ enum class LrcAnimationType {
     }
 }
 
-/**
- * 字幕位置
- */
 enum class LrcPosition {
     TOP, CENTER, BOTTOM;
     
@@ -1027,37 +818,28 @@ enum class LrcPosition {
     }
 }
 
-/**
- * 背景音乐项
- */
 data class BgmItem(
-    val id: String = java.util.UUID.randomUUID().toString(),  // 唯一ID
-    val name: String,           // 音乐名称
-    val path: String,           // 音乐文件路径
-    val coverPath: String? = null, // 封面图片路径（可选）
-    val isAsset: Boolean = false,  // Yes否为预置资源
-    val tags: List<BgmTag> = emptyList(),  // 标签
-    val sortOrder: Int = 0,     // Sort顺序
-    val lrcData: LrcData? = null,  // LRC 字幕数据
-    val lrcPath: String? = null,   // LRC 文件路径
-    val duration: Long = 0      // 音乐时长（毫秒）
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val name: String,
+    val path: String,
+    val coverPath: String? = null,
+    val isAsset: Boolean = false,
+    val tags: List<BgmTag> = emptyList(),
+    val sortOrder: Int = 0,
+    val lrcData: LrcData? = null,
+    val lrcPath: String? = null,
+    val duration: Long = 0
 )
 
-/**
- * 背景音乐配置
- */
 data class BgmConfig(
-    val playlist: List<BgmItem> = emptyList(),  // Play列表
-    val playMode: BgmPlayMode = BgmPlayMode.LOOP, // Play模式
-    val volume: Float = 0.5f,                    // Volume (0.0-1.0)
-    val autoPlay: Boolean = true,                // Yes否自动播放
-    val showLyrics: Boolean = true,              // Yes否显示歌词
-    val lrcTheme: LrcTheme? = null               // 字幕主题
+    val playlist: List<BgmItem> = emptyList(),
+    val playMode: BgmPlayMode = BgmPlayMode.LOOP,
+    val volume: Float = 0.5f,
+    val autoPlay: Boolean = true,
+    val showLyrics: Boolean = true,
+    val lrcTheme: LrcTheme? = null
 )
 
-/**
- * APK 架构选择
- */
 enum class ApkArchitecture(
     val abiFilters: List<String>
 ) {
@@ -1084,29 +866,81 @@ enum class ApkArchitecture(
     }
 }
 
-/**
- * APK 导出配置（仅打包APK时生效）
- */
 data class ApkExportConfig(
-    val customPackageName: String? = null,       // Custom包名（如 com.example.myapp）
-    val customVersionName: String? = null,       // Custom版本名（如 1.0.0）
-    val customVersionCode: Int? = null,          // Custom版本号（如 1）
-    val architecture: ApkArchitecture = ApkArchitecture.UNIVERSAL,  // APK架构
-    val encryptionConfig: ApkEncryptionConfig = ApkEncryptionConfig(),  // Encryption配置
-    val hardeningConfig: AppHardeningConfig = AppHardeningConfig(),  // 软件加固配置
-    val isolationConfig: com.webtoapp.core.isolation.IsolationConfig = com.webtoapp.core.isolation.IsolationConfig(),  // 独立环境/多开配置
-    val backgroundRunEnabled: Boolean = false,   // Yes否启用后台运行
-    val backgroundRunConfig: BackgroundRunExportConfig = BackgroundRunExportConfig(),  // 后台运行配置
-    val engineType: String = "SYSTEM_WEBVIEW",   // 浏览器引擎类型: SYSTEM_WEBVIEW, GECKOVIEW
-    val deepLinkEnabled: Boolean = false,         // 是否启用Deep Link（链接打开）
-    val customDeepLinkHosts: List<String> = emptyList(), // 用户自定义的额外 Deep Link 域名
-    val performanceOptimization: Boolean = false,  // 性能优化（资源压缩/构建加速/加载提速）
-    val performanceConfig: PerformanceOptimizationConfig = PerformanceOptimizationConfig()  // 性能优化详细配置
+    val customPackageName: String? = null,
+    val customVersionName: String? = null,
+    val customVersionCode: Int? = null,
+    val architecture: ApkArchitecture = ApkArchitecture.UNIVERSAL,
+    val runtimePermissions: ApkRuntimePermissions = ApkRuntimePermissions(),
+    val encryptionConfig: ApkEncryptionConfig = ApkEncryptionConfig(),
+    val hardeningConfig: AppHardeningConfig = AppHardeningConfig(),
+    val isolationConfig: com.webtoapp.core.isolation.IsolationConfig = com.webtoapp.core.isolation.IsolationConfig(),
+    val backgroundRunEnabled: Boolean = false,
+    val backgroundRunConfig: BackgroundRunExportConfig = BackgroundRunExportConfig(),
+    val engineType: String = "SYSTEM_WEBVIEW", // SYSTEM_WEBVIEW, GECKOVIEW
+    val deepLinkEnabled: Boolean = false,
+    val customDeepLinkHosts: List<String> = emptyList(),
+    val performanceOptimization: Boolean = false,
+    val performanceConfig: PerformanceOptimizationConfig = PerformanceOptimizationConfig(),
+    val notificationEnabled: Boolean = false,
+    val notificationConfig: NotificationExportConfig = NotificationExportConfig()
 )
 
-/**
- * 性能优化配置
- */
+data class ApkRuntimePermissions(
+    // ── 基础权限 (Basic) ──
+    val camera: Boolean = false,
+    val microphone: Boolean = false,
+    val location: Boolean = false,
+    val notifications: Boolean = false,
+
+    // ── 存储权限 (Storage) ──
+    val readExternalStorage: Boolean = false,
+    val writeExternalStorage: Boolean = false,
+    val readMediaImages: Boolean = false,
+    val readMediaVideo: Boolean = false,
+    val readMediaAudio: Boolean = false,
+
+    // ── 连接权限 (Connectivity) ──
+    val bluetooth: Boolean = false,
+    val nfc: Boolean = false,
+    val wifiState: Boolean = false,
+
+    // ── 传感器权限 (Sensors) ──
+    val bodySensors: Boolean = false,
+    val activityRecognition: Boolean = false,
+
+    // ── 系统权限 (System) ──
+    val readPhoneState: Boolean = false,
+    val callPhone: Boolean = false,
+    val readContacts: Boolean = false,
+    val writeContacts: Boolean = false,
+    val readCalendar: Boolean = false,
+    val writeCalendar: Boolean = false,
+    val readSms: Boolean = false,
+    val sendSms: Boolean = false,
+    val receiveSms: Boolean = false,
+    val readCallLog: Boolean = false,
+    val writeCallLog: Boolean = false,
+    val processOutgoingCalls: Boolean = false,
+
+    // ── 后台/系统高级权限 (Background / Advanced System) ──
+    val foregroundService: Boolean = false,
+    val wakeLock: Boolean = false,
+    val requestIgnoreBatteryOptimizations: Boolean = false,
+    val bootCompleted: Boolean = false,
+    val vibration: Boolean = false,
+    val installPackages: Boolean = false,
+    val requestDeletePackages: Boolean = false,
+    val systemAlertWindow: Boolean = false
+)
+
+fun ApkExportConfig?.isMeaningful(): Boolean {
+    if (this == null) return false
+
+    val defaultConfig = ApkExportConfig()
+    return this != defaultConfig
+}
+
 data class PerformanceOptimizationConfig(
     val compressImages: Boolean = true,
     val imageQuality: Int = 80,
@@ -1141,36 +975,27 @@ data class PerformanceOptimizationConfig(
     }
 }
 
-/**
- * 后台运行导出配置
- */
 data class BackgroundRunExportConfig(
-    val notificationTitle: String = "",          // 通知标题
-    val notificationContent: String = "",        // 通知内容
-    val showNotification: Boolean = true,        // Yes否显示通知
-    val keepCpuAwake: Boolean = true             // Yes否保持CPU唤醒
+    val notificationTitle: String = "",
+    val notificationContent: String = "",
+    val showNotification: Boolean = true,
+    val keepCpuAwake: Boolean = true
 )
 
-/**
- * APK 加密配置
- */
 data class ApkEncryptionConfig(
-    val enabled: Boolean = false,                // Yes否启用加密
-    val encryptConfig: Boolean = true,           // Encryption配置文件
-    val encryptHtml: Boolean = true,             // Encryption HTML/CSS/JS
-    val encryptMedia: Boolean = false,           // Encryption媒体文件（图片/视频）
-    val encryptSplash: Boolean = false,          // Encryption启动画面
-    val encryptBgm: Boolean = false,             // Encryption背景音乐
-    val customPassword: String? = null,          // Custom密码（可选，增强安全性）
-    val enableIntegrityCheck: Boolean = true,    // Enable完整性检查
-    val enableAntiDebug: Boolean = true,         // Enable反调试保护
-    val enableAntiTamper: Boolean = true,        // Enable防篡改保护
-    val obfuscateStrings: Boolean = false,       // 混淆字符串（实验性）
-    val encryptionLevel: EncryptionLevel = EncryptionLevel.STANDARD  // Encryption强度
+    val enabled: Boolean = false,
+    val encryptConfig: Boolean = true,
+    val encryptHtml: Boolean = true,
+    val encryptMedia: Boolean = false,
+    val encryptSplash: Boolean = false,
+    val encryptBgm: Boolean = false,
+    val customPassword: String? = null,
+    val enableIntegrityCheck: Boolean = true,
+    val enableAntiDebug: Boolean = true,
+    val enableAntiTamper: Boolean = true,
+    val obfuscateStrings: Boolean = false,
+    val encryptionLevel: EncryptionLevel = EncryptionLevel.STANDARD
 ) {
-    /**
-     * 加密强度级别
-     */
     enum class EncryptionLevel(val iterations: Int) {
         FAST(5000),
         STANDARD(10000),
@@ -1186,10 +1011,8 @@ data class ApkEncryptionConfig(
     }
     
     companion object {
-        /** 不加密 */
         val DISABLED = ApkEncryptionConfig(enabled = false)
-        
-        /** 基础加密（仅加密代码和配置） */
+
         val BASIC = ApkEncryptionConfig(
             enabled = true,
             encryptConfig = true,
@@ -1199,8 +1022,7 @@ data class ApkEncryptionConfig(
             enableAntiDebug = false,
             encryptionLevel = EncryptionLevel.STANDARD
         )
-        
-        /** 完全加密（加密所有资源） */
+
         val FULL = ApkEncryptionConfig(
             enabled = true,
             encryptConfig = true,
@@ -1213,8 +1035,7 @@ data class ApkEncryptionConfig(
             enableAntiTamper = true,
             encryptionLevel = EncryptionLevel.HIGH
         )
-        
-        /** 最高安全级别 */
+
         val MAXIMUM = ApkEncryptionConfig(
             enabled = true,
             encryptConfig = true,
@@ -1229,8 +1050,7 @@ data class ApkEncryptionConfig(
             encryptionLevel = EncryptionLevel.PARANOID
         )
     }
-    
-    /** 转换为内部加密配置 */
+
     fun toEncryptionConfig(): com.webtoapp.core.crypto.EncryptionConfig {
         return com.webtoapp.core.crypto.EncryptionConfig(
             enabled = enabled,
@@ -1258,10 +1078,7 @@ data class ApkEncryptionConfig(
     }
 }
 
-/**
- * 翻译目标语言 — 支持 20 种世界主要语言
- */
-enum class TranslateLanguage(val code: String, val displayName: String) {
+    enum class TranslateLanguage(val code: String, val displayName: String) {
     CHINESE("zh-CN", "中文（简体）"),
     CHINESE_TW("zh-TW", "中文（繁體）"),
     ENGLISH("en", "English"),
@@ -1284,126 +1101,97 @@ enum class TranslateLanguage(val code: String, val displayName: String) {
     POLISH("pl", "Polski")
 }
 
-/**
- * 翻译引擎 — 支持多引擎自动降级
- *
- * 优先级：GOOGLE → MYMEMORY → LIBRE → LINGVA
- */
 enum class TranslateEngine(val displayName: String) {
-    /** Google Translate API（默认，最稳定） */
     AUTO("自动选择"),
-    /** Google Translate */
     GOOGLE("Google Translate"),
-    /** MyMemory — 开源翻译记忆库 */
     MYMEMORY("MyMemory"),
-    /** LibreTranslate — 自托管开源翻译引擎 */
     LIBRE("LibreTranslate"),
-    /** Lingva — 开源 Google 前端代理 */
     LINGVA("Lingva Translate")
 }
 
-/**
- * 网页自动翻译配置
- */
 data class TranslateConfig(
-    val targetLanguage: TranslateLanguage = TranslateLanguage.CHINESE,  // 目标翻译语言
-    val showFloatingButton: Boolean = true,  // 是否显示翻译悬浮按钮
-    val preferredEngine: TranslateEngine = TranslateEngine.AUTO,  // 首选翻译引擎
-    val autoTranslateOnLoad: Boolean = true  // 页面加载完成后自动翻译
+    val targetLanguage: TranslateLanguage = TranslateLanguage.CHINESE,
+    val showFloatingButton: Boolean = true,
+    val preferredEngine: TranslateEngine = TranslateEngine.AUTO,
+    val autoTranslateOnLoad: Boolean = true
 )
 
-/**
- * WebApp 扩展函数 - 获取所有激活码（仅使用新字段）
- */
 fun WebApp.getAllActivationCodes(): List<com.webtoapp.core.activation.ActivationCode> {
     return activationCodeList
 }
 
-/**
- * WebApp 扩展函数 - 获取激活码字符串列表（从新字段序列化）
- */
 fun WebApp.getActivationCodeStrings(): List<String> {
     return activationCodeList.map { it.toJson() }
 }
 
-/**
- * 激活码对话框自定义文本配置
- */
 data class ActivationDialogConfig(
-    val title: String = "",       // 自定义标题（空=使用默认「激活应用」）
-    val subtitle: String = "",    // 自定义副标题（空=使用默认「请输入激活码以继续使用」）
-    val inputLabel: String = "",  // 自定义输入框标签（空=使用默认「激活码」）
-    val buttonText: String = ""   // 自定义按钮文字（空=使用默认「激活」）
+    val title: String = "",
+    val subtitle: String = "",
+    val inputLabel: String = "",
+    val buttonText: String = ""
 )
 
-/**
- * 软件加固配置
- * 独立于加密功能，提供企业级应用加固保护
- */
 data class AppHardeningConfig(
-    val enabled: Boolean = false,                    // 是否启用加固
-    val hardeningLevel: HardeningLevel = HardeningLevel.STANDARD,  // 加固等级
-    
-    // ==================== DEX 保护 ====================
-    val dexEncryption: Boolean = true,               // DEX 文件加密（壳保护）
-    val dexSplitting: Boolean = false,               // DEX 分片动态加载
-    val dexVmp: Boolean = false,                     // VMP 虚拟机保护（将关键代码转为自定义指令集）
-    val dexControlFlowFlattening: Boolean = false,   // 控制流平坦化
-    
-    // ==================== Native SO 保护 ====================
-    val soEncryption: Boolean = true,                // SO 文件 section 加密
-    val soElfObfuscation: Boolean = false,           // ELF 头混淆（抗 IDA 分析）
-    val soSymbolStrip: Boolean = true,               // 符号表剥离 + 假符号注入
-    val soAntiDump: Boolean = false,                 // 反内存 dump 保护
-    
-    // ==================== 反逆向工程 ====================
-    val antiDebugMultiLayer: Boolean = true,         // 多层反调试（ptrace/timing/signal/thread）
-    val antiFridaAdvanced: Boolean = true,           // 高级 Frida 检测（内存扫描/线程名/inline hook）
-    val antiXposedDeep: Boolean = true,              // 深度 Xposed/LSPosed 检测（ART hook 检测）
-    val antiMagiskDetect: Boolean = false,           // Magisk/Shamiko 隐藏检测
-    val antiMemoryDump: Boolean = false,             // 反内存 dump（mprotect + inotify）
-    val antiScreenCapture: Boolean = false,          // 反截屏/录屏保护（FLAG_SECURE）
-    
-    // ==================== 环境检测 ====================
-    val detectEmulatorAdvanced: Boolean = false,     // 高级模拟器检测（硬件指纹/传感器/温度）
-    val detectVirtualApp: Boolean = true,            // 虚拟化环境检测（VirtualXposed/太极/Parallel Space）
-    val detectUSBDebugging: Boolean = false,         // USB 调试状态检测
-    val detectVPN: Boolean = false,                  // VPN/代理检测
-    val detectDeveloperOptions: Boolean = false,     // 开发者选项检测
-    
-    // ==================== 代码混淆 ====================
-    val stringEncryption: Boolean = true,            // 字符串加密（多层编码：AES + Base64 + XOR）
-    val classNameObfuscation: Boolean = false,       // 类名混淆（重命名为无意义字符）
-    val callIndirection: Boolean = false,            // 方法调用间接化（反射 + 动态代理）
-    val opaquePredicates: Boolean = false,           // 不透明谓词注入（干扰静态分析）
-    
-    // ==================== 运行时自保护 (RASP) ====================
-    val dexCrcVerify: Boolean = true,                // DEX CRC 自校验（检测运行时篡改）
-    val memoryIntegrity: Boolean = false,            // 内存完整性监控（关键数据区域）
-    val jniCallValidation: Boolean = false,          // JNI 调用链验证（防止伪造调用）
-    val timingCheck: Boolean = false,                // 时序检测（反加速/减速攻击）
-    val stackTraceFilter: Boolean = true,            // 堆栈轨迹清洗（隐藏内部实现）
-    
-    // ==================== 防篡改 ====================
-    val multiPointSignatureVerify: Boolean = true,   // 多点签名验证（Native + Java + 延迟）
-    val apkChecksumValidation: Boolean = true,       // APK 校验和验证（DEX + 资源 + Manifest）
-    val resourceIntegrity: Boolean = false,          // 资源文件完整性校验
-    val certificatePinning: Boolean = false,         // 证书锁定（防中间人攻击）
-    
-    // ==================== 威胁响应策略 ====================
-    val responseStrategy: ThreatResponse = ThreatResponse.SILENT_EXIT,  // 检测到威胁时的响应
-    val responseDelay: Int = 0,                      // 响应延迟（秒，0=立即；延迟退出更隐蔽）
-    val enableHoneypot: Boolean = false,             // 蜜罐陷阱（注入假数据迷惑逆向者）
-    val enableSelfDestruct: Boolean = false          // 自毁机制（严重威胁时清除敏感数据）
+    val enabled: Boolean = false,
+    val hardeningLevel: HardeningLevel = HardeningLevel.STANDARD,
+
+    // DEX Protection
+    val dexEncryption: Boolean = true,
+    val dexSplitting: Boolean = false,
+    val dexVmp: Boolean = false,
+    val dexControlFlowFlattening: Boolean = false,
+
+    // Native SO Protection
+    val soEncryption: Boolean = true,
+    val soElfObfuscation: Boolean = false,
+    val soSymbolStrip: Boolean = true,
+    val soAntiDump: Boolean = false,
+
+    // Anti-Reverse Engineering
+    val antiDebugMultiLayer: Boolean = true,
+    val antiFridaAdvanced: Boolean = true,
+    val antiXposedDeep: Boolean = true,
+    val antiMagiskDetect: Boolean = false,
+    val antiMemoryDump: Boolean = false,
+    val antiScreenCapture: Boolean = false,
+
+    // Environment Detection
+    val detectEmulatorAdvanced: Boolean = false,
+    val detectVirtualApp: Boolean = true,
+    val detectUSBDebugging: Boolean = false,
+    val detectVPN: Boolean = false,
+    val detectDeveloperOptions: Boolean = false,
+
+    // Code Obfuscation
+    val stringEncryption: Boolean = true,
+    val classNameObfuscation: Boolean = false,
+    val callIndirection: Boolean = false,
+    val opaquePredicates: Boolean = false,
+
+    // RASP (Runtime Self-Protection)
+    val dexCrcVerify: Boolean = true,
+    val memoryIntegrity: Boolean = false,
+    val jniCallValidation: Boolean = false,
+    val timingCheck: Boolean = false,
+    val stackTraceFilter: Boolean = true,
+
+    // Anti-Tamper
+    val multiPointSignatureVerify: Boolean = true,
+    val apkChecksumValidation: Boolean = true,
+    val resourceIntegrity: Boolean = false,
+    val certificatePinning: Boolean = false,
+
+    // Threat Response
+    val responseStrategy: ThreatResponse = ThreatResponse.SILENT_EXIT,
+    val responseDelay: Int = 0,
+    val enableHoneypot: Boolean = false,
+    val enableSelfDestruct: Boolean = false
 ) {
-    /**
-     * 加固等级
-     */
     enum class HardeningLevel {
-        BASIC,        // 基础加固：DEX 加密 + 反调试 + 签名校验
-        STANDARD,     // 标准加固：+ SO 保护 + 字符串加密 + 环境检测
-        ADVANCED,     // 高级加固：+ VMP + 控制流混淆 + RASP + 内存保护
-        FORTRESS;     // 堡垒级：全部开启，极致保护
+        BASIC,
+        STANDARD,
+        ADVANCED,
+        FORTRESS;
         
         val displayName: String get() = when (this) {
             BASIC -> com.webtoapp.core.i18n.Strings.hardeningLevelBasic
@@ -1420,15 +1208,12 @@ data class AppHardeningConfig(
         }
     }
     
-    /**
-     * 威胁响应策略
-     */
     enum class ThreatResponse {
-        LOG_ONLY,        // 仅记录日志（最宽松）
-        SILENT_EXIT,     // 静默退出（延迟随机时间后退出，不提示原因）
-        CRASH_RANDOM,    // 随机崩溃（伪装成正常 bug，迷惑攻击者）
-        DATA_WIPE,       // 数据擦除（清除应用内敏感数据后退出）
-        FAKE_DATA;       // 假数据注入（返回伪造数据，蜜罐模式）
+        LOG_ONLY,
+        SILENT_EXIT,
+        CRASH_RANDOM,
+        DATA_WIPE,
+        FAKE_DATA;
         
         val displayName: String get() = when (this) {
             LOG_ONLY -> com.webtoapp.core.i18n.Strings.threatResponseLogOnly
@@ -1555,9 +1340,6 @@ data class AppHardeningConfig(
     }
 }
 
-/**
- * 自启动配置
- */
 data class AutoStartConfig(
     val bootStartEnabled: Boolean = false,      // 开机自启动
     val scheduledStartEnabled: Boolean = false, // 定时自启动
@@ -1568,59 +1350,32 @@ data class AutoStartConfig(
 )
 
 /**
- * 云 SDK 应用配置 — 关联云项目后嵌入导出的 APK
- *
- * 用户在创建/编辑应用时选择一个云项目来关联，
- * 构建 APK 时会把此配置转换为 CloudSdkConfig 写入 app_config.json，
- * 导出的 APP 启动时 CloudSdkManager 会读取配置并初始化：
- * - 更新检查 → 弹出更新对话框
- * - 公告展示 → 弹出公告对话框
- * - 远程配置 → 缓存到 SharedPreferences
- * - 激活码验证 → 在线验证
- * - 统计上报 → 设备/使用/崩溃数据
- * - FCM 推送 → 实时推送（Ultra 专属）
+ * Cloud SDK config — links a cloud project to the exported APK for updates, announcements, remote config, etc.
  */
 data class CloudAppConfig(
-    /** 是否启用云 SDK */
     val enabled: Boolean = false,
-    /** 关联的云项目 ID */
     val projectId: Int = 0,
-    /** 云项目 Key（UUID） */
     val projectKey: String = "",
-    /** 云项目名称（用于 UI 显示） */
     val projectName: String = "",
-    
-    // ─── 功能开关 ───
-    /** 启用更新检查 */
+
+    // ─── Feature toggles ───
     val updateCheckEnabled: Boolean = true,
-    /** 启用公告 */
     val announcementEnabled: Boolean = true,
-    /** 启用远程配置 */
     val remoteConfigEnabled: Boolean = true,
-    /** 启用在线激活码验证（替代离线激活码） */
+    /** Use online activation code verification (replaces offline codes) */
     val activationCodeEnabled: Boolean = false,
-    /** 启用统计上报 */
     val statsReportEnabled: Boolean = true,
-    /** 启用 FCM 推送 */
     val fcmPushEnabled: Boolean = false,
-    /** 启用远程脚本热更 */
+    /** Remote script hot-update */
     val remoteScriptEnabled: Boolean = false,
-    /** 启用崩溃上报 */
     val reportCrashes: Boolean = true,
-    
-    // ─── 更新配置 ───
-    /** 更新检查间隔（秒） */
+
     val updateCheckInterval: Int = 3600,
-    /** 支持强制更新 */
     val forceUpdateEnabled: Boolean = false,
-    
-    // ─── 统计配置 ───
-    /** 统计上报间隔（秒） */
+
     val statsReportInterval: Int = 3600
 ) {
-    /**
-     * 转换为 CloudSdkConfig（用于 APK 构建时嵌入）
-     */
+    /** Convert to CloudSdkConfig for APK build embedding */
     fun toCloudSdkConfig(): com.webtoapp.core.shell.CloudSdkConfig {
         return com.webtoapp.core.shell.CloudSdkConfig(
             enabled = enabled && projectKey.isNotBlank(),
@@ -1640,26 +1395,13 @@ data class CloudAppConfig(
     }
 }
 
-// ═══════════════════════════════════════════
-// Manifest 序列化 / 反序列化（云端同步用）
-// ═══════════════════════════════════════════
 
-/**
- * 将 WebApp 序列化为 Manifest JSON 字符串。
- * 用于云端同步、备份、跨设备迁移。
- */
 fun WebApp.toManifestJson(): String {
     return com.webtoapp.ui.data.converter.Converters.gson.toJson(this)
 }
 
-/**
- * Manifest 工具类
- */
 object ManifestUtils {
-    /**
-     * 从 Manifest JSON 字符串恢复 WebApp。
-     * 使用 mergeMissingDefaults 保证向前/向后兼容。
-     */
+    /** Restore WebApp from manifest JSON, merging missing defaults for forward/backward compatibility */
     fun fromManifestJson(json: String, overrideId: Long? = null): WebApp? {
         return try {
             val parsed = com.google.gson.JsonParser.parseString(json)
@@ -1678,3 +1420,25 @@ object ManifestUtils {
     }
 }
 
+enum class NotificationType(val key: String) {
+    @com.google.gson.annotations.SerializedName("none")
+    NONE("none"),
+    @com.google.gson.annotations.SerializedName("web_api")
+    WEB_API("web_api"),
+    @com.google.gson.annotations.SerializedName("polling")
+    POLLING("polling")
+}
+
+data class NotificationExportConfig(
+    val type: NotificationType = NotificationType.NONE,
+    /** 轮询通知 URL（仅 polling 类型） */
+    val pollUrl: String = "",
+    /** 轮询间隔（分钟），最小 5 分钟（仅 polling 类型） */
+    val pollIntervalMinutes: Int = 15,
+    /** 轮询请求方法（GET/POST） */
+    val pollMethod: String = "GET",
+    /** 轮询请求自定义 Headers（JSON 格式） */
+    val pollHeaders: String = "",
+    /** 通知点击后打开的 URL 路径（空则仅打开 app） */
+    val clickUrl: String = ""
+)

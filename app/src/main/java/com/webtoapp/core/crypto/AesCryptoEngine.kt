@@ -268,22 +268,45 @@ object AesCryptoEngine {
     }
     
     /**
-     * 从密码和包名派生密钥（用于 APK 加密）
+     * 从包名和签名派生密钥（用于 APK 加密）
      */
     fun deriveKeyFromPackage(packageName: String, signature: ByteArray): SecretKey {
-        return deriveKeyFromPackage(packageName, signature, CryptoConstants.PBKDF2_ITERATIONS)
+        return deriveKeyFromPackage(packageName, signature, CryptoConstants.PBKDF2_ITERATIONS, null)
     }
     
     /**
-     * 从密码和包名派生密钥（指定迭代次数）
+     * 从包名和签名派生密钥（指定迭代次数）
      */
     fun deriveKeyFromPackage(packageName: String, signature: ByteArray, iterations: Int): SecretKey {
-        // 组合包名和签名作为密码
-        val password = packageName + ":" + signature.toHexString()
+        return deriveKeyFromPackage(packageName, signature, iterations, null)
+    }
+    
+    /**
+     * 从包名、签名和可选自定义密码派生密钥
+     * SECURITY: customPassword 参与密钥派生，使无密码的逆向者无法重建密钥
+     */
+    fun deriveKeyFromPackage(
+        packageName: String, 
+        signature: ByteArray, 
+        iterations: Int, 
+        customPassword: String?
+    ): SecretKey {
+        // 组合包名、签名和自定义密码作为 PBKDF2 密码输入
+        // 当 customPassword 非空时，逆向者无法仅从 APK 内部信息重建密钥
+        val password = if (!customPassword.isNullOrBlank()) {
+            packageName + ":" + signature.toHexString() + ":" + customPassword
+        } else {
+            packageName + ":" + signature.toHexString()
+        }
         
-        // 使用固定盐 + 包名哈希 + 签名哈希，使盐不可仅从包名推导
-        val combinedInput = packageName.toByteArray() + signature
-        val salt = CryptoConstants.KEY_DERIVATION_SALT + combinedInput.sha256().copyOf(16)
+        // SECURITY: 盐值完全动态生成，不再使用硬编码 KEY_DERIVATION_SALT
+        // 从 packageName + signature + customPassword 派生，确保每个 APK 有唯一盐
+        val saltInput = if (!customPassword.isNullOrBlank()) {
+            packageName.toByteArray() + signature + customPassword.toByteArray()
+        } else {
+            packageName.toByteArray() + signature
+        }
+        val salt = saltInput.sha256().copyOf(32)  // 使用完整 32 字节 SHA-256 输出作为盐
         
         return deriveKey(password, salt, iterations)
     }

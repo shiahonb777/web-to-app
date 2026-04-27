@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.webtoapp.core.auth.AuthResult
 import com.webtoapp.core.cloud.*
+import com.webtoapp.core.i18n.Strings
 import com.webtoapp.core.logging.AppLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,7 +16,10 @@ import kotlinx.coroutines.launch
  *
  * 管理激活码兑换、设备管理、公告、项目等 UI 状态
  */
-class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
+class CloudViewModel(
+    private val cloudRepo: CloudRepository,
+    private val installedTracker: InstalledItemsTracker
+) : ViewModel() {
 
     // ─── 激活码 ───
 
@@ -184,7 +188,7 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
         viewModelScope.launch {
             when (val result = cloudRepo.createProject(name, description, githubRepo, giteeRepo)) {
                 is AuthResult.Success -> {
-                    _message.value = "项目创建成功"
+                    _message.value = Strings.projectCreatedSuccess
                     loadProjects()
                 }
                 is AuthResult.Error -> _message.value = result.message
@@ -211,17 +215,17 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
         _publishLoading.value = true
         _publishErrorReport.value = null
         viewModelScope.launch {
-            _message.value = "正在上传 APK 到服务器..."
+            _message.value = Strings.uploadingApkToServer
             when (val result = cloudRepo.publishVersion(
                 projectId, apkFile, versionCode, versionName, title, changelog, uploadTo
             )) {
                 is AuthResult.Success -> {
-                    _message.value = "版本发布成功！APK 已上传到 GitHub"
+                    _message.value = Strings.versionPublishSuccess
                     loadVersions(projectId)
                 }
                 is AuthResult.Error -> {
                     _publishErrorReport.value = buildPublishErrorReport(
-                        stage = "服务器上传",
+                        stage = Strings.serverUploadStage,
                         summary = result.message,
                         projectId = projectId,
                         apkFile = apkFile,
@@ -252,8 +256,8 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
             try {
                 if (uploadTo != "github") {
                     val report = buildPublishErrorReport(
-                        stage = "参数校验",
-                        summary = "直传模式仅支持 GitHub，当前目标为: $uploadTo",
+                        stage = Strings.paramValidationStage,
+                        summary = Strings.directUploadOnlyGithub.format(uploadTo),
                         projectId = projectId,
                         apkFile = apkFile,
                         versionCode = versionCode,
@@ -267,14 +271,14 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
                 }
 
                 // Step 1: Get temporary upload token from our server
-                _message.value = "正在获取上传令牌..."
+                _message.value = Strings.gettingUploadToken
                 val tokenResult = cloudRepo.requestUploadToken(
                     projectId, versionCode, versionName, title, changelog, apkFile.name
                 )
                 when (tokenResult) {
                     is AuthResult.Error -> {
                         _publishErrorReport.value = buildPublishErrorReport(
-                            stage = "获取上传令牌",
+                            stage = Strings.getUploadTokenStage,
                             summary = tokenResult.message,
                             projectId = projectId,
                             apkFile = apkFile,
@@ -290,7 +294,7 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
                         val uploadInfo = tokenResult.data
 
                         // Step 2: Upload APK directly to GitHub
-                        _message.value = "正在直传 APK 到 GitHub..."
+                        _message.value = Strings.directUploadingGithub
                         val uploadResult = cloudRepo.directUploadToGithub(
                             uploadInfo, apkFile
                         ) { progress ->
@@ -300,7 +304,7 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
                         when (uploadResult) {
                             is AuthResult.Error -> {
                                 _publishErrorReport.value = buildPublishErrorReport(
-                                    stage = "直传 GitHub",
+                                    stage = Strings.directGithubStage,
                                     summary = uploadResult.message,
                                     projectId = projectId,
                                     apkFile = apkFile,
@@ -315,7 +319,7 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
                                 val downloadUrl = uploadResult.data
 
                                 // Step 3: Confirm to our server
-                                _message.value = "正在确认版本..."
+                                _message.value = Strings.confirmingVersion
                                 val confirmResult = cloudRepo.confirmDirectUpload(
                                     projectId, versionCode, versionName, title, changelog,
                                     downloadUrl, apkFile.length()
@@ -323,13 +327,13 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
 
                                 when (confirmResult) {
                                     is AuthResult.Success -> {
-                                        _message.value = "✅ 版本发布成功！APK 已直传到 GitHub"
+                                        _message.value = Strings.versionPublishDirectSuccess
                                         loadVersions(projectId)
                                     }
                                     is AuthResult.Error -> {
-                                        val summary = "APK 已上传但服务端记录失败: ${confirmResult.message}"
+                                        val summary = Strings.apkUploadedServerRecordFailed.format(confirmResult.message)
                                         _publishErrorReport.value = buildPublishErrorReport(
-                                            stage = "确认版本",
+                                            stage = Strings.confirmVersionStage,
                                             summary = summary,
                                             projectId = projectId,
                                             apkFile = apkFile,
@@ -345,9 +349,9 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
                     }
                 }
             } catch (e: Exception) {
-                val summary = "发布失败: ${e.message}"
+                val summary = Strings.publishFailedSummary.format(e.message)
                 _publishErrorReport.value = buildPublishErrorReport(
-                    stage = "未捕获异常",
+                    stage = Strings.uncaughtExceptionStage,
                     summary = summary,
                     projectId = projectId,
                     apkFile = apkFile,
@@ -395,7 +399,7 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
             append(AppLogger.getRecentLogTail())
         }
         return PublishErrorReport(
-            title = "发布失败",
+            title = Strings.publishFailedTitle,
             summary = summary,
             stage = stage,
             details = details
@@ -440,7 +444,7 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
         viewModelScope.launch {
             when (val result = cloudRepo.generateProjectCodes(projectId, count, maxUses, prefix)) {
                 is AuthResult.Success -> {
-                    _message.value = "生成了 ${result.data.size} 个激活码"
+                    _message.value = Strings.activationCodesGenerated.format(result.data.size)
                     loadProjectCodes(projectId) // 刷新列表
                 }
                 is AuthResult.Error -> _message.value = result.message
@@ -468,7 +472,7 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
         viewModelScope.launch {
             when (val result = cloudRepo.createProjectAnnouncement(projectId, title, content, priority)) {
                 is AuthResult.Success -> {
-                    _message.value = "公告已创建"
+                    _message.value = Strings.announcementCreated
                     loadProjectAnnouncements(projectId)
                 }
                 is AuthResult.Error -> _message.value = result.message
@@ -508,7 +512,7 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
         viewModelScope.launch {
             when (val result = cloudRepo.createProjectConfig(projectId, key, value, description)) {
                 is AuthResult.Success -> {
-                    _message.value = "配置已添加"
+                    _message.value = Strings.configAdded
                     loadProjectConfigs(projectId)
                 }
                 is AuthResult.Error -> _message.value = result.message
@@ -548,7 +552,7 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
         viewModelScope.launch {
             when (val result = cloudRepo.createWebhook(projectId, url, events, secret)) {
                 is AuthResult.Success -> {
-                    _message.value = "Webhook 已创建"
+                    _message.value = Strings.cloudWebhookCreated
                     loadWebhooks(projectId)
                 }
                 is AuthResult.Error -> _message.value = result.message
@@ -590,10 +594,10 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
     fun createBackup(projectId: Int, platform: String, zipFile: java.io.File) {
         _backupLoading.value = true
         viewModelScope.launch {
-            _message.value = "正在备份..."
+            _message.value = Strings.backingUp
             when (val result = cloudRepo.createBackup(projectId, platform, zipFile)) {
                 is AuthResult.Success -> {
-                    _message.value = if (result.data.status == "success") "备份成功" else "备份失败: ${result.data.status}"
+                    _message.value = if (result.data.status == "success") Strings.backupSuccess else Strings.backupFailed.format(result.data.status)
                     loadBackups(projectId)
                 }
                 is AuthResult.Error -> _message.value = result.message
@@ -617,13 +621,13 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
             when (val result = cloudRepo.uploadManifest(projectId, manifestJson, currentVersion)) {
                 is AuthResult.Success -> {
                     if (result.data.conflict) {
-                        _message.value = "同步冲突：云端有更新的版本，请先拉取"
+                        _message.value = Strings.syncConflict
                         _manifestSyncState.value = _manifestSyncState.value.copy(
                             syncing = false, hasConflict = true,
                             cloudVersion = result.data.manifestVersion
                         )
                     } else {
-                        _message.value = "Manifest 已同步到云端"
+                        _message.value = Strings.manifestSynced
                         _manifestSyncState.value = _manifestSyncState.value.copy(
                             syncing = false, hasConflict = false,
                             localVersion = result.data.manifestVersion,
@@ -689,6 +693,42 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
     private val _storeTotal = MutableStateFlow(0)
     val storeTotal: StateFlow<Int> = _storeTotal.asStateFlow()
 
+    private val _featuredModules = MutableStateFlow<List<StoreModuleInfo>>(emptyList())
+    val featuredModules: StateFlow<List<StoreModuleInfo>> = _featuredModules.asStateFlow()
+
+    // 可更新的模块 ID 集合（本地版本 < 远程版本）
+    private val _updatableModuleIds = MutableStateFlow<Set<Int>>(emptySet())
+    val updatableModuleIds: StateFlow<Set<Int>> = _updatableModuleIds.asStateFlow()
+
+    fun checkModuleUpdates() {
+        val installedIds = installedTracker.getInstalledIds().mapNotNull { it.toIntOrNull() }
+        if (installedIds.isEmpty()) return
+        viewModelScope.launch {
+            val updatable = mutableSetOf<Int>()
+            installedIds.forEach { id ->
+                val localCode = installedTracker.getInstalledVersionCode(id)
+                try {
+                    when (val result = cloudRepo.getStoreModuleById(id)) {
+                        is AuthResult.Success -> {
+                            if (result.data.versionCode > localCode) updatable.add(id)
+                        }
+                        else -> {}
+                    }
+                } catch (_: Exception) {}
+            }
+            _updatableModuleIds.value = updatable
+        }
+    }
+
+    fun loadFeaturedModules() {
+        viewModelScope.launch {
+            when (val result = cloudRepo.getFeaturedModules(page = 1, size = 10)) {
+                is AuthResult.Success -> _featuredModules.value = result.data
+                is AuthResult.Error -> {} // silent fail for featured
+            }
+        }
+    }
+
     fun loadStoreModules(category: String? = null, search: String? = null, sort: String = "downloads", order: String = "desc", page: Int = 1) {
         _storeLoading.value = true
         viewModelScope.launch {
@@ -705,7 +745,7 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
 
     fun publishModule(module: com.webtoapp.core.extension.ExtensionModule) {
         viewModelScope.launch {
-            _message.value = "发布中..."
+            _message.value = Strings.publishingModule
             val shareCode = module.toShareCode()
             when (val result = cloudRepo.publishModule(
                 name = module.name,
@@ -717,7 +757,7 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
                 versionCode = module.version.code,
                 shareCode = shareCode
             )) {
-                is AuthResult.Success -> _message.value = "模块已发布到市场"
+                is AuthResult.Success -> _message.value = Strings.modulePublishedToStore
                 is AuthResult.Error -> _message.value = result.message
             }
         }
@@ -757,7 +797,7 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
         viewModelScope.launch {
             when (val result = cloudRepo.createRemoteScript(projectId, name, code, description, runAt, urlPattern)) {
                 is AuthResult.Success -> {
-                    _message.value = "脚本已创建"
+                    _message.value = Strings.scriptCreated
                     loadRemoteScripts(projectId)
                 }
                 is AuthResult.Error -> _message.value = result.message
@@ -778,7 +818,7 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
         viewModelScope.launch {
             when (val result = cloudRepo.updateRemoteScript(projectId, scriptId, fields)) {
                 is AuthResult.Success -> {
-                    _message.value = "脚本已更新"
+                    _message.value = Strings.scriptUpdated
                     loadRemoteScripts(projectId)
                 }
                 is AuthResult.Error -> _message.value = result.message
@@ -790,7 +830,7 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
         viewModelScope.launch {
             when (val result = cloudRepo.deleteRemoteScript(projectId, scriptId)) {
                 is AuthResult.Success -> {
-                    _message.value = "脚本已删除"
+                    _message.value = Strings.scriptDeleted
                     loadRemoteScripts(projectId)
                 }
                 is AuthResult.Error -> _message.value = result.message
@@ -815,7 +855,7 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
             when (val result = cloudRepo.previewRedeemCode(code)) {
                 is AuthResult.Success -> {
                     _redeemPreview.value = result.data
-                    _previewState.value = FormState.Success("预览成功")
+                    _previewState.value = FormState.Success(Strings.previewSuccess)
                 }
                 is AuthResult.Error -> {
                     _previewState.value = FormState.Error(result.message)
@@ -838,7 +878,7 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
         viewModelScope.launch {
             when (val result = cloudRepo.updateProject(projectId, name, description, githubRepo, giteeRepo)) {
                 is AuthResult.Success -> {
-                    _message.value = "项目已更新"
+                    _message.value = Strings.projectUpdated
                     loadProjects()
                 }
                 is AuthResult.Error -> _message.value = result.message
@@ -854,10 +894,10 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
                           versionName: String, title: String? = null, changelog: String? = null) {
         _publishLoading.value = true
         viewModelScope.launch {
-            _message.value = "正在上传 APK 到 R2 云存储..."
+            _message.value = Strings.uploadingApkToR2
             when (val result = cloudRepo.publishVersionR2(projectId, apkFile, versionCode, versionName, title, changelog)) {
                 is AuthResult.Success -> {
-                    _message.value = "✅ 版本已发布到 R2 云存储 (CDN 加速)"
+                    _message.value = Strings.versionPublishedToR2
                     loadVersions(projectId)
                 }
                 is AuthResult.Error -> _message.value = result.message
@@ -885,7 +925,7 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
     fun sendPush(projectId: Int, title: String, body: String,
                  targetType: String = "all", targetUserIds: List<Int>? = null) {
         viewModelScope.launch {
-            _message.value = "正在发送推送..."
+            _message.value = Strings.sendingPush
             when (val result = cloudRepo.sendPushNotification(projectId, title, body, targetType, targetUserIds)) {
                 is AuthResult.Success -> {
                     _message.value = result.data
@@ -902,7 +942,7 @@ class CloudViewModel(private val cloudRepo: CloudRepository) : ViewModel() {
             result.onSuccess { response ->
                 _pushHistory.value = response.records
             }.onFailure { e ->
-                _message.value = e.message ?: "加载推送历史失败"
+                _message.value = e.message ?: Strings.pushHistoryLoadFailed
             }
         }
     }

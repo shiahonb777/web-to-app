@@ -56,8 +56,10 @@ target_link_libraries(
 )
 
 # crypto_engine 可以 strip 所有符号
+# ★ 16KB 页面大小对齐：Android 15+ 设备使用 16KB 页面大小，
+# ELF LOAD 段必须对齐到 16KB (16384) 边界，否则应用运行在兼容模式
 set_target_properties(crypto_engine PROPERTIES
-    LINK_FLAGS "-Wl,--gc-sections -Wl,--strip-all"
+    LINK_FLAGS "-Wl,--gc-sections -Wl,--strip-all -Wl,-z,max-page-size=16384"
 )
 
 # ==================== Optimized Crypto (优化版加密引擎) ====================
@@ -87,7 +89,7 @@ target_link_libraries(
 )
 
 set_target_properties(crypto_optimized PROPERTIES
-    LINK_FLAGS "-Wl,--gc-sections -Wl,--strip-all"
+    LINK_FLAGS "-Wl,--gc-sections -Wl,--strip-all -Wl,-z,max-page-size=16384"
 )
 
 
@@ -106,7 +108,7 @@ target_compile_options(node_bridge PRIVATE
 
 # node_bridge 只 gc-sections，不 strip（保留 JNI 导出符号）
 set_target_properties(node_bridge PROPERTIES
-    LINK_FLAGS "-Wl,--gc-sections"
+    LINK_FLAGS "-Wl,--gc-sections -Wl,-z,max-page-size=16384"
 )
 
 # ==================== Hardware Control (黑科技底层控制) ====================
@@ -139,7 +141,7 @@ target_link_libraries(
 
 # 只 gc-sections，保留 JNI 导出符号
 set_target_properties(hardware_control PROPERTIES
-    LINK_FLAGS "-Wl,--gc-sections"
+    LINK_FLAGS "-Wl,--gc-sections -Wl,-z,max-page-size=16384"
 )
 
 # ==================== APK Optimizer (APK 体积优化引擎) ====================
@@ -177,7 +179,7 @@ target_link_libraries(
 
 # LTO + gc-sections + strip (优化器自身也要小)
 set_target_properties(apk_optimizer PROPERTIES
-    LINK_FLAGS "-Wl,--gc-sections -Wl,--strip-all -flto"
+    LINK_FLAGS "-Wl,--gc-sections -Wl,--strip-all -flto -Wl,-z,max-page-size=16384"
 )
 
 # ==================== Performance Engine (极致性能优化引擎) ====================
@@ -207,7 +209,7 @@ target_link_libraries(
 )
 
 set_target_properties(perf_engine PROPERTIES
-    LINK_FLAGS "-Wl,--gc-sections -Wl,--strip-all"
+    LINK_FLAGS "-Wl,--gc-sections -Wl,--strip-all -Wl,-z,max-page-size=16384"
 )
 
 # ==================== System Optimizer (系统层极致性能优化) ====================
@@ -237,7 +239,7 @@ target_link_libraries(
 )
 
 set_target_properties(sys_optimizer PROPERTIES
-    LINK_FLAGS "-Wl,--gc-sections -Wl,--strip-all"
+    LINK_FLAGS "-Wl,--gc-sections -Wl,--strip-all -Wl,-z,max-page-size=16384"
 )
 
 # ==================== Browser Kernel (浏览器内核伪装引擎) ====================
@@ -267,5 +269,5 @@ target_link_libraries(
 )
 
 set_target_properties(browser_kernel PROPERTIES
-    LINK_FLAGS "-Wl,--gc-sections -Wl,--strip-all"
+    LINK_FLAGS "-Wl,--gc-sections -Wl,--strip-all -Wl,-z,max-page-size=16384"
 )

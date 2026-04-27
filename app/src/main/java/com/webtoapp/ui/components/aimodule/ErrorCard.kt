@@ -38,39 +38,39 @@ sealed class RecoveryAction(
     val description: String
 ) {
     object Retry : RecoveryAction(
-        title = "Retry",
+        title = Strings.retry,
         icon = Icons.Default.Refresh,
-        description = "重新尝试上一次操作"
+        description = Strings.errorRetryAction
     )
     
     object RetryWithDifferentModel : RecoveryAction(
-        title = "换个模型重试",
+        title = Strings.errorRetryDifferentModel,
         icon = Icons.Default.SwapHoriz,
-        description = "使用其他 AI 模型重试"
+        description = Strings.errorRetryDifferentModelDesc
     )
     
     object ShowRawResponse : RecoveryAction(
-        title = "查看原始响应",
+        title = Strings.errorShowRawResponse,
         icon = Icons.Default.Code,
-        description = "显示 AI 返回的原始内容"
+        description = Strings.errorShowRawResponseDesc
     )
     
     object GoToSettings : RecoveryAction(
-        title = "前往设置",
+        title = Strings.errorGoToSettings,
         icon = Icons.Default.Settings,
-        description = "检查 API Key 配置"
+        description = Strings.errorGoToSettingsDesc
     )
     
     object ManualEdit : RecoveryAction(
-        title = "手动编辑",
+        title = Strings.errorManualEdit,
         icon = Icons.Default.Edit,
-        description = "手动修改代码"
+        description = Strings.errorManualEditDesc
     )
     
     object Dismiss : RecoveryAction(
-        title = "Close",
+        title = Strings.close,
         icon = Icons.Default.Close,
-        description = "关闭错误提示"
+        description = Strings.errorDismiss
     )
 }
 
@@ -137,15 +137,15 @@ fun formatErrorMessage(error: ErrorInfo): String {
  */
 private fun getErrorTypeDescription(error: ErrorInfo): String {
     return when {
-        error.code == "401" || error.code == "403" -> "认证错误"
-        error.code == "429" -> "请求限流"
-        error.code == "500" || error.code == "502" || error.code == "503" -> "服务器错误"
-        error.code == "NETWORK_ERROR" -> "网络错误"
-        error.code == "PARSE_ERROR" -> "解析错误"
-        error.code == "TIMEOUT" -> "请求超时"
-        error.rawResponse != null -> "响应解析失败"
-        !error.recoverable -> "严重错误"
-        else -> "Operation failed"
+        error.code == "401" || error.code == "403" -> Strings.errorTypeAuth
+        error.code == "429" -> Strings.errorTypeRateLimit
+        error.code == "500" || error.code == "502" || error.code == "503" -> Strings.errorTypeServer
+        error.code == "NETWORK_ERROR" -> Strings.errorTypeNetwork
+        error.code == "PARSE_ERROR" -> Strings.errorTypeParse
+        error.code == "TIMEOUT" -> Strings.errorTypeTimeout
+        error.rawResponse != null -> Strings.errorTypeResponseParseFailed
+        !error.recoverable -> Strings.errorTypeSevere
+        else -> Strings.operationFailed
     }
 }
 
@@ -287,7 +287,7 @@ private fun ErrorHeader(error: ErrorInfo) {
             // Error码（如果有）
             if (error.code != null) {
                 Text(
-                    text = "错误码: ${error.code}",
+                    text = Strings.errorCodeLabel.format(error.code),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.7f)
                 )
@@ -301,7 +301,7 @@ private fun ErrorHeader(error: ErrorInfo) {
                 color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
             ) {
                 Text(
-                    text = "可恢复",
+                    text = Strings.errorRecoverable,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
@@ -554,13 +554,13 @@ fun OfflineIndicator(
             
             Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                 Text(
-                    text = "网络连接不可用",
+                    text = Strings.errorNetworkUnavailable,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = "请检查网络后重试",
+                    text = Strings.errorCheckNetworkRetry,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )
@@ -623,13 +623,13 @@ fun RateLimitIndicator(
             
             Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                 Text(
-                    text = "请求过于频繁",
+                    text = Strings.errorRequestTooFrequent,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onTertiaryContainer
                 )
                 Text(
-                    text = if (remainingSeconds > 0) "${remainingSeconds}秒后自动重试" else "正在重试...",
+                    text = if (remainingSeconds > 0) Strings.errorAutoRetryAfterSeconds.format(remainingSeconds) else Strings.errorRetrying,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
                 )

@@ -195,7 +195,8 @@ private fun TabsMode(
                                                 this, webViewConfig, webViewCallbacks,
                                                 config.extensionModuleIds, config.embeddedExtensionModules,
                                                 config.extensionFabIcon, allowGlobalModuleFallback = false,
-                                browserDisguiseConfig = config.browserDisguiseConfig
+                                browserDisguiseConfig = config.browserDisguiseConfig,
+                                deviceDisguiseConfig = config.deviceDisguiseConfig
                                             )
                                             var lastTouchX = 0f; var lastTouchY = 0f
                                             setOnTouchListener { view, event ->
@@ -304,7 +305,8 @@ private fun CardsMode(
                                 this, webViewConfig, webViewCallbacks,
                                 config.extensionModuleIds, config.embeddedExtensionModules,
                                 config.extensionFabIcon, allowGlobalModuleFallback = false,
-                                browserDisguiseConfig = config.browserDisguiseConfig
+                                browserDisguiseConfig = config.browserDisguiseConfig,
+                                deviceDisguiseConfig = config.deviceDisguiseConfig
                             )
                             var lastTouchX = 0f; var lastTouchY = 0f
                             setOnTouchListener { view, event ->
@@ -605,7 +607,8 @@ private fun FeedMode(
                                 this, webViewConfig, webViewCallbacks,
                                 config.extensionModuleIds, config.embeddedExtensionModules,
                                 config.extensionFabIcon, allowGlobalModuleFallback = false,
-                                browserDisguiseConfig = config.browserDisguiseConfig
+                                browserDisguiseConfig = config.browserDisguiseConfig,
+                                deviceDisguiseConfig = config.deviceDisguiseConfig
                             )
                             var lastTouchX = 0f; var lastTouchY = 0f
                             setOnTouchListener { view, event ->
@@ -953,7 +956,8 @@ private fun DrawerMode(
                                                     this, webViewConfig, webViewCallbacks,
                                                     config.extensionModuleIds, config.embeddedExtensionModules,
                                                     config.extensionFabIcon, allowGlobalModuleFallback = false,
-                                browserDisguiseConfig = config.browserDisguiseConfig
+                                browserDisguiseConfig = config.browserDisguiseConfig,
+                                deviceDisguiseConfig = config.deviceDisguiseConfig
                                                 )
                                                 var lastTouchX = 0f; var lastTouchY = 0f
                                                 setOnTouchListener { view, event ->

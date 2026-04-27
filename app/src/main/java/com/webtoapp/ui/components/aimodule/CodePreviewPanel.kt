@@ -1,6 +1,7 @@
 package com.webtoapp.ui.components.aimodule
 
 import androidx.compose.animation.*
+import com.webtoapp.core.i18n.Strings
 import com.webtoapp.ui.components.PremiumButton
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -237,7 +238,7 @@ private fun CodePreviewHeader(
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.ContentCopy,
-                        contentDescription = "复制",
+                        contentDescription = Strings.aiCopyCode,
                         tint = colors.text.copy(alpha = 0.7f),
                         modifier = Modifier.size(18.dp)
                     )
@@ -251,7 +252,7 @@ private fun CodePreviewHeader(
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.CheckCircle,
-                            contentDescription = "验证",
+                            contentDescription = Strings.aiVerifyCode,
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(18.dp)
                         )
@@ -271,7 +272,7 @@ private fun CodePreviewHeader(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        "保存",
+                        Strings.save,
                         style = MaterialTheme.typography.labelMedium
                     )
                 }
@@ -511,7 +512,7 @@ private fun CodePreviewFooter(
             )
             
             Text(
-                text = "$lineCount 行",
+                text = Strings.lineCount.format(lineCount),
                 style = MaterialTheme.typography.labelSmall,
                 color = colors.text.copy(alpha = 0.5f)
             )
@@ -751,7 +752,7 @@ fun SimpleCodePreview(
                     }
                     
                     Text(
-                        text = "${lines.size} 行",
+                        text = Strings.lineCount.format(lines.size),
                         style = MaterialTheme.typography.labelSmall,
                         color = colors.text.copy(alpha = 0.6f)
                     )
@@ -766,7 +767,7 @@ fun SimpleCodePreview(
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.ContentCopy,
-                        contentDescription = "复制",
+                        contentDescription = Strings.aiCopyCode,
                         tint = colors.text.copy(alpha = 0.7f),
                         modifier = Modifier.size(16.dp)
                     )

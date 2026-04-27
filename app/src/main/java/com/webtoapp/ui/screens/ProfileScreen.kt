@@ -56,7 +56,6 @@ fun ProfileScreen(
     onLogout: () -> Unit,
     onNavigateDevices: () -> Unit = {},
     onNavigateActivationCode: () -> Unit = {},
-    onNavigateTeams: () -> Unit = {},
     onNavigateSubscription: () -> Unit = {}
 ) {
     val authState by authViewModel.authState.collectAsStateWithLifecycle()
@@ -360,16 +359,9 @@ fun ProfileScreen(
                     )
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                     MenuItemRow(
-                        icon = Icons.Outlined.Groups,
-                        title = Strings.teamTitle,
-                        subtitle = if (user.isPro) "${Strings.teamMembers} · RBAC" else Strings.authMenuCloudUpgrade,
-                        onClick = onNavigateTeams
-                    )
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-                    MenuItemRow(
                         icon = Icons.Outlined.Lock,
-                        title = "修改密码",
-                        subtitle = "更新您的登录密码",
+                        title = stringResource(R.string.change_password),
+                        subtitle = stringResource(R.string.update_login_password),
                         onClick = { showChangePasswordDialog = true }
                     )
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
@@ -411,7 +403,7 @@ fun ProfileScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "在所有设备上登出",
+                    text = stringResource(R.string.logout_all_devices),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -473,9 +465,9 @@ fun ProfileScreen(
         if (showLogoutAllDialog) {
             AlertDialog(
                 onDismissRequest = { showLogoutAllDialog = false },
-                title = { Text("在所有设备上登出") },
+                title = { Text(stringResource(R.string.logout_all_confirm_title)) },
                 text = {
-                    Text("确定在所有设备上登出吗？所有设备都将需要重新登录。")
+                    Text(stringResource(R.string.logout_all_confirm_message))
                 },
                 confirmButton = {
                     TextButton(
@@ -488,7 +480,7 @@ fun ProfileScreen(
                             contentColor = MaterialTheme.colorScheme.error
                         )
                     ) {
-                        Text("全部登出")
+                        Text(stringResource(R.string.logout_all))
                     }
                 },
                 dismissButton = {
@@ -536,7 +528,7 @@ private fun ChangePasswordDialog(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Outlined.Lock, null, modifier = Modifier.size(22.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("修改密码")
+                Text(stringResource(R.string.change_password))
             }
         },
         text = {
@@ -544,7 +536,7 @@ private fun ChangePasswordDialog(
                 PremiumTextField(
                     value = currentPassword,
                     onValueChange = { currentPassword = it },
-                    label = { Text("当前密码") },
+                    label = { Text(stringResource(R.string.current_password)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
@@ -554,8 +546,8 @@ private fun ChangePasswordDialog(
                 PremiumTextField(
                     value = newPassword,
                     onValueChange = { newPassword = it },
-                    label = { Text("新密码") },
-                    supportingText = { Text("至少 6 位") },
+                    label = { Text(stringResource(R.string.new_password)) },
+                    supportingText = { Text(stringResource(R.string.password_min_length)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
@@ -565,7 +557,7 @@ private fun ChangePasswordDialog(
                 PremiumTextField(
                     value = confirmNewPassword,
                     onValueChange = { confirmNewPassword = it },
-                    label = { Text("确认新密码") },
+                    label = { Text(stringResource(R.string.confirm_new_password)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
@@ -589,7 +581,7 @@ private fun ChangePasswordDialog(
                     CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
                     Spacer(modifier = Modifier.width(8.dp))
                 }
-                Text("确认修改")
+                Text(stringResource(R.string.confirm_change))
             }
         },
         dismissButton = {
@@ -814,7 +806,7 @@ private fun ProStatusCard(proStatus: ProStatus?, user: UserProfile, onNavigateSu
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { /* TODO: 触发升级流程 */ }
+                        .clickable { onNavigateSubscription() }
                         .padding(horizontal = 20.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {

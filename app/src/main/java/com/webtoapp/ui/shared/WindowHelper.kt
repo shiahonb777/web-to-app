@@ -14,28 +14,8 @@ import androidx.core.view.WindowInsetsControllerCompat
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.data.model.KeyboardAdjustMode
 
-/**
- * Shared window/system-bar helper used by both WebViewActivity and ShellActivity.
- *
- * Centralises:
- * - Status-bar colour application
- * - Immersive fullscreen toggling
- * - Video custom-view show/hide
- * - Colour-luminance helper
- */
 object WindowHelper {
 
-    private const val DEFAULT_GESTURE_EXCLUSION_DP = 48
-    private const val MAX_GESTURE_EXCLUSION_DP = 200
-    private val gestureExclusionLayoutListeners = java.util.WeakHashMap<View, View.OnLayoutChangeListener>()
-
-    // ==================== Status Bar ====================
-
-    /**
-     * Apply status-bar colour based on [colorMode].
-     *
-     * @param colorMode "THEME", "TRANSPARENT", or "CUSTOM"
-     */
     fun applyStatusBarColor(
         activity: Activity,
         colorMode: String,
@@ -62,7 +42,6 @@ object WindowHelper {
                 controller.isAppearanceLightStatusBars = useDarkIcons
             }
             else -> {
-                // THEME mode
                 if (isDarkTheme) {
                     activity.window.statusBarColor = android.graphics.Color.parseColor("#1C1B1F")
                     controller.isAppearanceLightStatusBars = false
@@ -76,8 +55,6 @@ object WindowHelper {
         controller.isAppearanceLightNavigationBars = controller.isAppearanceLightStatusBars
     }
 
-    // ==================== Colour Helpers ====================
-
     fun isColorLight(color: Int): Boolean {
         val red = android.graphics.Color.red(color)
         val green = android.graphics.Color.green(color)
@@ -86,19 +63,10 @@ object WindowHelper {
         return luminance > 0.5
     }
 
-    // ==================== Immersive Fullscreen ====================
-
     /**
-     * Toggle immersive fullscreen.
-     *
-     * @param statusBarColorMode   Current colour mode string ("THEME"/"TRANSPARENT"/"CUSTOM")
-     * @param statusBarCustomColor Custom colour hex (used when mode is "CUSTOM")
-     * @param statusBarDarkIcons   Force dark icons, or null for auto
-     * @param statusBarBgType      "COLOR" or "IMAGE"
-     * @param showStatusBar        Whether to keep the status bar visible in fullscreen
-     * @param forceHideSystemUi    If true, hide both status bar and nav bar regardless of other settings
-     * @param keyboardAdjustMode   Keyboard adjust mode (RESIZE = push content up, NOTHING = overlay content)
-     *                              If null, uses legacy behavior: NOTHING when enabled, RESIZE when disabled
+     * @param keyboardAdjustMode RESIZE = push content up, NOTHING = overlay content.
+     * If null, uses legacy behavior: NOTHING when enabled, RESIZE when disabled.
+     * Android 11+ deprecated ADJUST_RESIZE; this method uses WindowInsets IME listener instead.
      */
     fun applyImmersiveFullscreen(
         activity: Activity,
@@ -112,7 +80,6 @@ object WindowHelper {
         statusBarDarkIcons: Boolean? = null,
         statusBarBgType: String = "COLOR",
         keyboardAdjustMode: KeyboardAdjustMode? = null,
-        blockSystemNavigationGesture: Boolean = false,
         tag: String = "WindowHelper"
     ) {
         try {
@@ -122,9 +89,6 @@ object WindowHelper {
                     WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
             }
 
-            // ★ 键盘模式处理
-            // Android 11+ 废弃了 ADJUST_RESIZE，且 enableEdgeToEdge() 使其失效
-            // 需要通过 WindowInsets 监听 IME 变化，手动调整内容视图的 padding
             applyKeyboardMode(activity, keyboardAdjustMode, tag)
 
             WindowInsetsControllerCompat(activity.window, activity.window.decorView).let { controller ->
@@ -179,10 +143,7 @@ object WindowHelper {
                         controller.systemBarsBehavior =
                             WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
                     } else {
-                        // User wants to keep navigation bar visible in fullscreen
                         controller.show(WindowInsetsCompat.Type.navigationBars())
-                        // Only apply transient swipe to status bars (if hidden),
-                        // keep nav bar permanently visible
                         controller.systemBarsBehavior =
                             WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
                     }
@@ -193,74 +154,14 @@ object WindowHelper {
                     applyStatusBarColor(activity, statusBarColorMode, statusBarCustomColor, statusBarDarkIcons, isDarkTheme)
                 }
             }
-
-            applySystemNavigationGestureBlocking(
-                activity = activity,
-                enabled = enabled && blockSystemNavigationGesture,
-                tag = tag
-            )
         } catch (e: Exception) {
             AppLogger.w(tag, "applyImmersiveFullscreen failed", e)
         }
     }
 
-    fun applySystemNavigationGestureBlocking(
-        activity: Activity,
-        enabled: Boolean,
-        tag: String = "WindowHelper"
-    ) {
-        try {
-            val contentView = activity.findViewById<View>(android.R.id.content) ?: return
-
-            gestureExclusionLayoutListeners.remove(contentView)?.let { listener ->
-                contentView.removeOnLayoutChangeListener(listener)
-            }
-
-            if (!enabled) {
-                ViewCompat.setSystemGestureExclusionRects(contentView, emptyList())
-                return
-            }
-
-            val listener = View.OnLayoutChangeListener { view, _, _, _, _, _, _, _, _ ->
-                updateSystemGestureExclusionRects(view)
-            }
-            gestureExclusionLayoutListeners[contentView] = listener
-            contentView.addOnLayoutChangeListener(listener)
-            contentView.post {
-                updateSystemGestureExclusionRects(contentView)
-                AppLogger.d(tag, "已应用系统导航手势屏蔽")
-            }
-        } catch (e: Exception) {
-            AppLogger.w(tag, "applySystemNavigationGestureBlocking failed", e)
-        }
-    }
-
-    private fun updateSystemGestureExclusionRects(view: View) {
-        if (view.width <= 0 || view.height <= 0) return
-
-        val density = view.resources.displayMetrics.density
-        val fallbackWidthPx = ((DEFAULT_GESTURE_EXCLUSION_DP * density) + 0.5f).toInt()
-        val maxAllowedPx = ((MAX_GESTURE_EXCLUSION_DP * density) + 0.5f).toInt()
-        val gestureInsets = ViewCompat.getRootWindowInsets(view)
-            ?.getInsets(WindowInsetsCompat.Type.systemGestures())
-
-        val leftWidth = (gestureInsets?.left ?: 0).coerceAtLeast(fallbackWidthPx).coerceAtMost(maxAllowedPx)
-        val rightWidth = (gestureInsets?.right ?: 0).coerceAtLeast(fallbackWidthPx).coerceAtMost(maxAllowedPx)
-
-        val exclusionRects = buildList {
-            if (leftWidth > 0) add(android.graphics.Rect(0, 0, leftWidth, view.height))
-            if (rightWidth > 0) add(android.graphics.Rect((view.width - rightWidth).coerceAtLeast(0), 0, view.width, view.height))
-        }
-
-        ViewCompat.setSystemGestureExclusionRects(view, exclusionRects)
-    }
-    
-    // ==================== Keyboard Handling ====================
-    
     /**
-     * 应用键盘调整模式（仅更新键盘行为，不触发全屏模式变更）
-     * 
-     * 这个方法可以在配置加载后独立调用，无需重新走完整的 applyImmersiveFullscreen 流程
+     * 仅更新键盘行为，不触发全屏模式变更。
+     * 可在配置加载后独立调用，无需重新走完整的 applyImmersiveFullscreen 流程。
      */
     fun applyKeyboardModeOnly(
         activity: Activity,
@@ -273,15 +174,12 @@ object WindowHelper {
             AppLogger.w(tag, "applyKeyboardModeOnly failed", e)
         }
     }
-    
+
     /**
-     * 内部方法：配置键盘弹出时的内容调整行为
-     * 
-     * Android 11+ (API 30) 废弃了 SOFT_INPUT_ADJUST_RESIZE，在使用 enableEdgeToEdge() 的应用中，
-     * 该标志完全不生效。需要使用 WindowInsets API 监听 IME（输入法）变化，手动调整视图 padding。
-     * 
-     * RESIZE 模式：监听 IME insets，键盘弹出时增加 decorView 的 bottomPadding → 内容被推上去
-     * NOTHING 模式：不监听 IME，键盘直接覆盖内容（适合游戏/视频等场景）
+     * 配置键盘弹出时的内容调整行为。
+     * RESIZE: 监听 IME insets，给 contentView 设置 bottom padding 推内容上去。
+     * NOTHING: 不监听 IME，键盘直接覆盖内容。
+     * 使用 contentView 而非 decorView 设置 padding，避免影响系统 insets 处理。
      */
     private fun applyKeyboardMode(
         activity: Activity,
@@ -290,22 +188,12 @@ object WindowHelper {
     ) {
         val decorView = activity.window.decorView
         val contentView = activity.findViewById<View>(android.R.id.content) ?: return
-        
-        // 确定目标模式
+
         val mode = keyboardAdjustMode ?: KeyboardAdjustMode.RESIZE
         
         when (mode) {
             KeyboardAdjustMode.RESIZE -> {
-                // RESIZE 模式：手动接管键盘弹出时的内容调整
-                // 
-                // 策略：
-                // 1. 设置 ADJUST_NOTHING 让系统不做任何布局调整
-                // 2. 通过 WindowInsets 监听 IME 高度变化
-                // 3. 在键盘弹出时给 contentView 设置 bottom padding = IME 高度
-                // 4. 注入 JS 滚动焦点输入框到可视区域
-                //
-                // 注意：使用 contentView 而非 decorView 设置 padding，
-                // 避免影响状态栏/导航栏的系统 insets 处理
+                // ADJUST_NOTHING + WindowInsets IME 监听，手动给 contentView 设置 bottom padding
                 @Suppress("DEPRECATION")
                 activity.window.setSoftInputMode(
                     WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING or

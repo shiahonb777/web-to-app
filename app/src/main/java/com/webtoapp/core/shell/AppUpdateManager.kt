@@ -13,6 +13,7 @@ import android.os.Build
 import android.os.Environment
 import androidx.core.app.NotificationCompat
 import androidx.core.content.FileProvider
+import com.webtoapp.core.i18n.Strings
 import com.webtoapp.core.logging.AppLogger
 import java.io.File
 
@@ -254,10 +255,10 @@ class AppUpdateManager(private val context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 NOTIFICATION_CHANNEL_ID,
-                "应用更新",
+                Strings.notifUpdateChannelName,
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "显示应用更新下载进度和安装通知"
+                description = Strings.notifUpdateChannelDesc
             }
             val notificationManager = context.getSystemService(NotificationManager::class.java)
             notificationManager?.createNotificationChannel(channel)
@@ -271,8 +272,8 @@ class AppUpdateManager(private val context: Context) {
         try {
             val notification = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.stat_notify_error)
-                .setContentTitle("更新下载失败")
-                .setContentText("请检查网络连接后重试")
+                .setContentTitle(Strings.notifUpdateDownloadFailed)
+                .setContentText(Strings.errorCheckNetworkRetry)
                 .setAutoCancel(true)
                 .build()
 

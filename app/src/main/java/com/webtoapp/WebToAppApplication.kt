@@ -33,6 +33,10 @@ import org.koin.android.ext.koin.androidLogger
 class WebToAppApplication : Application() {
     
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private var shellActivationManager: ActivationManager? = null
+    private var shellAnnouncementManager: AnnouncementManager? = null
+    private var shellAdBlocker: AdBlocker? = null
+    private var shellModeManagerLocal: ShellModeManager? = null
 
     // Koin-managed dependencies (lazy inject)
     val database: AppDatabase by inject()
@@ -53,20 +57,25 @@ class WebToAppApplication : Application() {
         }.onFailure {
             android.util.Log.w("WebToAppApplication", "enableSlowWholeDocumentDraw failed", it)
         }
+
+        try {
+            AppLogger.init(this)
+            AppLogger.system("Application", "onCreate started")
+        } catch (e: Exception) {
+            android.util.Log.e("WebToAppApplication", "AppLogger initialization failed", e)
+        }
+
+        if (BuildConfig.SHELL_RUNTIME_ONLY) {
+            initShellRuntime()
+            AppLogger.system("Application", "onCreate completed (shell)")
+            return
+        }
         
         // 初始化 Koin 依赖注入
         startKoin {
             androidLogger(Level.ERROR)
             androidContext(this@WebToAppApplication)
             modules(appModules)
-        }
-        
-        // 初始化运行日志系统（最先初始化，以便记录后续所有日志）
-        try {
-            AppLogger.init(this)
-            AppLogger.system("Application", "onCreate started")
-        } catch (e: Exception) {
-            android.util.Log.e("WebToAppApplication", "AppLogger initialization failed", e)
         }
         
         // Preload Shell mode check (catch possible initialization errors)
@@ -125,7 +134,9 @@ class WebToAppApplication : Application() {
         appScope.coroutineContext[kotlinx.coroutines.Job]?.cancel()
         
         // 断开 Billing 连接
-        try { billingManager.disconnect() } catch (_: Exception) {}
+        if (!BuildConfig.SHELL_RUNTIME_ONLY) {
+            try { billingManager.disconnect() } catch (_: Exception) {}
+        }
         
         // Cleanup all singleton resources
         cleanupSingletons()
@@ -187,6 +198,15 @@ class WebToAppApplication : Application() {
     private fun cleanupSingletons() {
         try {
             AppLogger.d("WebToAppApplication", "Cleaning up singleton resources...")
+
+            if (BuildConfig.SHELL_RUNTIME_ONLY) {
+                shellActivationManager = null
+                shellAnnouncementManager = null
+                shellAdBlocker = null
+                shellModeManagerLocal = null
+                AppLogger.i("WebToAppApplication", "Shell runtime resources cleaned up")
+                return
+            }
             
             // 销毁健康监控（释放协程资源）
             try {
@@ -275,6 +295,20 @@ class WebToAppApplication : Application() {
             }
         }
     }
+
+    private fun initShellRuntime() {
+        shellModeManagerLocal = ShellModeManager(this)
+        shellActivationManager = ActivationManager(this)
+        shellAnnouncementManager = AnnouncementManager(this)
+        shellAdBlocker = AdBlocker()
+
+        try {
+            val isShell = shellModeManagerLocal?.isShellMode() == true
+            AppLogger.i("WebToAppApplication", "Dedicated shell runtime initialized: shellMode=$isShell")
+        } catch (e: Exception) {
+            AppLogger.e("WebToAppApplication", "Shell runtime initialization failed", e)
+        }
+    }
     
     companion object {
         private const val KEY_HTTP_URL_MIGRATED = "legacy_http_url_migrated_v1"
@@ -296,18 +330,34 @@ class WebToAppApplication : Application() {
 
         @Deprecated("编辑器侧请使用 Koin 注入: val mgr: ActivationManager by inject()", ReplaceWith("org.koin.java.KoinJavaComponent.get(ActivationManager::class.java)"))
         val activation: ActivationManager
-            get() = instance.activationManager
+            get() = if (BuildConfig.SHELL_RUNTIME_ONLY) {
+                instance.shellActivationManager ?: error("Shell ActivationManager unavailable")
+            } else {
+                instance.activationManager
+            }
 
         @Deprecated("编辑器侧请使用 Koin 注入: val mgr: AnnouncementManager by inject()", ReplaceWith("org.koin.java.KoinJavaComponent.get(AnnouncementManager::class.java)"))
         val announcement: AnnouncementManager
-            get() = instance.announcementManager
+            get() = if (BuildConfig.SHELL_RUNTIME_ONLY) {
+                instance.shellAnnouncementManager ?: error("Shell AnnouncementManager unavailable")
+            } else {
+                instance.announcementManager
+            }
 
         @Deprecated("编辑器侧请使用 Koin 注入: val blocker: AdBlocker by inject()", ReplaceWith("org.koin.java.KoinJavaComponent.get(AdBlocker::class.java)"))
         val adBlock: AdBlocker
-            get() = instance.adBlocker
+            get() = if (BuildConfig.SHELL_RUNTIME_ONLY) {
+                instance.shellAdBlocker ?: error("Shell AdBlocker unavailable")
+            } else {
+                instance.adBlocker
+            }
 
         @Deprecated("编辑器侧请使用 Koin 注入: val mgr: ShellModeManager by inject()", ReplaceWith("org.koin.java.KoinJavaComponent.get(ShellModeManager::class.java)"))
         val shellMode: ShellModeManager
-            get() = instance.shellModeManager
+            get() = if (BuildConfig.SHELL_RUNTIME_ONLY) {
+                instance.shellModeManagerLocal ?: error("ShellModeManager unavailable")
+            } else {
+                instance.shellModeManager
+            }
     }
 }

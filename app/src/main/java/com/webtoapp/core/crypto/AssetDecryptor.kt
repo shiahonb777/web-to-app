@@ -23,10 +23,33 @@ class AssetDecryptor(private val context: Context) {
     private var cachedKey: SecretKey? = null
     @Volatile
     private var cachedMetadata: EncryptionMetadataRuntime? = null
+    // SECURITY: 自定义密码，由外部（如 ShellActivity）通过 setCustomPassword() 设置
+    // 不存储在 APK 中，使逆向者无法仅从 APK 内部信息重建密钥
+    @Volatile
+    private var customPassword: String? = null
+    
+    /**
+     * 设置自定义密码（用于密钥派生）
+     * 当 encryption_meta.json 中 usesCustomPassword=true 时必须调用此方法
+     * 设置后自动清除缓存的密钥以触发重新派生
+     */
+    fun setCustomPassword(password: String?) {
+        customPassword = password
+        cachedKey = null  // 清除缓存以触发使用新密码重新派生密钥
+    }
+    
+    /**
+     * 检查是否需要自定义密码才能解密
+     */
+    fun requiresCustomPassword(): Boolean {
+        val metadata = loadEncryptionMetadata()
+        return metadata?.usesCustomPassword == true && customPassword.isNullOrBlank()
+    }
     
     /**
      * 获取解密密钥
-     * 优先使用 encryption_meta.json 中存储的签名哈希
+     * SECURITY: 优先从 APK 签名直接读取（不再依赖 meta 文件中的明文签名哈希）
+     * 仅对旧版 APK（meta 中有 signatureHash）保持向后兼容
      */
     private fun getKey(): SecretKey {
         cachedKey?.let { return it }
@@ -35,21 +58,38 @@ class AssetDecryptor(private val context: Context) {
             cachedKey?.let { return it }
             
             val key = try {
-                // 尝试从元数据文件获取签名哈希
                 val metadata = loadEncryptionMetadata()
+                
+                // SECURITY: 当 usesCustomPassword=true 时，必须提供密码才能派生密钥
+                if (metadata?.usesCustomPassword == true && customPassword.isNullOrBlank()) {
+                    throw CryptoException("此 APK 使用自定义密码加密，需要先调用 setCustomPassword() 设置密码")
+                }
+                
+                // SECURITY: 新版 APK 的 meta 中 signatureHash 为空，直接从 APK 签名读取
+                // 旧版 APK 的 meta 中有 signatureHash，保持向后兼容
                 if (metadata != null && metadata.signatureHash.isNotBlank()) {
-                    AppLogger.d(TAG, "使用元数据中的签名哈希派生密钥")
+                    // 旧版 APK 兼容路径：使用 meta 中存储的签名哈希
+                    AppLogger.d(TAG, "旧版 APK 兼容：使用元数据中的签名哈希派生密钥")
                     val signatureHash = metadata.signatureHash.hexToByteArray()
                     if (signatureHash.isNotEmpty()) {
                         keyManager.generateKeyForPackage(metadata.packageName, signatureHash)
                     } else {
-                        AppLogger.w(TAG, "签名哈希转换失败，使用当前应用签名派生密钥")
                         keyManager.getAppKey()
                     }
                 } else {
-                    AppLogger.d(TAG, "元数据不存在，使用当前应用签名派生密钥")
-                    keyManager.getAppKey()
+                    // 新版 APK：运行时直接从 APK 签名读取，结合 customPassword 派生密钥
+                    val packageName = metadata?.packageName ?: context.packageName
+                    val signature = keyManager.getAppSignature()
+                    val encryptionLevel = try {
+                        EncryptionLevel.valueOf(metadata?.encryptionLevel ?: "STANDARD")
+                    } catch (e: Exception) {
+                        EncryptionLevel.STANDARD
+                    }
+                    AppLogger.d(TAG, "使用当前 APK 签名派生密钥 (hasCustomPassword=${!customPassword.isNullOrBlank()})")
+                    keyManager.generateKeyForPackage(packageName, signature, encryptionLevel, customPassword)
                 }
+            } catch (e: CryptoException) {
+                throw e
             } catch (e: Exception) {
                 AppLogger.e(TAG, "获取密钥失败，使用当前应用签名派生密钥", e)
                 keyManager.getAppKey()
@@ -307,6 +347,16 @@ data class EncryptionMetadataRuntime(
     @SerializedName("packageName")
     val packageName: String = "",
     
+    // SECURITY: signatureHash 不再明文存储，运行时从 APK 签名直接读取
+    // 保留字段以兼容旧版 APK（旧版有值则使用，新版为空则走运行时读取）
     @SerializedName("signatureHash")
-    val signatureHash: String = ""
+    val signatureHash: String = "",
+    
+    // 标记是否使用自定义密码参与密钥派生
+    @SerializedName("usesCustomPassword")
+    val usesCustomPassword: Boolean = false,
+    
+    // 加密级别（影响 PBKDF2 迭代次数）
+    @SerializedName("encryptionLevel")
+    val encryptionLevel: String = "STANDARD"
 )

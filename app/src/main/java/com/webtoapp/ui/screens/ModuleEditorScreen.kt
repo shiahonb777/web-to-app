@@ -106,7 +106,6 @@ fun ModuleEditorScreen(
     var showConfigItemDialog by remember { mutableStateOf(false) }
     var showIconPicker by remember { mutableStateOf(false) }
     var showTemplateDialog by remember { mutableStateOf(false) }
-    var showUiTypeDialog by remember { mutableStateOf(false) }
     
     val tabs = listOf(Strings.basicInfo, Strings.code, Strings.advancedSettings)
     
@@ -282,9 +281,7 @@ fun ModuleEditorScreen(
                     urlMatches = urlMatches,
                     onUrlMatchesClick = { showUrlMatchDialog = true },
                     configItems = configItems,
-                    onConfigItemsClick = { showConfigItemDialog = true },
-                    uiConfig = uiConfig,
-                    onUiTypeClick = { showUiTypeDialog = true }
+                    onConfigItemsClick = { showConfigItemDialog = true }
                 )
             }
         }
@@ -713,14 +710,6 @@ fun ModuleEditorScreen(
         )
     }
     
-    // UI 类型选择对话框
-    if (showUiTypeDialog) {
-        UiTypeSelectionDialog(
-            currentUiConfig = uiConfig,
-            onUiConfigChange = { uiConfig = it },
-            onDismiss = { showUiTypeDialog = false }
-        )
-    }
         }
 }
 
@@ -1244,8 +1233,6 @@ private fun AdvancedTab(
     onUrlMatchesClick: () -> Unit,
     configItems: List<ModuleConfigItem>,
     onConfigItemsClick: () -> Unit,
-    uiConfig: ModuleUiConfig,
-    onUiTypeClick: () -> Unit
 ) {
     // Helper composable for advanced option rows
     @Composable
@@ -1315,20 +1302,8 @@ private fun AdvancedTab(
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         val primaryColor = MaterialTheme.colorScheme.primary
-        val tertiaryColor = MaterialTheme.colorScheme.tertiary
         val secondaryColor = MaterialTheme.colorScheme.secondary
 
-        // UI 类型配置
-        AdvancedOptionCard(
-            title = Strings.uiTypeConfig,
-            subtitle = uiConfig.type.getDisplayName(),
-            icon = {
-                Icon(Icons.Default.Widgets, contentDescription = null, modifier = Modifier.size(20.dp), tint = tertiaryColor)
-            },
-            iconTint = tertiaryColor,
-            onClick = onUiTypeClick
-        )
-        
         // 运行模式
         AdvancedOptionCard(
             title = Strings.runModeLabel,
@@ -1982,280 +1957,3 @@ fun TemplateSelectionDialog(
     )
 }
 
-/**
- * UI 类型选择对话框
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun UiTypeSelectionDialog(
-    currentUiConfig: ModuleUiConfig,
-    onUiConfigChange: (ModuleUiConfig) -> Unit,
-    onDismiss: () -> Unit
-) {
-    var selectedType by remember { mutableStateOf(currentUiConfig.type) }
-    var position by remember { mutableStateOf(currentUiConfig.position) }
-    var draggable by remember { mutableStateOf(currentUiConfig.draggable) }
-    var toolbarOrientation by remember { mutableStateOf(currentUiConfig.toolbarOrientation) }
-    var sidebarPosition by remember { mutableStateOf(currentUiConfig.sidebarPosition) }
-    var showPositionSelector by remember { mutableStateOf(false) }
-    
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(Strings.uiTypeConfig) },
-        text = {
-            Column(
-                modifier = Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                // UI 类型选择
-                Text(
-                    Strings.selectUiType,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold
-                )
-                
-                ModuleUiType.values().forEach { uiType ->
-                    val isSelected = selectedType == uiType
-                    val tintColor = MaterialTheme.colorScheme.primary
-                    Surface(
-                        onClick = { selectedType = uiType },
-                        shape = RoundedCornerShape(14.dp),
-                        color = if (isSelected)
-                            tintColor.copy(alpha = 0.08f)
-                        else
-                            MaterialTheme.colorScheme.surfaceContainerLow
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(
-                                        Brush.linearGradient(
-                                            listOf(
-                                                tintColor.copy(alpha = if (isSelected) 0.15f else 0.10f),
-                                                tintColor.copy(alpha = if (isSelected) 0.06f else 0.03f)
-                                            )
-                                        )
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    com.webtoapp.util.SvgIconMapper.getIcon(uiType.getIcon()),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp),
-                                    tint = if (isSelected) tintColor
-                                        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                                )
-                            }
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    uiType.getDisplayName(),
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium
-                                )
-                                Text(
-                                    uiType.getDescription(),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                                )
-                            }
-                            if (isSelected) {
-                                Icon(
-                                    Icons.Default.Check,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp),
-                                    tint = tintColor
-                                )
-                            }
-                        }
-                    }
-                }
-                
-                // Hairline divider
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                        .height(0.5.dp)
-                        .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-                )
-                
-                // 通用配置
-                Text(
-                    Strings.commonConfig,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold
-                )
-                
-                // 位置选择
-                if (selectedType != ModuleUiType.SIDEBAR && selectedType != ModuleUiType.BOTTOM_BAR) {
-                    Surface(
-                        onClick = { showPositionSelector = !showPositionSelector },
-                        shape = RoundedCornerShape(14.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerLow
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    Strings.uiPosition,
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                                Text(
-                                    position.getDisplayName(),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                                )
-                            }
-                            Icon(
-                                if (showPositionSelector) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                            )
-                        }
-                    }
-                    
-                    if (showPositionSelector) {
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = MaterialTheme.colorScheme.surfaceContainerLow
-                        ) {
-                            Column(modifier = Modifier.padding(6.dp)) {
-                                UiPosition.values().forEach { pos ->
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clip(RoundedCornerShape(10.dp))
-                                            .clickable { 
-                                                position = pos
-                                                showPositionSelector = false
-                                            }
-                                            .then(
-                                                if (position == pos) Modifier.background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f))
-                                                else Modifier
-                                            )
-                                            .padding(horizontal = 10.dp, vertical = 10.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        RadioButton(
-                                            selected = position == pos,
-                                            onClick = { 
-                                                position = pos
-                                                showPositionSelector = false
-                                            }
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
-                                            pos.getDisplayName(),
-                                            style = MaterialTheme.typography.titleSmall,
-                                            fontWeight = if (position == pos) FontWeight.SemiBold else FontWeight.Medium
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                // 可拖动开关
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(Strings.draggableSwitch)
-                    PremiumSwitch(checked = draggable, onCheckedChange = { draggable = it })
-                }
-                
-                // Toolbar特定配置
-                if (selectedType == ModuleUiType.FLOATING_TOOLBAR) {
-                    Box(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).height(0.5.dp).background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)))
-                    Text(
-                        Strings.toolbarConfig,
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        PremiumFilterChip(
-                            selected = toolbarOrientation == ToolbarOrientation.HORIZONTAL,
-                            onClick = { toolbarOrientation = ToolbarOrientation.HORIZONTAL },
-                            label = { Text(ToolbarOrientation.HORIZONTAL.getDisplayName()) }
-                        )
-                        PremiumFilterChip(
-                            selected = toolbarOrientation == ToolbarOrientation.VERTICAL,
-                            onClick = { toolbarOrientation = ToolbarOrientation.VERTICAL },
-                            label = { Text(ToolbarOrientation.VERTICAL.getDisplayName()) }
-                        )
-                    }
-                }
-                
-                // 侧边栏特定配置
-                if (selectedType == ModuleUiType.SIDEBAR) {
-                    Box(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).height(0.5.dp).background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)))
-                    Text(
-                        Strings.sidebarConfig,
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        PremiumFilterChip(
-                            selected = sidebarPosition == SidebarPosition.LEFT,
-                            onClick = { sidebarPosition = SidebarPosition.LEFT },
-                            label = { Text(SidebarPosition.LEFT.getDisplayName()) }
-                        )
-                        PremiumFilterChip(
-                            selected = sidebarPosition == SidebarPosition.RIGHT,
-                            onClick = { sidebarPosition = SidebarPosition.RIGHT },
-                            label = { Text(SidebarPosition.RIGHT.getDisplayName()) }
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            PremiumButton(
-                onClick = {
-                    onUiConfigChange(
-                        currentUiConfig.copy(
-                            type = selectedType,
-                            position = position,
-                            draggable = draggable,
-                            toolbarOrientation = toolbarOrientation,
-                            sidebarPosition = sidebarPosition
-                        )
-                    )
-                    onDismiss()
-                }
-            ) {
-                Text(Strings.confirm)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(Strings.cancel)
-            }
-        }
-    )
-}

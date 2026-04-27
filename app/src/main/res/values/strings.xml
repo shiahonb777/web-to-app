@@ -705,4 +705,90 @@
     <!-- 模块导入消息 -->
     <string name="msg_import_success">模块 %s 导入成功</string>
     <string name="msg_import_failed">模块导入失败: %s</string>
+
+    <!-- 个人资料页面 -->
+    <string name="change_password">修改密码</string>
+    <string name="update_login_password">更新您的登录密码</string>
+    <string name="logout_all_devices">在所有设备上登出</string>
+    <string name="logout_all_confirm_title">在所有设备上登出</string>
+    <string name="logout_all_confirm_message">确定在所有设备上登出吗？所有设备都将需要重新登录。</string>
+    <string name="logout_all">全部登出</string>
+    <string name="current_password">当前密码</string>
+    <string name="new_password">新密码</string>
+    <string name="confirm_new_password">确认新密码</string>
+    <string name="password_min_length">至少 6 位</string>
+    <string name="confirm_change">确认修改</string>
+
+    <!-- 公告模板 -->
+    <string name="template_minimal">极简风</string>
+    <string name="template_minimal_desc">简洁克制的留白排版</string>
+    <string name="template_xiaohongshu">小红书风</string>
+    <string name="template_xiaohongshu_desc">鲜明活泼的社交卡片风格</string>
+    <string name="template_gradient">渐变风</string>
+    <string name="template_gradient_desc">柔和梦幻的渐变视觉层次</string>
+    <string name="template_glassmorphism">毛玻璃风</string>
+    <string name="template_glassmorphism_desc">通透模糊与悬浮质感</string>
+    <string name="template_neon">霓虹风</string>
+    <string name="template_neon_desc">高对比度的醒目提示效果</string>
+    <string name="template_cute">可爱风</string>
+    <string name="template_cute_desc">轻松俏皮的趣味表达</string>
+    <string name="template_elegant">优雅风</string>
+    <string name="template_elegant_desc">柔和细腻的高级感呈现</string>
+    <string name="template_festive">节日风</string>
+    <string name="template_festive_desc">热闹明快的庆典氛围</string>
+    <string name="template_dark">暗黑风</string>
+    <string name="template_dark_desc">深色高对比的信息聚焦</string>
+    <string name="template_nature">自然风</string>
+    <string name="template_nature_desc">舒缓清新的平衡表达</string>
+
+    <!-- AI 错误卡片 -->
+    <string name="retry_action">重新尝试上一次操作</string>
+    <string name="retry_different_model">换个模型重试</string>
+    <string name="retry_different_model_desc">使用其他 AI 模型重试</string>
+    <string name="show_raw_response">查看原始响应</string>
+    <string name="show_raw_response_desc">显示 AI 返回的原始内容</string>
+    <string name="go_to_settings">前往设置</string>
+    <string name="go_to_settings_desc">检查 API Key 配置</string>
+    <string name="manual_edit">手动编辑</string>
+    <string name="manual_edit_desc">手动修改代码</string>
+    <string name="dismiss_error">关闭错误提示</string>
+    <string name="error_auth">认证错误</string>
+    <string name="error_rate_limit">请求限流</string>
+    <string name="error_server">服务器错误</string>
+    <string name="error_network">网络错误</string>
+    <string name="error_parse">解析错误</string>
+    <string name="error_timeout">请求超时</string>
+    <string name="error_response_parse_failed">响应解析失败</string>
+    <string name="error_severe">严重错误</string>
+    <string name="error_code_label">错误码: %s</string>
+    <string name="recoverable">可恢复</string>
+    <string name="network_unavailable">网络连接不可用</string>
+    <string name="check_network_retry">请检查网络后重试</string>
+    <string name="request_too_frequent">请求过于频繁</string>
+    <string name="auto_retry_after_seconds">%d秒后自动重试</string>
+    <string name="retrying">正在重试...</string>
+
+    <!-- AI 模块开发 UI -->
+    <string name="you">你</string>
+    <string name="generating">生成中</string>
+    <string name="copy_code">复制</string>
+    <string name="verify_code">验证</string>
+    <string name="thinking_label">思考中...</string>
+
+    <!-- 关于页面 - 法律声明 -->
+    <string name="legal_disclaimer_content_1">本软件为开源技术研究与教育演示工具，所有功能均基于Android系统公开API实现，旨在展示移动应用开发技术。本软件不鼓励、不支持任何非法用途。</string>
+    <string name="legal_disclaimer_content_2">用户应确保在合法、正当的场景下使用本软件，包括但不限于：\n• 自我管理：用于个人专注力训练、学习时间管理\n• 企业展示：用于展会、商场等场景的展示终端\n• 家长监护：在未成年人知情同意下的合理使用\n• 教育研究：用于技术学习和安全研究\n\n严禁将本软件用于任何侵犯他人人身自由、隐私权、财产权等合法权益的行为。</string>
+    <string name="legal_disclaimer_content_3">本软件包含的「强制运行」及相关硬件控制功能（以下简称「高级功能」）属于技术演示性质：\n\n1. 【知情同意原则】高级功能仅应在设备所有者或使用者完全知情并明确同意的情况下启用\n\n2. 【自主控制原则】所有功能均提供紧急退出机制，用户可通过密码随时终止\n\n3. 【技术中立原则】功能本身不具有违法性，其合法性取决于使用者的具体使用方式和目的\n\n</string>
+
+    <!-- 关于页面 - 更新错误 -->
+    <string name="update_check_failed_title">检查更新失败</string>
+    <string name="update_check_manual_stage">手动检查更新</string>
+    <string name="update_check_request_failed">更新服务请求失败，已停止继续处理。</string>
+    <string name="update_check_uncaught_exception">更新检查过程发生未捕获异常，已停止继续处理。</string>
+    <string name="update_download_start_failed_title">更新下载启动失败</string>
+    <string name="update_download_start_stage">启动更新下载</string>
+    <string name="update_download_create_failed">系统下载任务创建失败，未继续执行安装流程。</string>
+    <string name="update_download_prepare_stage">准备更新下载</string>
+    <string name="update_download_no_link">更新响应缺少有效下载链接，未继续执行下载流程。</string>
+    <string name="no_exception_object">未返回异常对象</string>
 </resources>

@@ -3,6 +3,7 @@ package com.webtoapp.ui.screens.community
 import androidx.compose.animation.*
 import com.webtoapp.ui.components.PremiumButton
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -22,7 +23,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -58,6 +61,8 @@ fun ModuleDetailScreen(
     val loading by communityViewModel.moduleDetailLoading.collectAsStateWithLifecycle()
     val comments by communityViewModel.comments.collectAsStateWithLifecycle()
     val commentsLoading by communityViewModel.commentsLoading.collectAsStateWithLifecycle()
+    val ratingDistribution by communityViewModel.ratingDistribution.collectAsStateWithLifecycle()
+    val commentSort by communityViewModel.commentSortOrder.collectAsStateWithLifecycle()
     val message by communityViewModel.message.collectAsStateWithLifecycle()
     val failureReport by communityViewModel.moduleFailureReport.collectAsStateWithLifecycle()
 
@@ -65,9 +70,9 @@ fun ModuleDetailScreen(
     var commentText by remember { mutableStateOf("") }
     var showMoreSheet by remember { mutableStateOf(false) }
 
-    LaunchedEffect(moduleId) {
-        communityViewModel.loadModuleDetail(moduleId)
-        communityViewModel.loadComments(moduleId)
+    val resumeKey = rememberResumeKey()
+    LaunchedEffect(moduleId, resumeKey) {
+        communityViewModel.loadModuleDetailWithComments(moduleId)
     }
 
     LaunchedEffect(message) {
@@ -79,7 +84,7 @@ fun ModuleDetailScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text(Strings.communityPost, fontSize = 17.sp, fontWeight = FontWeight.Bold) },
+                title = { Text(Strings.moduleDetail, fontSize = 17.sp, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null, Modifier.size(22.dp))
@@ -229,19 +234,12 @@ fun ModuleDetailScreen(
                                     onClick = {}
                                 )
                                 PhysicsActionButton(
-                                    icon = Icons.Outlined.ThumbUp,
-                                    activeIcon = Icons.Filled.ThumbUp,
-                                    count = mod.rating.toInt(),
-                                    isActive = mod.userVote == "up",
-                                    activeColor = Color(0xFF4CAF50),
-                                    onClick = { communityViewModel.voteModule(moduleId, "up") }
-                                )
-                                PhysicsActionButton(
-                                    icon = Icons.Outlined.ThumbDown,
-                                    activeIcon = Icons.Filled.ThumbDown,
-                                    count = null, isActive = mod.userVote == "down",
-                                    activeColor = Color(0xFFEF5350),
-                                    onClick = { communityViewModel.voteModule(moduleId, "down") }
+                                    icon = Icons.Outlined.FavoriteBorder,
+                                    activeIcon = Icons.Filled.Favorite,
+                                    count = mod.likeCount,
+                                    isActive = mod.isLiked,
+                                    activeColor = Color(0xFFE91E63),
+                                    onClick = { communityViewModel.toggleModuleLike(moduleId) }
                                 )
                                 PhysicsActionButton(
                                     icon = Icons.Outlined.BookmarkBorder,
@@ -250,16 +248,69 @@ fun ModuleDetailScreen(
                                     activeColor = MaterialTheme.colorScheme.primary,
                                     onClick = { communityViewModel.toggleFavorite(moduleId) }
                                 )
+                                // 安装按钮 — 市场与社区统一入口
+                                val installedTracker = org.koin.compose.koinInject<com.webtoapp.core.cloud.InstalledItemsTracker>()
+                                val isInstalled = installedTracker.isInstalled(mod.id)
                                 PhysicsActionButton(
                                     icon = Icons.Outlined.Download,
-                                    activeIcon = Icons.Filled.Download,
-                                    count = null, isActive = false,
-                                    activeColor = MaterialTheme.colorScheme.primary,
-                                    onClick = { mod.shareCode?.let(onInstallModule) }
+                                    activeIcon = Icons.Filled.CheckCircle,
+                                    count = mod.downloads, isActive = isInstalled,
+                                    activeColor = Color(0xFF4CAF50),
+                                    onClick = {
+                                        if (!isInstalled) {
+                                            communityViewModel.downloadStoreModule(
+                                                moduleId = moduleId,
+                                                onResult = { shareCode -> onInstallModule(shareCode) }
+                                            )
+                                        }
+                                    }
                                 )
                             }
                         }
                         GlassDivider()
+                    }
+
+                    // === 评分分布图 ===
+                    if (ratingDistribution.isNotEmpty()) {
+                        item {
+                            StaggeredItem(index = 2) {
+                                RatingDistributionChart(
+                                    distribution = ratingDistribution,
+                                    averageRating = mod.rating,
+                                    totalReviews = mod.ratingCount
+                                )
+                            }
+                            GlassDivider()
+                        }
+                    }
+
+                    // === 评论排序 ===
+                    if (comments.isNotEmpty()) {
+                        item {
+                            Row(
+                                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(Strings.reviews, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    listOf("newest" to Strings.sortNewest, "oldest" to Strings.sortOldest, "rating_high" to Strings.sortByRating).forEach { (key, label) ->
+                                        Surface(
+                                            shape = RoundedCornerShape(8.dp),
+                                            color = if (commentSort == key) MaterialTheme.colorScheme.primaryContainer
+                                                    else Color.Transparent,
+                                            onClick = { communityViewModel.setCommentSortOrder(key) }
+                                        ) {
+                                            Text(label, fontSize = 12.sp,
+                                                fontWeight = if (commentSort == key) FontWeight.SemiBold else FontWeight.Normal,
+                                                color = if (commentSort == key) MaterialTheme.colorScheme.primary
+                                                        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp))
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     // === 评论 ===
@@ -354,7 +405,7 @@ private fun ModuleFailureReportDialog(
                     ) {
                         Icon(Icons.Outlined.ContentCopy, null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("复制")
+                        Text(Strings.copy)
                     }
                 }
             }
@@ -570,6 +621,72 @@ private fun ReportSheet(onDismiss: () -> Unit, onReport: (String) -> Unit) {
                 enabled = selected.isNotBlank()
             ) { Text(Strings.communityReportSubmit, fontWeight = FontWeight.Bold) }
             Spacer(Modifier.height(28.dp))
+        }
+    }
+}
+
+// ════════════════════════════════════════════════
+// 评分分布图 — 1-5 星柱状图
+// ════════════════════════════════════════════════
+
+@Composable
+private fun RatingDistributionChart(
+    distribution: Map<Int, Int>,
+    averageRating: Float,
+    totalReviews: Int
+) {
+    val maxCount = distribution.values.maxOrNull() ?: 0
+
+    Column(Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
+        // Header: average + total
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(String.format("%.1f", averageRating), fontSize = 28.sp, fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface)
+            Spacer(Modifier.width(8.dp))
+            Column {
+                Row {
+                    repeat(5) { i ->
+                        Icon(
+                            if (i < averageRating.toInt()) Icons.Filled.Star else Icons.Outlined.Star,
+                            null, Modifier.size(14.dp),
+                            tint = Color(0xFFFFC107)
+                        )
+                    }
+                }
+                Text(Strings.ratingCountFormat.format(totalReviews), fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+            }
+        }
+
+        Spacer(Modifier.height(10.dp))
+
+        // 5 → 1 star bars
+        for (star in 5 downTo 1) {
+            val count = distribution[star] ?: 0
+            val fraction = if (maxCount > 0) count.toFloat() / maxCount else 0f
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("$star", fontSize = 11.sp, fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    modifier = Modifier.width(12.dp))
+                Icon(Icons.Filled.Star, null, Modifier.size(11.dp), tint = Color(0xFFFFC107))
+                Spacer(Modifier.width(6.dp))
+                Box(Modifier.weight(1f).height(8.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)) {
+                    Box(Modifier.fillMaxHeight().fillMaxWidth(fraction)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(Color(0xFFFFC107), Color(0xFFFFA000))
+                            )
+                        ))
+                }
+                Spacer(Modifier.width(6.dp))
+                Text("$count", fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                    modifier = Modifier.width(28.dp))
+            }
+            if (star > 1) Spacer(Modifier.height(3.dp))
         }
     }
 }

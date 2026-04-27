@@ -36,8 +36,9 @@ object CryptoConstants {
     const val ENCRYPTED_HTML_DIR = "encrypted/html"
     const val ENCRYPTED_MEDIA_DIR = "encrypted/media"
     
-    // Key派生盐（固定部分，会与包名的 SHA-256 组合生成每个 APK 唯一的盐）
-    // NOTE: This base salt is public; security relies on per-package combination in deriveKeyFromPackage().
+    // Key派生盐（已废弃：盐值现在由 deriveKeyFromPackage() 动态生成）
+    // 保留以兼容旧版 APK 的密钥派生（旧版使用固定盐 + 包名哈希组合）
+    @Deprecated("盐值现在由 deriveKeyFromPackage() 动态生成，此常量仅用于旧版兼容")
     val KEY_DERIVATION_SALT = byteArrayOf(
         0x57, 0x65, 0x62, 0x54, 0x6F, 0x41, 0x70, 0x70,  // "WebToApp"
         0x45, 0x6E, 0x63, 0x72, 0x79, 0x70, 0x74, 0x21   // "Encrypt!"

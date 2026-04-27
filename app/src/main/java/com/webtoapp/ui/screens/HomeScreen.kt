@@ -114,6 +114,7 @@ fun HomeScreen(
     onCreatePythonApp: () -> Unit = {},
     onCreateGoApp: () -> Unit = {},
     onCreateMultiWebApp: () -> Unit = {},
+    onCreateOfflinePack: () -> Unit = {},
     onEditApp: (WebApp) -> Unit,
     onEditAppCore: (WebApp) -> Unit = {},
     onPreviewApp: (WebApp) -> Unit,
@@ -123,6 +124,7 @@ fun HomeScreen(
     onOpenAiHtmlCoding: () -> Unit = {},
     onOpenExtensionModules: () -> Unit = {},
     onOpenLinuxEnvironment: () -> Unit = {},
+    onOpenDocs: () -> Unit = {},
 ) {
     // Initialize多语言
     InitializeLanguage()
@@ -147,7 +149,6 @@ fun HomeScreen(
     var shareApkFailureReport by remember { mutableStateOf<BuildFailureReport?>(null) }
     var showFabMenu by remember { mutableStateOf(false) }
     var showBatchImportDialog by remember { mutableStateOf(false) }
-    var showScraperDialog by remember { mutableStateOf(false) }
 
     // Scope 和 Snackbar
     val scope = rememberCoroutineScope()
@@ -177,7 +178,7 @@ fun HomeScreen(
         CreateActionItem(Strings.appTypeWeb, R.drawable.ic_type_web, onCreateApp),
         CreateActionItem(Strings.appTypeMultiWeb, R.drawable.ic_type_web, onCreateMultiWebApp),
         CreateActionItem(Strings.appTypeHtml, R.drawable.ic_type_html, onCreateHtmlApp),
-        CreateActionItem("网站离线打包", R.drawable.ic_type_html, { showScraperDialog = true }),
+        CreateActionItem(Strings.websiteOfflinePack, R.drawable.ic_type_html, onCreateOfflinePack),
         CreateActionItem(Strings.appTypeFrontend, R.drawable.ic_type_frontend, onCreateFrontendApp),
         CreateActionItem(Strings.appTypePhp, R.drawable.ic_type_php, onCreatePhpApp),
         CreateActionItem(Strings.appTypeWordPress, R.drawable.ic_type_wordpress, onCreateWordPressApp),
@@ -290,6 +291,18 @@ fun HomeScreen(
                     }
                 },
                 actions = {
+                    // 文档中心按钮
+                    IconButton(
+                        onClick = onOpenDocs,
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.MenuBook,
+                            contentDescription = Strings.docTitle,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    
                     // 深/浅色模式切换按钮（带圆形揭示动画）
                     val context = LocalContext.current
                     val themeManager = remember { ThemeManager.getInstance(context) }
@@ -699,7 +712,7 @@ fun HomeScreen(
                                                 listContext.startActivity(android.content.Intent.createChooser(shareIntent, Strings.shareApkTitle.replace("%s", app.name)))
                                             } catch (e: Exception) {
                                                 shareApkFailureReport = buildActionFailureReport(
-                                                    title = "APK 分享失败",
+                                                    title = Strings.apkShareFailed,
                                                     stage = "share_apk_intent",
                                                     webApp = app,
                                                     summary = Strings.shareApkFailed.replace("%s", e.message ?: "Unknown error"),
@@ -714,7 +727,7 @@ fun HomeScreen(
                                         }
                                         is BuildResult.Error -> {
                                             shareApkFailureReport = buildActionFailureReport(
-                                                title = "APK 分享失败",
+                                                title = Strings.apkShareFailed,
                                                 stage = "build_apk_for_share",
                                                 webApp = app,
                                                 summary = Strings.shareApkFailed.replace("%s", result.message),
@@ -1029,24 +1042,6 @@ fun HomeScreen(
         )
     }
     
-    // 网站离线打包对话框
-    if (showScraperDialog) {
-        WebsiteScraperDialog(
-            onDismiss = { showScraperDialog = false },
-            onStartScrape = { name, url, maxDepth, downloadCdn, onProgress ->
-                viewModel.saveScrapedWebsiteApp(
-                    name = name,
-                    url = url,
-                    iconUri = null,
-                    maxDepth = maxDepth,
-                    downloadCdnResources = downloadCdn,
-                    onProgress = onProgress
-                )
-                // Dialog will auto-close via UiState.Success snackbar
-                showScraperDialog = false
-            }
-        )
-    }
 }
 /**
  * 侧边栏菜单项
@@ -1697,7 +1692,7 @@ private fun readBuildLogTail(path: String?, maxChars: Int = 20000): String {
             }
     } catch (e: Exception) {
         AppLogger.e("HomeScreen", "读取 APK 构建日志失败", e)
-        "读取构建日志失败: ${e.message ?: "Unknown error"}"
+        Strings.readBuildLogFailed.format(e.message ?: "Unknown error")
     } ?: "<build log unavailable>"
 }
 
@@ -1755,7 +1750,7 @@ private fun buildBuildFailureReport(
     error: BuildResult.Error
 ): BuildFailureReport {
     return buildActionFailureReport(
-        title = "APK 构建失败",
+        title = Strings.apkBuildFailed,
         stage = "apk_build",
         webApp = webApp,
         summary = error.message,
@@ -1809,7 +1804,7 @@ private fun BuildFailureReportDialog(
                     ) {
                         Icon(Icons.Outlined.ContentCopy, null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("复制")
+                        Text(Strings.copy)
                     }
                 }
             }
@@ -1862,6 +1857,22 @@ fun BuildApkDialog(
     }
     var backgroundRunConfig by remember {
         mutableStateOf(webApp.apkExportConfig?.backgroundRunConfig ?: com.webtoapp.data.model.BackgroundRunExportConfig())
+    }
+    
+    // 通知配置状态
+    var notificationEnabled by remember {
+        mutableStateOf(webApp.apkExportConfig?.notificationEnabled ?: false)
+    }
+    var notificationConfig by remember {
+        mutableStateOf(webApp.apkExportConfig?.notificationConfig ?: com.webtoapp.data.model.NotificationExportConfig())
+    }
+    
+    // DNS 配置状态
+    var dnsMode by remember {
+        mutableStateOf(webApp.webViewConfig.dnsMode)
+    }
+    var dnsConfig by remember {
+        mutableStateOf(webApp.webViewConfig.dnsConfig)
     }
     
     // 浏览器引擎配置状态
@@ -1947,6 +1958,22 @@ fun BuildApkDialog(
                     config = backgroundRunConfig,
                     onEnabledChange = { backgroundRunEnabled = it },
                     onConfigChange = { backgroundRunConfig = it }
+                )
+                
+                // 通知配置
+                com.webtoapp.ui.components.NotificationConfigCard(
+                    enabled = notificationEnabled,
+                    config = notificationConfig,
+                    onEnabledChange = { notificationEnabled = it },
+                    onConfigChange = { notificationConfig = it }
+                )
+                
+                // DNS 配置
+                com.webtoapp.ui.components.DnsConfigCard(
+                    dnsMode = dnsMode,
+                    dnsConfig = dnsConfig,
+                    onDnsModeChange = { dnsMode = it },
+                    onDnsConfigChange = { dnsConfig = it }
                 )
                 
                 // 浏览器引擎选择
@@ -2145,12 +2172,18 @@ fun BuildApkDialog(
                         scope.launch {
                             // 将加密配置、隔离配置和后台运行配置应用到 WebApp
                             val webAppWithConfig = webApp.copy(
+                                webViewConfig = webApp.webViewConfig.copy(
+                                    dnsMode = dnsMode,
+                                    dnsConfig = dnsConfig
+                                ),
                                 apkExportConfig = (webApp.apkExportConfig ?: com.webtoapp.data.model.ApkExportConfig()).copy(
                                     encryptionConfig = encryptionConfig,
                                     hardeningConfig = hardeningConfig,
                                     isolationConfig = isolationConfig,
                                     backgroundRunEnabled = backgroundRunEnabled,
                                     backgroundRunConfig = backgroundRunConfig,
+                                    notificationEnabled = notificationEnabled,
+                                    notificationConfig = notificationConfig,
                                     engineType = selectedEngineType
                                 )
                             )

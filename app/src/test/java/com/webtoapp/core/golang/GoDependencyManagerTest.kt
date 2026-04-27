@@ -3,6 +3,7 @@ package com.webtoapp.core.golang
 import com.google.common.truth.Truth.assertThat
 import java.io.File
 import java.nio.file.Files
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -11,6 +12,9 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33])
 class GoDependencyManagerTest {
+
+    @Rule @JvmField
+    val koinRule = com.webtoapp.util.KoinCleanupRule()
 
     @Test
     fun `parseElf returns invalid for missing or non elf files`() {

@@ -83,7 +83,7 @@ class ErrorPageManagerTest {
         )
 
         assertThat(html).contains("再试一次")
-        assertThat(html).contains("自动重试中")
+        assertThat(html).contains("秒后重试")
         assertThat(html).contains("showGame()")
         assertThat(html).contains("gameCanvas")
         assertThat(html).contains("\\'1\\'")
@@ -102,7 +102,7 @@ class ErrorPageManagerTest {
 
         val html = manager.generateErrorPage(-2, "dns", "https://example.com")
 
-        assertThat(html).doesNotContain("自动重试中")
+        assertThat(html).doesNotContain("秒后重试")
         assertThat(html).doesNotContain("showGame()")
         assertThat(html).doesNotContain("gameOverlay")
     }

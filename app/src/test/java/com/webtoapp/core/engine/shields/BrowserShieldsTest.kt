@@ -3,6 +3,7 @@ package com.webtoapp.core.engine.shields
 import android.content.Context
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -12,6 +13,9 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33])
 class BrowserShieldsTest {
+
+    @Rule @JvmField
+    val koinRule = com.webtoapp.util.KoinCleanupRule()
 
     private lateinit var context: Context
     private lateinit var shields: BrowserShields

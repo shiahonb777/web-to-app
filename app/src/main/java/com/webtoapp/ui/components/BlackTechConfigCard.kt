@@ -52,13 +52,13 @@ fun BlackTechConfigCard(
     
     // 闪光灯模式选择状态
     val flashlightModes = listOf(
-        "常亮" to "持续打开闪光灯",
-        "爆闪" to "快速闪烁，每秒10次",
-        "摩斯电码" to "输入文本，闪光灯发送摩斯电码",
-        "SOS 求救" to "国际紧急求救信号 (... --- ...)",
-        "心跳" to "模拟心跳节奏的双闪效果",
-        "呼吸灯" to "渐快渐慢，模拟呼吸节奏",
-        "紧急三闪" to "连续三次快闪，紧急信号"
+        Strings.flashlightModeAlwaysOn to Strings.flashlightModeAlwaysOnDesc,
+        Strings.flashlightModeStrobe to Strings.flashlightModeStrobeDesc,
+        Strings.flashlightModeMorse to Strings.flashlightModeMorseDesc,
+        Strings.flashlightModeSos to Strings.flashlightModeSosDesc,
+        Strings.flashlightModeHeartbeat to Strings.flashlightModeHeartbeatDesc,
+        Strings.flashlightModeBreathing to Strings.flashlightModeBreathingDesc,
+        Strings.flashlightModeTripleFlash to Strings.flashlightModeTripleFlashDesc
     )
     
     // 计算当前选中的模式索引
@@ -307,7 +307,7 @@ fun BlackTechConfigCard(
                                 Column(modifier = Modifier.padding(start = 16.dp)) {
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(
-                                        "闪光灯模式",
+                                        Strings.flashlightModeLabel,
                                         style = MaterialTheme.typography.labelMedium,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -371,17 +371,17 @@ fun BlackTechConfigCard(
                                                     flashlightMorseText = it
                                                     updateConfig()
                                                 },
-                                                label = { Text("摩斯电码文本") },
-                                                placeholder = { Text("例如: SOS, HELLO") },
+                                                label = { Text(Strings.morseCodeText) },
+                                                placeholder = { Text(Strings.morseCodeExample) },
                                                 supportingText = {
                                                     if (flashlightMorseText.isNotBlank()) {
                                                         Text(
-                                                            "摩斯码: " + com.webtoapp.core.forcedrun.NativeHardwareController.textToMorseDisplay(flashlightMorseText),
+                                                            Strings.morseCodeLabel + com.webtoapp.core.forcedrun.NativeHardwareController.textToMorseDisplay(flashlightMorseText),
                                                             style = MaterialTheme.typography.labelSmall
                                                         )
                                                     } else {
                                                         Text(
-                                                            "支持 A-Z、0-9、空格和常见标点",
+                                                            Strings.morseSupportedChars,
                                                             style = MaterialTheme.typography.labelSmall
                                                         )
                                                     }
@@ -395,7 +395,7 @@ fun BlackTechConfigCard(
                                             
                                             // 速度设置
                                             Text(
-                                                "发送速度: ${flashlightMorseUnitMs}ms/单位",
+                                                Strings.sendSpeedLabel.format(flashlightMorseUnitMs),
                                                 style = MaterialTheme.typography.labelMedium
                                             )
                                             Slider(
@@ -411,9 +411,9 @@ fun BlackTechConfigCard(
                                                 modifier = Modifier.fillMaxWidth(),
                                                 horizontalArrangement = Arrangement.SpaceBetween
                                             ) {
-                                                Text("快 (50ms)", style = MaterialTheme.typography.labelSmall,
+                                                Text(Strings.speedFast, style = MaterialTheme.typography.labelSmall,
                                                      color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                                Text("慢 (500ms)", style = MaterialTheme.typography.labelSmall,
+                                                Text(Strings.speedSlow, style = MaterialTheme.typography.labelSmall,
                                                      color = MaterialTheme.colorScheme.onSurfaceVariant)
                                             }
                                         }

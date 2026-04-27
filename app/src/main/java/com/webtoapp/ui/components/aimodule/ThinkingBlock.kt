@@ -114,7 +114,7 @@ fun ThinkingBlock(
                         ThinkingIcon(isAnimating = isStreaming)
                         
                         Text(
-                            "思考中...",
+                            Strings.aiThinking,
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.tertiary
@@ -155,7 +155,7 @@ fun ThinkingBlock(
                         if (content.isBlank() && isStreaming) {
                             // 等待内容时显示占位符
                             Text(
-                                "正在分析...",
+                                Strings.analyzing,
                                 style = MaterialTheme.typography.bodySmall,
                                 fontStyle = FontStyle.Italic,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
@@ -307,7 +307,7 @@ fun CompactThinkingBlock(
         
         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
             Text(
-                "思考",
+                Strings.thinkingLabel,
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.tertiary
@@ -317,7 +317,7 @@ fun CompactThinkingBlock(
             
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(
-                    text = content.ifBlank { "分析中..." },
+                    text = content.ifBlank { Strings.analyzingDots },
                     style = MaterialTheme.typography.bodySmall,
                     fontStyle = FontStyle.Italic,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),

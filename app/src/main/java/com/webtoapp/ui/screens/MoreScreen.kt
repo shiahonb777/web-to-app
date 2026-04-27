@@ -20,12 +20,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.webtoapp.R
 import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.settings.FeatureToggleManager
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
@@ -45,9 +47,19 @@ fun MoreScreen(
     onOpenLinuxEnvironment: () -> Unit = {},
     onOpenRuntimeDeps: () -> Unit = {},
     onOpenPortManager: () -> Unit = {},
+    onOpenPermissionConfig: () -> Unit = {},
     onOpenStats: () -> Unit = {},
     onOpenAbout: () -> Unit = {},
+    onOpenFeatureToggles: () -> Unit = {},
 ) {
+    val context = LocalContext.current
+    val toggleManager = remember { FeatureToggleManager.getInstance(context) }
+
+    val isAiToolsEnabled by toggleManager.isAiToolsEnabled.collectAsState(initial = true)
+    val isDevToolsEnabled by toggleManager.isDevToolsEnabled.collectAsState(initial = true)
+    val isBrowserNetworkEnabled by toggleManager.isBrowserNetworkEnabled.collectAsState(initial = true)
+    val isDataStatsEnabled by toggleManager.isDataStatsEnabled.collectAsState(initial = true)
+
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
@@ -75,72 +87,99 @@ fun MoreScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
                 // ── AI 工具 ──
-                MoreSectionTitle(Strings.moreSectionAiTools)
-                MoreMenuCard {
-                    MoreMenuItem(
-                        title = Strings.menuAiCoding,
-                        icon = painterResource(R.drawable.ic_sidebar_ai_coding),
-                        onClick = onOpenAiCoding
-                    )
-                    MoreMenuItem(
-                        title = Strings.menuAiSettings,
-                        icon = painterResource(R.drawable.ic_sidebar_ai_settings),
-                        onClick = onOpenAiSettings
-                    )
+                if (isAiToolsEnabled) {
+                    MoreSectionTitle(Strings.moreSectionAiTools)
+                    MoreMenuCard {
+                        MoreMenuItem(
+                            title = Strings.menuAiCoding,
+                            icon = painterResource(R.drawable.ic_sidebar_ai_coding),
+                            onClick = onOpenAiCoding
+                        )
+                        MoreMenuItem(
+                            title = Strings.menuAiSettings,
+                            icon = painterResource(R.drawable.ic_sidebar_ai_settings),
+                            onClick = onOpenAiSettings
+                        )
+                    }
                 }
 
                 // ── 开发工具 ──
-                MoreSectionTitle(Strings.moreSectionDevTools)
-                MoreMenuCard {
-                    MoreMenuItem(
-                        title = Strings.menuExtensionModules,
-                        icon = painterResource(R.drawable.ic_sidebar_extensions),
-                        onClick = onOpenExtensionModules
-                    )
-                    MoreMenuItem(
-                        title = Strings.menuAppModifier,
-                        icon = painterResource(R.drawable.ic_sidebar_app_modifier),
-                        onClick = onOpenAppModifier
-                    )
-                    MoreMenuItem(
-                        title = Strings.menuLinuxEnvironment,
-                        icon = painterResource(R.drawable.ic_sidebar_linux),
-                        onClick = onOpenLinuxEnvironment
-                    )
-                    MoreMenuItem(
-                        title = Strings.menuRuntimeDeps,
-                        icon = painterResource(R.drawable.ic_sidebar_runtime),
-                        onClick = onOpenRuntimeDeps
-                    )
-                    MoreMenuItem(
-                        title = Strings.menuPortManager,
-                        icon = painterResource(R.drawable.ic_sidebar_port),
-                        onClick = onOpenPortManager
-                    )
+                if (isDevToolsEnabled) {
+                    MoreSectionTitle(Strings.moreSectionDevTools)
+                    MoreMenuCard {
+                        MoreMenuItem(
+                            title = Strings.menuExtensionModules,
+                            icon = painterResource(R.drawable.ic_sidebar_extensions),
+                            onClick = onOpenExtensionModules
+                        )
+                        MoreMenuItem(
+                            title = Strings.menuAppModifier,
+                            icon = painterResource(R.drawable.ic_sidebar_app_modifier),
+                            onClick = onOpenAppModifier
+                        )
+                        MoreMenuItem(
+                            title = Strings.menuLinuxEnvironment,
+                            icon = painterResource(R.drawable.ic_sidebar_linux),
+                            onClick = onOpenLinuxEnvironment
+                        )
+                        MoreMenuItem(
+                            title = Strings.menuRuntimeDeps,
+                            icon = painterResource(R.drawable.ic_sidebar_runtime),
+                            onClick = onOpenRuntimeDeps
+                        )
+                        MoreMenuItem(
+                            title = Strings.menuPortManager,
+                            icon = painterResource(R.drawable.ic_sidebar_port),
+                            onClick = onOpenPortManager
+                        )
+                    }
                 }
 
                 // ── 浏览器 & 网络 ──
-                MoreSectionTitle(Strings.moreSectionBrowser)
+                if (isBrowserNetworkEnabled) {
+                    MoreSectionTitle(Strings.moreSectionBrowser)
+                    MoreMenuCard {
+                        MoreMenuItem(
+                            title = Strings.menuBrowserKernel,
+                            icon = painterResource(R.drawable.ic_sidebar_browser),
+                            onClick = onOpenBrowserKernel
+                        )
+                        MoreMenuItem(
+                            title = Strings.menuHostsAdBlock,
+                            icon = painterResource(R.drawable.ic_sidebar_adblock),
+                            onClick = onOpenHostsAdBlock
+                        )
+                    }
+                }
+
+                // ── 安全与权限 ──
+                MoreSectionTitle(Strings.moreSectionSecurity)
                 MoreMenuCard {
                     MoreMenuItem(
-                        title = Strings.menuBrowserKernel,
-                        icon = painterResource(R.drawable.ic_sidebar_browser),
-                        onClick = onOpenBrowserKernel
-                    )
-                    MoreMenuItem(
-                        title = Strings.menuHostsAdBlock,
-                        icon = painterResource(R.drawable.ic_sidebar_adblock),
-                        onClick = onOpenHostsAdBlock
+                        title = Strings.menuPermissionConfig,
+                        icon = painterResource(R.drawable.ic_sidebar_settings),
+                        onClick = onOpenPermissionConfig
                     )
                 }
 
                 // ── 数据 & 统计 ──
-                MoreSectionTitle(Strings.moreSectionAppearance)
+                if (isDataStatsEnabled) {
+                    MoreSectionTitle(Strings.moreSectionAppearance)
+                    MoreMenuCard {
+                        MoreMenuItem(
+                            title = Strings.menuStats,
+                            icon = painterResource(R.drawable.ic_sidebar_stats),
+                            onClick = onOpenStats
+                        )
+                    }
+                }
+
+                // ── 功能开关 ──
                 MoreMenuCard {
                     MoreMenuItem(
-                        title = Strings.menuStats,
-                        icon = painterResource(R.drawable.ic_sidebar_stats),
-                        onClick = onOpenStats
+                        title = Strings.featureToggleSettings,
+                        icon = painterResource(R.drawable.ic_sidebar_settings),
+                        onClick = onOpenFeatureToggles
                     )
                 }
 

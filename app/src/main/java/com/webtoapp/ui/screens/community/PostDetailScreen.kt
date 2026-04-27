@@ -7,6 +7,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.net.Uri
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -50,12 +53,17 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.webtoapp.core.auth.AuthResult
 import com.webtoapp.core.cloud.CloudApiClient
+import com.webtoapp.core.cloud.GitHubAccelerator
 import com.webtoapp.core.cloud.CommunityPostItem
 import com.webtoapp.core.cloud.PostCommentItem
+import com.webtoapp.core.cloud.PostMediaInput
+import com.webtoapp.core.cloud.SubscriptionTier
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.ui.components.ThemedBackgroundBox
+import com.webtoapp.ui.components.UserTitleBadges
 import com.webtoapp.ui.viewmodel.OperationFailureReport
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import androidx.compose.ui.focus.FocusRequester
@@ -142,7 +150,7 @@ private fun PostFailureReportDialog(
                     ) {
                         Icon(Icons.Outlined.ContentCopy, null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("复制")
+                        Text(Strings.copy)
                     }
                 }
             }
@@ -182,6 +190,12 @@ fun PostDetailScreen(
     var submitting by remember { mutableStateOf(false) }
     var replyingTo by remember { mutableStateOf<PostCommentItem?>(null) }
     var showMoreSheet by remember { mutableStateOf(false) }
+    var commentImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
+    var uploadingImages by remember { mutableStateOf(false) }
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
+        commentImageUris = (commentImageUris + uris).take(4)
+    }
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var showEditSheet by remember { mutableStateOf(false) }
     var showReportSheet by remember { mutableStateOf(false) }
@@ -196,21 +210,27 @@ fun PostDetailScreen(
     val mentionLoading by communityViewModel.mentionLoading.collectAsState()
     val feedFailureReport by communityViewModel.feedFailureReport.collectAsState()
 
-    // Load post detail + comments
-    LaunchedEffect(postId) {
+    // Load post detail + comments in parallel (reload on every resume)
+    val resumeKey = rememberResumeKey()
+    LaunchedEffect(postId, resumeKey) {
         loading = true
-        val postResult = apiClient.getCommunityPost(postId)
+        val deferredPost = scope.async { apiClient.getCommunityPost(postId) }
+        val deferredComments = scope.async { apiClient.listPostComments(postId, page = 1) }
+        val postResult = deferredPost.await()
+        val commentsResult = deferredComments.await()
+
         if (postResult is AuthResult.Success) {
             post = postResult.data
+            // Sync updated viewCount (and other fields) back to ViewModel cache
+            communityViewModel.syncPost(postResult.data)
         } else if (postResult is AuthResult.Error) {
             failureReport = buildPostFailureReport(
-                title = "帖子加载失败",
-                stage = "加载帖子详情",
+                title = Strings.postLoadFailed,
+                stage = Strings.loadPostDetail,
                 summary = postResult.message,
                 contextLines = listOf("postId=$postId")
             )
         }
-        val commentsResult = apiClient.listPostComments(postId, page = 1)
         if (commentsResult is AuthResult.Success) {
             val resp = commentsResult.data
             comments = resp.comments
@@ -219,8 +239,8 @@ fun PostDetailScreen(
             hasMoreComments = resp.comments.size < resp.total
         } else if (commentsResult is AuthResult.Error) {
             failureReport = buildPostFailureReport(
-                title = "评论加载失败",
-                stage = "加载评论列表",
+                title = Strings.commentLoadFailed,
+                stage = Strings.loadCommentList,
                 summary = commentsResult.message,
                 contextLines = listOf("postId=$postId", "page=1")
             )
@@ -239,19 +259,22 @@ fun PostDetailScreen(
                 hasMoreComments = refreshed.data.comments.size < refreshed.data.total
             } else if (refreshed is AuthResult.Error) {
                 failureReport = buildPostFailureReport(
-                    title = "评论刷新失败",
-                    stage = "刷新评论列表",
+                    title = Strings.commentRefreshFailed,
+                    stage = Strings.refreshCommentList,
                     summary = refreshed.message,
                     contextLines = listOf("postId=$postId", "page=1")
                 )
             }
             // Also refresh the post to get latest counts
             val refreshedPost = apiClient.getCommunityPost(postId)
-            if (refreshedPost is AuthResult.Success) post = refreshedPost.data
+            if (refreshedPost is AuthResult.Success) {
+                post = refreshedPost.data
+                communityViewModel.syncPost(refreshedPost.data)
+            }
             else if (refreshedPost is AuthResult.Error) {
                 failureReport = buildPostFailureReport(
-                    title = "帖子刷新失败",
-                    stage = "刷新帖子详情",
+                    title = Strings.postRefreshFailed,
+                    stage = Strings.refreshPostDetail,
                     summary = refreshedPost.message,
                     contextLines = listOf("postId=$postId")
                 )
@@ -272,8 +295,8 @@ fun PostDetailScreen(
                 hasMoreComments = comments.size < result.data.total
             } else if (result is AuthResult.Error) {
                 failureReport = buildPostFailureReport(
-                    title = "更多评论加载失败",
-                    stage = "加载更多评论",
+                    title = Strings.moreCommentLoadFailed,
+                    stage = Strings.loadMoreComments,
                     summary = result.message,
                     contextLines = listOf("postId=$postId", "page=$nextPage")
                 )
@@ -282,7 +305,8 @@ fun PostDetailScreen(
         }
     }
 
-    Scaffold(
+    Box(Modifier.fillMaxSize()) {
+        Scaffold(
         containerColor = Color.Transparent,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -302,47 +326,9 @@ fun PostDetailScreen(
             )
         },
         bottomBar = {
+            val ctx = LocalContext.current
             FrostedBottomBar {
                 Column {
-                    // Reply indicator
-                    AnimatedVisibility(
-                        visible = replyingTo != null,
-                        enter = expandVertically() + fadeIn(),
-                        exit = shrinkVertically() + fadeOut()
-                    ) {
-                        replyingTo?.let { reply ->
-                            Surface(
-                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Row(
-                                    Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(Icons.Filled.SubdirectoryArrowRight, null, Modifier.size(14.dp),
-                                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f))
-                                    Spacer(Modifier.width(6.dp))
-                                    Text(
-                                        buildAnnotatedString {
-                                            withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) {
-                                                append("@${reply.authorDisplayName ?: reply.authorUsername}")
-                                            }
-                                            append(" ")
-                                            append(reply.content.take(40))
-                                        },
-                                        fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    IconButton(onClick = { replyingTo = null }, modifier = Modifier.size(20.dp)) {
-                                        Icon(Icons.Filled.Close, null, Modifier.size(14.dp),
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
-                                    }
-                                }
-                            }
-                        }
-                    }
-
                     // @mention popup overlay
                     AnimatedVisibility(
                         visible = showMentionPopup,
@@ -415,7 +401,7 @@ fun PostDetailScreen(
                                                 if (user.avatarUrl != null) {
                                                     AsyncImage(
                                                         model = ImageRequest.Builder(LocalContext.current)
-                                                            .data(user.avatarUrl).crossfade(true).build(),
+                                                            .data(GitHubAccelerator.accelerate(user.avatarUrl)).crossfade(true).build(),
                                                         contentDescription = null,
                                                         modifier = Modifier.fillMaxSize().clip(CircleShape),
                                                         contentScale = ContentScale.Crop
@@ -441,11 +427,51 @@ fun PostDetailScreen(
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                                                 )
                                             }
-                                            if (user.isDeveloper) {
-                                                Spacer(Modifier.width(4.dp))
-                                                Icon(Icons.Filled.Verified, null, Modifier.size(14.dp),
-                                                    tint = MaterialTheme.colorScheme.primary)
+                                            Spacer(Modifier.width(4.dp))
+                                            UserTitleBadges(isDeveloper = user.isDeveloper, subscriptionTier = user.subscriptionTier ?: SubscriptionTier.FREE)
                                             }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Image preview row
+                    if (commentImageUris.isNotEmpty()) {
+                        LazyRow(
+                            Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            items(commentImageUris.size) { idx ->
+                                Box(Modifier.size(64.dp).clip(RoundedCornerShape(8.dp))) {
+                                    AsyncImage(
+                                        model = commentImageUris[idx],
+                                        contentDescription = null,
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                    IconButton(
+                                        onClick = { commentImageUris = commentImageUris.toMutableList().apply { removeAt(idx) } },
+                                        modifier = Modifier.align(Alignment.TopEnd).size(20.dp)
+                                    ) {
+                                        Icon(Icons.Filled.Close, null, Modifier.size(12.dp),
+                                            tint = Color.White)
+                                    }
+                                }
+                            }
+                            if (commentImageUris.size < 4) {
+                                item {
+                                    Surface(
+                                        onClick = { imagePickerLauncher.launch("image/*") },
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
+                                        modifier = Modifier.size(64.dp)
+                                    ) {
+                                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                            Icon(Icons.Outlined.AddPhotoAlternate, null, Modifier.size(22.dp),
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
                                         }
                                     }
                                 }
@@ -457,6 +483,15 @@ fun PostDetailScreen(
                         Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        // Image picker button
+                        IconButton(
+                            onClick = { imagePickerLauncher.launch("image/*") },
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(Icons.Outlined.Image, null, Modifier.size(22.dp),
+                                tint = if (commentImageUris.isNotEmpty()) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
+                        }
                         OutlinedTextField(
                             value = commentText,
                             onValueChange = { newText ->
@@ -499,7 +534,7 @@ fun PostDetailScreen(
                             )
                         )
                         Spacer(Modifier.width(8.dp))
-                        val sendEnabled = commentText.isNotBlank() && !submitting
+                        val sendEnabled = (commentText.isNotBlank() || commentImageUris.isNotEmpty()) && !submitting && !uploadingImages
                         val sendAlpha by animateFloatAsState(
                             if (sendEnabled) 1f else 0.35f, tween(200), label = "sendA"
                         )
@@ -507,18 +542,46 @@ fun PostDetailScreen(
                             onClick = {
                                 if (sendEnabled) {
                                     submitting = true
+                                    val urisToUpload = commentImageUris.toList()
                                     scope.launch {
+                                        // Upload images first if any
+                                        val mediaInputs = mutableListOf<PostMediaInput>()
+                                        if (urisToUpload.isNotEmpty()) {
+                                            uploadingImages = true
+                                            for (uri in urisToUpload) {
+                                                try {
+                                                    val inputStream = ctx.contentResolver.openInputStream(uri) ?: continue
+                                                    val tempFile = java.io.File(ctx.cacheDir, "comment_img_${System.currentTimeMillis()}.jpg")
+                                                    tempFile.outputStream().use { out -> inputStream.copyTo(out) }
+                                                    inputStream.close()
+                                                    val uploadResult = apiClient.uploadAsset(tempFile, contentType = "image/jpeg")
+                                                    if (uploadResult is AuthResult.Success) {
+                                                        val downloadUrl = uploadResult.data
+                                                        if (downloadUrl.contains("github")) {
+                                                            mediaInputs.add(PostMediaInput(mediaType = "image", urlGithub = downloadUrl))
+                                                        } else {
+                                                            mediaInputs.add(PostMediaInput(mediaType = "image", urlGitee = downloadUrl))
+                                                        }
+                                                    }
+                                                    tempFile.delete()
+                                                } catch (e: Exception) {
+                                                    AppLogger.e("PostDetail", "Failed to upload comment image", e)
+                                                }
+                                            }
+                                            uploadingImages = false
+                                        }
                                         val parentId = replyingTo?.id
-                                        val result = apiClient.addPostComment(postId, commentText.trim(), parentId)
+                                        val result = apiClient.addPostComment(postId, commentText.trim(), parentId, mediaInputs)
                                         if (result is AuthResult.Success) {
                                             commentText = ""
+                                            commentImageUris = emptyList()
                                             replyingTo = null
-                                            communityViewModel.pushMessage("评论已发布")
+                                            communityViewModel.pushMessage(Strings.commentPublished)
                                             refreshComments()
                                         } else if (result is AuthResult.Error) {
                                             failureReport = buildPostFailureReport(
-                                                title = "评论提交失败",
-                                                stage = "提交评论",
+                                                title = Strings.commentSubmitFailed,
+                                                stage = Strings.submitComment,
                                                 summary = result.message,
                                                 contextLines = listOf(
                                                     "postId=$postId",
@@ -545,7 +608,6 @@ fun PostDetailScreen(
                     }
                 }
             }
-        }
     ) { padding ->
         ThemedBackgroundBox(
             modifier = Modifier.fillMaxSize().padding(padding)
@@ -572,7 +634,7 @@ fun PostDetailScreen(
                                             if (p.authorAvatarUrl != null) {
                                                 AsyncImage(
                                                     model = ImageRequest.Builder(LocalContext.current)
-                                                        .data(p.authorAvatarUrl).crossfade(true).build(),
+                                                        .data(GitHubAccelerator.accelerate(p.authorAvatarUrl)).crossfade(true).build(),
                                                     contentDescription = null,
                                                     modifier = Modifier.fillMaxSize().clip(CircleShape),
                                                     contentScale = ContentScale.Crop
@@ -592,11 +654,8 @@ fun PostDetailScreen(
                                             Row(verticalAlignment = Alignment.CenterVertically) {
                                                 Text(p.authorDisplayName ?: p.authorUsername,
                                                     fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                                                if (p.authorIsDeveloper) {
-                                                    Spacer(Modifier.width(4.dp))
-                                                    Icon(Icons.Filled.Verified, null, Modifier.size(16.dp),
-                                                        tint = MaterialTheme.colorScheme.primary)
-                                                }
+                                                Spacer(Modifier.width(4.dp))
+                                                UserTitleBadges(isDeveloper = p.authorIsDeveloper, subscriptionTier = p.authorSubscriptionTier)
                                             }
                                             Text(
                                                 "@${p.authorUsername} · ${formatTimeAgo(p.createdAt)}",
@@ -734,7 +793,7 @@ fun PostDetailScreen(
                                                         if (p.appIconUrl != null) {
                                                             AsyncImage(
                                                                 model = ImageRequest.Builder(LocalContext.current)
-                                                                    .data(p.appIconUrl).crossfade(true).build(),
+                                                                    .data(GitHubAccelerator.accelerate(p.appIconUrl)).crossfade(true).build(),
                                                                 contentDescription = null,
                                                                 modifier = Modifier.fillMaxSize()
                                                                     .clip(RoundedCornerShape(12.dp)),
@@ -860,7 +919,7 @@ fun PostDetailScreen(
                                         Spacer(Modifier.height(14.dp))
                                         if (p.media.size == 1) {
                                             val m = p.media[0]
-                                            val url = m.urlGitee ?: m.urlGithub
+                                            val url = GitHubAccelerator.pickBestUrl(m.urlGitee, m.urlGithub)
                                             if (url != null) {
                                                 AsyncImage(
                                                     model = ImageRequest.Builder(LocalContext.current)
@@ -886,7 +945,7 @@ fun PostDetailScreen(
                                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                                                 ) {
                                                     items(p.media) { m ->
-                                                        val url = m.urlGitee ?: m.urlGithub
+                                                        val url = GitHubAccelerator.pickBestUrl(m.urlGitee, m.urlGithub)
                                                         if (url != null) {
                                                             AsyncImage(
                                                                 model = ImageRequest.Builder(LocalContext.current)
@@ -948,7 +1007,7 @@ fun PostDetailScreen(
                                                         if (appLink.appIcon != null) {
                                                             AsyncImage(
                                                                 model = ImageRequest.Builder(LocalContext.current)
-                                                                    .data(appLink.appIcon).crossfade(true).build(),
+                                                                    .data(GitHubAccelerator.accelerate(appLink.appIcon)).crossfade(true).build(),
                                                                 contentDescription = null,
                                                                 modifier = Modifier.fillMaxSize()
                                                                     .clip(RoundedCornerShape(10.dp)),
@@ -1031,12 +1090,12 @@ fun PostDetailScreen(
                             GlassDivider()
                         }
 
-                        // ═══ Action Bar (physics-based) ═══
+                        // ═══ Action Bar (aligned) ═══
                         item {
                             StaggeredItem(index = 2) {
                                 Row(
                                     Modifier.fillMaxWidth().padding(vertical = 2.dp),
-                                    horizontalArrangement = Arrangement.SpaceEvenly
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     DetailActionButton(
                                         icon = Icons.Outlined.FavoriteBorder,
@@ -1044,6 +1103,7 @@ fun PostDetailScreen(
                                         label = Strings.communityLike,
                                         isActive = p.isLiked,
                                         activeColor = Color(0xFFE91E63),
+                                        modifier = Modifier.weight(1f),
                                         onClick = {
                                             scope.launch {
                                                 val result = apiClient.togglePostLike(postId)
@@ -1056,8 +1116,8 @@ fun PostDetailScreen(
                                                     communityViewModel.syncPost(updatedPost)
                                                 } else if (result is AuthResult.Error) {
                                                     failureReport = buildPostFailureReport(
-                                                        title = "帖子点赞失败",
-                                                        stage = "点赞帖子",
+                                                        title = Strings.postLikeFailed,
+                                                        stage = Strings.likePost,
                                                         summary = result.message,
                                                         contextLines = listOf(
                                                             "postId=$postId",
@@ -1074,6 +1134,7 @@ fun PostDetailScreen(
                                         label = Strings.communityComment,
                                         isActive = false,
                                         activeColor = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.weight(1f),
                                         onClick = {
                                             // CLI-14: Focus the comment input
                                             scope.launch {
@@ -1087,35 +1148,23 @@ fun PostDetailScreen(
                                         label = Strings.communityShare,
                                         isActive = false,
                                         activeColor = Color(0xFF4CAF50),
+                                        modifier = Modifier.weight(1f),
                                         onClick = {
-                                            scope.launch {
-                                                val result = apiClient.sharePost(postId)
-                                                if (result is AuthResult.Success) {
-                                                    val updatedPost = p.copy(shareCount = p.shareCount + 1)
-                                                    post = updatedPost
-                                                    communityViewModel.syncPost(updatedPost)
-                                                } else if (result is AuthResult.Error) {
-                                                    failureReport = buildPostFailureReport(
-                                                        title = "帖子转发失败",
-                                                        stage = "转发帖子",
-                                                        summary = result.message,
-                                                        contextLines = listOf(
-                                                            "postId=$postId",
-                                                            "action=sharePost"
-                                                        )
-                                                    )
-                                                }
-                                            }
+                                            communityViewModel.sharePost(postId)
+                                            // Optimistic update
+                                            val updatedPost = p.copy(shareCount = p.shareCount + 1)
+                                            post = updatedPost
+                                            communityViewModel.syncPost(updatedPost)
                                         }
                                     )
-                                    // CLI-05: Hide bookmark until API exists — show view count instead
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.padding(vertical = 10.dp)
+                                    // Views — consistent style with other actions
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        modifier = Modifier.weight(1f).padding(vertical = 10.dp)
                                     ) {
-                                        Icon(Icons.Outlined.RemoveRedEye, null, Modifier.size(18.dp),
+                                        Icon(Icons.Outlined.RemoveRedEye, null, Modifier.size(22.dp),
                                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f))
-                                        Spacer(Modifier.width(4.dp))
+                                        Spacer(Modifier.height(2.dp))
                                         Text("${p.viewCount}", fontSize = 11.sp,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f))
                                     }
@@ -1213,6 +1262,51 @@ fun PostDetailScreen(
             }
         }
     }
+
+        // Reply indicator — floating above bottomBar, outside Scaffold layout
+        AnimatedVisibility(
+            visible = replyingTo != null,
+            enter = expandVertically() + fadeIn(),
+            exit = shrinkVertically() + fadeOut(),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 72.dp)
+        ) {
+            replyingTo?.let { reply ->
+                Surface(
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f),
+                    shape = RoundedCornerShape(12.dp),
+                    shadowElevation = 3.dp,
+                    modifier = Modifier.padding(horizontal = 12.dp)
+                ) {
+                    Row(
+                        Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Filled.SubdirectoryArrowRight, null, Modifier.size(14.dp),
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f))
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            buildAnnotatedString {
+                                withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, fontSize = 12.sp)) {
+                                    append("@${reply.authorDisplayName ?: reply.authorUsername}")
+                                }
+                                append(" ")
+                                append(reply.content.take(30))
+                            },
+                            fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                            modifier = Modifier.widthIn(max = 200.dp)
+                        )
+                        IconButton(onClick = { replyingTo = null }, modifier = Modifier.size(20.dp)) {
+                            Icon(Icons.Filled.Close, null, Modifier.size(14.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                        }
+                    }
+                }
+            }
+        }
+    } // close Box
 
     // ═══ More Sheet ═══
     if (showMoreSheet) {
@@ -1330,13 +1424,13 @@ fun PostDetailScreen(
                         when (val result = apiClient.deletePost(postId)) {
                             is AuthResult.Success -> {
                                 communityViewModel.removePostFromCaches(postId)
-                                snackbarHostState.showSnackbar("帖子已删除")
+                                snackbarHostState.showSnackbar(Strings.postDeleted)
                                 onBack()
                             }
                             is AuthResult.Error -> {
                                 failureReport = buildPostFailureReport(
-                                    title = "帖子删除失败",
-                                    stage = "删除帖子",
+                                    title = Strings.postDeleteFailed,
+                                    stage = Strings.deletePost,
                                     summary = result.message,
                                     contextLines = listOf("postId=$postId")
                                 )
@@ -1386,13 +1480,13 @@ fun PostDetailScreen(
                                     is AuthResult.Success -> {
                                         post = result.data
                                         communityViewModel.syncPost(result.data)
-                                        snackbarHostState.showSnackbar("帖子已更新")
+                                        snackbarHostState.showSnackbar(Strings.postUpdated)
                                         showEditSheet = false
                                     }
                                     is AuthResult.Error -> {
                                         failureReport = buildPostFailureReport(
-                                            title = "帖子编辑失败",
-                                            stage = "编辑帖子",
+                                            title = Strings.postEditFailed,
+                                            stage = Strings.editPost,
                                             summary = result.message,
                                             contextLines = listOf(
                                                 "postId=$postId",
@@ -1421,11 +1515,11 @@ fun PostDetailScreen(
                 showReportSheet = false
                 scope.launch {
                     when (val result = apiClient.reportPost(postId, reason)) {
-                        is AuthResult.Success -> snackbarHostState.showSnackbar("举报已提交")
+                        is AuthResult.Success -> snackbarHostState.showSnackbar(Strings.reportSubmitted)
                         is AuthResult.Error -> {
                             failureReport = buildPostFailureReport(
-                                title = "帖子举报失败",
-                                stage = "举报帖子",
+                                title = Strings.postReportFailed,
+                                stage = Strings.reportPost,
                                 summary = result.message,
                                 contextLines = listOf(
                                     "postId=$postId",
@@ -1481,6 +1575,7 @@ private fun DetailActionButton(
     icon: ImageVector, activeIcon: ImageVector,
     label: String = "",
     isActive: Boolean, activeColor: Color,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     val inactiveColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f)
@@ -1502,7 +1597,7 @@ private fun DetailActionButton(
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.clickable(
+        modifier = modifier.clickable(
             interactionSource = remember { MutableInteractionSource() },
             indication = null
         ) {
@@ -1562,7 +1657,7 @@ private fun PostCommentRow(
                 if (comment.authorAvatarUrl != null) {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
-                            .data(comment.authorAvatarUrl).crossfade(true).build(),
+                            .data(GitHubAccelerator.accelerate(comment.authorAvatarUrl)).crossfade(true).build(),
                         contentDescription = null,
                         modifier = Modifier.fillMaxSize().clip(CircleShape),
                         contentScale = ContentScale.Crop
@@ -1585,11 +1680,8 @@ private fun PostCommentRow(
                         fontWeight = FontWeight.Bold, fontSize = 14.sp,
                         modifier = Modifier.clickable(onClick = onUserClick)
                     )
-                    if (comment.authorIsDeveloper) {
-                        Spacer(Modifier.width(3.dp))
-                        Icon(Icons.Filled.Verified, null, Modifier.size(14.dp),
-                            tint = MaterialTheme.colorScheme.primary)
-                    }
+                    Spacer(Modifier.width(4.dp))
+                    UserTitleBadges(isDeveloper = comment.authorIsDeveloper, subscriptionTier = comment.authorSubscriptionTier)
                     comment.createdAt?.let {
                         Text("  ·  ", fontSize = 13.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
@@ -1606,6 +1698,38 @@ private fun PostCommentRow(
                     mentionColor = MaterialTheme.colorScheme.primary,
                     onMentionClick = onMentionClick
                 )
+
+                // Comment media images
+                if (comment.media.isNotEmpty()) {
+                    Spacer(Modifier.height(6.dp))
+                    if (comment.media.size == 1) {
+                        val m = comment.media[0]
+                        val url = GitHubAccelerator.pickBestUrl(m.urlGitee, m.urlGithub)
+                        if (url != null) {
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current).data(url).crossfade(true).build(),
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp).clip(RoundedCornerShape(10.dp)),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                    } else {
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            items(comment.media.size) { idx ->
+                                val m = comment.media[idx]
+                                val url = GitHubAccelerator.pickBestUrl(m.urlGitee, m.urlGithub)
+                                if (url != null) {
+                                    AsyncImage(
+                                        model = ImageRequest.Builder(LocalContext.current).data(url).crossfade(true).build(),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(120.dp).clip(RoundedCornerShape(8.dp)),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
 
                 // Action row
                 Spacer(Modifier.height(6.dp))
@@ -1828,7 +1952,8 @@ fun MentionableText(
     lineHeight: androidx.compose.ui.unit.TextUnit = 20.sp,
     color: Color = MaterialTheme.colorScheme.onSurface,
     mentionColor: Color = MaterialTheme.colorScheme.primary,
-    onMentionClick: (String) -> Unit = {}
+    onMentionClick: (String) -> Unit = {},
+    onTextClick: () -> Unit = {}
 ) {
     val annotated = buildAnnotatedString {
         val regex = Regex("@(\\w{2,20})")
@@ -1855,10 +1980,12 @@ fun MentionableText(
             color = color
         ),
         onClick = { offset ->
-            annotated.getStringAnnotations("mention", offset, offset)
-                .firstOrNull()?.let { annotation ->
-                    onMentionClick(annotation.item)
-                }
+            val mention = annotated.getStringAnnotations("mention", offset, offset).firstOrNull()
+            if (mention != null) {
+                onMentionClick(mention.item)
+            } else {
+                onTextClick()
+            }
         }
     )
 }

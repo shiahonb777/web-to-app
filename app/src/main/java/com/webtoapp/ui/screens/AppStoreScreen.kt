@@ -5,6 +5,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -70,9 +71,11 @@ import com.webtoapp.ui.screens.community.CommunityPhysics
 import com.webtoapp.ui.screens.community.LikeBurstEffect
 import com.webtoapp.ui.screens.community.AnimatedCounter
 import com.webtoapp.ui.screens.community.StaggeredItem
+import com.webtoapp.ui.screens.community.ModuleCard
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.graphicsLayer
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.collectAsState
 import org.koin.compose.koinInject
@@ -87,6 +90,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 fun AppStoreScreen(
     cloudViewModel: CloudViewModel,
     onInstallModule: (String) -> Unit,
+    onNavigateToModule: (Int) -> Unit = {},
     downloadManager: AppDownloadManager? = null
 ) {
     val apiClient: CloudApiClient = koinInject()
@@ -303,7 +307,8 @@ fun AppStoreScreen(
                     cloudViewModel = cloudViewModel,
                     searchQuery = searchQuery,
                     isSearchActive = isSearchActive,
-                    onInstallModule = onInstallModule
+                    onInstallModule = onInstallModule,
+                    onNavigateToModule = onNavigateToModule
                 )
             }
         }
@@ -697,15 +702,16 @@ private fun ModulesTabContent(
     cloudViewModel: CloudViewModel,
     searchQuery: String,
     isSearchActive: Boolean,
-    onInstallModule: (String) -> Unit
-) {
+    onInstallModule: (String) -> Unit,
+    onNavigateToModule: (Int) -> Unit = {}) {
     val modules by cloudViewModel.storeModules.collectAsStateWithLifecycle()
     val loading by cloudViewModel.storeLoading.collectAsStateWithLifecycle()
     val total by cloudViewModel.storeTotal.collectAsStateWithLifecycle()
+    val featured by cloudViewModel.featuredModules.collectAsStateWithLifecycle()
+    val updatableIds by cloudViewModel.updatableModuleIds.collectAsStateWithLifecycle()
 
     // 跟踪是否已完成首次加载——避免空列表瞬间闪过
     var initialLoaded by remember { mutableStateOf(false) }
-    var selectedStoreModule by remember { mutableStateOf<StoreModuleInfo?>(null) }
 
     var selectedCategory by rememberSaveable { mutableStateOf<String?>(null) }
     var selectedSort by rememberSaveable { mutableStateOf("downloads") }
@@ -739,7 +745,11 @@ private fun ModulesTabContent(
     }
 
     // 首次进入触发加载
-    LaunchedEffect(Unit) { loadModules() }
+    LaunchedEffect(Unit) {
+        loadModules()
+        cloudViewModel.loadFeaturedModules()
+        cloudViewModel.checkModuleUpdates()
+    }
     LaunchedEffect(selectedCategory, selectedSort, sortOrder) { loadModules() }
     LaunchedEffect(searchQuery, isSearchActive) {
         if (!isSearchActive) loadModules()
@@ -788,6 +798,22 @@ private fun ModulesTabContent(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalArrangement = if (isLandscape) Arrangement.spacedBy(12.dp) else Arrangement.spacedBy(0.dp)
     ) {
+        // ── 精选推荐 Banner (full-width) ──
+        if (featured.isNotEmpty() && selectedCategory == null && searchQuery.isBlank()) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                FeaturedModuleBanner(
+                    modules = featured,
+                    onModuleClick = { onNavigateToModule(it.id) },
+                    onInstall = { module ->
+                        cloudViewModel.downloadStoreModule(
+                            moduleId = module.id,
+                            onResult = { shareCode -> onInstallModule(shareCode) }
+                        )
+                    }
+                )
+            }
+        }
+
         // ── 分类过滤 (full-width) ──
         item(span = { GridItemSpan(maxLineSpan) }) {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -818,7 +844,7 @@ private fun ModulesTabContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "$total 个模块",
+                    Strings.moduleCount.format(total),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -866,10 +892,16 @@ private fun ModulesTabContent(
         // ── 模块列表 — cards auto-fill grid columns ──
         if (!loading) {
             items(modules, key = { it.id }) { module ->
-                ModuleStoreCard(
+                ModuleCard(
                     module = module,
-                    onClick = { selectedStoreModule = module },
-                    onInstall = { selectedStoreModule = module }
+                    onClick = { onNavigateToModule(module.id) },
+                    onInstall = {
+                        cloudViewModel.downloadStoreModule(
+                            moduleId = module.id,
+                            onResult = { shareCode -> onInstallModule(shareCode) }
+                        )
+                    },
+                    hasUpdate = module.id in updatableIds
                 )
             }
         }
@@ -926,508 +958,184 @@ private fun ModulesTabContent(
         }
     }
 
-    // ── Module detail sheet ──
-    selectedStoreModule?.let { module ->
-        ModuleStoreDetailSheet(
-            module = module,
-            onDismiss = { selectedStoreModule = null },
-            onInstallWithCallback = { onComplete ->
-                cloudViewModel.downloadStoreModule(
-                    moduleId = module.id,
-                    onResult = { shareCode ->
-                        try {
-                            onInstallModule(shareCode)
-                            onComplete(true, Strings.storeInstallSuccess)
-                        } catch (e: Exception) {
-                            onComplete(false, e.message ?: Strings.storeInstallFailed)
-                        }
-                    },
-                    onError = { errorMsg ->
-                        onComplete(false, errorMsg)
-                    }
-                )
-            }
-        )
-    }
 }
-/**
- * 模块详情弹窗 — Twitter/X style (与 AppDetailSheet 统一)
- */
-@OptIn(ExperimentalMaterial3Api::class)
+
+
+
+
+// ════════════════════════════════════════════════
+// 精选推荐 Banner — App Store style auto-scroll
+// ════════════════════════════════════════════════
+
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun ModuleStoreDetailSheet(
-    module: StoreModuleInfo,
-    onDismiss: () -> Unit,
-    onInstallWithCallback: (onComplete: (success: Boolean, message: String) -> Unit) -> Unit
+private fun FeaturedModuleBanner(
+    modules: List<StoreModuleInfo>,
+    onModuleClick: (StoreModuleInfo) -> Unit,
+    onInstall: (StoreModuleInfo) -> Unit
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val apiClient = koinInject<com.webtoapp.core.cloud.CloudApiClient>()
+    val pagerState = rememberPagerState(pageCount = { modules.size })
     val installedTracker = koinInject<com.webtoapp.core.cloud.InstalledItemsTracker>()
-    val scope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
 
-    // Like state
-    var isLiked by remember { mutableStateOf(false) }
-    var currentLikeCount by remember { mutableIntStateOf(module.likeCount) }
-    var isLiking by remember { mutableStateOf(false) }
-
-    // Review state
-    var showReviewDialog by remember { mutableStateOf(false) }
-    var reviews by remember { mutableStateOf<List<com.webtoapp.core.cloud.AppReviewItem>>(emptyList()) }
-    var reviewsTotal by remember { mutableIntStateOf(0) }
-    var isLoadingReviews by remember { mutableStateOf(false) }
-
-    // Report state
-    var showReportDialog by remember { mutableStateOf(false) }
-    var actionFailureReport by remember { mutableStateOf<SheetFailureReport?>(null) }
-
-    // Download / Install state
-    var isDownloading by remember { mutableStateOf(false) }
-    var isInstalled by remember { mutableStateOf(installedTracker.isInstalled(module.id)) }
-
-    LaunchedEffect(module.id) {
-        when (val likeResult = apiClient.getModuleLikeStatus(module.id)) {
-            is com.webtoapp.core.auth.AuthResult.Success -> isLiked = likeResult.data
-            else -> {}
+    // Auto-scroll
+    LaunchedEffect(pagerState) {
+        while (true) {
+            delay(4000)
+            val nextPage = (pagerState.currentPage + 1) % modules.size
+            pagerState.animateScrollToPage(nextPage)
         }
-        isLoadingReviews = true
-        apiClient.getModuleReviews(module.id, page = 1, size = 5).onSuccess { resp ->
-            reviews = resp.reviews; reviewsTotal = resp.total
-        }
-        isLoadingReviews = false
     }
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        modifier = Modifier.fillMaxHeight(0.92f),
-        containerColor = MaterialTheme.colorScheme.surface,
-        contentWindowInsets = { WindowInsets(0) },
-        dragHandle = { BottomSheetDefaults.DragHandle() }
-    ) {
-        Scaffold(
-            containerColor = Color.Transparent,
-            snackbarHost = {
-                SnackbarHost(
-                    hostState = snackbarHostState,
-                    modifier = Modifier.padding(16.dp)
-                )
-            },
-            modifier = Modifier.fillMaxSize()
-        ) { scaffoldPadding ->
-        LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(scaffoldPadding),
-            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(0.dp)
-        ) {
-            // ── Header ──
-            item {
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Surface(shape = RoundedCornerShape(14.dp), color = Color.Transparent, modifier = Modifier.size(56.dp)) {
-                            Box(Modifier.fillMaxSize().background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.tertiaryContainer))), contentAlignment = Alignment.Center) {
-                                Icon(Icons.Outlined.Extension, null, Modifier.size(28.dp), tint = MaterialTheme.colorScheme.primary)
-                            }
-                        }
-                        Spacer(Modifier.width(14.dp))
-                        Column(Modifier.weight(1f)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(module.name, fontWeight = FontWeight.Bold, fontSize = 20.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
-                                if (module.isFeatured) { Spacer(Modifier.width(6.dp)); Icon(Icons.Filled.Verified, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary) }
-                            }
-                            Text("by ${module.authorName}", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
-                        }
-                    }
-                    Spacer(Modifier.height(14.dp))
-                    if (!module.description.isNullOrBlank()) { Text(module.description, fontSize = 15.sp, lineHeight = 22.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.88f)); Spacer(Modifier.height(10.dp)) }
-                    if (module.tags.isNotEmpty()) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                            module.tags.take(4).forEach { tag -> Surface(shape = RoundedCornerShape(6.dp), color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)) { Text("#$tag", fontSize = 11.sp, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Medium) } }
-                        }
-                        Spacer(Modifier.height(10.dp))
-                    }
-                    Text(buildString { module.versionName?.let { append("v$it  ·  ") }; append("${module.downloads} downloads  ·  ${module.ratingCount} ratings") }, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
-                    Spacer(Modifier.height(16.dp))
-                    Button(
-                        onClick = {
-                            if (isDownloading || isInstalled) return@Button
-                            isDownloading = true
-                            onInstallWithCallback { success, msg ->
-                                isDownloading = false
-                                if (success) {
-                                    isInstalled = true
-                                    installedTracker.markInstalled(module.id)
-                                    scope.launch { snackbarHostState.showSnackbar("✅ " + Strings.storeModuleInstallSuccess) }
-                                } else {
-                                    actionFailureReport = buildSheetFailureReport(
-                                        title = "模块安装失败",
-                                        stage = "安装模块",
-                                        summary = msg,
-                                        contextLines = listOf(
-                                            "moduleId=${module.id}",
-                                            "moduleName=${module.name}",
-                                            "versionName=${module.versionName ?: ""}"
-                                        )
-                                    )
-                                }
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth().height(44.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        enabled = !isDownloading,
-                        colors = if (isInstalled) ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF4CAF50)
-                        ) else ButtonDefaults.buttonColors()
-                    ) {
-                        if (isDownloading) {
-                            CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
-                            Spacer(Modifier.width(8.dp))
-                            Text(Strings.storeDownloading, fontWeight = FontWeight.SemiBold)
-                        } else if (isInstalled) {
-                            Icon(Icons.Filled.CheckCircle, null, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text(Strings.storeInstalled, fontWeight = FontWeight.SemiBold)
-                        } else {
-                            Icon(Icons.Outlined.Download, null, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text(Strings.moduleStoreInstall, fontWeight = FontWeight.SemiBold)
-                        }
-                    }
-                }
-            }
+    Column {
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxWidth().height(180.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            pageSpacing = 12.dp
+        ) { page ->
+            val module = modules[page]
+            val isInstalled = installedTracker.isInstalled(module.id)
 
-            // ── Physics action bar ──
-            item { Spacer(Modifier.height(8.dp)) }
-            item { GlassDivider() }
-            item {
-                Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    AppPhysicsActionButton(icon = Icons.Outlined.ChatBubbleOutline, activeIcon = Icons.Filled.ChatBubble, count = reviewsTotal, isActive = false, activeColor = MaterialTheme.colorScheme.primary, onClick = { showReviewDialog = true })
-                    AppPhysicsActionButton(icon = Icons.Outlined.ThumbUp, activeIcon = Icons.Filled.ThumbUp, count = currentLikeCount, isActive = isLiked, activeColor = Color(0xFF4CAF50), onClick = {
-                        if (isLiking) return@AppPhysicsActionButton; isLiking = true
-                        scope.launch {
-                            when (val r = apiClient.likeStoreModule(module.id)) {
-                                is com.webtoapp.core.auth.AuthResult.Success -> {
-                                    isLiked = r.data.liked
-                                    currentLikeCount = r.data.likeCount
-                                }
-                                is com.webtoapp.core.auth.AuthResult.Error -> {
-                                    actionFailureReport = buildSheetFailureReport(
-                                        title = "模块操作失败",
-                                        stage = "点赞模块",
-                                        summary = r.message,
-                                        contextLines = listOf(
-                                            "moduleId=${module.id}",
-                                            "moduleName=${module.name}",
-                                            "action=likeStoreModule"
-                                        )
-                                    )
-                                }
-                            }
-                            isLiking = false
-                        }
-                    })
-                    AppPhysicsActionButton(icon = Icons.Outlined.Share, activeIcon = Icons.Filled.Share, count = null, isActive = false, activeColor = MaterialTheme.colorScheme.primary, onClick = { })
-                    AppPhysicsActionButton(icon = Icons.Outlined.Flag, activeIcon = Icons.Filled.Flag, count = null, isActive = false, activeColor = Color(0xFFEF5350), onClick = { showReportDialog = true })
-                }
-            }
-            item { GlassDivider() }
-
-            // ── Reviews ──
-            if (reviews.isEmpty() && !isLoadingReviews) {
-                item { Box(Modifier.fillMaxWidth().padding(vertical = 48.dp), contentAlignment = Alignment.Center) { Column(horizontalAlignment = Alignment.CenterHorizontally) { Text(Strings.storeNoReviewsYet, fontSize = 15.sp, fontWeight = FontWeight.SemiBold); Spacer(Modifier.height(2.dp)); Text(Strings.storeBeFirstToReview, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)) } } }
-            }
-            items(reviews.size) { index ->
-                val review = reviews[index]
-                StaggeredItem(index = index) {
-                    Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-                        Avatar(name = review.authorName, size = 36)
-                        Spacer(Modifier.width(10.dp))
-                        Column(Modifier.weight(1f, true)) {
-                            Text(review.authorName, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
-                            val metaParts = mutableListOf<String>()
-                            review.deviceModel?.let { metaParts.add(it) }; review.ipAddress?.let { metaParts.add("IP $it") }; review.createdAt?.let { metaParts.add(it.take(16).replace("T", " ")) }
-                            if (metaParts.isNotEmpty()) { Text(metaParts.joinToString("  ·  "), fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 1.dp)) }
-                            Row(horizontalArrangement = Arrangement.spacedBy(1.dp), modifier = Modifier.padding(vertical = 2.dp)) { repeat(5) { i -> Icon(if (i < review.rating) Icons.Filled.Star else Icons.Outlined.StarBorder, null, Modifier.size(13.dp), tint = if (i < review.rating) Color(0xFFFFC107) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)) } }
-                            if (!review.comment.isNullOrBlank()) { Text(review.comment, fontSize = 15.sp, lineHeight = 21.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)) }
-                        }
-                    }
-                }
-                GlassDivider(Modifier.padding(start = 62.dp))
-            }
-            item { Spacer(modifier = Modifier.height(32.dp)) }
-        }
-        } // Scaffold
-    }
-
-    // Report dialog
-    if (showReportDialog) {
-        ReportDialog(appName = Strings.storeReportAppTitle + " \"" + module.name + "\"", onDismiss = { showReportDialog = false }, onSubmit = { reason, _ ->
-            scope.launch {
-                when (val r = apiClient.reportStoreModule(module.id, reason)) {
-                    is com.webtoapp.core.auth.AuthResult.Success -> snackbarHostState.showSnackbar(Strings.storeReportSuccess)
-                    is com.webtoapp.core.auth.AuthResult.Error -> {
-                        actionFailureReport = buildSheetFailureReport(
-                            title = "模块举报失败",
-                            stage = "举报模块",
-                            summary = Strings.storeReportFailed + ": ${r.message}",
-                            contextLines = listOf(
-                                "moduleId=${module.id}",
-                                "moduleName=${module.name}",
-                                "reason=$reason"
+            EnhancedElevatedCard(
+                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier.fillMaxSize().clickable { onModuleClick(module) }
+            ) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    // Gradient background
+                    Box(
+                        modifier = Modifier.fillMaxSize().background(
+                            Brush.linearGradient(
+                                listOf(
+                                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
+                                    MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.4f),
+                                    MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f)
+                                )
                             )
                         )
-                    }
-                }
-                showReportDialog = false
-            }
-        })
-    }
+                    )
 
-    // Review dialog
-    if (showReviewDialog) {
-        var reviewRating by remember { mutableIntStateOf(5) }
-        var reviewComment by remember { mutableStateOf("") }
-        var isSubmittingReview by remember { mutableStateOf(false) }
-        AlertDialog(
-            onDismissRequest = { if (!isSubmittingReview) showReviewDialog = false },
-            icon = { Surface(shape = RoundedCornerShape(16.dp), color = Color.Transparent, modifier = Modifier.size(48.dp)) { Box(Modifier.fillMaxSize().background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f), MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f))), RoundedCornerShape(16.dp)), contentAlignment = Alignment.Center) { Icon(Icons.Outlined.RateReview, null, Modifier.size(24.dp), tint = MaterialTheme.colorScheme.tertiary) } } },
-            title = { Text("\"" + Strings.storeReviewSubmitTitle + " \"" + module.name + "\"", fontWeight = FontWeight.Bold) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                        Text(Strings.storeReviewRatingLabel, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            (1..5).forEach { star -> IconButton(onClick = { reviewRating = star }, modifier = Modifier.size(36.dp)) { Icon(if (star <= reviewRating) Icons.Filled.Star else Icons.Outlined.StarBorder, "Star $star", tint = if (star <= reviewRating) Color(0xFFFFC107) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f), modifier = Modifier.size(28.dp)) } }
-                        }
-                    }
-                    OutlinedTextField(value = reviewComment, onValueChange = { reviewComment = it }, label = { Text(Strings.storeReviewCommentLabel) }, placeholder = { Text(Strings.storeReviewPlaceholder) }, minLines = 2, maxLines = 4, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
-                }
-            },
-            confirmButton = {
-                Button(onClick = {
-                    isSubmittingReview = true
-                    scope.launch {
-                        when (val result = apiClient.reviewStoreModule(module.id, reviewRating, reviewComment.ifBlank { null })) {
-                            is com.webtoapp.core.auth.AuthResult.Success -> { isSubmittingReview = false; showReviewDialog = false; apiClient.getModuleReviews(module.id, page = 1, size = 5).onSuccess { reviews = it.reviews; reviewsTotal = it.total }; snackbarHostState.showSnackbar(Strings.storeReviewSuccess) }
-                            is com.webtoapp.core.auth.AuthResult.Error -> {
-                                isSubmittingReview = false
-                                actionFailureReport = buildSheetFailureReport(
-                                    title = "模块评价提交失败",
-                                    stage = "提交评价",
-                                    summary = Strings.storeReviewFailed + ": ${result.message}",
-                                    contextLines = listOf(
-                                        "moduleId=${module.id}",
-                                        "moduleName=${module.name}",
-                                        "rating=$reviewRating",
-                                        "comment=$reviewComment"
-                                    )
-                                )
+                    // Content
+                    Row(
+                        modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Left: info
+                        Column(modifier = Modifier.weight(1f)) {
+                            // Featured badge
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = Color(0xFFFFA726).copy(alpha = 0.18f)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(3.dp)
+                                ) {
+                                    Icon(Icons.Filled.Star, null, modifier = Modifier.size(11.dp),
+                                        tint = Color(0xFFFFA726))
+                                    Text(Strings.featured, fontSize = 10.sp, fontWeight = FontWeight.SemiBold,
+                                        color = Color(0xFFFFA726))
+                                }
+                            }
+                            Spacer(Modifier.height(8.dp))
+                            Text(module.name, fontWeight = FontWeight.Bold, fontSize = 18.sp,
+                                maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                color = MaterialTheme.colorScheme.onSurface)
+                            Spacer(Modifier.height(3.dp))
+                            Text("by ${module.authorName}", fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
+                            if (!module.description.isNullOrBlank()) {
+                                Spacer(Modifier.height(6.dp))
+                                Text(module.description, fontSize = 13.sp, maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis, lineHeight = 17.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f))
+                            }
+                            Spacer(Modifier.height(8.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                // Downloads
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Outlined.Download, null, Modifier.size(13.dp),
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                                    Spacer(Modifier.width(2.dp))
+                                    Text("${module.downloads}", fontSize = 11.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                                }
+                                // Rating
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Filled.Star, null, Modifier.size(13.dp), tint = Color(0xFFFFC107))
+                                    Spacer(Modifier.width(2.dp))
+                                    Text(if (module.ratingCount > 0) String.format("%.1f", module.rating) else "-",
+                                        fontSize = 11.sp, fontWeight = FontWeight.SemiBold,
+                                        color = Color(0xFFFFC107))
+                                }
                             }
                         }
-                    }
-                }, enabled = !isSubmittingReview, shape = RoundedCornerShape(10.dp)) {
-                    if (isSubmittingReview) { CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary); Spacer(Modifier.width(8.dp)) }
-                    Text(Strings.storeReviewSubmit)
-                }
-            },
-            dismissButton = { TextButton(onClick = { showReviewDialog = false }, enabled = !isSubmittingReview) { Text(Strings.storeReviewCancel) } }
-        )
-    }
 
-    actionFailureReport?.let { report ->
-        SheetFailureReportDialog(
-            report = report,
-            onDismiss = { actionFailureReport = null }
-        )
-    }
-}
-
-
-// ════════════════════════════════════════════════
-// 模块列表卡片
-// ════════════════════════════════════════════════
-
-@Composable
-private fun ModuleStoreCard(module: StoreModuleInfo, onClick: () -> Unit, onInstall: () -> Unit) {
-    val installedTracker = koinInject<com.webtoapp.core.cloud.InstalledItemsTracker>()
-    val isInstalled = installedTracker.isInstalled(module.id)
-    EnhancedElevatedCard(
-        shape = RoundedCornerShape(18.dp),
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                // Gradient icon
-                Surface(
-                    shape = RoundedCornerShape(14.dp),
-                    color = Color.Transparent,
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.linearGradient(
-                                    listOf(
-                                        MaterialTheme.colorScheme.primaryContainer,
-                                        MaterialTheme.colorScheme.tertiaryContainer
-                                    )
-                                )
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            Icons.Outlined.Extension,
-                            null,
-                            modifier = Modifier.size(24.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.width(14.dp))
-                Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(module.name, fontWeight = FontWeight.Bold, fontSize = 15.sp, maxLines = 1,
-                            overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(weight = 1f, fill = false))
-                        if (module.isFeatured) {
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Surface(shape = RoundedCornerShape(6.dp), color = Color(0xFFFFA726).copy(alpha = 0.12f)) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(2.dp)
+                        // Right: icon + install
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            // Module icon
+                            Surface(
+                                shape = RoundedCornerShape(16.dp),
+                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
+                                modifier = Modifier.size(56.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                    Icon(Icons.Outlined.Extension, null, Modifier.size(28.dp),
+                                        tint = MaterialTheme.colorScheme.primary)
+                                }
+                            }
+                            Spacer(Modifier.height(8.dp))
+                            if (isInstalled) {
+                                Surface(shape = RoundedCornerShape(8.dp),
+                                    color = Color(0xFF4CAF50).copy(alpha = 0.15f)) {
+                                    Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                                        Icon(Icons.Filled.CheckCircle, null, Modifier.size(13.dp),
+                                            tint = Color(0xFF4CAF50))
+                                        Text(Strings.installed, fontSize = 10.sp,
+                                            color = Color(0xFF4CAF50), fontWeight = FontWeight.Medium)
+                                    }
+                                }
+                            } else {
+                                FilledTonalButton(
+                                    onClick = { onInstall(module) },
+                                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 4.dp),
+                                    shape = RoundedCornerShape(8.dp)
                                 ) {
-                                    Icon(Icons.Filled.Star, null, modifier = Modifier.size(10.dp), tint = Color(0xFFFFA726))
-                                    Text(Strings.moduleStoreFeatured, fontSize = 9.sp, fontWeight = FontWeight.SemiBold,
-                                        color = Color(0xFFFFA726), letterSpacing = 0.3.sp)
+                                    Icon(Icons.Outlined.Download, null, Modifier.size(13.dp))
+                                    Spacer(Modifier.width(3.dp))
+                                    Text(Strings.install, fontSize = 10.sp, fontWeight = FontWeight.Medium)
                                 }
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text("by ${module.authorName}", style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
-                        letterSpacing = 0.2.sp)
                 }
             }
+        }
 
-            if (!module.description.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(10.dp))
-                Text(module.description, style = MaterialTheme.typography.bodySmall,
-                    maxLines = 2, overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
-                    lineHeight = 18.sp)
-            }
-
-            // Tags as styled pills
-            if (module.tags.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(10.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                    module.tags.take(3).forEach { tag ->
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
-                        ) {
-                            Text(tag, fontSize = 10.sp,
-                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                                letterSpacing = 0.2.sp)
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Bottom bar: stats pills + install button
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                // Downloads pill
-                Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainerHighest
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(3.dp)
-                    ) {
-                        Icon(Icons.Outlined.Download, null, modifier = Modifier.size(11.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
-                        Text("${module.downloads}",
-                            fontSize = 10.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(6.dp))
-
-                // Rating pill
-                Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = Color(0xFFFFC107).copy(alpha = 0.1f)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(3.dp)
-                    ) {
-                        Icon(Icons.Filled.Star, null, modifier = Modifier.size(11.dp),
-                            tint = Color(0xFFFFC107))
-                        Text(
-                            if (module.ratingCount > 0) "${module.rating}" else "-",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFFFFC107)
+        // Page indicator dots
+        Row(
+            Modifier.fillMaxWidth().padding(top = 8.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            repeat(modules.size) { index ->
+                val isSelected = pagerState.currentPage == index
+                Box(
+                    modifier = Modifier
+                        .padding(horizontal = 3.dp)
+                        .size(if (isSelected) 7.dp else 5.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (isSelected) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
                         )
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(6.dp))
-
-                // Version pill
-                module.versionName?.let {
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerHighest
-                    ) {
-                        Text("v$it", fontSize = 10.sp,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
-                    }
-                }
-
-                Spacer(modifier = Modifier.weight(weight = 1f, fill = true))
-
-                // Install button — shows Strings.storeInstalled if already installed
-                if (isInstalled) {
-                    FilledTonalButton(
-                        onClick = onClick,
-                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.height(32.dp),
-                        colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = Color(0xFF4CAF50).copy(alpha = 0.15f)
-                        )
-                    ) {
-                        Icon(Icons.Filled.CheckCircle, null, modifier = Modifier.size(14.dp),
-                            tint = Color(0xFF4CAF50))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(Strings.storeInstalled, fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF4CAF50))
-                    }
-                } else {
-                    Button(
-                        onClick = onInstall,
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.height(32.dp)
-                    ) {
-                        Icon(Icons.Outlined.Download, null, modifier = Modifier.size(14.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(Strings.moduleStoreInstall, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                    }
-                }
+                )
             }
         }
     }
@@ -2116,8 +1824,8 @@ private fun AppDetailSheet(
                                                         uriHandler.openUri(url)
                                                     } else {
                                                         actionFailureReport = buildSheetFailureReport(
-                                                            title = "应用下载失败",
-                                                            stage = "获取下载链接",
+                                                            title = Strings.appDownloadFailed,
+                                                            stage = Strings.getDownloadLinkStage,
                                                             summary = Strings.storeNoDownloadLink,
                                                             contextLines = listOf(
                                                                 "appId=${detail.id}",
@@ -2129,8 +1837,8 @@ private fun AppDetailSheet(
                                                 }
                                                 result.onFailure { e ->
                                                     actionFailureReport = buildSheetFailureReport(
-                                                        title = "应用下载失败",
-                                                        stage = "获取下载链接",
+                                                        title = Strings.appDownloadFailed,
+                                                        stage = Strings.getDownloadLinkStage,
                                                         summary = context.getString(
                                                             com.webtoapp.R.string.store_get_download_link_failed,
                                                             (e.message ?: "")
@@ -2145,8 +1853,8 @@ private fun AppDetailSheet(
                                                 }
                                             } catch (e: Exception) {
                                                 actionFailureReport = buildSheetFailureReport(
-                                                    title = "应用下载失败",
-                                                    stage = "请求下载接口",
+                                                    title = Strings.appDownloadFailed,
+                                                    stage = Strings.requestDownloadApiStage,
                                                     summary = context.getString(
                                                         com.webtoapp.R.string.store_network_error,
                                                         (e.message ?: "")
@@ -2196,8 +1904,8 @@ private fun AppDetailSheet(
                                                 uriHandler.openUri(url)
                                             } else {
                                                 actionFailureReport = buildSheetFailureReport(
-                                                    title = "应用下载失败",
-                                                    stage = "获取下载链接",
+                                                    title = Strings.appDownloadFailed,
+                                                    stage = Strings.getDownloadLinkStage,
                                                     summary = Strings.storeNoDownloadLink,
                                                     contextLines = listOf(
                                                         "appId=${detail.id}",
@@ -2209,8 +1917,8 @@ private fun AppDetailSheet(
                                         }
                                         result.onFailure { e ->
                                             actionFailureReport = buildSheetFailureReport(
-                                                title = "应用下载失败",
-                                                stage = "获取下载链接",
+                                                title = Strings.appDownloadFailed,
+                                                stage = Strings.getDownloadLinkStage,
                                                 summary = context.getString(
                                                     com.webtoapp.R.string.store_get_download_link_failed,
                                                     (e.message ?: "")
@@ -2225,8 +1933,8 @@ private fun AppDetailSheet(
                                         }
                                     } catch (e: Exception) {
                                         actionFailureReport = buildSheetFailureReport(
-                                            title = "应用下载失败",
-                                            stage = "请求下载接口",
+                                            title = Strings.appDownloadFailed,
+                                            stage = Strings.requestDownloadApiStage,
                                             summary = context.getString(
                                                 com.webtoapp.R.string.store_network_error,
                                                 (e.message ?: "")
@@ -2433,8 +2141,8 @@ private fun AppDetailSheet(
                                         is com.webtoapp.core.auth.AuthResult.Error -> {
                                             isLiking = false
                                             actionFailureReport = buildSheetFailureReport(
-                                                title = "应用操作失败",
-                                                stage = "点赞应用",
+                                                title = Strings.appActionFailed,
+                                                stage = Strings.likeAppStage,
                                                 summary = result.message,
                                                 contextLines = listOf(
                                                     "appId=${detail.id}",
@@ -2556,8 +2264,8 @@ private fun AppDetailSheet(
                         }
                         is com.webtoapp.core.auth.AuthResult.Error -> {
                             actionFailureReport = buildSheetFailureReport(
-                                title = "应用举报失败",
-                                stage = "举报应用",
+                                title = Strings.appReportFailed,
+                                stage = Strings.reportAppStage,
                                 summary = context.getString(
                                     com.webtoapp.R.string.store_report_failed,
                                     result.message
@@ -2683,8 +2391,8 @@ private fun AppDetailSheet(
                                 is com.webtoapp.core.auth.AuthResult.Error -> {
                                     isSubmittingReview = false
                                     actionFailureReport = buildSheetFailureReport(
-                                        title = "应用评价提交失败",
-                                        stage = "提交评价",
+                                        title = Strings.appReviewSubmitFailed,
+                                        stage = Strings.submitReviewStage,
                                         summary = Strings.storeReviewFailed + ": ${result.message}",
                                         contextLines = listOf(
                                             "appId=${detail.id}",
@@ -2773,7 +2481,7 @@ private fun ReportDialog(
                 }
             }
         },
-        title = { Text("举报「$appName」", fontWeight = FontWeight.Bold) },
+        title = { Text(Strings.reportAppTitle.format(appName), fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(Strings.storeReportSelectReason,
@@ -3387,7 +3095,7 @@ private fun DownloadManagerSheet(
                                                 .background(Color(0xFF10B981), CircleShape)
                                         )
                                         Text(
-                                            "已下载",
+                                            Strings.downloaded,
                                             style = MaterialTheme.typography.titleSmall,
                                             color = Color(0xFF10B981),
                                             fontWeight = FontWeight.Bold
@@ -4192,7 +3900,7 @@ private fun ItemDeleteConfirmDialog(
         },
         title = { Text(Strings.storeConfirmDelistTitle, fontWeight = FontWeight.Bold) },
         text = {
-            Text("确定要下架「${itemName}」吗？\n\n下架后将从${storeName}中移除，其他用户将无法看到或${actionVerb}。此操作不可撤销。")
+            Text(Strings.confirmDelistMessage.format(itemName, storeName, actionVerb))
         },
         confirmButton = {
             Button(
@@ -4508,18 +4216,18 @@ private fun MyAppsSheet(
     val totalLikes = remember(myApps) { myApps.sumOf { it.likeCount } }
 
     val categoryLabels = mapOf(
-        "tools" to Strings.catTools, "social" to Strings.catSocial, "education" to "教育",
-        "entertainment" to "娱乐", "productivity" to "效率",
-        "lifestyle" to "生活", "business" to "商务",
-        "news" to "新闻", "finance" to "金融",
-        "health" to "健康", "other" to Strings.catOther
+        "tools" to Strings.catTools, "social" to Strings.catSocial, "education" to Strings.catEducation,
+        "entertainment" to Strings.catEntertainment, "productivity" to Strings.catProductivity,
+        "lifestyle" to Strings.catLifestyle, "business" to Strings.catBusiness,
+        "news" to Strings.catNews, "finance" to Strings.catFinance,
+        "health" to Strings.catHealth, "other" to Strings.catOther
     )
 
     // ── 删除确认（共享组件） ──
     appToDelete?.let { app ->
         ItemDeleteConfirmDialog(
             itemName = app.name,
-            storeName = "商店",
+            storeName = Strings.storeName,
             actionVerb = "Download this app",
             isDeleting = isDeleting,
             onConfirm = {
@@ -4532,8 +4240,8 @@ private fun MyAppsSheet(
                         }
                         is com.webtoapp.core.auth.AuthResult.Error -> {
                             actionFailureReport = buildSheetFailureReport(
-                                title = "应用下架失败",
-                                stage = "下架已发布应用",
+                                title = Strings.appUnpublishFailed,
+                                stage = Strings.unpublishPublishedAppStage,
                                 summary = result.message,
                                 contextLines = listOf(
                                     "appId=${app.id}",
@@ -4631,7 +4339,7 @@ private fun MyAppsSheet(
                 PublishedItemEmptyState(
                     icon = Icons.Outlined.RocketLaunch,
                     title = Strings.storeNoPublishedApps,
-                    subtitle = "将你制作的 APP 发布到商店\n让更多人发现和使用你的作品",
+                    subtitle = Strings.publishAppSubtitle,
                     onAction = onDismiss
                 )
             } else {
@@ -4942,11 +4650,11 @@ private fun ManagementOverviewTab(app: AppStoreItem, apiClient: CloudApiClient? 
     var actionFailureReport by remember { mutableStateOf<SheetFailureReport?>(null) }
 
     val categories = listOf(
-        "tools" to Strings.catTools, "social" to Strings.catSocial, "education" to "教育",
-        "entertainment" to "娱乐", "productivity" to "效率",
-        "lifestyle" to "生活", "business" to "商务",
-        "news" to "新闻", "finance" to "金融",
-        "health" to "健康", "other" to Strings.catOther
+        "tools" to Strings.catTools, "social" to Strings.catSocial, "education" to Strings.catEducation,
+        "entertainment" to Strings.catEntertainment, "productivity" to Strings.catProductivity,
+        "lifestyle" to Strings.catLifestyle, "business" to Strings.catBusiness,
+        "news" to Strings.catNews, "finance" to Strings.catFinance,
+        "health" to Strings.catHealth, "other" to Strings.catOther
     )
 
     // 编辑对话框
@@ -5039,8 +4747,8 @@ private fun ManagementOverviewTab(app: AppStoreItem, apiClient: CloudApiClient? 
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("确定要删除「${app.name}」吗？", style = MaterialTheme.typography.bodyMedium)
-                    Text("此操作不可撤销，应用的所有数据（激活码、公告、用户数据等）都将被永久删除。",
+                    Text(Strings.confirmDeleteAppMessage.format(app.name), style = MaterialTheme.typography.bodyMedium)
+                    Text(Strings.deleteAppWarning,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.error.copy(alpha = 0.7f))
                 }
@@ -5057,8 +4765,8 @@ private fun ManagementOverviewTab(app: AppStoreItem, apiClient: CloudApiClient? 
                                 }
                                 is com.webtoapp.core.auth.AuthResult.Error -> {
                                     actionFailureReport = buildSheetFailureReport(
-                                        title = "应用删除失败",
-                                        stage = "删除应用",
+                                        title = Strings.appDeleteFailed,
+                                        stage = Strings.deleteAppStage,
                                         summary = result.message,
                                         contextLines = listOf(
                                             "appId=${app.id}",
@@ -5076,7 +4784,7 @@ private fun ManagementOverviewTab(app: AppStoreItem, apiClient: CloudApiClient? 
                     shape = RoundedCornerShape(10.dp)
                 ) {
                     if (isDeleting) { CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = Color.White); Spacer(Modifier.width(6.dp)) }
-                    Text(if (isDeleting) "删除中…" else "确认删除", color = Color.White)
+                    Text(if (isDeleting) Strings.deleting else Strings.confirmDelete, color = Color.White)
                 }
             },
             dismissButton = { TextButton(onClick = { showDeleteDialog = false }, enabled = !isDeleting) { Text(Strings.storeReviewCancel) } }
@@ -5087,9 +4795,9 @@ private fun ManagementOverviewTab(app: AppStoreItem, apiClient: CloudApiClient? 
         // 渐变三格统计
         item {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                GradientMiniStat(mgmtGradientBlue, Icons.Outlined.Download, "${app.downloads}", "下载", Modifier.weight(1f))
+                GradientMiniStat(mgmtGradientBlue, Icons.Outlined.Download, "${app.downloads}", Strings.downloads, Modifier.weight(1f))
                 GradientMiniStat(mgmtGradientOrange, Icons.Filled.Star, String.format("%.1f", app.rating), Strings.storeReviewRatingLabel, Modifier.weight(1f))
-                GradientMiniStat(mgmtGradientGreen, Icons.Outlined.ThumbUp, "${app.likeCount}", "点赞", Modifier.weight(1f))
+                GradientMiniStat(mgmtGradientGreen, Icons.Outlined.ThumbUp, "${app.likeCount}", Strings.likes, Modifier.weight(1f))
             }
         }
         // 应用信息卡
@@ -5098,21 +4806,21 @@ private fun ManagementOverviewTab(app: AppStoreItem, apiClient: CloudApiClient? 
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(Modifier.size(4.dp, 18.dp).clip(RoundedCornerShape(2.dp)).background(Brush.linearGradient(mgmtGradientBlue)))
-                        Text("应用信息", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        Text(Strings.appInfo, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.weight(1f))
                         if (apiClient != null) {
                             IconButton(onClick = { showEditDialog = true }, modifier = Modifier.size(28.dp)) {
-                                Icon(Icons.Outlined.Edit, "编辑", Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
+                                Icon(Icons.Outlined.Edit, Strings.editLabel, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
                             }
                         }
                     }
                     Spacer(Modifier.height(2.dp))
-                    OverviewInfoRow("应用 ID", "#${app.id}")
-                    OverviewInfoRow("版本", "v${app.versionName}")
+                    OverviewInfoRow(Strings.appId, "#${app.id}")
+                    OverviewInfoRow(Strings.version, "v${app.versionName}")
                     OverviewInfoRow("Category", app.category)
-                    OverviewInfoRow("包名", app.packageName ?: "—")
-                    OverviewInfoRow("发布者", app.authorName)
-                    app.createdAt?.let { OverviewInfoRow("发布时间", it.take(10)) }
+                    OverviewInfoRow(Strings.packageName, app.packageName ?: "—")
+                    OverviewInfoRow(Strings.publisher, app.authorName)
+                    app.createdAt?.let { OverviewInfoRow(Strings.publishTime, it.take(10)) }
                 }
             }
         }
@@ -5142,9 +4850,9 @@ private fun ManagementOverviewTab(app: AppStoreItem, apiClient: CloudApiClient? 
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Icon(Icons.Outlined.Warning, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error)
-                            Text("危险区域", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
+                            Text(Strings.dangerZone, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
                         }
-                        Text("删除应用后所有数据将不可恢复", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
+                        Text(Strings.deleteAppDataWarning, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
                         OutlinedButton(
                             onClick = { showDeleteDialog = true },
                             colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
@@ -5154,7 +4862,7 @@ private fun ManagementOverviewTab(app: AppStoreItem, apiClient: CloudApiClient? 
                         ) {
                             Icon(Icons.Outlined.DeleteForever, null, Modifier.size(16.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text("删除此应用", fontWeight = FontWeight.SemiBold)
+                            Text(Strings.deleteThisApp, fontWeight = FontWeight.SemiBold)
                         }
                     }
                 }
@@ -5192,12 +4900,12 @@ private fun ManagementActivationTab(app: AppStoreItem, apiClient: CloudApiClient
                     Box(Modifier.size(32.dp).clip(RoundedCornerShape(10.dp)).background(Brush.linearGradient(mgmtGradientPurple)), contentAlignment = Alignment.Center) {
                         Icon(Icons.Outlined.VpnKey, null, Modifier.size(16.dp), tint = Color.White)
                     }
-                    Text("添加激活码", fontWeight = FontWeight.Bold)
+                    Text(Strings.addActivationCode, fontWeight = FontWeight.Bold)
                 }
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("选择模板快速生成", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(Strings.selectTemplateQuickGenerate, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         listOf("numeric6" to "🔢 数字码", "standard" to "📋 标准码", "uuid" to "🔗 UUID").forEach { (id, label) ->
                             Surface(
@@ -5215,17 +4923,17 @@ private fun ManagementActivationTab(app: AppStoreItem, apiClient: CloudApiClient
                         }
                     }
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-                    Text("或自定义（每行一个）", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    OutlinedTextField(value = newCodes, onValueChange = { newCodes = it; selectedTemplate = null }, modifier = Modifier.fillMaxWidth().height(150.dp), placeholder = { Text("输入激活码…", fontSize = 13.sp) }, shape = RoundedCornerShape(12.dp), textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace))
+                    Text(Strings.orCustomPerLine, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    OutlinedTextField(value = newCodes, onValueChange = { newCodes = it; selectedTemplate = null }, modifier = Modifier.fillMaxWidth().height(150.dp), placeholder = { Text(Strings.enterActivationCode, fontSize = 13.sp) }, shape = RoundedCornerShape(12.dp), textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace))
                     Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)) {
-                        Text("共 ${newCodes.lines().filter { it.isNotBlank() }.size} 个", Modifier.padding(horizontal = 10.dp, vertical = 4.dp), fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+                        Text(Strings.totalCodes.format(newCodes.lines().filter { it.isNotBlank() }.size), Modifier.padding(horizontal = 10.dp, vertical = 4.dp), fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
                     }
                 }
             },
             confirmButton = {
                 Button(onClick = { val cl = newCodes.lines().filter { it.isNotBlank() }.map { it.trim() }; if (cl.isNotEmpty()) { isAdding = true; scope.launch { apiClient.createActivationCodes(app.id, cl); loadSettings(); showAddDialog = false; isAdding = false; newCodes = "" } } }, enabled = !isAdding && newCodes.lines().any { it.isNotBlank() }, shape = RoundedCornerShape(10.dp)) {
                     if (isAdding) { CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp); Spacer(Modifier.width(6.dp)) }
-                    Text(if (isAdding) "添加中…" else "添加")
+                    Text(if (isAdding) Strings.adding else Strings.addLabel)
                 }
             },
             dismissButton = { TextButton(onClick = { showAddDialog = false }, enabled = !isAdding) { Text(Strings.storeReviewCancel) } }
@@ -5233,7 +4941,7 @@ private fun ManagementActivationTab(app: AppStoreItem, apiClient: CloudApiClient
     }
 
     LazyColumn(Modifier.fillMaxSize().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(bottom = 32.dp)) {
-        if (isLoading) { item { PublishedItemLoadingState("加载激活码…") } }
+        if (isLoading) { item { PublishedItemLoadingState(Strings.loadingActivationCodes) } }
         else if (errorMsg != null) { item { PublishedItemErrorState(errorMsg) { loadSettings() } } }
         else {
             val s = settings ?: return@LazyColumn
@@ -5243,15 +4951,15 @@ private fun ManagementActivationTab(app: AppStoreItem, apiClient: CloudApiClient
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Box(Modifier.size(4.dp, 18.dp).clip(RoundedCornerShape(2.dp)).background(Brush.linearGradient(mgmtGradientPurple)))
-                            Text("激活码设置", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                            Text(Strings.activationCodeSettings, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                         }
                         Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
-                            Column { Text("启用激活码验证", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold); Text("用户需输入激活码才能使用", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)) }
+                            Column { Text(Strings.enableActivationVerification, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold); Text(Strings.userNeedActivationCode, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)) }
                             Switch(checked = s.enabled, onCheckedChange = { scope.launch { apiClient.updateActivationSettings(app.id, it, s.deviceBindingEnabled, s.maxDevicesPerCode); loadSettings() } })
                         }
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
                         Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
-                            Column { Text("设备绑定", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold); Text("每个激活码绑定一台设备", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)) }
+                            Column { Text(Strings.enableDeviceBinding, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold); Text(Strings.oneCodeOneDevice, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)) }
                             Switch(checked = s.deviceBindingEnabled, onCheckedChange = { scope.launch { apiClient.updateActivationSettings(app.id, s.enabled, it, s.maxDevicesPerCode); loadSettings() } })
                         }
                     }
@@ -5260,9 +4968,9 @@ private fun ManagementActivationTab(app: AppStoreItem, apiClient: CloudApiClient
             // 渐变统计
             item {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    GradientMiniStat(mgmtGradientPurple, Icons.Outlined.VpnKey, "${s.totalCodes}", "总激活码", Modifier.weight(1f))
-                    GradientMiniStat(mgmtGradientGreen, Icons.Outlined.CheckCircle, "${s.usedCodes}", "已使用", Modifier.weight(1f))
-                    GradientMiniStat(mgmtGradientOrange, Icons.Outlined.Pending, "${s.totalCodes - s.usedCodes}", "未使用", Modifier.weight(1f))
+                    GradientMiniStat(mgmtGradientPurple, Icons.Outlined.VpnKey, "${s.totalCodes}", Strings.totalActivationCodesShort, Modifier.weight(1f))
+                    GradientMiniStat(mgmtGradientGreen, Icons.Outlined.CheckCircle, "${s.usedCodes}", Strings.usedCodes, Modifier.weight(1f))
+                    GradientMiniStat(mgmtGradientOrange, Icons.Outlined.Pending, "${s.totalCodes - s.usedCodes}", Strings.unusedCodes, Modifier.weight(1f))
                 }
             }
             // 渐变添加按钮
@@ -5270,7 +4978,7 @@ private fun ManagementActivationTab(app: AppStoreItem, apiClient: CloudApiClient
                 Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Brush.linearGradient(mgmtGradientPurple)).clickable { showAddDialog = true }.padding(vertical = 13.dp), contentAlignment = Alignment.Center) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         Icon(Icons.Outlined.Add, null, Modifier.size(18.dp), tint = Color.White)
-                        Text("添加激活码", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 14.sp)
+                        Text(Strings.addActivationCode, fontWeight = FontWeight.Bold, color = Color.White, fontSize = 14.sp)
                     }
                 }
             }
@@ -5285,7 +4993,7 @@ private fun ManagementActivationTab(app: AppStoreItem, apiClient: CloudApiClient
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                             Text(code.code, style = MaterialTheme.typography.bodySmall, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, fontWeight = FontWeight.SemiBold)
                             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                CategoryTag(if (code.isUsed) "已使用" else "未使用", if (code.isUsed) Color(0xFF10B981) else Color(0xFFF59E0B))
+                                CategoryTag(if (code.isUsed) Strings.usedCode else Strings.unusedCode, if (code.isUsed) Color(0xFF10B981) else Color(0xFFF59E0B))
                                 code.usedByDeviceId?.let { Text("📱 ${it.take(8)}…", fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)) }
                             }
                         }
@@ -5318,30 +5026,30 @@ private fun ManagementAnnouncementTab(app: AppStoreItem, apiClient: CloudApiClie
 
     data class ATemplate(val id: String, val name: String, val emoji: String, val title: String, val content: String, val type: String)
     val templates = listOf(
-        ATemplate("maintenance", "系统维护", "🔧", "系统维护通知", "尊敬的用户，我们将于 [时间] 进行系统维护升级，预计维护时长 [X] 小时。维护期间可能无法正常使用，敬请谅解。", "warning"),
-        ATemplate("feature", "功能更新", "🎉", "新功能上线", "好消息！我们推出了全新的 [功能名称]：\n\n• 新增 [功能1]\n• 优化 [功能2]\n• 修复 [问题]", "info"),
-        ATemplate("security", "安全提醒", "🔒", "安全公告", "请注意：\n\n• 请勿分享激活码\n• 定期更新应用\n• 发现异常请联系我们", "warning"),
-        ATemplate("event", "活动通知", "🎁", "限时活动", "🎊 [活动名称] 现已开启！\n\n活动时间：[开始] - [结束]\n\n快来参与吧！", "event")
+        ATemplate("maintenance", Strings.templateMaintenance, "🔧", Strings.templateMaintenanceTitle, Strings.templateMaintenanceContent, "warning"),
+        ATemplate("feature", Strings.templateFeature, "🎉", Strings.templateFeatureTitle, Strings.templateFeatureContent, "info"),
+        ATemplate("security", Strings.templateSecurity, "🔒", Strings.templateSecurityTitle, Strings.templateSecurityContent, "warning"),
+        ATemplate("event", Strings.templateEvent, "🎁", Strings.templateEventTitle, Strings.templateEventContent, "event")
     )
 
     if (showCreateDialog) {
         AlertDialog(
             onDismissRequest = { if (!isCreating) showCreateDialog = false },
-            title = { Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { Box(Modifier.size(32.dp).clip(RoundedCornerShape(10.dp)).background(Brush.linearGradient(mgmtGradientOrange)), contentAlignment = Alignment.Center) { Icon(Icons.Outlined.Campaign, null, Modifier.size(16.dp), tint = Color.White) }; Text("发布公告", fontWeight = FontWeight.Bold) } },
+            title = { Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { Box(Modifier.size(32.dp).clip(RoundedCornerShape(10.dp)).background(Brush.linearGradient(mgmtGradientOrange)), contentAlignment = Alignment.Center) { Icon(Icons.Outlined.Campaign, null, Modifier.size(16.dp), tint = Color.White) }; Text(Strings.publishAnnouncement, fontWeight = FontWeight.Bold) } },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.verticalScroll(rememberScrollState())) {
-                    Text("选择模板", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(Strings.selectTemplate, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        templates.forEach { t -> Surface(onClick = { selectedTemplateId = t.id; annoTitle = t.title; annoContent = t.content; annoType = t.type }, shape = RoundedCornerShape(10.dp), color = if (selectedTemplateId == t.id) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHighest) { Text("${t.emoji} ${t.name}", Modifier.padding(horizontal = 8.dp, vertical = 6.dp), fontSize = 11.sp, fontWeight = if (selectedTemplateId == t.id) FontWeight.Bold else FontWeight.Normal) } }
+                        listOf("info" to Strings.infoNotice, "warning" to Strings.warningNotice, "event" to Strings.eventNotice).forEach { (type, label) -> FilterChip(selected = annoType == type, onClick = { annoType = type }, label = { Text(label, fontSize = 12.sp) }) }
                     }
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-                    OutlinedTextField(value = annoTitle, onValueChange = { annoTitle = it; selectedTemplateId = null }, label = { Text("标题") }, modifier = Modifier.fillMaxWidth(), singleLine = true, shape = RoundedCornerShape(12.dp))
-                    OutlinedTextField(value = annoContent, onValueChange = { annoContent = it; selectedTemplateId = null }, label = { Text("内容") }, modifier = Modifier.fillMaxWidth().height(140.dp), shape = RoundedCornerShape(12.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf("info" to "ℹ️ 通知", "warning" to "⚠️ 警告", "event" to "🎁 活动").forEach { (type, label) -> FilterChip(selected = annoType == type, onClick = { annoType = type }, label = { Text(label, fontSize = 12.sp) }) } }
-                    Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) { Text("📌 置顶", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold); Switch(checked = annoPinned, onCheckedChange = { annoPinned = it }) }
+                    OutlinedTextField(value = annoTitle, onValueChange = { annoTitle = it; selectedTemplateId = null }, label = { Text(Strings.titleLabel) }, modifier = Modifier.fillMaxWidth(), singleLine = true, shape = RoundedCornerShape(12.dp))
+                    OutlinedTextField(value = annoContent, onValueChange = { annoContent = it; selectedTemplateId = null }, label = { Text(Strings.contentLabel) }, modifier = Modifier.fillMaxWidth().height(140.dp), shape = RoundedCornerShape(12.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf("info" to Strings.infoNotice, "warning" to Strings.warningNotice, "event" to Strings.eventNotice).forEach { (type, label) -> FilterChip(selected = annoType == type, onClick = { annoType = type }, label = { Text(label, fontSize = 12.sp) }) } }
+                    Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) { Text(Strings.pinnedLabel, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold); Switch(checked = annoPinned, onCheckedChange = { annoPinned = it }) }
                 }
             },
-            confirmButton = { Button(onClick = { isCreating = true; scope.launch { apiClient.createAnnouncement(app.id, annoTitle, annoContent, annoType, annoPinned); load(); showCreateDialog = false; isCreating = false; annoTitle = ""; annoContent = ""; selectedTemplateId = null } }, enabled = !isCreating && annoTitle.isNotBlank() && annoContent.isNotBlank(), shape = RoundedCornerShape(10.dp)) { if (isCreating) { CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp); Spacer(Modifier.width(6.dp)) }; Text(if (isCreating) "发布中…" else "发布") } },
+            confirmButton = { Button(onClick = { isCreating = true; scope.launch { apiClient.createAnnouncement(app.id, annoTitle, annoContent, annoType, annoPinned); load(); showCreateDialog = false; isCreating = false; annoTitle = ""; annoContent = ""; selectedTemplateId = null } }, enabled = !isCreating && annoTitle.isNotBlank() && annoContent.isNotBlank(), shape = RoundedCornerShape(10.dp)) { if (isCreating) { CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp); Spacer(Modifier.width(6.dp)) }; Text(if (isCreating) Strings.publishing else Strings.publishButton) } },
             dismissButton = { TextButton(onClick = { showCreateDialog = false }, enabled = !isCreating) { Text(Strings.storeReviewCancel) } }
         )
     }
@@ -5349,23 +5057,23 @@ private fun ManagementAnnouncementTab(app: AppStoreItem, apiClient: CloudApiClie
     LazyColumn(Modifier.fillMaxSize().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(bottom = 32.dp)) {
         item {
             Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Brush.linearGradient(mgmtGradientOrange)).clickable { showCreateDialog = true }.padding(vertical = 13.dp), contentAlignment = Alignment.Center) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) { Icon(Icons.Outlined.Campaign, null, Modifier.size(18.dp), tint = Color.White); Text("发布新公告", fontWeight = FontWeight.Bold, color = Color.White) }
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) { Icon(Icons.Outlined.Campaign, null, Modifier.size(18.dp), tint = Color.White); Text(Strings.publishNewAnnouncement, fontWeight = FontWeight.Bold, color = Color.White) }
             }
         }
-        if (isLoading) { item { PublishedItemLoadingState("加载公告…") } }
+        if (isLoading) { item { PublishedItemLoadingState(Strings.loadingAnnouncements) } }
         else if (errorMsg != null) { item { PublishedItemErrorState(errorMsg) { load() } } }
         else if (announcements.isEmpty()) {
-            item { Box(Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) { Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) { Icon(Icons.Outlined.Campaign, null, Modifier.size(48.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)); Text("暂无公告", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)) } } }
+            item { Box(Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) { Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) { Icon(Icons.Outlined.Campaign, null, Modifier.size(48.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)); Text(Strings.noAnnouncements, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)) } } }
         } else {
             items(announcements, key = { it.id }) { anno ->
                 val typeGrad = when (anno.type) { "warning" -> mgmtGradientOrange; "event" -> mgmtGradientPurple; else -> mgmtGradientBlue }
-                val typeLabel = when (anno.type) { "warning" -> "⚠️ 警告"; "event" -> "🎁 活动"; else -> "ℹ️ 通知" }
+                val typeLabel = when (anno.type) { "warning" -> Strings.warningNotice; "event" -> Strings.eventNotice; else -> Strings.infoNotice }
                 Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f)) {
                     Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
                             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                 Box(Modifier.clip(RoundedCornerShape(6.dp)).background(Brush.linearGradient(typeGrad)).padding(horizontal = 8.dp, vertical = 3.dp)) { Text(typeLabel, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White) }
-                                if (anno.isPinned) Box(Modifier.clip(RoundedCornerShape(6.dp)).background(Color(0xFFEF4444).copy(alpha = 0.12f)).padding(horizontal = 6.dp, vertical = 3.dp)) { Text("📌 置顶", fontSize = 10.sp, color = Color(0xFFEF4444)) }
+                                if (anno.isPinned) Box(Modifier.clip(RoundedCornerShape(6.dp)).background(Color(0xFFEF4444).copy(alpha = 0.12f)).padding(horizontal = 6.dp, vertical = 3.dp)) { Text(Strings.pinnedBadge, fontSize = 10.sp, color = Color(0xFFEF4444)) }
                             }
                             IconButton(onClick = { scope.launch { apiClient.deleteAnnouncement(app.id, anno.id); load() } }, Modifier.size(28.dp)) { Icon(Icons.Outlined.Delete, null, Modifier.size(14.dp), tint = MaterialTheme.colorScheme.error.copy(alpha = 0.5f)) }
                         }
@@ -5418,31 +5126,31 @@ private fun ManagementUpdateTab(app: AppStoreItem, apiClient: CloudApiClient, sc
 
     data class UTemplate(val id: String, val name: String, val desc: String, val t: String, val c: String)
     val templates = listOf(
-        UTemplate("simple", "📝 简约", "列表式更新日志", "发现新版本 v[版本号]", "🔸 新增 [功能1]\n🔸 优化 [功能2]\n🔸 修复 [问题]"),
-        UTemplate("dialog", "💬 弹窗", "半屏弹窗 + 柔和动效", "有新版本可用", "请更新到最新版本以获得更好的体验。"),
-        UTemplate("fullscreen", "🖥 全屏", "全屏卡片 + 大图", "重大更新！", "🎉 全新版本！\n\n✨ 全新界面\n⚡ 性能提升\n🔒 安全增强")
+        UTemplate("simple", Strings.templateSimple, Strings.templateSimpleDesc, Strings.templateSimpleTitle, Strings.templateSimpleContent),
+        UTemplate("dialog", Strings.templateDialog, Strings.templateDialogDesc, Strings.templateDialogTitle, Strings.templateDialogContent),
+        UTemplate("fullscreen", Strings.templateFullscreen, Strings.templateFullscreenDesc, Strings.templateFullscreenTitle, Strings.templateFullscreenContent)
     )
 
     if (showPushDialog) {
         AlertDialog(
             onDismissRequest = { if (!isPushing) showPushDialog = false },
-            title = { Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { Box(Modifier.size(32.dp).clip(RoundedCornerShape(10.dp)).background(Brush.linearGradient(mgmtGradientGreen)), contentAlignment = Alignment.Center) { Icon(Icons.Outlined.SystemUpdate, null, Modifier.size(16.dp), tint = Color.White) }; Text("推送更新", fontWeight = FontWeight.Bold) } },
+            title = { Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { Box(Modifier.size(32.dp).clip(RoundedCornerShape(10.dp)).background(Brush.linearGradient(mgmtGradientGreen)), contentAlignment = Alignment.Center) { Icon(Icons.Outlined.SystemUpdate, null, Modifier.size(16.dp), tint = Color.White) }; Text(Strings.pushUpdate, fontWeight = FontWeight.Bold) } },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.verticalScroll(rememberScrollState())) {
-                    Text("更新模板", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(Strings.updateTemplate, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         templates.forEach { t -> Surface(onClick = { selectedTemplateId = t.id; pushTemplateId = t.id; pushTitle = t.t; pushContent = t.c }, shape = RoundedCornerShape(10.dp), color = if (selectedTemplateId == t.id) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHighest) { Column(Modifier.padding(8.dp)) { Text(t.name, fontSize = 11.sp, fontWeight = if (selectedTemplateId == t.id) FontWeight.Bold else FontWeight.Normal); Text(t.desc, fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)) } } }
                     }
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(value = pushVersionName, onValueChange = { pushVersionName = it }, label = { Text("版本号", fontSize = 12.sp) }, modifier = Modifier.weight(1f), singleLine = true, shape = RoundedCornerShape(12.dp), placeholder = { Text("1.2.0", fontSize = 12.sp) })
-                        OutlinedTextField(value = pushVersionCode, onValueChange = { pushVersionCode = it }, label = { Text("版本代码", fontSize = 12.sp) }, modifier = Modifier.weight(1f), singleLine = true, shape = RoundedCornerShape(12.dp), placeholder = { Text("2", fontSize = 12.sp) })
+                        OutlinedTextField(value = pushVersionName, onValueChange = { pushVersionName = it }, label = { Text(Strings.versionNoLabel, fontSize = 12.sp) }, modifier = Modifier.weight(1f), singleLine = true, shape = RoundedCornerShape(12.dp), placeholder = { Text("1.2.0", fontSize = 12.sp) })
+                        OutlinedTextField(value = pushVersionCode, onValueChange = { pushVersionCode = it }, label = { Text(Strings.versionCodeShortLabel, fontSize = 12.sp) }, modifier = Modifier.weight(1f), singleLine = true, shape = RoundedCornerShape(12.dp), placeholder = { Text("2", fontSize = 12.sp) })
                     }
-                    OutlinedTextField(value = pushTitle, onValueChange = { pushTitle = it; selectedTemplateId = null }, label = { Text("更新标题") }, modifier = Modifier.fillMaxWidth(), singleLine = true, shape = RoundedCornerShape(12.dp))
-                    OutlinedTextField(value = pushContent, onValueChange = { pushContent = it; selectedTemplateId = null }, label = { Text("更新内容") }, modifier = Modifier.fillMaxWidth().height(120.dp), shape = RoundedCornerShape(12.dp))
+                    OutlinedTextField(value = pushTitle, onValueChange = { pushTitle = it; selectedTemplateId = null }, label = { Text(Strings.updateTitleLabel) }, modifier = Modifier.fillMaxWidth(), singleLine = true, shape = RoundedCornerShape(12.dp))
+                    OutlinedTextField(value = pushContent, onValueChange = { pushContent = it; selectedTemplateId = null }, label = { Text(Strings.updateContentLabel) }, modifier = Modifier.fillMaxWidth().height(120.dp), shape = RoundedCornerShape(12.dp))
 
                     // ── App Selector (replaces APK URL input) ──
-                    Text("关联更新应用", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(Strings.linkUpdateApp, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Surface(
                         onClick = { showAppPicker = !showAppPicker },
                         shape = RoundedCornerShape(12.dp),
@@ -5463,7 +5171,7 @@ private fun ManagementUpdateTab(app: AppStoreItem, apiClient: CloudApiClient, sc
                                 Icon(Icons.Filled.CheckCircle, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
                             } else {
                                 Icon(Icons.Outlined.Apps, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
-                                Text("选择一个已发布的应用作为更新源", Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
+                                Text(Strings.selectPublishedAppAsSource, Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
                                 Icon(if (showAppPicker) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
                             }
                         }
@@ -5476,7 +5184,7 @@ private fun ManagementUpdateTab(app: AppStoreItem, apiClient: CloudApiClient, sc
                                 if (isLoadingApps) {
                                     Box(Modifier.fillMaxWidth().height(60.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp) }
                                 } else if (myApps.isEmpty()) {
-                                    Box(Modifier.fillMaxWidth().height(60.dp), contentAlignment = Alignment.Center) { Text("暂无其他已发布的应用", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)) }
+                                    Box(Modifier.fillMaxWidth().height(60.dp), contentAlignment = Alignment.Center) { Text(Strings.noOtherPublishedApps, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)) }
                                 } else {
                                     myApps.forEach { item ->
                                         val isSelected = selectedSourceApp?.id == item.id
@@ -5492,7 +5200,7 @@ private fun ManagementUpdateTab(app: AppStoreItem, apiClient: CloudApiClient, sc
                                                 }
                                                 Column(Modifier.weight(1f)) {
                                                     Text(item.name, fontSize = 13.sp, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                                    Text("v${item.versionName} · ${item.downloads} 次下载", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                                                    Text("v${item.versionName} · " + Strings.storeDownloadsCount.format(item.downloads), fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
                                                 }
                                                 if (isSelected) Icon(Icons.Filled.RadioButtonChecked, null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
                                                 else Icon(Icons.Filled.RadioButtonUnchecked, null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
@@ -5506,7 +5214,7 @@ private fun ManagementUpdateTab(app: AppStoreItem, apiClient: CloudApiClient, sc
 
                     Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = if (pushForce) Color(0xFFEF4444).copy(alpha = 0.08f) else MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f)) {
                         Row(Modifier.padding(14.dp), Arrangement.SpaceBetween, Alignment.CenterVertically) {
-                            Column { Text(if (pushForce) "⚠️ 强制更新" else "可选更新", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold); Text(if (pushForce) "用户必须更新才能继续使用" else "用户可以选择稍后更新", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)) }
+                            Column { Text(if (pushForce) Strings.forceUpdate else Strings.optionalUpdate, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold); Text(if (pushForce) Strings.forceUpdateDesc else Strings.optionalUpdateDesc, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)) }
                             Switch(checked = pushForce, onCheckedChange = { pushForce = it })
                         }
                     }
@@ -5515,15 +5223,15 @@ private fun ManagementUpdateTab(app: AppStoreItem, apiClient: CloudApiClient, sc
                     Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = if (useR2) Color(0xFF3B82F6).copy(alpha = 0.08f) else MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f)) {
                         Row(Modifier.padding(14.dp), Arrangement.SpaceBetween, Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
-                                Text(if (useR2) "🚀 R2 CDN 加速" else "☁️ R2 云存储", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                                Text(if (useR2) "APK 将通过 Cloudflare R2 CDN 全球加速分发" else "启用 R2 存储以获得更快的下载速度", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                                Text(if (useR2) Strings.r2CdnAccelerate else Strings.r2CloudStorage, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                                Text(if (useR2) Strings.r2CdnDesc else Strings.r2StorageDesc, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
                             }
                             Switch(checked = useR2, onCheckedChange = { useR2 = it })
                         }
                     }
                 }
             },
-            confirmButton = { Button(onClick = { isPushing = true; scope.launch { apiClient.pushUpdate(app.id, pushVersionName, pushVersionCode.toIntOrNull() ?: 1, pushTitle, pushContent, selectedSourceApp?.id, pushForce, 0, pushTemplateId); load(); showPushDialog = false; isPushing = false } }, enabled = !isPushing && pushVersionName.isNotBlank() && pushTitle.isNotBlank(), shape = RoundedCornerShape(10.dp)) { if (isPushing) { CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp); Spacer(Modifier.width(6.dp)) }; Text(if (isPushing) "推送中…" else "推送更新") } },
+            confirmButton = { Button(onClick = { isPushing = true; scope.launch { apiClient.pushUpdate(app.id, pushVersionName, pushVersionCode.toIntOrNull() ?: 1, pushTitle, pushContent, selectedSourceApp?.id, pushForce, 0, pushTemplateId); load(); showPushDialog = false; isPushing = false } }, enabled = !isPushing && pushVersionName.isNotBlank() && pushTitle.isNotBlank(), shape = RoundedCornerShape(10.dp)) { if (isPushing) { CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp); Spacer(Modifier.width(6.dp)) }; Text(if (isPushing) Strings.pushingUpdate else Strings.pushUpdateButton) } },
             dismissButton = { TextButton(onClick = { showPushDialog = false }, enabled = !isPushing) { Text(Strings.storeReviewCancel) } }
         )
     }
@@ -5531,10 +5239,10 @@ private fun ManagementUpdateTab(app: AppStoreItem, apiClient: CloudApiClient, sc
     LazyColumn(Modifier.fillMaxSize().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(bottom = 32.dp)) {
         item {
             Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Brush.linearGradient(mgmtGradientGreen)).clickable { showPushDialog = true }.padding(vertical = 13.dp), contentAlignment = Alignment.Center) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) { Icon(Icons.Outlined.SystemUpdate, null, Modifier.size(18.dp), tint = Color.White); Text("推送新版本", fontWeight = FontWeight.Bold, color = Color.White) }
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) { Icon(Icons.Outlined.SystemUpdate, null, Modifier.size(18.dp), tint = Color.White); Text(Strings.pushNewVersion, fontWeight = FontWeight.Bold, color = Color.White) }
             }
         }
-        if (isLoading) { item { PublishedItemLoadingState("加载更新配置…") } }
+        if (isLoading) { item { PublishedItemLoadingState(Strings.loadingUpdateConfig) } }
         else if (errorMsg != null) { item { PublishedItemErrorState(errorMsg) { load() } } }
         else {
             val c = config ?: return@LazyColumn
@@ -5544,21 +5252,21 @@ private fun ManagementUpdateTab(app: AppStoreItem, apiClient: CloudApiClient, sc
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Box(Modifier.size(4.dp, 18.dp).clip(RoundedCornerShape(2.dp)).background(Brush.linearGradient(mgmtGradientGreen)))
-                                Text("当前更新配置", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                                Text(Strings.currentUpdateConfig, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                                 Spacer(Modifier.weight(1f))
-                                Box(Modifier.clip(RoundedCornerShape(6.dp)).background(Brush.linearGradient(if (c.isForceUpdate) mgmtGradientRed else mgmtGradientGreen)).padding(horizontal = 8.dp, vertical = 3.dp)) { Text(if (c.isForceUpdate) "强制更新" else "可选更新", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White) }
+                                Box(Modifier.clip(RoundedCornerShape(6.dp)).background(Brush.linearGradient(if (c.isForceUpdate) mgmtGradientRed else mgmtGradientGreen)).padding(horizontal = 8.dp, vertical = 3.dp)) { Text(if (c.isForceUpdate) Strings.forceUpdate else Strings.optionalUpdate, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White) }
                             }
                             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
-                            OverviewInfoRow("目标版本", "v${c.latestVersionName} (${c.latestVersionCode})")
-                            OverviewInfoRow("更新标题", c.updateTitle)
-                            OverviewInfoRow("模板", c.templateId)
-                            c.sourceAppName?.let { OverviewInfoRow("更新源应用", it) } ?: c.apkUrl?.let { OverviewInfoRow("APK", it.take(35) + "…") }
+                            OverviewInfoRow(Strings.targetVersion, "v${c.latestVersionName} (${c.latestVersionCode})")
+                            OverviewInfoRow(Strings.updateTitleLabel2, c.updateTitle)
+                            OverviewInfoRow(Strings.templateLabel, c.templateId)
+                            c.sourceAppName?.let { OverviewInfoRow(Strings.sourceApp, it) } ?: c.apkUrl?.let { OverviewInfoRow("APK", it.take(35) + "…") }
                             Text(c.updateContent, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f), maxLines = 4, overflow = TextOverflow.Ellipsis, lineHeight = 16.sp)
                         }
                     }
                 }
             } else {
-                item { Box(Modifier.fillMaxWidth().height(160.dp), contentAlignment = Alignment.Center) { Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) { Icon(Icons.Outlined.SystemUpdate, null, Modifier.size(48.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)); Text("暂未配置更新推送", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)) } } }
+                item { Box(Modifier.fillMaxWidth().height(160.dp), contentAlignment = Alignment.Center) { Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) { Icon(Icons.Outlined.SystemUpdate, null, Modifier.size(48.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)); Text(Strings.noUpdateConfig, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)) } } }
             }
         }
     }
@@ -5577,21 +5285,21 @@ private fun ManagementUsersTab(app: AppStoreItem, apiClient: CloudApiClient, sco
     LaunchedEffect(Unit) { load() }
 
     LazyColumn(Modifier.fillMaxSize().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(bottom = 32.dp)) {
-        if (isLoading) { item { PublishedItemLoadingState("加载用户…") } }
+        if (isLoading) { item { PublishedItemLoadingState(Strings.loadingUsers) } }
         else if (errorMsg != null) { item { PublishedItemErrorState(errorMsg) { load() } } }
         else {
             item {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    GradientMiniStat(mgmtGradientBlue, Icons.Outlined.People, "${users.size}", "总用户", Modifier.weight(1f))
-                    GradientMiniStat(mgmtGradientGreen, Icons.Outlined.FiberManualRecord, "${users.count { it.isActive }}", "活跃", Modifier.weight(1f))
-                    GradientMiniStat(mgmtGradientPurple, Icons.Outlined.Public, "${geoData.size}", "国家/地区", Modifier.weight(1f))
+                    GradientMiniStat(mgmtGradientBlue, Icons.Outlined.People, "${users.size}", Strings.totalUsers, Modifier.weight(1f))
+                    GradientMiniStat(mgmtGradientGreen, Icons.Outlined.FiberManualRecord, "${users.count { it.isActive }}", Strings.activeUsers, Modifier.weight(1f))
+                    GradientMiniStat(mgmtGradientPurple, Icons.Outlined.Public, "${geoData.size}", Strings.countriesRegions, Modifier.weight(1f))
                 }
             }
             // 地理分布
             item {
                 Surface(Modifier.fillMaxWidth().clickable { showGeo = !showGeo }, shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f)) {
                     Row(Modifier.padding(14.dp).fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) { Box(Modifier.size(4.dp, 18.dp).clip(RoundedCornerShape(2.dp)).background(Brush.linearGradient(mgmtGradientRed))); Text("🌍 地理分布", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold) }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) { Box(Modifier.size(4.dp, 18.dp).clip(RoundedCornerShape(2.dp)).background(Brush.linearGradient(mgmtGradientRed))); Text(Strings.geoDistribution, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold) }
                         Icon(if (showGeo) Icons.Outlined.KeyboardArrowUp else Icons.Outlined.KeyboardArrowDown, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
                     }
                 }
@@ -5613,8 +5321,8 @@ private fun ManagementUsersTab(app: AppStoreItem, apiClient: CloudApiClient, sco
                 }
             }
             // 用户列表
-            item { Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { Box(Modifier.size(4.dp, 18.dp).clip(RoundedCornerShape(2.dp)).background(Brush.linearGradient(mgmtGradientBlue))); Text("👤 用户列表", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold) } }
-            if (users.isEmpty()) { item { Box(Modifier.fillMaxWidth().height(120.dp), contentAlignment = Alignment.Center) { Text("暂无用户数据", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)) } } }
+            item { Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { Box(Modifier.size(4.dp, 18.dp).clip(RoundedCornerShape(2.dp)).background(Brush.linearGradient(mgmtGradientBlue))); Text(Strings.userList, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold) } }
+            if (users.isEmpty()) { item { Box(Modifier.fillMaxWidth().height(120.dp), contentAlignment = Alignment.Center) { Text(Strings.noUserData, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)) } } }
             else {
                 items(users, key = { it.id }) { user ->
                     Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f)) {
@@ -5634,7 +5342,7 @@ private fun ManagementUsersTab(app: AppStoreItem, apiClient: CloudApiClient, sco
                                     user.appVersion?.let { Text("v$it", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)) }
                                 }
                             }
-                            user.activationCode?.let { Box(Modifier.clip(RoundedCornerShape(6.dp)).background(Brush.linearGradient(mgmtGradientGreen.map { c -> c.copy(alpha = 0.15f) })).padding(horizontal = 7.dp, vertical = 3.dp)) { Text("✓ 已激活", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color(0xFF10B981)) } }
+                            user.activationCode?.let { Box(Modifier.clip(RoundedCornerShape(6.dp)).background(Brush.linearGradient(mgmtGradientGreen.map { c -> c.copy(alpha = 0.15f) })).padding(horizontal = 7.dp, vertical = 3.dp)) { Text(Strings.storeActivated, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color(0xFF10B981)) } }
                         }
                     }
                 }
@@ -5714,7 +5422,7 @@ private fun buildApkBuildFailureReport(
     }
 
     return SheetFailureReport(
-        title = "APK 构建失败",
+        title = Strings.apkBuildFailed,
         summary = error.message,
         details = details
     )
@@ -5766,7 +5474,7 @@ private fun SheetFailureReportDialog(
                     ) {
                         Icon(Icons.Outlined.ContentCopy, null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("复制")
+                        Text(Strings.copy)
                     }
                 }
             }
@@ -5830,42 +5538,6 @@ private fun PublishAppSheet(
     var customCodeInput by remember { mutableStateOf("") }
 
 
-    var myTeams by remember { mutableStateOf<List<com.webtoapp.core.cloud.TeamItem>>(emptyList()) }
-    var selectedTeamId by remember { mutableStateOf<Int?>(null) }
-    var selectedTeamMembers by remember { mutableStateOf<List<com.webtoapp.core.cloud.TeamMemberItem>>(emptyList()) }
-    data class ContribEntry(val userId: Int, val username: String, val displayName: String?, var role: String = "member", var points: Int = 0, var desc: String = "")
-    var contributorEntries by remember { mutableStateOf<List<ContribEntry>>(emptyList()) }
-    var isLoadingTeams by remember { mutableStateOf(false) }
-
-    // Load user's teams on mount
-    LaunchedEffect(Unit) {
-        isLoadingTeams = true
-        when (val result = apiClient.listTeams()) {
-            is com.webtoapp.core.auth.AuthResult.Success -> myTeams = result.data.teams
-            else -> {}
-        }
-        isLoadingTeams = false
-    }
-
-    // Load members when team is selected
-    LaunchedEffect(selectedTeamId) {
-        selectedTeamId?.let { teamId ->
-            when (val result = apiClient.getTeamMembers(teamId)) {
-                is com.webtoapp.core.auth.AuthResult.Success -> {
-                    selectedTeamMembers = result.data
-                    // Auto-populate contributor entries from members
-                    contributorEntries = result.data.map { m ->
-                        ContribEntry(m.userId, m.username, m.displayName, if (m.role == "owner") "lead" else "member", 0, "")
-                    }
-                }
-                else -> {}
-            }
-        } ?: run {
-            selectedTeamMembers = emptyList()
-            contributorEntries = emptyList()
-        }
-    }
-
     // The built APK file from the selected project
     var selectedApkFile by remember { mutableStateOf<java.io.File?>(null) }
 
@@ -5893,11 +5565,11 @@ private fun PublishAppSheet(
     }
 
     val categories = listOf(
-        "tools" to Strings.catTools, "social" to Strings.catSocial, "education" to "教育",
-        "entertainment" to "娱乐", "productivity" to "效率",
-        "lifestyle" to "生活", "business" to "商务",
-        "news" to "新闻", "finance" to "金融",
-        "health" to "健康", "other" to Strings.catOther
+        "tools" to Strings.catTools, "social" to Strings.catSocial, "education" to Strings.catEducation,
+        "entertainment" to Strings.catEntertainment, "productivity" to Strings.catProductivity,
+        "lifestyle" to Strings.catLifestyle, "business" to Strings.catBusiness,
+        "news" to Strings.catNews, "finance" to Strings.catFinance,
+        "health" to Strings.catHealth, "other" to Strings.catOther
     )
 
     ModalBottomSheet(
@@ -5946,7 +5618,7 @@ private fun PublishAppSheet(
                                     letterSpacing = (-0.3).sp
                                 )
                                 Text(
-                                    "选择您已创建的应用发布到商店",
+                                    Strings.selectAppToPublish,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                                 )
@@ -5959,10 +5631,10 @@ private fun PublishAppSheet(
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
-                        Text("选择应用", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        Text(Strings.selectApp, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                     }
                     Text(
-                        "选择已创建的应用项目",
+                        Strings.selectCreatedApp,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                     )
@@ -6045,7 +5717,7 @@ private fun PublishAppSheet(
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Text(
-                                    "点击选择要发布的应用",
+                                    Strings.tapToSelectApp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     style = MaterialTheme.typography.bodyMedium
                                 )
@@ -6084,7 +5756,7 @@ private fun PublishAppSheet(
                                             style = MaterialTheme.typography.bodySmall,
                                             fontWeight = FontWeight.SemiBold,
                                             maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                        Text("${selectedApkFile!!.length() / 1024} KB · APK 已就绪",
+                                        Text("${selectedApkFile!!.length() / 1024} KB · " + Strings.storeApkReady,
                                             style = MaterialTheme.typography.labelSmall,
                                             color = Color(0xFF10B981).copy(alpha = 0.8f))
                                     }
@@ -6094,7 +5766,7 @@ private fun PublishAppSheet(
                                         showBuildFailureDialog = false
                                         isBuilding = true
                                         buildProgress = 0
-                                        buildProgressText = "准备构建..."
+                                        buildProgressText = Strings.preparingBuild
                                         scope.launch {
                                             val apkBuilder = com.webtoapp.core.apkbuilder.ApkBuilder(context)
                                     val result = apkBuilder.buildApk(selectedProject!!) { p, t ->
@@ -6121,7 +5793,7 @@ private fun PublishAppSheet(
                                     }, contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)) {
                                         Icon(Icons.Outlined.Refresh, null, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(4.dp))
-                                        Text("重新构建", style = MaterialTheme.typography.labelSmall)
+                                        Text(Strings.rebuild, style = MaterialTheme.typography.labelSmall)
                                     }
                                 }
                             }
@@ -6140,7 +5812,7 @@ private fun PublishAppSheet(
                                             strokeWidth = 2.dp,
                                             color = MaterialTheme.colorScheme.primary
                                         )
-                                        Text("正在构建 APK...",
+                                        Text(Strings.buildingApk,
                                             style = MaterialTheme.typography.bodySmall,
                                             fontWeight = FontWeight.SemiBold)
                                         Spacer(modifier = Modifier.weight(1f))
@@ -6188,7 +5860,7 @@ private fun PublishAppSheet(
                                         Icon(Icons.Outlined.Build, null, modifier = Modifier.size(18.dp),
                                             tint = MaterialTheme.colorScheme.tertiary)
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text("需要先构建 APK 才能发布",
+                                        Text(Strings.needBuildBeforePublish,
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onTertiaryContainer)
                                     }
@@ -6199,7 +5871,7 @@ private fun PublishAppSheet(
                                             showBuildFailureDialog = false
                                             isBuilding = true
                                             buildProgress = 0
-                                            buildProgressText = "准备构建..."
+                                            buildProgressText = Strings.preparingBuild
                                             scope.launch {
                                                 val apkBuilder = com.webtoapp.core.apkbuilder.ApkBuilder(context)
                                                 val result = apkBuilder.buildApk(selectedProject!!) { p, t ->
@@ -6232,7 +5904,7 @@ private fun PublishAppSheet(
                                     ) {
                                         Icon(Icons.Outlined.Build, null, modifier = Modifier.size(18.dp))
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text("一键构建 APK", fontWeight = FontWeight.SemiBold)
+                                        Text(Strings.oneClickBuildApk, fontWeight = FontWeight.SemiBold)
                                     }
                                 }
                             }
@@ -6260,7 +5932,7 @@ private fun PublishAppSheet(
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Column(modifier = Modifier.weight(1f)) {
                                             Text(
-                                                "构建失败",
+                                                Strings.buildFailed,
                                                 style = MaterialTheme.typography.labelLarge,
                                                 fontWeight = FontWeight.SemiBold,
                                                 color = MaterialTheme.colorScheme.onErrorContainer
@@ -6278,7 +5950,7 @@ private fun PublishAppSheet(
                                     ) {
                                         Icon(Icons.Outlined.Article, null, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(6.dp))
-                                        Text("查看完整报错")
+                                        Text(Strings.viewFullError)
                                     }
                                 }
                             }
@@ -6290,10 +5962,10 @@ private fun PublishAppSheet(
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
-                        Text("基本信息", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        Text(Strings.basicInfo, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                     }
                     Text(
-                        "应用名称、图标和版本信息",
+                        Strings.appNameIconVersion,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                     )
@@ -6304,8 +5976,8 @@ private fun PublishAppSheet(
                     OutlinedTextField(
                         value = name,
                         onValueChange = { name = it },
-                        label = { Text("应用名称 *") },
-                        placeholder = { Text("如：我的工具箱") },
+                        label = { Text(Strings.appNameLabel) },
+                        placeholder = { Text(Strings.appNamePlaceholder) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
@@ -6325,14 +5997,14 @@ private fun PublishAppSheet(
                             if (iconUri != null) {
                                 AsyncImage(
                                     model = iconUri,
-                                    contentDescription = "图标预览",
+                                    contentDescription = Strings.iconPreview,
                                     modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp)),
                                     contentScale = ContentScale.Crop
                                 )
                             } else if (iconUrl.isNotBlank()) {
                                 AsyncImage(
                                     model = iconUrl,
-                                    contentDescription = "图标预览",
+                                    contentDescription = Strings.iconPreview,
                                     modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp)),
                                     contentScale = ContentScale.Crop
                                 )
@@ -6368,9 +6040,9 @@ private fun PublishAppSheet(
                             ) {
                                 Icon(Icons.Outlined.AddPhotoAlternate, null, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text(if (iconUri != null) "更换图标" else "选择图标")
+                                Text(if (iconUri != null) Strings.changeIcon else Strings.selectIcon)
                             }
-                            Text("从相册选择应用图标",
+                            Text(Strings.selectIconFromGallery,
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
@@ -6384,7 +6056,7 @@ private fun PublishAppSheet(
                         Text("Category", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                     }
                     Text(
-                        "选择应用所属分类",
+                        Strings.selectAppCategory,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                     )
@@ -6406,7 +6078,7 @@ private fun PublishAppSheet(
                         OutlinedTextField(
                             value = versionName,
                             onValueChange = { versionName = it },
-                            label = { Text("版本名") },
+                            label = { Text(Strings.versionNameLabel) },
                             singleLine = true,
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
@@ -6414,7 +6086,7 @@ private fun PublishAppSheet(
                         OutlinedTextField(
                             value = versionCode,
                             onValueChange = { versionCode = it.filter { c -> c.isDigit() } },
-                            label = { Text("版本号") },
+                            label = { Text(Strings.versionCodeLabel) },
                             singleLine = true,
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
@@ -6427,7 +6099,7 @@ private fun PublishAppSheet(
                     OutlinedTextField(
                         value = packageName,
                         onValueChange = { packageName = it },
-                        label = { Text("包名 (可选)") },
+                        label = { Text(Strings.packageNameLabel) },
                         placeholder = { Text("com.example.myapp") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
@@ -6439,10 +6111,10 @@ private fun PublishAppSheet(
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
-                        Text("描述和标签", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        Text(Strings.descriptionAndTags, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                     }
                     Text(
-                        "详细描述应用功能，添加标签方便搜索",
+                        Strings.describeAppFeatures,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                     )
@@ -6452,8 +6124,8 @@ private fun PublishAppSheet(
                     OutlinedTextField(
                         value = description,
                         onValueChange = { description = it },
-                        label = { Text("应用描述 * (支持 Markdown)") },
-                        placeholder = { Text("描述应用的功能和用途...") },
+                        label = { Text(Strings.appDescLabel) },
+                        placeholder = { Text(Strings.appDescPlaceholder) },
                         minLines = 4,
                         maxLines = 8,
                         modifier = Modifier.fillMaxWidth(),
@@ -6465,8 +6137,8 @@ private fun PublishAppSheet(
                     OutlinedTextField(
                         value = tags,
                         onValueChange = { tags = it },
-                        label = { Text("标签 (逗号分隔)") },
-                        placeholder = { Text("工具,效率,开源") },
+                        label = { Text(Strings.tagsLabel) },
+                        placeholder = { Text(Strings.tagsPlaceholder) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp)
@@ -6477,10 +6149,10 @@ private fun PublishAppSheet(
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
-                        Text("截图 * (至少一张)", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        Text(Strings.screenshotsRequired, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                     }
                     Text(
-                        "添加截图让用户了解应用界面",
+                        Strings.addScreenshots,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                     )
@@ -6501,7 +6173,7 @@ private fun PublishAppSheet(
                                     ) {
                                         AsyncImage(
                                             model = screenshotUrls[index],
-                                            contentDescription = "截图 ${index + 1}",
+                                            contentDescription = Strings.screenshotLabel.format(index + 1),
                                             modifier = Modifier
                                                 .fillMaxSize()
                                                 .clip(RoundedCornerShape(12.dp)),
@@ -6535,7 +6207,7 @@ private fun PublishAppSheet(
                                     ) {
                                         AsyncImage(
                                             model = screenshotUris[index],
-                                            contentDescription = "新截图 ${index + 1}",
+                                            contentDescription = Strings.newScreenshotLabel.format(index + 1),
                                             modifier = Modifier
                                                 .fillMaxSize()
                                                 .clip(RoundedCornerShape(12.dp)),
@@ -6593,7 +6265,7 @@ private fun PublishAppSheet(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                "从相册添加截图",
+                                Strings.addScreenshotsFromAlbum,
                                 fontWeight = FontWeight.Medium,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -6601,7 +6273,7 @@ private fun PublishAppSheet(
                     }
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        "已添加 ${screenshotUrls.size + screenshotUris.size} 张截图",
+                        Strings.screenshotsAdded.format(screenshotUrls.size + screenshotUris.size),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
@@ -6614,10 +6286,10 @@ private fun PublishAppSheet(
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
-                        Text("联系信息", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        Text(Strings.contactInfo, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                     }
                     Text(
-                        "方便用户联系开发者",
+                        Strings.contactInfoHint,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                     )
@@ -6628,7 +6300,7 @@ private fun PublishAppSheet(
                         OutlinedTextField(
                             value = contactEmail,
                             onValueChange = { contactEmail = it },
-                            label = { Text("邮箱") },
+                            label = { Text(Strings.emailLabel) },
                             singleLine = true,
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp),
@@ -6637,7 +6309,7 @@ private fun PublishAppSheet(
                         OutlinedTextField(
                             value = websiteUrl,
                             onValueChange = { websiteUrl = it },
-                            label = { Text("网站") },
+                            label = { Text(Strings.websiteLabel) },
                             singleLine = true,
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp),
@@ -6650,7 +6322,7 @@ private fun PublishAppSheet(
                     OutlinedTextField(
                         value = privacyPolicyUrl,
                         onValueChange = { privacyPolicyUrl = it },
-                        label = { Text("隐私政策 URL (可选)") },
+                        label = { Text(Strings.privacyPolicyUrlLabel) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
@@ -6675,14 +6347,14 @@ private fun PublishAppSheet(
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     Icon(Icons.Outlined.VpnKey, null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
-                                    Text("激活码配置", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                                    Text(Strings.activationCodeConfig, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                                 }
                                 Switch(checked = enableActivation, onCheckedChange = { enableActivation = it })
                             }
 
                             if (enableActivation) {
                                 Text(
-                                    "用户安装后需要输入激活码才能使用应用",
+                                    Strings.userActivationCodeHint,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                 )
@@ -6694,8 +6366,8 @@ private fun PublishAppSheet(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Column {
-                                        Text("设备绑定", style = MaterialTheme.typography.bodyMedium)
-                                        Text("每个激活码只能在一台设备使用", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                                        Text(Strings.deviceBindingLabel, style = MaterialTheme.typography.bodyMedium)
+                                        Text(Strings.oneCodeOneDeviceAlt, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
                                     }
                                     Switch(checked = enableDeviceBinding, onCheckedChange = { enableDeviceBinding = it })
                                 }
@@ -6703,12 +6375,12 @@ private fun PublishAppSheet(
                                 HorizontalDivider()
 
                                 // 模板快速生成
-                                Text("快速生成", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(Strings.quickGenerate, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                     listOf(
-                                        "numeric6" to "数字码 ×5",
-                                        "standard" to "标准码 ×5",
-                                        "uuid" to "UUID ×5"
+                                        "numeric6" to Strings.numericCodeLabel,
+                                        "standard" to Strings.standardCodeLabel,
+                                        "uuid" to Strings.uuidCodeLabel
                                     ).forEach { (id, label) ->
                                         Surface(
                                             onClick = {
@@ -6747,7 +6419,7 @@ private fun PublishAppSheet(
                                         value = customCodeInput,
                                         onValueChange = { customCodeInput = it },
                                         modifier = Modifier.weight(1f),
-                                        placeholder = { Text("输入自定义激活码", fontSize = 13.sp) },
+                                        placeholder = { Text(Strings.enterCustomActivationCode, fontSize = 13.sp) },
                                         singleLine = true,
                                         shape = RoundedCornerShape(10.dp),
                                         textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
@@ -6774,9 +6446,9 @@ private fun PublishAppSheet(
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Text("已添加 ${activationCodes.size} 个激活码", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                                        Text(Strings.addedCodesCount.format(activationCodes.size), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
                                         TextButton(onClick = { activationCodes = emptyList(); selectedCodeTemplate = null }) {
-                                            Text("清空", fontSize = 11.sp, color = MaterialTheme.colorScheme.error)
+                                            Text(Strings.clearAll, fontSize = 11.sp, color = MaterialTheme.colorScheme.error)
                                         }
                                     }
                                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -6841,7 +6513,7 @@ private fun PublishAppSheet(
                                             strokeWidth = 2.dp
                                         )
                                         Text(
-                                            uploadStatus.ifBlank { "上传中..." },
+                                            uploadStatus.ifBlank { Strings.uploading },
                                             style = MaterialTheme.typography.bodySmall,
                                             fontWeight = FontWeight.Medium
                                         )
@@ -6880,211 +6552,6 @@ private fun PublishAppSheet(
                     }
                 }
 
-                // ── 关联团队 (可选) ──
-                if (myTeams.isNotEmpty()) {
-                    item {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.tertiary, CircleShape))
-                            Text(Strings.teamAssociate, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                            Surface(
-                                shape = RoundedCornerShape(4.dp),
-                                color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)
-                            ) {
-                                Text(
-                                    "可选",
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onTertiaryContainer,
-                                    fontSize = 10.sp
-                                )
-                            }
-                        }
-                        Text(
-                            "关联团队后，团队和成员贡献信息将在应用详情及成员主页展示",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                        )
-                    }
-
-                    // Team selector
-                    item {
-                        var teamDropdownExpanded by remember { mutableStateOf(false) }
-                        val selectedTeam = myTeams.find { it.id == selectedTeamId }
-
-                        ExposedDropdownMenuBox(
-                            expanded = teamDropdownExpanded,
-                            onExpandedChange = { teamDropdownExpanded = it }
-                        ) {
-                            OutlinedTextField(
-                                value = selectedTeam?.name ?: "",
-                                onValueChange = {},
-                                readOnly = true,
-                                label = { Text(Strings.teamSelectTeam) },
-                                placeholder = { Text("点击选择团队") },
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = teamDropdownExpanded) },
-                                modifier = Modifier.menuAnchor().fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp),
-                                leadingIcon = { Icon(Icons.Outlined.Groups, null, modifier = Modifier.size(20.dp)) }
-                            )
-                            ExposedDropdownMenu(
-                                expanded = teamDropdownExpanded,
-                                onDismissRequest = { teamDropdownExpanded = false }
-                            ) {
-                                DropdownMenuItem(
-                                    text = { Text("不关联团队", color = MaterialTheme.colorScheme.onSurfaceVariant) },
-                                    leadingIcon = { Icon(Icons.Outlined.Close, null, Modifier.size(18.dp)) },
-                                    onClick = {
-                                        selectedTeamId = null
-                                        teamDropdownExpanded = false
-                                    }
-                                )
-                                HorizontalDivider()
-                                myTeams.forEach { team ->
-                                    DropdownMenuItem(
-                                        text = {
-                                            Column {
-                                                Text(team.name, fontWeight = FontWeight.Medium)
-                                                Text(
-                                                    "${team.memberCount} 成员",
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                            }
-                                        },
-                                        leadingIcon = { Icon(Icons.Outlined.Groups, null, Modifier.size(18.dp)) },
-                                        onClick = {
-                                            selectedTeamId = team.id
-                                            teamDropdownExpanded = false
-                                        }
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    // Contributor entries (when team selected)
-                    if (selectedTeamId != null && contributorEntries.isNotEmpty()) {
-                        item {
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                "设置贡献者角色与贡献点",
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                            )
-                        }
-
-                        contributorEntries.forEachIndexed { index, entry ->
-                            item(key = "contrib_${entry.userId}") {
-                                Surface(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(12.dp),
-                                    color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f),
-                                    border = if (entry.role == "lead")
-                                        BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
-                                    else null
-                                ) {
-                                    Column(modifier = Modifier.padding(12.dp)) {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                        ) {
-                                            Surface(
-                                                modifier = Modifier.size(32.dp),
-                                                shape = CircleShape,
-                                                color = if (entry.role == "lead")
-                                                    MaterialTheme.colorScheme.primaryContainer
-                                                else MaterialTheme.colorScheme.surfaceContainerHighest
-                                            ) {
-                                                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                                                    Text(
-                                                        (entry.displayName ?: entry.username).take(1).uppercase(),
-                                                        fontSize = 14.sp,
-                                                        fontWeight = FontWeight.Bold,
-                                                        color = if (entry.role == "lead")
-                                                            MaterialTheme.colorScheme.primary
-                                                        else MaterialTheme.colorScheme.onSurfaceVariant
-                                                    )
-                                                }
-                                            }
-                                            Column(modifier = Modifier.weight(1f)) {
-                                                Text(
-                                                    entry.displayName ?: entry.username,
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    fontWeight = FontWeight.SemiBold
-                                                )
-                                                Text(
-                                                    "@${entry.username}",
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                                                )
-                                            }
-                                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                                FilterChip(
-                                                    selected = entry.role == "lead",
-                                                    onClick = {
-                                                        contributorEntries = contributorEntries.toMutableList().also {
-                                                            it[index] = entry.copy(role = "lead")
-                                                        }
-                                                    },
-                                                    label = { Text(Strings.teamLead, fontSize = 11.sp) },
-                                                    modifier = Modifier.height(28.dp)
-                                                )
-                                                FilterChip(
-                                                    selected = entry.role == "member",
-                                                    onClick = {
-                                                        contributorEntries = contributorEntries.toMutableList().also {
-                                                            it[index] = entry.copy(role = "member")
-                                                        }
-                                                    },
-                                                    label = { Text(Strings.teamMemberRole, fontSize = 11.sp) },
-                                                    modifier = Modifier.height(28.dp)
-                                                )
-                                            }
-                                        }
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                        ) {
-                                            OutlinedTextField(
-                                                value = entry.points.toString(),
-                                                onValueChange = { value ->
-                                                    val p = value.toIntOrNull() ?: 0
-                                                    contributorEntries = contributorEntries.toMutableList().also {
-                                                        it[index] = entry.copy(points = p)
-                                                    }
-                                                },
-                                                label = { Text(Strings.teamContributionPoints, fontSize = 11.sp) },
-                                                modifier = Modifier.width(100.dp),
-                                                shape = RoundedCornerShape(8.dp),
-                                                singleLine = true,
-                                                textStyle = MaterialTheme.typography.bodySmall
-                                            )
-                                            OutlinedTextField(
-                                                value = entry.desc,
-                                                onValueChange = { value ->
-                                                    contributorEntries = contributorEntries.toMutableList().also {
-                                                        it[index] = entry.copy(desc = value)
-                                                    }
-                                                },
-                                                label = { Text(Strings.teamContributionDesc, fontSize = 11.sp) },
-                                                modifier = Modifier.weight(1f),
-                                                shape = RoundedCornerShape(8.dp),
-                                                singleLine = true,
-                                                placeholder = { Text("如：UI设计、后端开发", fontSize = 12.sp) },
-                                                textStyle = MaterialTheme.typography.bodySmall
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
                 // ── 发布按钮 ──
                 item {
                     Spacer(modifier = Modifier.height(4.dp))
@@ -7092,7 +6559,7 @@ private fun PublishAppSheet(
                         enabled = !isPublishing && !isBuilding,
                         onClick = {
                             if (selectedProject == null) {
-                                scope.launch { snackbarHostState.showSnackbar("请先选择要发布的应用") }
+                                scope.launch { snackbarHostState.showSnackbar(Strings.selectAppToPublish) }
                                 return@Button
                             }
                             if (name.isBlank() || description.isBlank()) {
@@ -7121,16 +6588,16 @@ private fun PublishAppSheet(
                                 // Step 1: Upload icon if selected locally
                                 var finalIconUrl = iconUrl.ifBlank { null }
                                 if (iconUri != null) {
-                                    uploadStatus = "正在上传图标..."
+                                    uploadStatus = Strings.uploadingIconAlready
                                     val iconFile = uriToTempFile(iconUri!!, "icon", "png")
                                     if (iconFile != null) {
                                         when (val r = apiClient.uploadAsset(iconFile, "image/png")) {
                                             is com.webtoapp.core.auth.AuthResult.Success -> finalIconUrl = r.data
                                             is com.webtoapp.core.auth.AuthResult.Error -> {
-                                                val summary = "图标上传失败: ${r.message}"
+                                                val summary = Strings.iconUploadFailed.format(r.message)
                                                 publishFailureReport = buildSheetFailureReport(
-                                                    title = "应用发布失败",
-                                                    stage = "上传图标",
+                                                    title = Strings.appPublishFailed,
+                                                    stage = Strings.uploadIconStage,
                                                     summary = summary,
                                                     contextLines = listOf(
                                                         "project=${selectedProject?.name ?: "unknown"}",
@@ -7149,10 +6616,10 @@ private fun PublishAppSheet(
                                         }
                                         iconFile.delete()
                                     } else {
-                                        val summary = "图标读取失败，无法创建临时文件"
+                                        val summary = Strings.iconReadFailed
                                         publishFailureReport = buildSheetFailureReport(
-                                            title = "应用发布失败",
-                                            stage = "读取图标",
+                                            title = Strings.appPublishFailed,
+                                            stage = Strings.readIconStage,
                                             summary = summary,
                                             contextLines = listOf(
                                                 "project=${selectedProject?.name ?: "unknown"}",
@@ -7172,17 +6639,17 @@ private fun PublishAppSheet(
                                 if (screenshotUris.isNotEmpty()) {
                                     val total = screenshotUris.size
                                     for ((idx, uri) in screenshotUris.withIndex()) {
-                                        uploadStatus = "正在上传截图 ${idx + 1}/$total..."
+                                        uploadStatus = Strings.uploadingScreenshot.format(idx + 1, total)
                                         uploadProgress = (idx.toFloat()) / (total + 2)
                                         val scrFile = uriToTempFile(uri, "screenshot_$idx", "png")
                                         if (scrFile != null) {
                                             when (val r = apiClient.uploadAsset(scrFile, "image/png")) {
                                                 is com.webtoapp.core.auth.AuthResult.Success -> allScreenshotUrls.add(r.data)
                                                 is com.webtoapp.core.auth.AuthResult.Error -> {
-                                                    val summary = "截图 ${idx + 1} 上传失败: ${r.message}"
+                                                    val summary = Strings.screenshotUploadFailed.format(idx + 1, r.message)
                                                     publishFailureReport = buildSheetFailureReport(
-                                                        title = "应用发布失败",
-                                                        stage = "上传截图",
+                                                        title = Strings.appPublishFailed,
+                                                        stage = Strings.uploadScreenshotStage,
                                                         summary = summary,
                                                         contextLines = listOf(
                                                             "project=${selectedProject?.name ?: "unknown"}",
@@ -7200,10 +6667,10 @@ private fun PublishAppSheet(
                                             }
                                             scrFile.delete()
                                         } else {
-                                            val summary = "截图 ${idx + 1} 读取失败，无法创建临时文件"
+                                            val summary = Strings.screenshotReadFailed.format(idx + 1)
                                             publishFailureReport = buildSheetFailureReport(
-                                                title = "应用发布失败",
-                                                stage = "读取截图",
+                                                title = Strings.appPublishFailed,
+                                                stage = Strings.readScreenshotStage,
                                                 summary = summary,
                                                 contextLines = listOf(
                                                     "project=${selectedProject?.name ?: "unknown"}",
@@ -7223,17 +6690,17 @@ private fun PublishAppSheet(
                                 var apkUrlGithub: String? = null
                                 if (selectedApkFile != null && selectedApkFile!!.exists()) {
                                     try {
-                                        uploadStatus = "正在上传 APK..."
+                                        uploadStatus = Strings.uploadingApk
                                         when (val r = apiClient.uploadAsset(
                                             selectedApkFile!!,
                                             "application/vnd.android.package-archive"
                                         ) { progress -> uploadProgress = 0.5f + progress * 0.4f }) {
                                             is com.webtoapp.core.auth.AuthResult.Success -> apkUrlGithub = r.data
                                             is com.webtoapp.core.auth.AuthResult.Error -> {
-                                                val summary = "APK 上传失败: ${r.message}"
+                                                val summary = Strings.apkUploadFailed.format(r.message)
                                                 publishFailureReport = buildSheetFailureReport(
-                                                    title = "应用发布失败",
-                                                    stage = "上传 APK",
+                                                    title = Strings.appPublishFailed,
+                                                    stage = Strings.uploadApkStage,
                                                     summary = summary,
                                                     contextLines = listOf(
                                                         "project=${selectedProject?.name ?: "unknown"}",
@@ -7251,10 +6718,10 @@ private fun PublishAppSheet(
                                             }
                                         }
                                     } catch (e: Exception) {
-                                        val summary = "APK 上传失败: ${e.message}"
+                                        val summary = Strings.apkUploadFailed.format(e.message)
                                         publishFailureReport = buildSheetFailureReport(
-                                            title = "应用发布失败",
-                                            stage = "上传 APK",
+                                            title = Strings.appPublishFailed,
+                                            stage = Strings.uploadApkStage,
                                             summary = summary,
                                             contextLines = listOf(
                                                 "project=${selectedProject?.name ?: "unknown"}",
@@ -7272,12 +6739,12 @@ private fun PublishAppSheet(
                                 } else {
                                     // Warn: no APK selected — app won't be downloadable
                                     scope.launch {
-                                        snackbarHostState.showSnackbar("⚠️ 未选择 APK 文件，应用发布后将无法被下载安装")
+                                        snackbarHostState.showSnackbar(Strings.noApkWarning)
                                     }
                                 }
 
                                 // Step 4: Publish app info to store
-                                uploadStatus = "正在发布应用信息..."
+                                uploadStatus = Strings.publishingAppInfo
                                 uploadProgress = 0.95f
                                 val result = apiClient.publishApp(
                                     name = name,
@@ -7300,43 +6767,14 @@ private fun PublishAppSheet(
                                 uploadStatus = ""
                                 when (result) {
                                     is com.webtoapp.core.auth.AuthResult.Success -> {
-                                        // If team is selected, associate it now
-                                        val publishedAppId = result.data.id
-                                        if (selectedTeamId != null && contributorEntries.isNotEmpty()) {
-                                            val hasLead = contributorEntries.any { it.role == "lead" }
-                                            if (hasLead) {
-                                                val contribs = contributorEntries.map { e ->
-                                                    com.webtoapp.core.cloud.ContributorInput(
-                                                        userId = e.userId,
-                                                        contributorRole = e.role,
-                                                        contributionPoints = e.points,
-                                                        description = e.desc.ifBlank { null }
-                                                    )
-                                                }
-                                                val teamResult = apiClient.associateModuleTeam(
-                                                    moduleId = publishedAppId,
-                                                    teamId = selectedTeamId!!,
-                                                    contributors = contribs
-                                                )
-                                                when (teamResult) {
-                                                    is com.webtoapp.core.auth.AuthResult.Success ->
-                                                        snackbarHostState.showSnackbar("${Strings.storePublishSuccess} · 团队已关联")
-                                                    is com.webtoapp.core.auth.AuthResult.Error ->
-                                                        snackbarHostState.showSnackbar("${Strings.storePublishSuccess} · 团队关联失败: ${teamResult.message}")
-                                                }
-                                            } else {
-                                                snackbarHostState.showSnackbar("${Strings.storePublishSuccess} · 团队关联需至少一位主负责人")
-                                            }
-                                        } else {
-                                            snackbarHostState.showSnackbar(Strings.storePublishSuccess)
-                                        }
+                                        snackbarHostState.showSnackbar(Strings.storePublishSuccess)
                                         onPublished()
                                     }
                                     is com.webtoapp.core.auth.AuthResult.Error -> {
                                         val summary = "${Strings.storePublishFailed}: ${result.message}"
                                         publishFailureReport = buildSheetFailureReport(
-                                            title = "应用发布失败",
-                                            stage = "提交应用信息",
+                                            title = Strings.appPublishFailed,
+                                            stage = Strings.submitAppInfoStage,
                                             summary = summary,
                                             contextLines = listOf(
                                                 "project=${selectedProject?.name ?: "unknown"}",
@@ -7362,7 +6800,7 @@ private fun PublishAppSheet(
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("发布中...", fontWeight = FontWeight.SemiBold)
+                            Text(Strings.publishing, fontWeight = FontWeight.SemiBold)
                         } else {
                             Icon(Icons.Outlined.Publish, null, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))
@@ -7382,9 +6820,9 @@ private fun PublishAppSheet(
             onDismissRequest = { showProjectPicker = false },
             title = {
                 Column {
-                    Text("选择要发布的应用", fontWeight = FontWeight.Bold)
+                    Text(Strings.selectAppToPublish, fontWeight = FontWeight.Bold)
                     Text(
-                        "${allProjects.size} 个本地应用",
+                        Strings.localAppsCount.format(allProjects.size),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
@@ -7426,7 +6864,7 @@ private fun PublishAppSheet(
                                             tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f))
                                     }
                                 }
-                                Text("您还没有创建任何应用，请先创建应用",
+                                Text(Strings.noAppsCreateFirst,
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                                     textAlign = TextAlign.Center)
@@ -7620,8 +7058,8 @@ private fun MyModulesSheet(
     moduleToDelete?.let { module ->
         ItemDeleteConfirmDialog(
             itemName = module.name,
-            storeName = "市场",
-            actionVerb = "安装此模块",
+            storeName = Strings.marketName,
+            actionVerb = Strings.installModule,
             isDeleting = isDeleting,
             onConfirm = {
                 isDeleting = true
@@ -7633,8 +7071,8 @@ private fun MyModulesSheet(
                         }
                         is com.webtoapp.core.auth.AuthResult.Error -> {
                             actionFailureReport = buildSheetFailureReport(
-                                title = "模块下架失败",
-                                stage = "下架已发布模块",
+                                title = Strings.moduleUnpublishFailed,
+                                stage = Strings.unpublishPublishedModuleStage,
                                 summary = result.message,
                                 contextLines = listOf(
                                     "moduleId=${module.id}",
@@ -7687,7 +7125,7 @@ private fun MyModulesSheet(
                     totalDownloads = totalDownloads,
                     avgRating = avgRating,
                     totalLikes = totalLikes,
-                    downloadLabel = "总安装"
+                    downloadLabel = Strings.totalInstalls
                 )
             }
 
@@ -7695,14 +7133,14 @@ private fun MyModulesSheet(
 
             // ── 内容状态（共享组件） ──
             if (isLoading) {
-                PublishedItemLoadingState("加载我的模块...")
+                PublishedItemLoadingState(Strings.loadingMyModules)
             } else if (errorMsg != null) {
                 PublishedItemErrorState(errorMsg) { loadMyModules() }
             } else if (myModules.isEmpty()) {
                 PublishedItemEmptyState(
                     icon = Icons.Outlined.Extension,
                     title = Strings.storeNoPublishedModules,
-                    subtitle = "将你开发的扩展模块发布到市场\n让更多用户体验你的创意",
+                    subtitle = Strings.publishModuleSubtitle,
                     onAction = onDismiss
                 )
             } else {
@@ -7868,37 +7306,6 @@ private fun PublishModuleSheet(
     var uploadStatus by remember { mutableStateOf("") }
     var publishFailureReport by remember { mutableStateOf<SheetFailureReport?>(null) }
 
-    // ── Team association state ──
-    var myTeams by remember { mutableStateOf<List<com.webtoapp.core.cloud.TeamItem>>(emptyList()) }
-    var selectedTeamId by remember { mutableStateOf<Int?>(null) }
-    var selectedTeamMembers by remember { mutableStateOf<List<com.webtoapp.core.cloud.TeamMemberItem>>(emptyList()) }
-    data class ModContribEntry(val userId: Int, val username: String, val displayName: String?, var role: String = "member", var points: Int = 0, var desc: String = "")
-    var contributorEntries by remember { mutableStateOf<List<ModContribEntry>>(emptyList()) }
-
-    LaunchedEffect(Unit) {
-        when (val result = apiClient.listTeams()) {
-            is com.webtoapp.core.auth.AuthResult.Success -> myTeams = result.data.teams
-            else -> {}
-        }
-    }
-
-    LaunchedEffect(selectedTeamId) {
-        selectedTeamId?.let { teamId ->
-            when (val result = apiClient.getTeamMembers(teamId)) {
-                is com.webtoapp.core.auth.AuthResult.Success -> {
-                    selectedTeamMembers = result.data
-                    contributorEntries = result.data.map { m ->
-                        ModContribEntry(m.userId, m.username, m.displayName, if (m.role == "owner") "lead" else "member", 0, "")
-                    }
-                }
-                else -> {}
-            }
-        } ?: run {
-            selectedTeamMembers = emptyList()
-            contributorEntries = emptyList()
-        }
-    }
-
     // Icon picker
     var iconUri by remember { mutableStateOf<android.net.Uri?>(null) }
     var iconUrl by remember { mutableStateOf("") }
@@ -7913,10 +7320,10 @@ private fun PublishModuleSheet(
     ) { uris -> screenshotUris = screenshotUris + uris }
 
     val moduleCategories = listOf(
-        "tools" to Strings.catTools, "ui" to "界面", "media" to Strings.catMedia,
-        "social" to Strings.catSocial, "productivity" to "效率",
-        "education" to "教育", "entertainment" to "娱乐",
-        "developer" to "开发", "other" to Strings.catOther
+        "tools" to Strings.catTools, "ui" to Strings.catUi, "media" to Strings.catMedia,
+        "social" to Strings.catSocial, "productivity" to Strings.catProductivity,
+        "education" to Strings.catEducation, "entertainment" to Strings.catEntertainment,
+        "developer" to Strings.catDeveloper, "other" to Strings.catOther
     )
 
     // Map ExtensionModule category to store category string
@@ -7952,9 +7359,9 @@ private fun PublishModuleSheet(
             onDismissRequest = { showModulePicker = false },
             title = {
                 Column {
-                    Text("选择要发布的模块", fontWeight = FontWeight.Bold)
+                    Text(Strings.selectModuleToPublish, fontWeight = FontWeight.Bold)
                     Text(
-                        "${localModules.size} 个本地模块",
+                        Strings.localModulesCount.format(localModules.size),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
@@ -7991,12 +7398,12 @@ private fun PublishModuleSheet(
                                         tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f))
                                 }
                             }
-                            Text("暂无本地模块",
+                            Text(Strings.noLocalModules,
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Medium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                                 textAlign = TextAlign.Center)
-                            Text("请先在模块编辑器中创建模块",
+                            Text(Strings.createModuleFirst,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f))
                         }
@@ -8144,7 +7551,7 @@ private fun PublishModuleSheet(
                                     letterSpacing = (-0.3).sp
                                 )
                                 Text(
-                                    "选择您已创建的模块发布到市场",
+                                    Strings.selectModuleToPublish,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                                 )
@@ -8157,10 +7564,10 @@ private fun PublishModuleSheet(
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
-                        Text("选择模块", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        Text(Strings.selectModule, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                     }
                     Text(
-                        "选择已创建的本地模块",
+                        Strings.selectCreatedLocalModule,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                     )
@@ -8227,7 +7634,7 @@ private fun PublishModuleSheet(
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Text(
-                                    "点击选择要发布的模块",
+                                    Strings.tapToSelectModule,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     style = MaterialTheme.typography.bodyMedium
                                 )
@@ -8260,10 +7667,10 @@ private fun PublishModuleSheet(
                                 }
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text("分享码已自动生成",
+                                    Text(Strings.shareCodeAutoGenerated,
                                         style = MaterialTheme.typography.bodySmall,
                                         fontWeight = FontWeight.SemiBold)
-                                    Text("${shareCode.length} 字符",
+                                    Text(Strings.charCount.format(shareCode.length),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = Color(0xFF10B981).copy(alpha = 0.8f))
                                 }
@@ -8276,10 +7683,10 @@ private fun PublishModuleSheet(
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
-                        Text("基本信息", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        Text(Strings.basicInfo, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                     }
                     Text(
-                        "模块名称、图标和版本信息",
+                        Strings.moduleNameIconVersion,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                     )
@@ -8290,8 +7697,8 @@ private fun PublishModuleSheet(
                     OutlinedTextField(
                         value = name,
                         onValueChange = { name = it },
-                        label = { Text("模块名称 *") },
-                        placeholder = { Text("如：天气小组件") },
+                        label = { Text(Strings.moduleNameLabel) },
+                        placeholder = { Text(Strings.moduleNamePlaceholder) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
@@ -8310,14 +7717,14 @@ private fun PublishModuleSheet(
                             if (iconUri != null) {
                                 AsyncImage(
                                     model = iconUri,
-                                    contentDescription = "图标预览",
+                                    contentDescription = Strings.iconPreview,
                                     modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp)),
                                     contentScale = ContentScale.Crop
                                 )
                             } else if (iconUrl.isNotBlank()) {
                                 AsyncImage(
                                     model = iconUrl,
-                                    contentDescription = "图标预览",
+                                    contentDescription = Strings.iconPreview,
                                     modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp)),
                                     contentScale = ContentScale.Crop
                                 )
@@ -8353,9 +7760,9 @@ private fun PublishModuleSheet(
                             ) {
                                 Icon(Icons.Outlined.AddPhotoAlternate, null, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text(if (iconUri != null) "更换图标" else "选择图标")
+                                Text(if (iconUri != null) Strings.changeIcon else Strings.selectIcon)
                             }
-                            Text("从相册选择模块图标 (可选)",
+                            Text(Strings.selectModuleIconFromGallery,
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
@@ -8369,7 +7776,7 @@ private fun PublishModuleSheet(
                         Text("Category", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                     }
                     Text(
-                        "选择模块所属分类",
+                        Strings.selectModuleCategory,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                     )
@@ -8391,7 +7798,7 @@ private fun PublishModuleSheet(
                         OutlinedTextField(
                             value = versionName,
                             onValueChange = { versionName = it },
-                            label = { Text("版本名") },
+                            label = { Text(Strings.versionNameLabel) },
                             singleLine = true,
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
@@ -8399,7 +7806,7 @@ private fun PublishModuleSheet(
                         OutlinedTextField(
                             value = versionCode.toString(),
                             onValueChange = { versionCode = it.toIntOrNull() ?: 1 },
-                            label = { Text("版本号") },
+                            label = { Text(Strings.versionCodeLabel) },
                             singleLine = true,
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
@@ -8411,10 +7818,10 @@ private fun PublishModuleSheet(
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
-                        Text("描述和标签", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        Text(Strings.descriptionAndTags, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                     }
                     Text(
-                        "详细描述模块功能，添加标签方便搜索",
+                        Strings.describeModuleFeatures,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                     )
@@ -8424,8 +7831,8 @@ private fun PublishModuleSheet(
                     OutlinedTextField(
                         value = description,
                         onValueChange = { description = it },
-                        label = { Text("模块描述 (支持 Markdown)") },
-                        placeholder = { Text("描述模块的功能和用途...") },
+                        label = { Text(Strings.moduleDescLabel) },
+                        placeholder = { Text(Strings.moduleDescPlaceholder) },
                         minLines = 4,
                         maxLines = 8,
                         modifier = Modifier.fillMaxWidth(),
@@ -8437,8 +7844,8 @@ private fun PublishModuleSheet(
                     OutlinedTextField(
                         value = tags,
                         onValueChange = { tags = it },
-                        label = { Text("标签 (逗号分隔)") },
-                        placeholder = { Text("天气,工具,小组件") },
+                        label = { Text(Strings.tagsLabel) },
+                        placeholder = { Text(Strings.moduleTagsPlaceholder) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp)
@@ -8449,10 +7856,10 @@ private fun PublishModuleSheet(
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
-                        Text("截图 (可选)", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        Text(Strings.screenshotsOptional, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                     }
                     Text(
-                        "添加截图让用户提前预览效果",
+                        Strings.addScreenshotsPreview,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                     )
@@ -8471,7 +7878,7 @@ private fun PublishModuleSheet(
                                     ) {
                                         AsyncImage(
                                             model = screenshotUris[index],
-                                            contentDescription = "截图 ${index + 1}",
+                                            contentDescription = Strings.screenshotLabel.format(index + 1),
                                             modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp)),
                                             contentScale = ContentScale.Crop
                                         )
@@ -8521,14 +7928,14 @@ private fun PublishModuleSheet(
                                 modifier = Modifier.size(18.dp),
                                 tint = MaterialTheme.colorScheme.primary)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("从相册添加截图",
+                            Text(Strings.addScreenshotFromGallery,
                                 fontWeight = FontWeight.Medium,
                                 color = MaterialTheme.colorScheme.primary)
                         }
                     }
                     if (screenshotUris.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text("已添加 ${screenshotUris.size} 张截图",
+                        Text(Strings.addedScreenshotsCount.format(screenshotUris.size),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
                     }
@@ -8539,11 +7946,11 @@ private fun PublishModuleSheet(
                     item {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.tertiary, CircleShape))
-                            Text("手动输入分享码", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold,
+                            Text(Strings.manualShareCodeTitle, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.tertiary)
                         }
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text("如果不选择本地模块，也可以直接粘贴分享码",
+                        Text(Strings.noShareCodeLocalModule,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
                     }
@@ -8552,11 +7959,11 @@ private fun PublishModuleSheet(
                         OutlinedTextField(
                             value = shareCode,
                             onValueChange = { shareCode = it },
-                            label = { Text("模块分享码 *") },
-                            placeholder = { Text("粘贴模块的分享码") },
+                            label = { Text(Strings.moduleShareCodeLabel) },
+                            placeholder = { Text(Strings.pasteModuleShareCode) },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
-                            supportingText = { Text("在模块编辑器中导出获得的分享码") },
+                            supportingText = { Text(Strings.shareCodeExportHint) },
                             minLines = 3,
                             maxLines = 6
                         )
@@ -8582,7 +7989,7 @@ private fun PublishModuleSheet(
                                 ) {
                                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                         CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
-                                        Text(uploadStatus.ifBlank { "上传中..." },
+                                        Text(uploadStatus.ifBlank { Strings.uploading },
                                             style = MaterialTheme.typography.bodySmall,
                                             fontWeight = FontWeight.Medium)
                                     }
@@ -8613,103 +8020,6 @@ private fun PublishModuleSheet(
                     }
                 }
 
-                // ── 关联团队 (可选) ──
-                if (myTeams.isNotEmpty()) {
-                    item {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Box(modifier = Modifier.size(4.dp).background(MaterialTheme.colorScheme.tertiary, CircleShape))
-                            Text(Strings.teamAssociate, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                            Surface(
-                                shape = RoundedCornerShape(4.dp),
-                                color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)
-                            ) {
-                                Text("可选", modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp),
-                                    style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onTertiaryContainer, fontSize = 10.sp)
-                            }
-                        }
-                        Text("关联团队后，团队和成员贡献信息将在模块详情及成员主页展示",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
-                    }
-
-                    item {
-                        var teamDropdownExpanded by remember { mutableStateOf(false) }
-                        val selectedTeam = myTeams.find { it.id == selectedTeamId }
-                        ExposedDropdownMenuBox(expanded = teamDropdownExpanded, onExpandedChange = { teamDropdownExpanded = it }) {
-                            OutlinedTextField(
-                                value = selectedTeam?.name ?: "", onValueChange = {}, readOnly = true,
-                                label = { Text(Strings.teamSelectTeam) }, placeholder = { Text("点击选择团队") },
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = teamDropdownExpanded) },
-                                modifier = Modifier.menuAnchor().fillMaxWidth(), shape = RoundedCornerShape(12.dp),
-                                leadingIcon = { Icon(Icons.Outlined.Groups, null, modifier = Modifier.size(20.dp)) }
-                            )
-                            ExposedDropdownMenu(expanded = teamDropdownExpanded, onDismissRequest = { teamDropdownExpanded = false }) {
-                                DropdownMenuItem(
-                                    text = { Text("不关联团队", color = MaterialTheme.colorScheme.onSurfaceVariant) },
-                                    leadingIcon = { Icon(Icons.Outlined.Close, null, Modifier.size(18.dp)) },
-                                    onClick = { selectedTeamId = null; teamDropdownExpanded = false }
-                                )
-                                HorizontalDivider()
-                                myTeams.forEach { team ->
-                                    DropdownMenuItem(
-                                        text = { Column { Text(team.name, fontWeight = FontWeight.Medium); Text("${team.memberCount} 成员", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) } },
-                                        leadingIcon = { Icon(Icons.Outlined.Groups, null, Modifier.size(18.dp)) },
-                                        onClick = { selectedTeamId = team.id; teamDropdownExpanded = false }
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    if (selectedTeamId != null && contributorEntries.isNotEmpty()) {
-                        item {
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text("设置贡献者角色与贡献点", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
-                        }
-                        contributorEntries.forEachIndexed { index, entry ->
-                            item(key = "mcontrib_${entry.userId}") {
-                                Surface(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp),
-                                    color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f),
-                                    border = if (entry.role == "lead") BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)) else null
-                                ) {
-                                    Column(modifier = Modifier.padding(12.dp)) {
-                                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                            Surface(modifier = Modifier.size(32.dp), shape = CircleShape,
-                                                color = if (entry.role == "lead") MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHighest
-                                            ) {
-                                                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                                                    Text((entry.displayName ?: entry.username).take(1).uppercase(), fontSize = 14.sp, fontWeight = FontWeight.Bold,
-                                                        color = if (entry.role == "lead") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
-                                                }
-                                            }
-                                            Column(modifier = Modifier.weight(1f)) {
-                                                Text(entry.displayName ?: entry.username, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                                                Text("@${entry.username}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
-                                            }
-                                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                                FilterChip(selected = entry.role == "lead", onClick = { contributorEntries = contributorEntries.toMutableList().also { it[index] = entry.copy(role = "lead") } },
-                                                    label = { Text(Strings.teamLead, fontSize = 11.sp) }, modifier = Modifier.height(28.dp))
-                                                FilterChip(selected = entry.role == "member", onClick = { contributorEntries = contributorEntries.toMutableList().also { it[index] = entry.copy(role = "member") } },
-                                                    label = { Text(Strings.teamMemberRole, fontSize = 11.sp) }, modifier = Modifier.height(28.dp))
-                                            }
-                                        }
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                            OutlinedTextField(value = entry.points.toString(), onValueChange = { v -> val p = v.toIntOrNull() ?: 0; contributorEntries = contributorEntries.toMutableList().also { it[index] = entry.copy(points = p) } },
-                                                label = { Text(Strings.teamContributionPoints, fontSize = 11.sp) }, modifier = Modifier.width(100.dp), shape = RoundedCornerShape(8.dp), singleLine = true, textStyle = MaterialTheme.typography.bodySmall)
-                                            OutlinedTextField(value = entry.desc, onValueChange = { v -> contributorEntries = contributorEntries.toMutableList().also { it[index] = entry.copy(desc = v) } },
-                                                label = { Text(Strings.teamContributionDesc, fontSize = 11.sp) }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(8.dp), singleLine = true,
-                                                placeholder = { Text("如：功能开发、测试", fontSize = 12.sp) }, textStyle = MaterialTheme.typography.bodySmall)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
                 // ── 发布按钮 ──
                 item {
                     Spacer(modifier = Modifier.height(4.dp))
@@ -8717,11 +8027,11 @@ private fun PublishModuleSheet(
                         enabled = !isPublishing,
                         onClick = {
                             if (name.isBlank()) {
-                                scope.launch { snackbarHostState.showSnackbar("请输入模块名称") }
+                                scope.launch { snackbarHostState.showSnackbar(Strings.enterModuleName) }
                                 return@Button
                             }
                             if (shareCode.isBlank()) {
-                                scope.launch { snackbarHostState.showSnackbar("请选择模块或输入分享码") }
+                                scope.launch { snackbarHostState.showSnackbar(Strings.selectModuleOrShareCode) }
                                 return@Button
                             }
                             scope.launch {
@@ -8742,17 +8052,17 @@ private fun PublishModuleSheet(
                                 // Step 1: Upload icon if selected locally
                                 var finalIconUrl = iconUrl.ifBlank { null }
                                 if (iconUri != null) {
-                                    uploadStatus = "正在上传图标..."
+                                    uploadStatus = Strings.uploadingIconAlready
                                     uploadProgress = 0.1f
                                     val iconFile = uriToTempFile(iconUri!!, "icon", "png")
                                     if (iconFile != null) {
                                         when (val r = apiClient.uploadAsset(iconFile, "image/png")) {
                                             is com.webtoapp.core.auth.AuthResult.Success -> finalIconUrl = r.data
                                             is com.webtoapp.core.auth.AuthResult.Error -> {
-                                                val summary = "图标上传失败: ${r.message}"
+                                                val summary = Strings.iconUploadFailed.format(r.message)
                                                 publishFailureReport = buildSheetFailureReport(
-                                                    title = "模块发布失败",
-                                                    stage = "上传图标",
+                                                    title = Strings.modulePublishFailed,
+                                                    stage = Strings.uploadIconStage,
                                                     summary = summary,
                                                     contextLines = listOf(
                                                         "module=${selectedModule?.name ?: "manual"}",
@@ -8771,10 +8081,10 @@ private fun PublishModuleSheet(
                                         }
                                         iconFile.delete()
                                     } else {
-                                        val summary = "图标读取失败，无法创建临时文件"
+                                        val summary = Strings.iconReadFailed
                                         publishFailureReport = buildSheetFailureReport(
-                                            title = "模块发布失败",
-                                            stage = "读取图标",
+                                            title = Strings.modulePublishFailed,
+                                            stage = Strings.readIconStage,
                                             summary = summary,
                                             contextLines = listOf(
                                                 "module=${selectedModule?.name ?: "manual"}",
@@ -8790,7 +8100,7 @@ private fun PublishModuleSheet(
                                 }
 
                                 // Step 2: Publish module info
-                                uploadStatus = "正在发布模块..."
+                                uploadStatus = Strings.publishingModule
                                 uploadProgress = 0.8f
 
                                 try {
@@ -8807,37 +8117,14 @@ private fun PublishModuleSheet(
                                     uploadProgress = 1f
                                     when (result) {
                                         is com.webtoapp.core.auth.AuthResult.Success -> {
-                                            // Associate team if selected
-                                            val publishedModuleId = result.data.id
-                                            if (selectedTeamId != null && contributorEntries.isNotEmpty()) {
-                                                val hasLead = contributorEntries.any { it.role == "lead" }
-                                                if (hasLead) {
-                                                    val contribs = contributorEntries.map { e ->
-                                                        com.webtoapp.core.cloud.ContributorInput(
-                                                            userId = e.userId, contributorRole = e.role,
-                                                            contributionPoints = e.points, description = e.desc.ifBlank { null }
-                                                        )
-                                                    }
-                                                    val teamResult = apiClient.associateModuleTeam(moduleId = publishedModuleId, teamId = selectedTeamId!!, contributors = contribs)
-                                                    when (teamResult) {
-                                                        is com.webtoapp.core.auth.AuthResult.Success ->
-                                                            snackbarHostState.showSnackbar("${Strings.storeModulePublishSuccess} · 团队已关联")
-                                                        is com.webtoapp.core.auth.AuthResult.Error ->
-                                                            snackbarHostState.showSnackbar("${Strings.storeModulePublishSuccess} · 团队关联失败: ${teamResult.message}")
-                                                    }
-                                                } else {
-                                                    snackbarHostState.showSnackbar("${Strings.storeModulePublishSuccess} · 团队关联需至少一位主负责人")
-                                                }
-                                            } else {
-                                                snackbarHostState.showSnackbar(Strings.storeModulePublishSuccess)
-                                            }
+                                            snackbarHostState.showSnackbar(Strings.storeModulePublishSuccess)
                                             onPublished()
                                         }
                                         is com.webtoapp.core.auth.AuthResult.Error -> {
-                                            val summary = "发布失败: ${result.message}"
+                                            val summary = Strings.publishFailed.format(result.message)
                                             publishFailureReport = buildSheetFailureReport(
-                                                title = "模块发布失败",
-                                                stage = "提交模块信息",
+                                                title = Strings.modulePublishFailed,
+                                                stage = Strings.submitModuleInfoStage,
                                                 summary = summary,
                                                 contextLines = listOf(
                                                     "module=${selectedModule?.name ?: "manual"}",
@@ -8850,10 +8137,10 @@ private fun PublishModuleSheet(
                                         }
                                     }
                                 } catch (e: Exception) {
-                                    val summary = "网络错误: ${e.message}"
+                                    val summary = Strings.networkError.format(e.message)
                                     publishFailureReport = buildSheetFailureReport(
-                                        title = "模块发布失败",
-                                        stage = "请求发布接口",
+                                        title = Strings.modulePublishFailed,
+                                        stage = Strings.requestPublishStage,
                                         summary = summary,
                                         contextLines = listOf(
                                             "module=${selectedModule?.name ?: "manual"}",
@@ -8883,7 +8170,7 @@ private fun PublishModuleSheet(
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("发布中...", fontWeight = FontWeight.SemiBold)
+                            Text(Strings.publishing, fontWeight = FontWeight.SemiBold)
                         } else {
                             Icon(Icons.Outlined.Publish, null, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))

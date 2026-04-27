@@ -1160,7 +1160,7 @@ private fun UploadBgmDialog(
             PremiumButton(
                 onClick = {
                     val uri = bgmUri ?: return@PremiumButton
-                    val name = bgmName.ifBlank { "未命名" }
+                    val name = bgmName.ifBlank { Strings.unnamed }
                     
                     isUploading = true
                     scope.launch {
@@ -1418,7 +1418,7 @@ private fun LrcThemePreviewCard(
             Spacer(modifier = Modifier.height(8.dp))
             
             Text(
-                "动画: ${theme.animationType.displayName} | 位置: ${theme.position.displayName}",
+                Strings.animationPositionInfo.format(theme.animationType.displayName, theme.position.displayName),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

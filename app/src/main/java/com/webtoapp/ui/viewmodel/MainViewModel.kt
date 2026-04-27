@@ -467,13 +467,7 @@ class MainViewModel(
 
                 // Build APK export config (only save when has custom values)
                 val apkExportConfig = state.apkExportConfig.let { config ->
-                    if (config.customPackageName.isNullOrBlank() && 
-                        config.customVersionName.isNullOrBlank() && 
-                        config.customVersionCode == null) {
-                        null
-                    } else {
-                        config
-                    }
+                    if (config.isMeaningful()) config else null
                 }
 
                 // Build translate config
@@ -676,9 +670,7 @@ class MainViewModel(
             } else null
             
             val apkExportConfig = state.apkExportConfig.let { config ->
-                if (config.customPackageName.isNullOrBlank() && 
-                    config.customVersionName.isNullOrBlank() && 
-                    config.customVersionCode == null) null else config
+                if (config.isMeaningful()) config else null
             }
             
             val translateConfig = if (state.translateEnabled) state.translateConfig else null
@@ -1569,6 +1561,11 @@ class MainViewModel(
         iconUri: Uri?,
         maxDepth: Int = 3,
         downloadCdnResources: Boolean = true,
+        followLinks: Boolean = true,
+        maxFiles: Int = 500,
+        maxTotalSizeMb: Int = 200,
+        skipPatterns: String = "",
+        timeoutSeconds: Int = 30,
         onProgress: (com.webtoapp.core.scraper.WebsiteScraper.ScrapeProgress) -> Unit = {}
     ) {
         viewModelScope.launch {
@@ -1577,10 +1574,18 @@ class MainViewModel(
                 val context = getApplication<Application>()
                 val scraper = com.webtoapp.core.scraper.WebsiteScraper(context)
                 
+                val skipPatternList = if (skipPatterns.isBlank()) emptyList()
+                    else skipPatterns.split(",", " ", ";").map { it.trim() }.filter { it.isNotEmpty() }
+                
                 val config = com.webtoapp.core.scraper.WebsiteScraper.ScrapeConfig(
                     url = url,
                     maxDepth = maxDepth,
-                    downloadCdnResources = downloadCdnResources
+                    downloadCdnResources = downloadCdnResources,
+                    followLinks = followLinks,
+                    maxFiles = maxFiles,
+                    maxTotalSize = maxTotalSizeMb.toLong() * 1024 * 1024,
+                    skipPatterns = skipPatternList,
+                    timeoutSeconds = timeoutSeconds
                 )
                 
                 val result = scraper.scrape(config, onProgress)

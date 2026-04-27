@@ -161,7 +161,7 @@ fun AuthScreen(
                         fontWeight = FontWeight.Medium
                     )
                     Text(
-                        text = "目前云端相关功能（云端构建、云端同步、远程管理等）仍在开发中，当前功能尚不完善，部分服务可能暂时不可用。\n\n我们正在积极开发中，敬请期待后续更新！",
+                        text = Strings.cloudFeatureNotice,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -256,7 +256,7 @@ fun AuthScreen(
             TopAppBar(
                 title = {
                     Text(
-                        if (showForgotPassword) "重置密码" else Strings.authCloudService,
+                        if (showForgotPassword) Strings.resetPassword else Strings.authCloudService,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -320,7 +320,7 @@ fun AuthScreen(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    text = if (showForgotPassword) "输入邮箱，获取验证码重置密码"
+                    text = if (showForgotPassword) Strings.enterEmailForResetCode
                            else Strings.authCloudDesc,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -775,7 +775,7 @@ fun AuthScreen(
                                                 )
                                             } else {
                                                 Text(
-                                                    text = if (codeCountdown > 0) "${codeCountdown}s" else "发送验证码",
+                                                    text = if (codeCountdown > 0) "${codeCountdown}s" else Strings.sendVerificationCode,
                                                     style = MaterialTheme.typography.labelMedium,
                                                     maxLines = 1
                                                 )
@@ -960,7 +960,7 @@ private fun ForgotPasswordForm(
                     )
                 } else {
                     Text(
-                        text = if (resetCodeCountdown > 0) "${resetCodeCountdown}s" else "发送验证码",
+                        text = if (resetCodeCountdown > 0) "${resetCodeCountdown}s" else Strings.sendVerificationCode,
                         style = MaterialTheme.typography.labelMedium,
                         maxLines = 1
                     )

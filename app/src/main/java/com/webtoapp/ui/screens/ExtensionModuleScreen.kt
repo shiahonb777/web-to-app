@@ -1409,7 +1409,7 @@ fun ModuleCard(
                         // 发布到模块市场
                         onPublish?.let { publish ->
                             DropdownMenuItem(
-                                text = { Text("发布到市场") },
+                                text = { Text(Strings.publishToMarket) },
                                 onClick = { showMenu = false; publish() },
                                 leadingIcon = { Icon(Icons.Outlined.CloudUpload, null) }
                             )

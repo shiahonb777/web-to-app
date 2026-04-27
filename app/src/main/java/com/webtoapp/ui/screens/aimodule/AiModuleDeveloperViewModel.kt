@@ -16,6 +16,7 @@ import com.webtoapp.core.extension.ModuleCategory
 import com.webtoapp.core.extension.agent.*
 import com.webtoapp.data.model.AiFeature
 import com.webtoapp.data.model.SavedModel
+import com.webtoapp.core.i18n.Strings
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -159,7 +160,7 @@ class AiModuleDeveloperViewModel(
         
         if (state.userInput.isBlank()) {
             viewModelScope.launch {
-                _events.emit(AiModuleDeveloperEvent.ShowToast("请输入功能需求"))
+                _events.emit(AiModuleDeveloperEvent.ShowToast(Strings.aiModuleFeatureRequired))
             }
             return
         }
@@ -303,7 +304,7 @@ class AiModuleDeveloperViewModel(
                 }
                 // Save会话状态（包含生成的模块）
                 saveSessionState()
-                _events.emit(AiModuleDeveloperEvent.ShowToast("模块生成成功"))
+                _events.emit(AiModuleDeveloperEvent.ShowToast(Strings.aiModuleGenerateSuccess))
             }
         }
     }
@@ -343,7 +344,7 @@ class AiModuleDeveloperViewModel(
         
         if (jsCode.isBlank()) {
             viewModelScope.launch {
-                _events.emit(AiModuleDeveloperEvent.ShowToast("没有代码可验证"))
+                _events.emit(AiModuleDeveloperEvent.ShowToast(Strings.aiModuleNoCodeToValidate))
             }
             return
         }
@@ -362,7 +363,7 @@ class AiModuleDeveloperViewModel(
     fun copyCode(code: String) {
         viewModelScope.launch {
             _events.emit(AiModuleDeveloperEvent.CopyToClipboard(code))
-            _events.emit(AiModuleDeveloperEvent.ShowToast("已复制到剪贴板"))
+            _events.emit(AiModuleDeveloperEvent.ShowToast(Strings.aiModuleCopiedToClipboard))
         }
     }
     
@@ -389,12 +390,12 @@ class AiModuleDeveloperViewModel(
         viewModelScope.launch {
             extensionManager.addModule(finalModule)
                 .onSuccess { savedModule ->
-                    _events.emit(AiModuleDeveloperEvent.ShowToast("模块已保存"))
+                    _events.emit(AiModuleDeveloperEvent.ShowToast(Strings.aiModuleSaved))
                     _events.emit(AiModuleDeveloperEvent.ModuleCreated(savedModule.id))
                     onSuccess(savedModule)
                 }
                 .onFailure { e ->
-                    _events.emit(AiModuleDeveloperEvent.ShowToast("保存失败: ${e.message}"))
+                    _events.emit(AiModuleDeveloperEvent.ShowToast(Strings.aiModuleSaveFailed.format(e.message)))
                 }
         }
     }
@@ -469,7 +470,7 @@ class AiModuleDeveloperViewModel(
             }
             
             viewModelScope.launch {
-                _events.emit(AiModuleDeveloperEvent.ShowToast("已切换到 ${nextModel.alias ?: nextModel.model.name}"))
+                _events.emit(AiModuleDeveloperEvent.ShowToast(Strings.aiModuleSwitchedToModel.format(nextModel.alias ?: nextModel.model.name)))
             }
             
             // 如果有用户输入，重新开始开发
@@ -478,7 +479,7 @@ class AiModuleDeveloperViewModel(
             }
         } else {
             viewModelScope.launch {
-                _events.emit(AiModuleDeveloperEvent.ShowToast("没有其他可用模型"))
+                _events.emit(AiModuleDeveloperEvent.ShowToast(Strings.aiModuleNoOtherModels))
             }
         }
     }
@@ -645,10 +646,10 @@ class AiModuleDeveloperViewModel(
                     // 清除中断标记
                     _hasInterruptedSession.value = false
                     
-                    _events.emit(AiModuleDeveloperEvent.ShowToast("已恢复上次会话"))
+                    _events.emit(AiModuleDeveloperEvent.ShowToast(Strings.aiModuleSessionRestored))
                 }
             } catch (e: Exception) {
-                _events.emit(AiModuleDeveloperEvent.ShowToast("恢复会话失败: ${e.message}"))
+                _events.emit(AiModuleDeveloperEvent.ShowToast(Strings.aiModuleSessionRestoreFailed.format(e.message)))
             }
         }
     }
@@ -662,7 +663,7 @@ class AiModuleDeveloperViewModel(
         viewModelScope.launch {
             clearSessionState()
             _hasInterruptedSession.value = false
-            _events.emit(AiModuleDeveloperEvent.ShowToast("已放弃上次会话"))
+            _events.emit(AiModuleDeveloperEvent.ShowToast(Strings.aiModuleSessionDiscarded))
         }
     }
     

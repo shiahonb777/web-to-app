@@ -160,11 +160,15 @@ class EncryptedApkBuilder(private val context: Context) {
     
     /**
      * 生成加密密钥
-     * 基于目标包名和签名生成
+     * 基于目标包名、签名和可选自定义密码生成
      */
-    fun generateEncryptionKey(packageName: String): SecretKey {
+    fun generateEncryptionKey(packageName: String, encryptionConfig: EncryptionConfig = EncryptionConfig.DISABLED): SecretKey {
         val signatureHash = keyManager.getSignatureHashForBuild()
-        return keyManager.generateKeyForPackage(packageName, signatureHash)
+        return keyManager.generateKeyForPackage(
+            packageName, signatureHash,
+            encryptionConfig.encryptionLevel,
+            encryptionConfig.customPassword
+        )
     }
     
     /**
@@ -180,8 +184,9 @@ class EncryptedApkBuilder(private val context: Context) {
     ) {
         if (!encryptionConfig.enabled) return
         
-        // 使用传入的签名哈希，如果没有则使用当前应用的签名
-        val sigHash = signatureHash ?: keyManager.getSignatureHashForBuild()
+        // SECURITY: 不再将 signatureHash 明文写入元数据文件
+        // 运行时通过 KeyManager.getAppSignature() 直接从 APK 签名读取
+        // signatureHash 参数保留用于向后兼容调用方，但不再写入文件
         
         val metadata = EncryptionMetadata(
             version = CryptoConstants.ENCRYPTED_HEADER_VERSION,
@@ -191,7 +196,8 @@ class EncryptedApkBuilder(private val context: Context) {
             encryptSplash = encryptionConfig.encryptSplash,
             encryptBgm = encryptionConfig.encryptBgm,
             packageName = packageName,
-            signatureHash = sigHash.toHexString(),
+            signatureHash = "",  // 不再存储签名哈希，运行时直接读取 APK 签名
+            usesCustomPassword = !encryptionConfig.customPassword.isNullOrBlank(),
             // Security保护配置
             enableIntegrityCheck = encryptionConfig.enableIntegrityCheck,
             enableAntiDebug = encryptionConfig.enableAntiDebug,
@@ -206,7 +212,7 @@ class EncryptedApkBuilder(private val context: Context) {
         val metadataJson = gson.toJson(metadata)
         writeEntryDeflated(zipOut, "assets/encryption_meta.json", metadataJson.toByteArray(Charsets.UTF_8))
         
-        AppLogger.d(TAG, "写入加密元数据: $metadata")
+        AppLogger.d(TAG, "写入加密元数据 (signatureHash 已省略, usesCustomPassword=${metadata.usesCustomPassword})")
     }
     
     /**
@@ -271,7 +277,11 @@ data class EncryptionMetadata(
     val encryptSplash: Boolean,
     val encryptBgm: Boolean,
     val packageName: String,
-    val signatureHash: String,
+    // SECURITY: signatureHash 不再明文存储，运行时从 APK 签名直接读取
+    // 旧版字段保留为空串以兼容旧 APK
+    val signatureHash: String = "",
+    // 标记是否使用自定义密码参与密钥派生
+    val usesCustomPassword: Boolean = false,
     // Security保护配置
     val enableIntegrityCheck: Boolean = true,
     val enableAntiDebug: Boolean = true,

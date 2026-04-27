@@ -33,6 +33,14 @@ interface ShellTemplateProvider {
      * 返回 -1 表示未知
      */
     val estimatedSize: Long get() = -1
+
+    fun supports(config: ApkConfig): Boolean = true
+
+    /**
+     * Whether the selector may fall back to another provider when this provider
+     * supports the config but cannot supply a template at runtime.
+     */
+    val allowFallbackOnMissing: Boolean get() = true
 }
 
 /**
@@ -75,13 +83,16 @@ class AssetTemplateProvider(
 ) : ShellTemplateProvider {
     
     override val sourceName = "asset($assetPath)"
+    override val allowFallbackOnMissing: Boolean = false
     
     private val cacheDir = File(context.cacheDir, "shell_templates").apply { mkdirs() }
+
+    override fun supports(config: ApkConfig): Boolean {
+        return config.appType in setOf("WEB", "HTML", "FRONTEND", "IMAGE", "VIDEO", "GALLERY")
+    }
     
     override fun getTemplate(): File? {
         val cached = File(cacheDir, "shell.apk")
-        if (cached.exists()) return cached
-        
         return try {
             context.assets.open(assetPath).use { input ->
                 FileOutputStream(cached).use { output ->
@@ -107,11 +118,25 @@ class CompositeTemplateProvider(
         get() = "composite[${providers.joinToString(",") { it.sourceName }}]"
     
     override fun getTemplate(): File? {
+        return getTemplateFor(null)
+    }
+
+    fun getTemplateFor(config: ApkConfig?): File? {
         for (provider in providers) {
+            if (config != null && !provider.supports(config)) {
+                continue
+            }
             val template = provider.getTemplate()
             if (template != null) {
                 AppLogger.i("CompositeTemplateProvider", "Using template from: ${provider.sourceName}")
                 return template
+            }
+            if (config != null && !provider.allowFallbackOnMissing) {
+                AppLogger.e(
+                    "CompositeTemplateProvider",
+                    "Required template provider missing for appType=${config.appType}: ${provider.sourceName}"
+                )
+                return null
             }
         }
         AppLogger.e("CompositeTemplateProvider", "No template available from any provider")

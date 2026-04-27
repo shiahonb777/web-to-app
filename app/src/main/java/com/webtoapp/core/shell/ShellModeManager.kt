@@ -6,7 +6,7 @@ import com.webtoapp.core.crypto.AssetDecryptor
 import com.webtoapp.core.forcedrun.ForcedRunConfig
 import com.webtoapp.core.logging.AppLogger
 
-/** Escape a string for use inside a JS single-quoted string literal. */
+/** Escape for JS single-quoted string literal. */
 private fun String.escapeForJsSingleQuote(): String =
     this.replace("\\", "\\\\")
         .replace("'", "\\'")
@@ -15,7 +15,7 @@ private fun String.escapeForJsSingleQuote(): String =
         .replace("\u2028", "\\u2028")
         .replace("\u2029", "\\u2029")
 
-/** Escape a string for use inside a JS template literal (backtick). */
+/** Escape for JS template literal (backtick). */
 private fun String.escapeForJsTemplate(): String =
     this.replace("\\", "\\\\")
         .replace("`", "\\`")
@@ -24,9 +24,7 @@ private fun String.escapeForJsTemplate(): String =
         .replace("\r", "\\r")
 
 /**
- * Shell 模式管理器
- * 检测应用是否以 Shell 模式运行（独立 WebApp）
- * 支持加密和非加密配置文件
+ * Shell 模式管理器 — 检测应用是否以独立 WebApp 模式运行
  */
 class ShellModeManager(private val context: Context) {
 
@@ -42,23 +40,10 @@ class ShellModeManager(private val context: Context) {
     private var configLoaded = false
     private val assetDecryptor = AssetDecryptor(context)
 
-    /**
-     * 检查是否为 Shell 模式（存在有效的配置文件）
-     */
-    fun isShellMode(): Boolean {
-        return loadConfig() != null
-    }
+    fun isShellMode(): Boolean = loadConfig() != null
 
-    /**
-     * 获取 Shell 配置
-     */
-    fun getConfig(): ShellConfig? {
-        return loadConfig()
-    }
+    fun getConfig(): ShellConfig? = loadConfig()
 
-    /**
-     * 加载配置文件（支持加密和非加密）
-     */
     private fun loadConfig(): ShellConfig? {
         if (configLoaded) return cachedConfig
 
@@ -68,13 +53,11 @@ class ShellModeManager(private val context: Context) {
             configLoaded = true
             cachedConfig = try {
             AppLogger.d(TAG, "尝试加载配置文件: $CONFIG_FILE")
-            
-            // 使用 AssetDecryptor 自动处理加密/非加密配置
+
             val jsonStr = try {
                 assetDecryptor.loadAssetAsString(CONFIG_FILE)
             } catch (e: Exception) {
                 AppLogger.e(TAG, "AssetDecryptor 加载失败，尝试直接读取", e)
-                // 回退：直接从 assets 读取（非加密模式）
                 try {
                     context.assets.open(CONFIG_FILE).bufferedReader().use { it.readText() }
                 } catch (e2: Exception) {
@@ -82,36 +65,24 @@ class ShellModeManager(private val context: Context) {
                     throw e2
                 }
             }
-            
+
             AppLogger.d(TAG, "配置文件内容长度: ${jsonStr.length}")
             val config = gson.fromJson(jsonStr, ShellConfig::class.java)
             val normalizedAppType = config?.appType?.trim()?.uppercase() ?: ""
             AppLogger.d(TAG, "解析结果: appType=${config?.appType} (normalized=$normalizedAppType)")
             val isDebuggable = (context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0
             if (isDebuggable) {
-                // 调试模式下输出详细配置信息，Release 构建不会泄露敏感配置
                 AppLogger.d(TAG, "WebView UA配置: userAgentMode=${config?.webViewConfig?.userAgentMode}")
                 AppLogger.d(TAG, "注入脚本: ${config?.webViewConfig?.injectScripts?.size ?: 0} 个")
                 AppLogger.d(TAG, "扩展模块: extensionModuleIds=${config?.extensionModuleIds?.size ?: 0}, embeddedExtensionModules=${config?.embeddedExtensionModules?.size ?: 0}")
             }
-            // Verify配置有效性
-            // HTML/FRONTEND应用不需要targetUrl，使用嵌入的HTML文件
-            // Media应用也不需要targetUrl，使用嵌入的媒体文件
-            // Gallery应用也不需要targetUrl，使用嵌入的图片/视频列表
             val isValid = when {
                 normalizedAppType == "HTML" || normalizedAppType == "FRONTEND" -> {
-                    // Verify entryFile 必须有文件名部分（不能只是 .html 或空字符串）
                     val entryFile = config.htmlConfig.entryFile
                     entryFile.isNotBlank() && entryFile.substringBeforeLast(".").isNotBlank()
                 }
-                normalizedAppType == "IMAGE" || normalizedAppType == "VIDEO" -> true // Media应用
-                normalizedAppType == "GALLERY" -> true // Gallery应用（图片/视频画廊）
-                normalizedAppType == "WORDPRESS" -> true // WordPress应用（离线PHP+SQLite）
-                normalizedAppType == "NODEJS_APP" -> true // Node.js应用（Express/Fastify/Nest等后端）
-                normalizedAppType == "PHP_APP" -> true // PHP应用（Laravel/ThinkPHP等）
-                normalizedAppType == "PYTHON_APP" -> true // Python应用（Flask/Django/FastAPI等）
-                normalizedAppType == "GO_APP" -> true // Go应用（Gin/Fiber/Echo等）
-                else -> !config?.targetUrl.isNullOrBlank() // WEB应用需要targetUrl
+                normalizedAppType in listOf("IMAGE", "VIDEO", "GALLERY", "WORDPRESS", "NODEJS_APP", "PHP_APP", "PYTHON_APP", "GO_APP") -> true
+                else -> !config?.targetUrl.isNullOrBlank()
             }
             if (!isValid) {
                 AppLogger.w(TAG, "配置无效: appType=${config?.appType}, targetUrl=${config?.targetUrl}")
@@ -124,7 +95,6 @@ class ShellModeManager(private val context: Context) {
             AppLogger.e(TAG, "加载配置文件失败", e)
             null
         } catch (e: Error) {
-            // 捕获所有 Error（包括 NoClassDefFoundError 等）
             AppLogger.e(TAG, "加载配置文件时发生严重错误", e)
             null
         }
@@ -132,10 +102,7 @@ class ShellModeManager(private val context: Context) {
             return cachedConfig
         }
     }
-    
-    /**
-     * 重新加载配置
-     */
+
     fun reload() {
         synchronized(this) {
             configLoaded = false
@@ -143,11 +110,28 @@ class ShellModeManager(private val context: Context) {
             assetDecryptor.clearCache()
         }
     }
+    
+    /**
+     * 设置自定义密码（用于密钥派生）
+     * 当 APK 使用自定义密码加密时，需要在加载配置前调用此方法
+     */
+    fun setCustomPassword(password: String?) {
+        assetDecryptor.setCustomPassword(password)
+        // 清除配置缓存以触发重新加载
+        synchronized(this) {
+            configLoaded = false
+            cachedConfig = null
+        }
+    }
+    
+    /**
+     * 检查是否需要自定义密码才能解密
+     */
+    fun requiresCustomPassword(): Boolean {
+        return assetDecryptor.requiresCustomPassword()
+    }
 }
 
-/**
- * Shell 模式配置数据类
- */
 data class ShellConfig(
     @SerializedName("appName")
     val appName: String = "",
@@ -164,7 +148,7 @@ data class ShellConfig(
     @SerializedName("versionName")
     val versionName: String = "1.0.0",
 
-    // Activation码配置
+    // Activation
     @SerializedName("activationEnabled")
     val activationEnabled: Boolean = false,
 
@@ -186,14 +170,14 @@ data class ShellConfig(
     @SerializedName("activationDialogButtonText")
     val activationDialogButtonText: String = "",
 
-    // Ad拦截配置
+    // Ad block
     @SerializedName("adBlockEnabled")
     val adBlockEnabled: Boolean = false,
 
     @SerializedName("adBlockRules")
     val adBlockRules: List<String> = emptyList(),
 
-    // Announcement配置
+    // Announcement
     @SerializedName("announcementEnabled")
     val announcementEnabled: Boolean = false,
 
@@ -227,11 +211,11 @@ data class ShellConfig(
     @SerializedName("announcementAllowNeverShow")
     val announcementAllowNeverShow: Boolean = false,
 
-    // WebView 配置
+    // WebView
     @SerializedName("webViewConfig")
     val webViewConfig: WebViewShellConfig = WebViewShellConfig(),
 
-    // Start画面配置
+    // Splash
     @SerializedName("splashEnabled")
     val splashEnabled: Boolean = false,
 
@@ -244,7 +228,7 @@ data class ShellConfig(
     @SerializedName("splashClickToSkip")
     val splashClickToSkip: Boolean = true,
 
-    // Video裁剪配置
+    // Video crop
     @SerializedName("splashVideoStartMs")
     val splashVideoStartMs: Long = 0,
 
@@ -260,18 +244,18 @@ data class ShellConfig(
     @SerializedName("splashEnableAudio")
     val splashEnableAudio: Boolean = false,
     
-    // Media应用配置
+    // App type
     @SerializedName("appType")
     val appType: String = "WEB",
     
     @SerializedName("mediaConfig")
     val mediaConfig: MediaShellConfig = MediaShellConfig(),
     
-    // HTML应用配置
+    // HTML
     @SerializedName("htmlConfig")
     val htmlConfig: HtmlShellConfig = HtmlShellConfig(),
     
-    // Background music配置
+    // BGM
     @SerializedName("bgmEnabled")
     val bgmEnabled: Boolean = false,
     
@@ -293,14 +277,14 @@ data class ShellConfig(
     @SerializedName("bgmLrcTheme")
     val bgmLrcTheme: LrcShellTheme? = null,
     
-    // Theme配置
+    // Theme
     @SerializedName("themeType")
     val themeType: String = "AURORA",
     
     @SerializedName("darkMode")
     val darkMode: String = "SYSTEM",
     
-    // Web page自动翻译配置
+    // Translate
     @SerializedName("translateEnabled")
     val translateEnabled: Boolean = false,
     
@@ -310,7 +294,7 @@ data class ShellConfig(
     @SerializedName("translateShowButton")
     val translateShowButton: Boolean = true,
     
-    // 扩展模块配置
+    // Extension
     @SerializedName("extensionFabIcon")
     val extensionFabIcon: String = "",
     
@@ -321,87 +305,96 @@ data class ShellConfig(
     @SerializedName("embeddedExtensionModules")
     val embeddedExtensionModules: List<EmbeddedShellModule> = emptyList(),
     
-    // 自启动配置
+    // Auto start
     @SerializedName("autoStartConfig")
     val autoStartConfig: AutoStartShellConfig? = null,
 
-    // 强制运行配置
+    // Forced run
     @SerializedName("forcedRunConfig")
     val forcedRunConfig: ForcedRunConfig? = null,
     
-    // 独立环境/多开配置
+    // Isolation
     @SerializedName("isolationEnabled")
     val isolationEnabled: Boolean = false,
     
     @SerializedName("isolationConfig")
     val isolationConfig: IsolationShellConfig? = null,
     
-    // 后台运行配置
+    // Background run
     @SerializedName("backgroundRunEnabled")
     val backgroundRunEnabled: Boolean = false,
     
     @SerializedName("backgroundRunConfig")
     val backgroundRunConfig: BackgroundRunShellConfig? = null,
     
-    // 黑科技功能配置（独立模块）
+    // Notification
+    @SerializedName("notificationEnabled")
+    val notificationEnabled: Boolean = false,
+    
+    @SerializedName("notificationConfig")
+    val notificationConfig: NotificationShellConfig? = null,
+    
+    // Black tech
     @SerializedName("blackTechConfig")
     val blackTechConfig: com.webtoapp.core.blacktech.BlackTechConfig? = null,
     
-    // App伪装配置（独立模块）
+    // Disguise
     @SerializedName("disguiseConfig")
     val disguiseConfig: com.webtoapp.core.disguise.DisguiseConfig? = null,
     
-    // 浏览器伪装配置（反指纹引擎）
+    // Browser disguise
     @SerializedName("browserDisguiseConfig")
     val browserDisguiseConfig: com.webtoapp.core.disguise.BrowserDisguiseConfig? = null,
     
-    // 界面语言配置
+    // Device disguise
+    @SerializedName("deviceDisguiseConfig")
+    val deviceDisguiseConfig: com.webtoapp.core.disguise.DeviceDisguiseConfig? = null,
+    
+    // Language
     @SerializedName("language")
     val language: String = "CHINESE",  // CHINESE, ENGLISH, ARABIC
     
-    // Gallery 画廊应用配置
+    // Gallery
     @SerializedName("galleryConfig")
     val galleryConfig: GalleryShellConfig = GalleryShellConfig(),
     
-    // WordPress 应用配置
+    // WordPress
     @SerializedName("wordpressConfig")
     val wordpressConfig: WordPressShellConfig = WordPressShellConfig(),
     
-    // Node.js 应用配置
+    // Node.js
     @SerializedName("nodejsConfig")
     val nodejsConfig: NodeJsShellConfig = NodeJsShellConfig(),
     
-    // Deep link配置
+    // Deep link
     @SerializedName("deepLinkEnabled")
     val deepLinkEnabled: Boolean = false,
     
     @SerializedName("deepLinkHosts")
     val deepLinkHosts: List<String> = emptyList(),
     
-    // PHP 应用配置
+    // PHP
     @SerializedName("phpAppConfig")
     val phpAppConfig: PhpAppShellConfig = PhpAppShellConfig(),
     
-    // Python 应用配置
+    // Python
     @SerializedName("pythonAppConfig")
     val pythonAppConfig: PythonAppShellConfig = PythonAppShellConfig(),
     
-    // Go 应用配置
+    // Go
     @SerializedName("goAppConfig")
     val goAppConfig: GoAppShellConfig = GoAppShellConfig(),
     
-    // 多站点聚合应用配置
+    // Multi-web
     @SerializedName("multiWebConfig")
     val multiWebConfig: MultiWebShellConfig = MultiWebShellConfig(),
     
-    // 云 SDK 配置（导出 APK 内嵌入的云服务参数）
+    // Cloud SDK
     @SerializedName("cloudSdkConfig")
     val cloudSdkConfig: CloudSdkConfig = CloudSdkConfig()
 )
 
-/**
- * 嵌入到 Shell APK 中的扩展模块数据
- */
+/** Shell APK 中嵌入的扩展模块 */
 data class EmbeddedShellModule(
     @SerializedName("id")
     val id: String = "",
@@ -438,13 +431,10 @@ data class EmbeddedShellModule(
 ) {
     companion object {
         private val GSON = com.webtoapp.util.GsonProvider.gson
-        /** URL 匹配 Regex 缓存，避免每次重建 */
+        /** URL 匹配 Regex 缓存 */
         private val regexCache = android.util.LruCache<String, Regex>(32)
     }
     
-    /**
-     * 检查 URL 是否匹配此模块
-     */
     fun matchesUrl(url: String): Boolean {
         if (urlMatches.isEmpty()) return true
         
@@ -470,7 +460,7 @@ data class EmbeddedShellModule(
                 val r = if (rule.isRegex) {
                     Regex(rule.pattern)
                 } else {
-                    // 通配符匹配：* 匹配任意字符
+                    // Wildcard: * matches any
                     val regexPattern = rule.pattern
                         .replace(".", "\\.")
                         .replace("*", ".*")
@@ -490,10 +480,7 @@ data class EmbeddedShellModule(
     @Volatile
     private var _cachedCode: String? = null
     
-    /**
-     * 生成可执行的 JavaScript 代码
-     * 结果会缓存，避免每次页面加载时重复序列化
-     */
+    /** Generate executable JS code (cached). */
     fun generateExecutableCode(): String {
         _cachedCode?.let { return it }
         val configJson = GSON.toJson(configValues)
@@ -534,9 +521,6 @@ data class EmbeddedShellModule(
     }
 }
 
-/**
- * 嵌入的 URL 匹配规则
- */
 data class EmbeddedUrlMatch(
     @SerializedName("pattern")
     val pattern: String = "",
@@ -548,9 +532,6 @@ data class EmbeddedUrlMatch(
     val exclude: Boolean = false
 )
 
-/**
- * Gallery 画廊应用 Shell 配置
- */
 data class GalleryShellConfig(
     @SerializedName("items")
     val items: List<GalleryShellItem> = emptyList(),
@@ -586,9 +567,6 @@ data class GalleryShellConfig(
     val videoAutoNext: Boolean = true
 )
 
-/**
- * Gallery 媒体项 Shell 配置
- */
 data class GalleryShellItem(
     @SerializedName("id")
     val id: String = "",
@@ -609,9 +587,6 @@ data class GalleryShellItem(
     val thumbnailPath: String? = null  // assets/gallery/thumb_0.jpg
 )
 
-/**
- * 媒体应用 Shell 配置
- */
 data class MediaShellConfig(
     @SerializedName("enableAudio")
     val enableAudio: Boolean = true,
@@ -632,12 +607,6 @@ data class MediaShellConfig(
     val keepScreenOn: Boolean = true  // 保持屏幕常亮
 )
 
-/**
- * HTML应用 Shell 配置
- */
-/**
- * WordPress 应用 Shell 配置
- */
 data class WordPressShellConfig(
     @SerializedName("siteTitle")
     val siteTitle: String = "My Site",
@@ -649,9 +618,6 @@ data class WordPressShellConfig(
     val landscapeMode: Boolean = false
 )
 
-/**
- * Node.js 应用 Shell 配置
- */
 data class NodeJsShellConfig(
     @SerializedName("mode")
     val mode: String = "STATIC",  // STATIC, BACKEND, FULLSTACK
@@ -669,12 +635,6 @@ data class NodeJsShellConfig(
     val landscapeMode: Boolean = false
 )
 
-/**
- * HTML应用 Shell 配置
- */
-/**
- * PHP 应用 Shell 配置
- */
 data class PhpAppShellConfig(
     @SerializedName("framework")
     val framework: String = "",
@@ -695,9 +655,6 @@ data class PhpAppShellConfig(
     val landscapeMode: Boolean = false
 )
 
-/**
- * Python 应用 Shell 配置
- */
 data class PythonAppShellConfig(
     @SerializedName("framework")
     val framework: String = "",
@@ -721,9 +678,6 @@ data class PythonAppShellConfig(
     val landscapeMode: Boolean = false
 )
 
-/**
- * Go 应用 Shell 配置
- */
 data class GoAppShellConfig(
     @SerializedName("framework")
     val framework: String = "",
@@ -744,9 +698,6 @@ data class GoAppShellConfig(
     val landscapeMode: Boolean = false
 )
 
-/**
- * 多站点聚合 Shell 配置
- */
 data class MultiWebShellConfig(
     @SerializedName("sites")
     val sites: List<MultiWebSiteShellConfig> = emptyList(),
@@ -806,10 +757,7 @@ data class HtmlShellConfig(
     @SerializedName("landscapeMode")
     val landscapeMode: Boolean = false
 ) {
-    /**
-     * 获取有效的入口文件名
-     * 验证 entryFile 必须有文件名部分（不能只是 .html 或空字符串）
-     */
+    /** Validate entryFile has a non-empty name part. */
     fun getValidEntryFile(): String {
         return entryFile.takeIf { 
             it.isNotBlank() && it.substringBeforeLast(".").isNotBlank() 
@@ -817,15 +765,35 @@ data class HtmlShellConfig(
     }
 }
 
-/**
- * WebView Shell 配置
- */
+data class DnsShellConfig(
+    @SerializedName("provider")
+    val provider: String = "cloudflare",
+
+    @SerializedName("customDohUrl")
+    val customDohUrl: String = "",
+
+    @SerializedName("dohMode")
+    val dohMode: String = "automatic", // automatic, strict
+
+    @SerializedName("bypassSystemDns")
+    val bypassSystemDns: Boolean = false
+)
+
 data class WebViewShellConfig(
     @SerializedName("javaScriptEnabled")
     val javaScriptEnabled: Boolean = true,
 
     @SerializedName("domStorageEnabled")
     val domStorageEnabled: Boolean = true,
+
+    @SerializedName("allowFileAccess")
+    val allowFileAccess: Boolean = false,
+
+    @SerializedName("allowContentAccess")
+    val allowContentAccess: Boolean = true,
+
+    @SerializedName("cacheEnabled")
+    val cacheEnabled: Boolean = true,
 
     @SerializedName("zoomEnabled")
     val zoomEnabled: Boolean = true,
@@ -897,7 +865,7 @@ data class WebViewShellConfig(
     val adBlockToggleEnabled: Boolean = false, // Allow用户在运行时切换广告拦截开关
     
     @SerializedName("popupBlockerEnabled")
-    val popupBlockerEnabled: Boolean = true, // 启用弹窗拦截器
+    val popupBlockerEnabled: Boolean = false, // 默认关闭，避免拦截合法的 window.open 导致按钮/菜单/搜索失效
     
     @SerializedName("popupBlockerToggleEnabled")
     val popupBlockerToggleEnabled: Boolean = false, // Allow用户在运行时切换弹窗拦截开关
@@ -905,12 +873,15 @@ data class WebViewShellConfig(
     @SerializedName("openExternalLinks")
     val openExternalLinks: Boolean = false, // External链接是否在浏览器打开
     
-    // ============ 浏览器兼容性增强配置 ============
+    // Browser compatibility
     @SerializedName("initialScale")
     val initialScale: Int = 0,
     
     @SerializedName("viewportMode")
     val viewportMode: String = "DEFAULT", // DEFAULT, FIT_SCREEN, DESKTOP
+    
+    @SerializedName("customViewportWidth")
+    val customViewportWidth: Int = 0, // 自定义视口宽度（0=自动）
     
     @SerializedName("newWindowBehavior")
     val newWindowBehavior: String = "SAME_WINDOW",
@@ -924,9 +895,12 @@ data class WebViewShellConfig(
     @SerializedName("enableZoomPolyfill")
     val enableZoomPolyfill: Boolean = true,
     
-    // ============ 高级功能配置 ============
+    // Advanced
     @SerializedName("enableCrossOriginIsolation")
     val enableCrossOriginIsolation: Boolean = false,
+    
+    @SerializedName("hideUrlPreview")
+    val hideUrlPreview: Boolean = false,
     
     @SerializedName("disableShields")
     val disableShields: Boolean = true, // 默认禁用 BrowserShields - 避免误杀关键服务 (OAuth/CAPTCHA/错误监控等)
@@ -943,26 +917,22 @@ data class WebViewShellConfig(
     @SerializedName("screenBrightness")
     val screenBrightness: Int = -1, // 屏幕亮度：-1=跟随系统, 0-100=自定义百分比
     
-    // ============ 悬浮返回按钮 ============
+    // Floating back button
     @SerializedName("showFloatingBackButton")
     val showFloatingBackButton: Boolean = true, // 全屏模式下是否显示悬浮返回按钮
 
-    // ============ 系统导航手势屏蔽 ============
-    @SerializedName("blockSystemNavigationGesture")
-    val blockSystemNavigationGesture: Boolean = false, // 是否屏蔽系统导航手势（全屏模式下生效，默认关闭）
-
-    // ============ 键盘调整模式 ============
+    // Keyboard
     @SerializedName("keyboardAdjustMode")
     val keyboardAdjustMode: String = "RESIZE", // RESIZE, NOTHING
 
-    // ============ 下拉刷新 / 视频全屏 ============
+    // Pull refresh / Video fullscreen
     @SerializedName("swipeRefreshEnabled")
     val swipeRefreshEnabled: Boolean = true,
     
     @SerializedName("fullscreenEnabled")
     val fullscreenEnabled: Boolean = true,
 
-    // ============ 性能优化 / PWA 离线 ============
+    // Performance / PWA offline
     @SerializedName("performanceOptimization")
     val performanceOptimization: Boolean = false,
     
@@ -972,15 +942,15 @@ data class WebViewShellConfig(
     @SerializedName("pwaOfflineStrategy")
     val pwaOfflineStrategy: String = "NETWORK_FIRST",
 
-    // ============ 网络错误页配置 ============
+    // Error page
     @SerializedName("errorPageConfig")
     val errorPageConfig: ErrorPageShellConfig = ErrorPageShellConfig(),
 
-    // ============ 悬浮小窗配置 ============
+    // Floating window
     @SerializedName("floatingWindowConfig")
     val floatingWindowConfig: FloatingWindowShellConfig = FloatingWindowShellConfig(),
 
-    // ============ 代理配置（PAC / Static / None）============
+    // Proxy
     @SerializedName("proxyMode")
     val proxyMode: String = "NONE",  // NONE, STATIC, PAC
     
@@ -997,12 +967,16 @@ data class WebViewShellConfig(
     val pacUrl: String = "",         // PAC 脚本 URL（PAC 模式）
     
     @SerializedName("proxyBypassRules")
-    val proxyBypassRules: List<String> = emptyList() // 代理绕过规则
+    val proxyBypassRules: List<String> = emptyList(), // 代理绕过规则
+
+    // DNS
+    @SerializedName("dnsMode")
+    val dnsMode: String = "SYSTEM",  // SYSTEM, DOH
+
+    @SerializedName("dnsConfig")
+    val dnsConfig: DnsShellConfig = DnsShellConfig()
 )
 
-/**
- * 悬浮小窗 Shell 配置
- */
 data class FloatingWindowShellConfig(
     @SerializedName("enabled")
     val enabled: Boolean = false,
@@ -1050,9 +1024,6 @@ data class FloatingWindowShellConfig(
     val lockPosition: Boolean = false       // 锁定位置
 )
 
-/**
- * 网络错误页 Shell 配置
- */
 data class ErrorPageShellConfig(
     @SerializedName("mode")
     val mode: String = "BUILTIN_STYLE", // DEFAULT, BUILTIN_STYLE, CUSTOM_HTML, CUSTOM_MEDIA
@@ -1070,9 +1041,6 @@ data class ErrorPageShellConfig(
     val autoRetrySeconds: Int = 15
 )
 
-/**
- * Shell 模式用户脚本配置
- */
 data class ShellUserScript(
     @SerializedName("name")
     val name: String = "",
@@ -1087,9 +1055,6 @@ data class ShellUserScript(
     val runAt: String = "DOCUMENT_END"
 )
 
-/**
- * BGM 项（用于 Shell 配置）
- */
 data class BgmShellItem(
     @SerializedName("id")
     val id: String = "",
@@ -1107,9 +1072,6 @@ data class BgmShellItem(
     val sortOrder: Int = 0
 )
 
-/**
- * 歌词主题（用于 Shell 配置）
- */
 data class LrcShellTheme(
     @SerializedName("id")
     val id: String = "",
@@ -1136,9 +1098,6 @@ data class LrcShellTheme(
     val position: String = "BOTTOM"
 )
 
-/**
- * 自启动配置（用于 Shell 配置）
- */
 data class AutoStartShellConfig(
     @SerializedName("bootStartEnabled")
     val bootStartEnabled: Boolean = false,
@@ -1153,9 +1112,6 @@ data class AutoStartShellConfig(
     val scheduledDays: List<Int> = listOf(1, 2, 3, 4, 5, 6, 7)
 )
 
-/**
- * 独立环境/多开配置（用于 Shell 配置）
- */
 data class IsolationShellConfig(
     @SerializedName("enabled")
     val enabled: Boolean = false,
@@ -1208,9 +1164,6 @@ data class IsolationShellConfig(
     @SerializedName("customScreenHeight")
     val customScreenHeight: Int? = null
 ) {
-    /**
-     * 转换为 IsolationConfig
-     */
     fun toIsolationConfig(): com.webtoapp.core.isolation.IsolationConfig {
         return com.webtoapp.core.isolation.IsolationConfig(
             enabled = enabled,
@@ -1267,9 +1220,6 @@ data class IsolationShellConfig(
     }
 }
 
-/**
- * 指纹配置（用于 Shell 配置）
- */
 data class FingerprintShellConfig(
     @SerializedName("randomize")
     val randomize: Boolean = true,
@@ -1287,9 +1237,6 @@ data class FingerprintShellConfig(
     val fingerprintId: String = java.util.UUID.randomUUID().toString()
 )
 
-/**
- * Header 配置（用于 Shell 配置）
- */
 data class HeaderShellConfig(
     @SerializedName("enabled")
     val enabled: Boolean = false,
@@ -1307,9 +1254,6 @@ data class HeaderShellConfig(
     val refererPolicy: String = "STRICT_ORIGIN"
 )
 
-/**
- * IP 伪装配置（用于 Shell 配置）
- */
 data class IpSpoofShellConfig(
     @SerializedName("enabled")
     val enabled: Boolean = false,
@@ -1336,9 +1280,6 @@ data class IpSpoofShellConfig(
     val clientIp: Boolean = true
 )
 
-/**
- * 后台运行配置（用于 Shell 配置）
- */
 data class BackgroundRunShellConfig(
     @SerializedName("notificationTitle")
     val notificationTitle: String = "",
@@ -1351,5 +1292,25 @@ data class BackgroundRunShellConfig(
     
     @SerializedName("keepCpuAwake")
     val keepCpuAwake: Boolean = true
+)
+
+data class NotificationShellConfig(
+    @SerializedName("type")
+    val type: String = "none", // none, web_api, polling
+
+    @SerializedName("pollUrl")
+    val pollUrl: String = "",
+
+    @SerializedName("pollIntervalMinutes")
+    val pollIntervalMinutes: Int = 15,
+
+    @SerializedName("pollMethod")
+    val pollMethod: String = "GET",
+
+    @SerializedName("pollHeaders")
+    val pollHeaders: String = "",
+
+    @SerializedName("clickUrl")
+    val clickUrl: String = ""
 )
 

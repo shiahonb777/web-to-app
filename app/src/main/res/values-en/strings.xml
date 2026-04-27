@@ -702,4 +702,90 @@
     <!-- Module Import Messages -->
     <string name="msg_import_success">Module %s imported successfully</string>
     <string name="msg_import_failed">Module import failed: %s</string>
+
+    <!-- Profile Screen -->
+    <string name="change_password">Change Password</string>
+    <string name="update_login_password">Update your login password</string>
+    <string name="logout_all_devices">Log out on all devices</string>
+    <string name="logout_all_confirm_title">Log out on all devices</string>
+    <string name="logout_all_confirm_message">Are you sure you want to log out on all devices? All devices will need to log in again.</string>
+    <string name="logout_all">Log out all</string>
+    <string name="current_password">Current Password</string>
+    <string name="new_password">New Password</string>
+    <string name="confirm_new_password">Confirm New Password</string>
+    <string name="password_min_length">At least 6 characters</string>
+    <string name="confirm_change">Confirm Change</string>
+
+    <!-- Announcement Templates -->
+    <string name="template_minimal">Minimal</string>
+    <string name="template_minimal_desc">Clean and restrained whitespace layout</string>
+    <string name="template_xiaohongshu">Xiaohongshu</string>
+    <string name="template_xiaohongshu_desc">Vibrant and lively social card style</string>
+    <string name="template_gradient">Gradient</string>
+    <string name="template_gradient_desc">Soft and dreamy gradient visual layers</string>
+    <string name="template_glassmorphism">Glassmorphism</string>
+    <string name="template_glassmorphism_desc">Transparent blur with floating texture</string>
+    <string name="template_neon">Neon</string>
+    <string name="template_neon_desc">High-contrast striking notification effect</string>
+    <string name="template_cute">Cute</string>
+    <string name="template_cute_desc">Light-hearted and playful expression</string>
+    <string name="template_elegant">Elegant</string>
+    <string name="template_elegant_desc">Soft and refined premium feel</string>
+    <string name="template_festive">Festive</string>
+    <string name="template_festive_desc">Lively and bright celebration atmosphere</string>
+    <string name="template_dark">Dark</string>
+    <string name="template_dark_desc">Dark high-contrast information focus</string>
+    <string name="template_nature">Nature</string>
+    <string name="template_nature_desc">Soothing and fresh balanced expression</string>
+
+    <!-- AI Error Card -->
+    <string name="retry_action">Retry the last operation</string>
+    <string name="retry_different_model">Retry with different model</string>
+    <string name="retry_different_model_desc">Retry using another AI model</string>
+    <string name="show_raw_response">View raw response</string>
+    <string name="show_raw_response_desc">Show the raw content returned by AI</string>
+    <string name="go_to_settings">Go to Settings</string>
+    <string name="go_to_settings_desc">Check API Key configuration</string>
+    <string name="manual_edit">Manual Edit</string>
+    <string name="manual_edit_desc">Manually modify the code</string>
+    <string name="dismiss_error">Close error message</string>
+    <string name="error_auth">Authentication error</string>
+    <string name="error_rate_limit">Rate limited</string>
+    <string name="error_server">Server error</string>
+    <string name="error_network">Network error</string>
+    <string name="error_parse">Parse error</string>
+    <string name="error_timeout">Request timeout</string>
+    <string name="error_response_parse_failed">Response parse failed</string>
+    <string name="error_severe">Severe error</string>
+    <string name="error_code_label">Error code: %s</string>
+    <string name="recoverable">Recoverable</string>
+    <string name="network_unavailable">Network connection unavailable</string>
+    <string name="check_network_retry">Please check your network and retry</string>
+    <string name="request_too_frequent">Too many requests</string>
+    <string name="auto_retry_after_seconds">Auto retry in %d seconds</string>
+    <string name="retrying">Retrying...</string>
+
+    <!-- AI Module Dev UI -->
+    <string name="you">You</string>
+    <string name="generating">Generating</string>
+    <string name="copy_code">Copy</string>
+    <string name="verify_code">Verify</string>
+    <string name="thinking_label">Thinking...</string>
+
+    <!-- About Screen - Legal Disclaimer -->
+    <string name="legal_disclaimer_content_1">This software is an open-source technology research and educational demonstration tool. All features are implemented based on Android public APIs, intended to showcase mobile app development technology. This software does not encourage or support any illegal use.</string>
+    <string name="legal_disclaimer_content_2">Users should ensure that the software is used in legal and legitimate scenarios, including but not limited to:\n• Self-management: for personal focus training and study time management\n• Business display: for exhibition and mall display terminals\n• Parental supervision: for reasonable use with the informed consent of minors\n• Educational research: for technology learning and security research\n\nIt is strictly prohibited to use this software for any behavior that infringes on the personal freedom, privacy, property or other legitimate rights of others.</string>
+    <string name="legal_disclaimer_content_3">The \"Forced Run\" and related hardware control features (hereinafter referred to as \"Advanced Features\") in this software are of a technical demonstration nature:\n\n1. [Informed Consent Principle] Advanced Features should only be enabled with the full knowledge and explicit consent of the device owner or user\n\n2. [Self-Control Principle] All features provide emergency exit mechanisms, and users can terminate them at any time via password\n\n3. [Technology Neutrality Principle] The features themselves are not inherently illegal; their legality depends on the specific usage and purpose of the user\n\n</string>
+
+    <!-- About Screen - Update Errors -->
+    <string name="update_check_failed_title">Update check failed</string>
+    <string name="update_check_manual_stage">Manual update check</string>
+    <string name="update_check_request_failed">Update service request failed, processing stopped.</string>
+    <string name="update_check_uncaught_exception">Uncaught exception during update check, processing stopped.</string>
+    <string name="update_download_start_failed_title">Update download start failed</string>
+    <string name="update_download_start_stage">Starting update download</string>
+    <string name="update_download_create_failed">System download task creation failed, installation process not continued.</string>
+    <string name="update_download_prepare_stage">Preparing update download</string>
+    <string name="update_download_no_link">Update response missing valid download link, download process not continued.</string>
+    <string name="no_exception_object">No exception object returned</string>
 </resources>

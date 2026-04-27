@@ -37,6 +37,7 @@ android {
         targetSdk = 36
         versionCode = 32
         versionName = "1.9.5"
+        buildConfigField("boolean", "SHELL_RUNTIME_ONLY", "false")
 
         vectorDrawables {
             useSupportLibrary = true
@@ -66,10 +67,8 @@ android {
 
     buildTypes {
         release {
-            // 关闭 R8 与资源压缩，避免正式包和调试包出现不必要的行为差异。
-            // WebToApp 本身开源，不依赖代码混淆或收缩来保护应用本体。
-            isMinifyEnabled = false
-            isShrinkResources = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             signingConfig = signingConfigs.getByName("shiaho")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -109,6 +108,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     testOptions {
@@ -136,6 +136,21 @@ android {
             excludes += "**/libmozavcodec.so"
         }
     }
+}
+
+val shellTemplateOutput = project(":shell").layout.buildDirectory.file("outputs/apk/release/shell-release.apk")
+
+tasks.register<Copy>("syncShellTemplateApk") {
+    description = "Builds the dedicated shell template APK and copies it into app assets."
+    group = "build"
+    dependsOn(":shell:assembleRelease")
+    from(shellTemplateOutput)
+    into(file("src/main/assets/template"))
+    rename { "webview_shell.apk" }
+}
+
+tasks.named("preBuild").configure {
+    dependsOn("syncShellTemplateApk")
 }
 
 dependencies {
@@ -183,6 +198,7 @@ dependencies {
 
     // OkHttp for networking
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:okhttp-dnsoverhttps:4.12.0")
     
     // Koin for dependency injection
     implementation("io.insert-koin:koin-android:3.5.3")
@@ -213,6 +229,10 @@ dependencies {
     
     // Vico 图表库（高级数据看板）
     implementation("com.patrykandpatrick.vico:compose-m3:2.0.0-beta.3")
+    
+    // Markdown rendering (commonmark + GFM extensions)
+    implementation("org.commonmark:commonmark:0.22.0")
+    implementation("org.commonmark:commonmark-ext-gfm-tables:0.22.0")
     
     // Google Play Billing (Pro/Ultra 订阅)
     implementation("com.android.billingclient:billing-ktx:7.0.0")

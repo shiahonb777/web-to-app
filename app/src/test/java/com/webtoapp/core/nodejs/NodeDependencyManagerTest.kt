@@ -6,6 +6,7 @@ import java.io.File
 import java.util.Locale
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -15,6 +16,9 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33])
 class NodeDependencyManagerTest {
+
+    @Rule @JvmField
+    val koinRule = com.webtoapp.util.KoinCleanupRule()
 
     private lateinit var context: Context
     private var originalLocale: Locale = Locale.getDefault()

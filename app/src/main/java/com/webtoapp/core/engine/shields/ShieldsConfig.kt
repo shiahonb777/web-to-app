@@ -104,17 +104,17 @@ data class ShieldsConfig(
     /** 跟踪器拦截 */
     val trackerBlocking: Boolean = true,
     
-    /** Cookie 弹窗自动关闭 */
-    val cookieConsentBlock: Boolean = true,
+    /** Cookie 弹窗自动关闭（默认关闭 — 自动点击按钮可能误点合法对话框） */
+    val cookieConsentBlock: Boolean = false,
     
-    /** Global Privacy Control 信号 */
-    val gpcEnabled: Boolean = true,
+    /** Global Privacy Control 信号（默认关闭 — 部分网站检测到 GPC 后拒绝服务或降级功能） */
+    val gpcEnabled: Boolean = false,
     
-    /** 第三方 Cookie 策略 */
-    val thirdPartyCookiePolicy: ThirdPartyCookiePolicy = ThirdPartyCookiePolicy.BLOCK_CROSS_SITE,
+    /** 第三方 Cookie 策略（默认允许 — web-to-app 工具不是隐私浏览器，OAuth/嵌入式小部件依赖第三方 Cookie） */
+    val thirdPartyCookiePolicy: ThirdPartyCookiePolicy = ThirdPartyCookiePolicy.ALLOW_ALL,
     
-    /** Referrer 策略 */
-    val referrerPolicy: ShieldsReferrerPolicy = ShieldsReferrerPolicy.STRICT_ORIGIN_CROSS,
+    /** Referrer 策略（默认宽松 — 严格策略会破坏反盗链/CSRF 校验） */
+    val referrerPolicy: ShieldsReferrerPolicy = ShieldsReferrerPolicy.ORIGIN,
     
     /** 阅读模式 */
     val readerModeEnabled: Boolean = true

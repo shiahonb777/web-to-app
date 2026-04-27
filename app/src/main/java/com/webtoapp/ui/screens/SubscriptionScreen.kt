@@ -330,9 +330,11 @@ fun SubscriptionScreen(
                         )
                     }
                     3 -> {
+                        val plan = SubscriptionPlan.PRO_LIFETIME
+                        val price = billingManager.getFormattedPrice(plan) ?: "$99"
                         SubscriptionCard(
                             tierName = Strings.tierPro,
-                            price = "$99",
+                            price = price,
                             period = Strings.oneTime,
                             gradient = listOf(Color(0xFF42A5F5), Color(0xFF1E88E5)),
                             features = proFeatures() + listOf(
@@ -342,11 +344,7 @@ fun SubscriptionScreen(
                             isDowngrade = isDowngrade,
                             isLoading = purchaseState is PurchaseState.Loading,
                             isLifetime = true,
-                            onSubscribe = {
-                                scope.launch {
-                                    snackbarHostState.showSnackbar(Strings.redeemWithActivationCode)
-                                }
-                            }
+                            onSubscribe = { if (!isCurrentPro && !isDowngrade && activity != null) billingManager.launchPurchase(activity, plan) }
                         )
                     }
                 }
@@ -409,9 +407,11 @@ fun SubscriptionScreen(
                         )
                     }
                     3 -> {
+                        val plan = SubscriptionPlan.ULTRA_LIFETIME
+                        val price = billingManager.getFormattedPrice(plan) ?: "$199"
                         SubscriptionCard(
                             tierName = Strings.tierUltra,
-                            price = "$199",
+                            price = price,
                             period = Strings.oneTime,
                             gradient = listOf(Color(0xFFF093FB), Color(0xFFF5576C)),
                             isRecommended = true,
@@ -422,11 +422,7 @@ fun SubscriptionScreen(
                             isLoading = purchaseState is PurchaseState.Loading,
                             isLifetime = true,
                             upgradeNote = if (userTier == UserTier.PRO_LIFETIME) Strings.proUpgradeNote else null,
-                            onSubscribe = {
-                                scope.launch {
-                                    snackbarHostState.showSnackbar(Strings.redeemWithActivationCode)
-                                }
-                            }
+                            onSubscribe = { if (!isCurrentUltra && activity != null) billingManager.launchPurchase(activity, plan) }
                         )
                     }
                 }
@@ -800,7 +796,7 @@ private fun SubscriptionCard(
                             when {
                                 isCurrent -> Strings.currentScheme
                                 isDowngrade -> Strings.hasHigherPlan
-                                isLifetime -> Strings.redeemWithActivationCode
+                                isLifetime -> Strings.purchaseLifetime
                                 else -> Strings.subscribeTierName.format(tierName)
                             },
                             fontWeight = FontWeight.Bold,

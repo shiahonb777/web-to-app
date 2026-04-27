@@ -267,6 +267,13 @@
         android:usesCleartextTraffic="false"
         tools:targetApi="31">
 
+        <!-- ★ 16KB 页面大小兼容性声明 (Android 15+)
+             告知系统此 APK 的 native 库支持 16KB 页面大小对齐
+             配合 CMake -Wl,-z,max-page-size=16384 链接标志 -->
+        <property
+            android:name="android.app.property.PAGE_SIZE_COMPATIBILITY"
+            android:value="16" />
+
         <!-- 主界面 - App生成器 -->
         <activity
             android:name=".ui.MainActivity"
@@ -312,6 +319,7 @@
             android:configChanges="orientation|screenSize|keyboardHidden|screenLayout|smallestScreenSize"
             android:exported="false"
             android:hardwareAccelerated="true"
+            android:launchMode="singleTask"
             android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.WebToApp.Shell" />
         
@@ -446,6 +454,17 @@
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="background_run" />
+        </service>
+
+        <!-- 轮询通知服务 - 定时请求 URL 并弹出通知 -->
+        <service
+            android:name=".core.notification.NotificationPollingService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="notification_polling" />
         </service>
         
         <!-- 悬浮小窗前台服务 - 管理悬浮窗生命周期 -->

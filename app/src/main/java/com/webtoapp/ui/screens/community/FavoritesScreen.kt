@@ -21,7 +21,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.webtoapp.core.cloud.CommunityModuleDetail
+import com.webtoapp.core.cloud.ModuleItem
 import com.webtoapp.ui.viewmodel.CommunityViewModel
 import com.webtoapp.ui.viewmodel.OperationFailureReport
 import com.webtoapp.ui.components.ThemedBackgroundBox
@@ -44,7 +44,8 @@ fun FavoritesScreen(
     val failureReport by communityViewModel.profileFailureReport.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(Unit) { communityViewModel.loadFavorites() }
+    val resumeKey = rememberResumeKey()
+    LaunchedEffect(resumeKey) { communityViewModel.loadFavorites() }
     LaunchedEffect(message) { message?.let { snackbarHostState.showSnackbar(it); communityViewModel.clearMessage() } }
 
     Scaffold(
@@ -112,7 +113,7 @@ fun FavoritesScreen(
 }
 
 @Composable
-private fun BookmarkRow(module: CommunityModuleDetail, onClick: () -> Unit) {
+private fun BookmarkRow(module: ModuleItem, onClick: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.Top
@@ -142,10 +143,10 @@ private fun BookmarkRow(module: CommunityModuleDetail, onClick: () -> Unit) {
             Spacer(Modifier.height(8.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Outlined.ThumbUp, null, Modifier.size(14.dp),
+                    Icon(Icons.Outlined.FavoriteBorder, null, Modifier.size(14.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f))
                     Spacer(Modifier.width(3.dp))
-                    Text("${module.rating.toInt()}", fontSize = 12.sp,
+                    Text("${module.likeCount}", fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f))
                     Spacer(Modifier.width(16.dp))
                     Icon(Icons.Outlined.Download, null, Modifier.size(14.dp),

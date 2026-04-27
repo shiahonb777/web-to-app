@@ -132,6 +132,9 @@ class ApkTemplate(private val context: Context) {
             "webViewConfig": {
                 "javaScriptEnabled": ${config.javaScriptEnabled},
                 "domStorageEnabled": ${config.domStorageEnabled},
+                "allowFileAccess": ${config.allowFileAccess},
+                "allowContentAccess": ${config.allowContentAccess},
+                "cacheEnabled": ${config.cacheEnabled},
                 "zoomEnabled": ${config.zoomEnabled},
                 "desktopMode": ${config.desktopMode},
                 "userAgent": ${config.userAgent?.let { "\"${escapeJson(it)}\"" } ?: "null"},
@@ -165,11 +168,13 @@ class ApkTemplate(private val context: Context) {
                 "openExternalLinks": ${config.openExternalLinks},
                 "initialScale": ${config.initialScale},
                 "viewportMode": "${config.viewportMode}",
+                "customViewportWidth": ${config.customViewportWidth},
                 "newWindowBehavior": "${config.newWindowBehavior}",
                 "enablePaymentSchemes": ${config.enablePaymentSchemes},
                 "enableShareBridge": ${config.enableShareBridge},
                 "enableZoomPolyfill": ${config.enableZoomPolyfill},
                 "enableCrossOriginIsolation": ${config.enableCrossOriginIsolation},
+                "hideUrlPreview": ${config.hideUrlPreview},
                 "disableShields": ${config.disableShields},
                 "keepScreenOn": ${config.keepScreenOn},
                 "screenAwakeMode": "${config.screenAwakeMode}",
@@ -184,6 +189,8 @@ class ApkTemplate(private val context: Context) {
                 "proxyType": "${config.proxyType}",
                 "pacUrl": "${escapeJson(config.pacUrl)}",
                 "proxyBypassRules": [${config.proxyBypassRules.joinToString(",") { "\"${escapeJson(it)}\"" }}],
+                "dnsMode": "${config.dnsMode}",
+                "dnsConfig": {"provider":"${config.dnsConfig.provider}","customDohUrl":"${escapeJson(config.dnsConfig.customDohUrl)}","dohMode":"${config.dnsConfig.dohMode}","bypassSystemDns":${config.dnsConfig.bypassSystemDns}},
                 "showFloatingBackButton": ${config.showFloatingBackButton},
                 "floatingWindowConfig": {
                     "enabled": ${config.floatingWindowEnabled},
@@ -282,9 +289,15 @@ class ApkTemplate(private val context: Context) {
                 val bc = config.backgroundRunConfig
                 """{"notificationTitle":"${escapeJson(bc.notificationTitle)}","notificationContent":"${escapeJson(bc.notificationContent)}","showNotification":${bc.showNotification},"keepCpuAwake":${bc.keepCpuAwake}}"""
             } else "null"},
+            "notificationEnabled": ${config.notificationEnabled},
+            "notificationConfig": ${if (config.notificationEnabled && config.notificationConfig != null) {
+                val nc = config.notificationConfig
+                """{"type":"${nc.type}","pollUrl":"${escapeJson(nc.pollUrl)}","pollIntervalMinutes":${nc.pollIntervalMinutes},"pollMethod":"${nc.pollMethod}","pollHeaders":"${escapeJson(nc.pollHeaders)}","clickUrl":"${escapeJson(nc.clickUrl)}"}"""
+            } else "null"},
             "blackTechConfig": ${gson.toJson(config.blackTechConfig)},
             "disguiseConfig": ${gson.toJson(config.disguiseConfig)},
             "browserDisguiseConfig": ${gson.toJson(config.browserDisguiseConfig)},
+            "deviceDisguiseConfig": ${gson.toJson(config.deviceDisguiseConfig)},
             "language": "${config.language}",
             "engineType": "${config.engineType}",
             "wordpressConfig": {
@@ -498,6 +511,7 @@ data class ApkConfig(
     val versionCode: Int = 1,
     val versionName: String = "1.0.0",
     val iconPath: String? = null,
+    val runtimePermissions: com.webtoapp.data.model.ApkRuntimePermissions = com.webtoapp.data.model.ApkRuntimePermissions(),
     
     // Activation码
     val activationEnabled: Boolean = false,
@@ -528,6 +542,9 @@ data class ApkConfig(
     // WebView 配置
     val javaScriptEnabled: Boolean = true,
     val domStorageEnabled: Boolean = true,
+    val allowFileAccess: Boolean = false,
+    val allowContentAccess: Boolean = true,
+    val cacheEnabled: Boolean = true,
     val zoomEnabled: Boolean = true,
     val desktopMode: Boolean = false,
     val userAgent: String? = null,
@@ -553,19 +570,21 @@ data class ApkConfig(
     val longPressMenuEnabled: Boolean = true, // Yes否启用长按菜单
     val longPressMenuStyle: String = "FULL", // DISABLED, SIMPLE, FULL
     val adBlockToggleEnabled: Boolean = false, // Allow用户在运行时切换广告拦截开关
-    val popupBlockerEnabled: Boolean = true, // 启用弹窗拦截器
+    val popupBlockerEnabled: Boolean = false, // 默认关闭，避免拦截合法的 window.open 导致按钮/菜单/搜索失效
     val popupBlockerToggleEnabled: Boolean = false, // Allow用户在运行时切换弹窗拦截开关
     val openExternalLinks: Boolean = false, // External链接是否在浏览器打开
     
     // 浏览器兼容性增强配置
     val initialScale: Int = 0, // Initial scale (0-200, 0=自动)
     val viewportMode: String = "DEFAULT", // DEFAULT, FIT_SCREEN, DESKTOP
+    val customViewportWidth: Int = 0, // 自定义视口宽度（0=自动）
     val newWindowBehavior: String = "SAME_WINDOW", // SAME_WINDOW, EXTERNAL_BROWSER, POPUP_WINDOW, BLOCK
     val enablePaymentSchemes: Boolean = true, // Enable支付宝/微信等支付 scheme 拦截
     val enableShareBridge: Boolean = true, // Enable navigator.share 桥接
     val enableZoomPolyfill: Boolean = true, // Enable CSS zoom polyfill
     val enableCrossOriginIsolation: Boolean = false, // 启用跨域隔离（SharedArrayBuffer/FFmpeg.wasm 支持）
-    val disableShields: Boolean = false, // 禁用 BrowserShields（游戏/需要完整网络功能的应用）
+    val hideUrlPreview: Boolean = false, // 隐藏链接URL预览（会破坏长按菜单和文本选择）
+    val disableShields: Boolean = true, // 禁用 BrowserShields — 默认关闭避免误杀关键服务
     val keepScreenOn: Boolean = false, // [向后兼容] 保持屏幕常亮
     val screenAwakeMode: String = "OFF", // 屏幕常亮模式: OFF, ALWAYS, TIMED
     val screenAwakeTimeoutMinutes: Int = 30, // 定时常亮时长（分钟）
@@ -585,6 +604,10 @@ data class ApkConfig(
     val proxyType: String = "HTTP",               // HTTP, HTTPS, SOCKS5（STATIC 模式）
     val pacUrl: String = "",                      // PAC 脚本 URL（PAC 模式）
     val proxyBypassRules: List<String> = emptyList(), // 代理绕过规则
+    
+    // DNS 配置
+    val dnsMode: String = "SYSTEM",                // SYSTEM, DOH
+    val dnsConfig: DnsApkConfig = DnsApkConfig(),
     
     // 网络错误页配置
     val errorPageMode: String = "BUILTIN_STYLE", // DEFAULT, BUILTIN_STYLE, CUSTOM_HTML, CUSTOM_MEDIA
@@ -690,6 +713,10 @@ data class ApkConfig(
     val backgroundRunEnabled: Boolean = false,
     val backgroundRunConfig: BackgroundRunConfig? = null,
     
+    // 通知配置
+    val notificationEnabled: Boolean = false,
+    val notificationConfig: NotificationConfig? = null,
+    
     // 黑科技功能配置（独立模块）
     val blackTechConfig: com.webtoapp.core.blacktech.BlackTechConfig? = null,
     
@@ -698,6 +725,9 @@ data class ApkConfig(
     
     // 浏览器伪装配置（反指纹引擎）
     val browserDisguiseConfig: com.webtoapp.core.disguise.BrowserDisguiseConfig? = null,
+    
+    // 设备伪装配置（设备类型/品牌/型号 UA 伪装）
+    val deviceDisguiseConfig: com.webtoapp.core.disguise.DeviceDisguiseConfig? = null,
     
     // 界面语言配置
     val language: String = "CHINESE",  // CHINESE, ENGLISH, ARABIC
@@ -768,6 +798,18 @@ data class BackgroundRunConfig(
 )
 
 /**
+ * 通知配置（用于 APK 构建）
+ */
+data class NotificationConfig(
+    val type: String = "none", // none, web_api, polling
+    val pollUrl: String = "",
+    val pollIntervalMinutes: Int = 15,
+    val pollMethod: String = "GET",
+    val pollHeaders: String = "",
+    val clickUrl: String = ""
+)
+
+/**
  * Gallery 媒体项配置（用于 APK 构建）
  */
 data class GalleryShellItemConfig(
@@ -804,4 +846,14 @@ data class EmbeddedUrlMatchRule(
     val pattern: String,
     val isRegex: Boolean = false,
     val exclude: Boolean = false
+)
+
+/**
+ * DNS-over-HTTPS 配置（用于 APK 构建）
+ */
+data class DnsApkConfig(
+    val provider: String = "cloudflare",
+    val customDohUrl: String = "",
+    val dohMode: String = "automatic",
+    val bypassSystemDns: Boolean = false
 )

@@ -12,6 +12,7 @@ import androidx.compose.animation.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -187,8 +188,7 @@ fun ExtensionModuleCard(
                         onApplyPreset = { preset ->
                             onModuleIdsChange(preset.moduleIds.toSet())
                             Toast.makeText(context, "${Strings.appliedPreset}: ${preset.name}", Toast.LENGTH_SHORT).show()
-                        },
-                        onShowAllPresets = { showPresetSelector = true }
+                        }
                     )
                     
                     HorizontalDivider()
@@ -318,7 +318,6 @@ fun ExtensionModuleCard(
     if (showPresetSelector) {
         PresetSelectorDialog(
             presetManager = presetManager,
-            extensionManager = extensionManager,
             currentSelection = selectedModuleIds,
             onApplyPreset = { preset ->
                 onModuleIdsChange(preset.moduleIds.toSet())
@@ -451,14 +450,6 @@ private fun SelectedModuleItem(
                             text = Strings.builtIn,
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
                             contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
-                    }
-                    // UI 类型（仅非默认时显示）
-                    if (module.uiConfig.type != ModuleUiType.FLOATING_BUTTON) {
-                        CompactBadge(
-                            text = module.uiConfig.type.getDisplayName(),
-                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer
                         )
                     }
                     // 运行模式
@@ -1432,47 +1423,40 @@ private fun InfoChip(text: String) {
 private fun PresetQuickSelect(
     presetManager: ModulePresetManager,
     selectedModuleIds: Set<String>,
-    onApplyPreset: (ModulePreset) -> Unit,
-    onShowAllPresets: () -> Unit
+    onApplyPreset: (ModulePreset) -> Unit
 ) {
-    val presets = remember { presetManager.getBuiltInPresets().take(4) }
+    val presets = remember { presetManager.getBuiltInPresets() }
     
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = Strings.quickSchemes,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        presets.forEach { preset ->
+            val isApplied = preset.moduleIds.toSet() == selectedModuleIds
+            FilterChip(
+                selected = isApplied,
+                onClick = { onApplyPreset(preset) },
+                label = { Text(preset.name) },
+                leadingIcon = {
+                    Icon(
+                        presetIconFromKey(preset.icon),
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
             )
-            TextButton(
-                onClick = onShowAllPresets,
-                contentPadding = PaddingValues(horizontal = 8.dp)
-            ) {
-                Text(Strings.allSchemesBtn, style = MaterialTheme.typography.labelSmall)
-                Icon(Icons.Default.ChevronRight, null, Modifier.size(16.dp))
-            }
-        }
-        
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(presets) { preset ->
-                val isApplied = preset.moduleIds.toSet() == selectedModuleIds
-                PremiumFilterChip(
-                    selected = isApplied,
-                    onClick = { onApplyPreset(preset) },
-                    label = { Text("${preset.icon} ${preset.name}") },
-                    leadingIcon = if (isApplied) {
-                        { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
-                    } else null
-                )
-            }
         }
     }
+}
+
+@Composable
+private fun presetIconFromKey(key: String): ImageVector = when (key) {
+    "auto_stories" -> Icons.Outlined.MenuBook
+    "shield" -> Icons.Outlined.Shield
+    "play_circle" -> Icons.Outlined.PlayArrow
+    "build" -> Icons.Outlined.Build
+    "dark_mode" -> Icons.Outlined.DarkMode
+    else -> Icons.Outlined.Extension
 }
 
 /**
@@ -1482,7 +1466,6 @@ private fun PresetQuickSelect(
 @Composable
 fun PresetSelectorDialog(
     presetManager: ModulePresetManager,
-    extensionManager: ExtensionManager,
     currentSelection: Set<String>,
     onApplyPreset: (ModulePreset) -> Unit,
     onDismiss: () -> Unit
@@ -1498,9 +1481,9 @@ fun PresetSelectorDialog(
     ) {
         Surface(
             modifier = Modifier
-                .fillMaxWidth(0.95f)
-                .fillMaxHeight(0.8f),
-            shape = RoundedCornerShape(16.dp),
+                .fillMaxWidth(0.92f)
+                .fillMaxHeight(0.7f),
+            shape = RoundedCornerShape(20.dp),
             color = MaterialTheme.colorScheme.surface
         ) {
             Column {
@@ -1516,23 +1499,22 @@ fun PresetSelectorDialog(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                        .padding(horizontal = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     // Built-in方案
                     item {
                         Text(
                             Strings.builtInSchemes,
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(vertical = 8.dp)
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 4.dp, bottom = 4.dp)
                         )
                     }
                     
                     items(builtInPresets) { preset ->
                         PresetItem(
                             preset = preset,
-                            extensionManager = extensionManager,
                             isApplied = preset.moduleIds.toSet() == currentSelection,
                             onApply = { onApplyPreset(preset) },
                             onDelete = null
@@ -1545,16 +1527,15 @@ fun PresetSelectorDialog(
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 Strings.mySchemes,
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(vertical = 8.dp)
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 4.dp, bottom = 4.dp)
                             )
                         }
                         
                         items(userPresets) { preset ->
                             PresetItem(
                                 preset = preset,
-                                extensionManager = extensionManager,
                                 isApplied = preset.moduleIds.toSet() == currentSelection,
                                 onApply = { onApplyPreset(preset) },
                                 onDelete = {
@@ -1563,16 +1544,6 @@ fun PresetSelectorDialog(
                                 }
                             )
                         }
-                    }
-                    
-                    item {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            Strings.schemeTip,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
                     }
                 }
             }
@@ -1587,104 +1558,52 @@ fun PresetSelectorDialog(
 @Composable
 private fun PresetItem(
     preset: ModulePreset,
-    extensionManager: ExtensionManager,
     isApplied: Boolean,
     onApply: () -> Unit,
     onDelete: (() -> Unit)?
 ) {
-    val modules = remember(preset.moduleIds) {
-        extensionManager.getModulesByIds(preset.moduleIds)
-    }
-    
-    Surface(
-        onClick = onApply,
-        shape = RoundedCornerShape(12.dp),
-        color = if (isApplied) {
-            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-        } else {
-            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-        },
-        border = if (isApplied) {
-            androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
-        } else null
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onApply() }
+            .padding(horizontal = 4.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Icon
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.surface
+        Icon(
+            presetIconFromKey(preset.icon),
+            contentDescription = null,
+            tint = if (isApplied) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(20.dp)
+        )
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Text(
+            preset.name,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = if (isApplied) FontWeight.Medium else FontWeight.Normal,
+            color = if (isApplied) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f)
+        )
+
+        if (isApplied) {
+            Icon(
+                Icons.Default.Check,
+                contentDescription = Strings.applied,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(18.dp)
+            )
+        } else if (onDelete != null) {
+            IconButton(
+                onClick = onDelete,
+                modifier = Modifier.size(28.dp)
             ) {
-                Text(
-                    preset.icon,
-                    fontSize = 24.sp,
-                    modifier = Modifier.padding(8.dp)
-                )
-            }
-            
-            Spacer(modifier = Modifier.width(12.dp))
-            
-            // Info
-            Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        preset.name,
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Medium
-                    )
-                    if (preset.builtIn) {
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Surface(
-                            shape = RoundedCornerShape(4.dp),
-                            color = MaterialTheme.colorScheme.secondaryContainer
-                        ) {
-                            Text(
-                                Strings.builtIn,
-                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                        }
-                    }
-                }
-                
-                if (preset.description.isNotBlank()) {
-                    Text(
-                        preset.description,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-                
-                // 包含的模块
-                Text(
-                    "${Strings.containsModules.format(modules.size)}: ${modules.joinToString { it.name }}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            
-            // 操作
-            if (isApplied) {
                 Icon(
-                    Icons.Default.Check,
-                    contentDescription = Strings.applied,
-                    tint = MaterialTheme.colorScheme.primary
+                    Icons.Outlined.Delete,
+                    contentDescription = Strings.btnDelete,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                    modifier = Modifier.size(16.dp)
                 )
-            } else if (onDelete != null) {
-                IconButton(onClick = onDelete) {
-                    Icon(
-                        Icons.Outlined.Delete,
-                        contentDescription = Strings.btnDelete,
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                }
             }
         }
     }

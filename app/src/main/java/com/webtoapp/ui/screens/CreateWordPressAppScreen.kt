@@ -1038,9 +1038,9 @@ private fun WpLanguageCard(
     wpBlue: Color
 ) {
     val languages = listOf(
-        "zh_CN" to "中文（简体）",
+        "zh_CN" to Strings.langChineseSimplified,
         "en_US" to "English",
-        "zh_TW" to "中文（繁體）",
+        "zh_TW" to Strings.langChineseTraditional,
         "ja" to "日本語",
         "ko_KR" to "한국어",
         "ar" to "العربية",

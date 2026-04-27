@@ -6,6 +6,7 @@ import java.io.File
 import java.util.Locale
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -15,6 +16,9 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33])
 class PythonDependencyManagerTest {
+
+    @Rule @JvmField
+    val koinRule = com.webtoapp.util.KoinCleanupRule()
 
     private lateinit var context: Context
     private var originalLocale: Locale = Locale.getDefault()
@@ -74,7 +78,8 @@ class PythonDependencyManagerTest {
     fun `python readiness becomes true when binary exists in downloaded dir`() {
         val binary = File(PythonDependencyManager.getPythonDir(context), "bin/python3").apply {
             parentFile?.mkdirs()
-            writeText("#!/system/bin/sh")
+            // isPythonReady requires file size > 1MB
+            writeBytes(ByteArray(1024 * 1024 + 1) { 0 })
             setExecutable(true)
         }
 

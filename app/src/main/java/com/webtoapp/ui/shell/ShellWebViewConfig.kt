@@ -17,6 +17,9 @@ fun buildWebViewConfig(config: ShellConfig): WebViewConfig {
     val webViewConfig = WebViewConfig(
         javaScriptEnabled = config.webViewConfig.javaScriptEnabled,
         domStorageEnabled = config.webViewConfig.domStorageEnabled,
+        allowFileAccess = config.webViewConfig.allowFileAccess,
+        allowContentAccess = config.webViewConfig.allowContentAccess,
+        cacheEnabled = config.webViewConfig.cacheEnabled,
         zoomEnabled = config.webViewConfig.zoomEnabled,
         desktopMode = config.webViewConfig.desktopMode,
         userAgent = config.webViewConfig.userAgent,
@@ -63,15 +66,16 @@ fun buildWebViewConfig(config: ShellConfig): WebViewConfig {
         // 浏览器兼容性增强配置
         initialScale = config.webViewConfig.initialScale,
         viewportMode = try { com.webtoapp.data.model.ViewportMode.valueOf(config.webViewConfig.viewportMode) } catch (e: Exception) { com.webtoapp.data.model.ViewportMode.DEFAULT },
+        customViewportWidth = config.webViewConfig.customViewportWidth,
         newWindowBehavior = try { com.webtoapp.data.model.NewWindowBehavior.valueOf(config.webViewConfig.newWindowBehavior) } catch (e: Exception) { com.webtoapp.data.model.NewWindowBehavior.SAME_WINDOW },
         enablePaymentSchemes = config.webViewConfig.enablePaymentSchemes,
         enableShareBridge = config.webViewConfig.enableShareBridge,
         enableZoomPolyfill = config.webViewConfig.enableZoomPolyfill,
         enableCrossOriginIsolation = config.webViewConfig.enableCrossOriginIsolation,
+        hideUrlPreview = config.webViewConfig.hideUrlPreview,
         disableShields = config.webViewConfig.disableShields,
         keepScreenOn = config.webViewConfig.keepScreenOn,
         showFloatingBackButton = config.webViewConfig.showFloatingBackButton,
-        blockSystemNavigationGesture = config.webViewConfig.blockSystemNavigationGesture,
         // 键盘调整模式
         keyboardAdjustMode = try {
             com.webtoapp.data.model.KeyboardAdjustMode.valueOf(config.webViewConfig.keyboardAdjustMode)
@@ -126,6 +130,14 @@ fun buildWebViewConfig(config: ShellConfig): WebViewConfig {
         proxyType = config.webViewConfig.proxyType,
         pacUrl = config.webViewConfig.pacUrl,
         proxyBypassRules = config.webViewConfig.proxyBypassRules,
+        // DNS 配置
+        dnsMode = config.webViewConfig.dnsMode,
+        dnsConfig = com.webtoapp.data.model.DnsConfig(
+            provider = config.webViewConfig.dnsConfig.provider,
+            customDohUrl = config.webViewConfig.dnsConfig.customDohUrl,
+            dohMode = config.webViewConfig.dnsConfig.dohMode,
+            bypassSystemDns = config.webViewConfig.dnsConfig.bypassSystemDns
+        ),
         injectScripts = config.webViewConfig.injectScripts.map { shellScript ->
             com.webtoapp.data.model.UserScript(
                 name = shellScript.name,

@@ -45,8 +45,41 @@ class GeckoViewEngine(
             }
         }
 
+        @Volatile
+        private var currentDnsConfig: com.webtoapp.data.model.DnsConfig? = null
+
+        fun applyDnsConfig(config: com.webtoapp.data.model.DnsConfig) {
+            currentDnsConfig = config
+            val runtime = sharedRuntime ?: return
+            applyDohToRuntime(runtime, config)
+        }
+
+        private fun applyDohToRuntime(runtime: GeckoRuntime, config: com.webtoapp.data.model.DnsConfig) {
+            val dohUrl = config.effectiveDohUrl
+            if (dohUrl.isBlank()) {
+                // 禁用 DoH，使用系统 DNS
+                runtime.settings.setTrustedRecursiveResolverMode(GeckoRuntimeSettings.TRR_MODE_OFF)
+                AppLogger.d(TAG, "DoH disabled, using system DNS")
+                return
+            }
+
+            // 使用 GeckoView 官方 TRR API
+            // TRR_MODE_FIRST = DoH first, native fallback (automatic)
+            // TRR_MODE_ONLY = DoH only, no native fallback (strict / bypassSystemDns)
+            val trrMode = if (config.dohMode == "strict" || config.bypassSystemDns) {
+                GeckoRuntimeSettings.TRR_MODE_ONLY
+            } else {
+                GeckoRuntimeSettings.TRR_MODE_FIRST
+            }
+
+            runtime.settings.setTrustedRecursiveResolverMode(trrMode)
+            runtime.settings.setTrustedRecursiveResolverUri(dohUrl)
+
+            AppLogger.d(TAG, "DoH applied to GeckoView: provider=${config.provider}, mode=$trrMode, url=$dohUrl")
+        }
+
         private fun createRuntime(context: Context): GeckoRuntime {
-            val settings = GeckoRuntimeSettings.Builder()
+            val settingsBuilder = GeckoRuntimeSettings.Builder()
                 .javaScriptEnabled(true)
                 .consoleOutput(true)
                 .contentBlocking(
@@ -59,8 +92,22 @@ class GeckoViewEngine(
                         .cookieBehavior(ContentBlocking.CookieBehavior.ACCEPT_NON_TRACKERS)
                         .build()
                 )
-                .build()
-            return GeckoRuntime.create(context, settings)
+
+            // 在创建时就应用 DNS 配置
+            currentDnsConfig?.let { config ->
+                val dohUrl = config.effectiveDohUrl
+                if (dohUrl.isNotBlank()) {
+                    val trrMode = if (config.dohMode == "strict" || config.bypassSystemDns) {
+                        GeckoRuntimeSettings.TRR_MODE_ONLY
+                    } else {
+                        GeckoRuntimeSettings.TRR_MODE_FIRST
+                    }
+                    settingsBuilder.trustedRecursiveResolverMode(trrMode)
+                    settingsBuilder.trustedRecursiveResolverUri(dohUrl)
+                }
+            }
+
+            return GeckoRuntime.create(context, settingsBuilder.build())
         }
     }
 

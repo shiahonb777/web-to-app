@@ -63,12 +63,14 @@ class ShellActivity : AppCompatActivity() {
     private var statusBarHeightDp: Int = 0
     private var forceHideSystemUi: Boolean = false
     private var keyboardAdjustMode: KeyboardAdjustMode = KeyboardAdjustMode.RESIZE  // 键盘调整模式
-    private var blockSystemNavigationGesture: Boolean = false
     private var forcedRunConfig: ForcedRunConfig? = null
     private val forcedRunManager by lazy { ForcedRunManager.getInstance(this) }
     
     // 悬浮窗模式：等待权限授予后重试
     private var pendingFloatingWindowLaunch = false
+
+    // WebView 状态保存（后台返回时不重新加载页面）
+    private var webViewStateBundle: Bundle? = null
     
     // 云 SDK 管理器（导出 APK 内的云服务运行时）
     internal var cloudSdkManager: CloudSdkManager? = null
@@ -94,7 +96,6 @@ class ShellActivity : AppCompatActivity() {
             statusBarDarkIcons = statusBarDarkIcons,
             statusBarBgType = statusBarBackgroundType,
             keyboardAdjustMode = keyboardAdjustMode,
-            blockSystemNavigationGesture = immersiveFullscreenEnabled && blockSystemNavigationGesture,
             tag = "ShellActivity"
         )
     }
@@ -229,6 +230,15 @@ class ShellActivity : AppCompatActivity() {
         
         super.onCreate(savedInstanceState)
 
+        // 恢复 WebView 状态（系统后台杀死 Activity 后重建时）
+        savedInstanceState?.let { webViewStateBundle = it }
+
+        // SECURITY: 检查是否需要自定义密码才能解密配置
+        if (WebToAppApplication.shellMode.requiresCustomPassword()) {
+            showPasswordDialog()
+            return
+        }
+
         val config = WebToAppApplication.shellMode.getConfig()
         if (config == null) {
             AppLogger.e("ShellActivity", "配置加载失败，无法启动应用")
@@ -263,6 +273,7 @@ class ShellActivity : AppCompatActivity() {
         ShellActivityInit.initAutoStart(this, config)
         ShellActivityInit.initIsolation(this, config)
         ShellActivityInit.initBackgroundService(this, config)
+        ShellActivityInit.initNotificationService(this, config)
         ShellActivityInit.setTaskDescription(this, config.appName)
         
         // Request通知权限（Android 13+）
@@ -284,7 +295,6 @@ class ShellActivity : AppCompatActivity() {
         statusBarHeightDp = config.webViewConfig.statusBarHeightDp
         showStatusBarInFullscreen = config.webViewConfig.showStatusBarInFullscreen
         showNavigationBarInFullscreen = config.webViewConfig.showNavigationBarInFullscreen
-        blockSystemNavigationGesture = config.webViewConfig.blockSystemNavigationGesture
         // 读取键盘调整模式
         keyboardAdjustMode = try {
             KeyboardAdjustMode.valueOf(config.webViewConfig.keyboardAdjustMode)
@@ -389,7 +399,22 @@ class ShellActivity : AppCompatActivity() {
                     onWebViewCreated = { wv ->
                         try {
                             webView = wv
-                            com.webtoapp.core.shell.ShellLogger.i("ShellActivity", "WebView 创建成功")
+                            // onDestroy 中的 pauseTimers() 是进程级静态方法，若 Activity 被系统重建而非用户销毁，
+                            // 定时器仍处于暂停状态，必须显式恢复
+                            wv.resumeTimers()
+                            com.webtoapp.core.shell.ShellLogger.i("ShellActivity", "WebView 创建成功, timers resumed")
+                            // 恢复 WebView 状态（系统后台杀死 Activity 后重建时）
+                            // restoreState 必须在 loadUrl 之前调用
+                            val savedState = webViewStateBundle
+                            if (savedState != null) {
+                                val restored = wv.restoreState(savedState)
+                                webViewStateBundle = null
+                                if (restored != null) {
+                                    // 标记已恢复状态，让 loadUrl 跳过加载
+                                    wv.tag = "state_restored"
+                                    com.webtoapp.core.shell.ShellLogger.i("ShellActivity", "WebView state restored from saved bundle")
+                                }
+                            }
                             // 添加翻译桥接
                             translateBridge = TranslateBridge(wv, lifecycleScope)
                             wv.addJavascriptInterface(translateBridge!!, TranslateBridge.JS_INTERFACE_NAME)
@@ -511,16 +536,30 @@ class ShellActivity : AppCompatActivity() {
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        webView?.saveState(outState)
+        com.webtoapp.core.shell.ShellLogger.logLifecycle("ShellActivity", "onSaveInstanceState - WebView state saved")
+    }
+
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
+        
+        // Handle notification click URL (from NotificationPollingService)
+        val notificationClickUrl = intent?.getStringExtra("notification_click_url")
+        if (!notificationClickUrl.isNullOrBlank()) {
+            val baseUrl = WebToAppApplication.shellMode.getConfig()?.targetUrl ?: ""
+            val fullUrl = if (notificationClickUrl.startsWith("http")) notificationClickUrl
+                          else baseUrl.trimEnd('/') + "/" + notificationClickUrl.trimStart('/')
+            webView?.loadUrl(fullUrl)
+            com.webtoapp.core.shell.ShellLogger.i("ShellActivity", "Notification click URL: $fullUrl")
+            return
+        }
+        
         val url = intent?.data?.toString()
         if (!url.isNullOrBlank() && intent?.action == Intent.ACTION_VIEW) {
             val safeUrl = normalizeShellTargetUrlForSecurity(url)
-            // 验证 Deep Link 域名白名单
-            val config = WebToAppApplication.shellMode.getConfig()
-            val validatedUrl = if (config?.deepLinkEnabled == true) {
-                validateDeepLinkUrl(safeUrl, config.deepLinkHosts, config.targetUrl)
-            } else safeUrl
+            val validatedUrl = if (safeUrl.startsWith("http://") || safeUrl.startsWith("https://")) safeUrl else return
             deepLinkUrl.value = validatedUrl
             // Directly load URL in existing WebView
             webView?.loadUrl(validatedUrl)
@@ -530,7 +569,7 @@ class ShellActivity : AppCompatActivity() {
     
     override fun onResume() {
         super.onResume()
-        
+
         // 悬浮窗模式：用户从权限设置页面返回后，检查权限并启动悬浮窗
         if (pendingFloatingWindowLaunch) {
             val config = WebToAppApplication.shellMode.getConfig()
@@ -541,17 +580,20 @@ class ShellActivity : AppCompatActivity() {
             }
             // 用户未授权，继续以普通窗口模式运行
         }
-        
+
         webView?.onResume()
+        // onDestroy 中的 pauseTimers() 是进程级静态方法，若 Activity 被系统重建而非用户销毁，
+        // 定时器仍处于暂停状态，必须显式恢复
         webView?.resumeTimers()
-        com.webtoapp.core.shell.ShellLogger.logLifecycle("ShellActivity", "onResume - WebView resumed")
+        com.webtoapp.core.shell.ShellLogger.logLifecycle("ShellActivity", "onResume - WebView resumed, timers resumed")
     }
-    
+
     override fun onPause() {
         super.onPause()
-        // 暂停 WebView 渲染和 JS 定时器，释放 CPU
+        // 暂停 WebView 渲染，释放 CPU
+        // 注意：不调用 pauseTimers()，因为它是进程级静态方法，会暂停所有 WebView 的 JS 定时器，
+        // 导致返回前台时页面状态丢失（SPA 应用尤甚）
         webView?.onPause()
-        webView?.pauseTimers()
         // Persist cookies when app goes to background
         android.webkit.CookieManager.getInstance().flush()
         com.webtoapp.core.shell.ShellLogger.logLifecycle("ShellActivity", "onPause - WebView paused, cookies flushed")
@@ -559,23 +601,23 @@ class ShellActivity : AppCompatActivity() {
     
     override fun onTrimMemory(level: Int) {
         super.onTrimMemory(level)
-        if (level >= android.content.ComponentCallbacks2.TRIM_MEMORY_MODERATE) {
-            webView?.clearCache(false)
-            com.webtoapp.core.shell.ShellLogger.logLifecycle("ShellActivity", "Memory pressure (level=$level), cleared WebView cache")
-        }
-        if (level >= android.content.ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL) {
-            webView?.freeMemory()
+        // ★ FIX: 不再在内存压力时调用 clearCache() / freeMemory()
+        // 这些方法会销毁 WebView 的缓存和内部内存，导致页面重新加载
+        // 滚动时触发内存回收 → 缓存清除 → 页面重载 → 再次滚动 → 循环
+        // 仅使用 System.gc() 作为温和的内存压力提示
+        if (level >= android.content.ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) {
             System.gc()
-            com.webtoapp.core.shell.ShellLogger.logLifecycle("ShellActivity", "Critical memory pressure, freed WebView memory")
+            com.webtoapp.core.shell.ShellLogger.logLifecycle("ShellActivity", "Memory pressure (level=$level), requested GC (no cache clear)")
         }
     }
 
     override fun onLowMemory() {
         super.onLowMemory()
-        webView?.clearCache(false)
-        webView?.freeMemory()
+        // ★ FIX: 不再调用 clearCache() / freeMemory()
+        // freeMemory() 会使当前渲染的页面失效，导致用户可见的重新加载
+        // clearCache(false) 清除磁盘+内存缓存，后续资源请求必须重新网络获取
         System.gc()
-        com.webtoapp.core.shell.ShellLogger.logLifecycle("ShellActivity", "Low memory, cleared cache and freed WebView memory")
+        com.webtoapp.core.shell.ShellLogger.logLifecycle("ShellActivity", "Low memory, requested GC (no cache clear / freeMemory)")
     }
 
     override fun onDestroy() {
@@ -603,6 +645,48 @@ class ShellActivity : AppCompatActivity() {
         }
         webView = null
         super.onDestroy()
+    }
+    
+    /**
+     * SECURITY: 显示密码输入对话框
+     * 当 APK 使用自定义密码加密时，需要用户输入密码才能解密配置
+     */
+    private fun showPasswordDialog() {
+        val editText = android.widget.EditText(this).apply {
+            hint = Strings.enterEncryptionPassword
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
+            setSingleLine(true)
+        }
+        
+        val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle(Strings.passwordVerification)
+            .setMessage(Strings.appEncryptedMessage)
+            .setView(editText)
+            .setPositiveButton(Strings.btnConfirm) { _, _ ->
+                val password = editText.text.toString()
+                if (password.isNotBlank()) {
+                    WebToAppApplication.shellMode.setCustomPassword(password)
+                    // 重新尝试加载配置
+                    val config = WebToAppApplication.shellMode.getConfig()
+                    if (config == null) {
+                        Toast.makeText(this, Strings.wrongPasswordCannotDecrypt, Toast.LENGTH_LONG).show()
+                        finish()
+                    } else {
+                        // 密码正确，重新执行 onCreate 后续逻辑
+                        recreate()
+                    }
+                } else {
+                    Toast.makeText(this, Strings.passwordCannotBeEmpty, Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+            }
+            .setNegativeButton(Strings.btnExit) { _, _ ->
+                finish()
+            }
+            .setCancelable(false)
+            .create()
+        
+        dialog.show()
     }
 }
 

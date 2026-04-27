@@ -17,6 +17,7 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.os.PowerManager
+import com.webtoapp.core.i18n.Strings
 import android.provider.Settings
 import com.webtoapp.core.logging.AppLogger
 import androidx.core.app.NotificationCompat
@@ -310,10 +311,10 @@ class ForcedRunGuardService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "强制运行守护",
+                Strings.notifFocusModeChannelName,
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "保持应用在前台运行"
+                description = Strings.notifFocusModeChannelDesc
                 setShowBadge(false)
             }
             
@@ -332,8 +333,8 @@ class ForcedRunGuardService : Service() {
         )
         
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("专注模式运行中")
-            .setContentText("点击返回应用")
+            .setContentTitle(Strings.notifFocusModeRunning)
+            .setContentText(Strings.notifClickToReturn)
             .setSmallIcon(android.R.drawable.ic_lock_lock)
             .setContentIntent(pendingIntent)
             .setOngoing(true)

@@ -38,6 +38,12 @@ class ModulePresetManager private constructor(private val context: Context) {
                 INSTANCE ?: ModulePresetManager(context.applicationContext).also { INSTANCE = it }
             }
         }
+
+        fun release() {
+            synchronized(this) {
+                INSTANCE = null
+            }
+        }
     }
     
     private val gson = com.webtoapp.util.GsonProvider.gson
@@ -61,8 +67,8 @@ class ModulePresetManager private constructor(private val context: Context) {
         ModulePreset(
             id = "preset-reading",
             name = Strings.presetReading,
-            description = Strings.presetReadingDesc,
-            icon = "📖",
+            description = "",
+            icon = "auto_stories",
             moduleIds = listOf(
                 "builtin-dark-mode",
                 "builtin-reading-mode",
@@ -74,8 +80,8 @@ class ModulePresetManager private constructor(private val context: Context) {
         ModulePreset(
             id = "preset-adblock",
             name = Strings.presetAdblock,
-            description = Strings.presetAdblockDesc,
-            icon = "🛡️",
+            description = "",
+            icon = "shield",
             moduleIds = listOf(
                 "builtin-adblocker-enhanced",
                 "builtin-element-blocker"
@@ -85,8 +91,8 @@ class ModulePresetManager private constructor(private val context: Context) {
         ModulePreset(
             id = "preset-media",
             name = Strings.presetMedia,
-            description = Strings.presetMediaDesc,
-            icon = "🎬",
+            description = "",
+            icon = "play_circle",
             moduleIds = listOf(
                 "builtin-video-speed",
                 "builtin-image-downloader"
@@ -96,8 +102,8 @@ class ModulePresetManager private constructor(private val context: Context) {
         ModulePreset(
             id = "preset-utility",
             name = Strings.presetUtility,
-            description = Strings.presetUtilityDesc,
-            icon = "🔧",
+            description = "",
+            icon = "build",
             moduleIds = listOf(
                 "builtin-copy-protection-remover",
                 "builtin-translate-helper",
@@ -108,8 +114,8 @@ class ModulePresetManager private constructor(private val context: Context) {
         ModulePreset(
             id = "preset-night",
             name = Strings.presetNight,
-            description = Strings.presetNightDesc,
-            icon = "🌙",
+            description = "",
+            icon = "dark_mode",
             moduleIds = listOf(
                 "builtin-dark-mode",
                 "builtin-night-shield"

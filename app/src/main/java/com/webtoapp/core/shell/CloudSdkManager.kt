@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.os.Build
 import android.provider.Settings
+import com.webtoapp.core.i18n.Strings
 import com.webtoapp.core.logging.AppLogger
 import kotlinx.coroutines.*
 import org.json.JSONArray
@@ -258,9 +259,9 @@ class CloudSdkManager(
         val act = activity ?: return
         act.runOnUiThread {
             try {
-                val title = config.updateDialogTitle.ifBlank { "发现新版本 v$version" }
-                val message = if (changelog.isNotBlank()) changelog else "有新版本可用，建议更新。"
-                val buttonText = config.updateDialogButtonText.ifBlank { "立即更新" }
+                val title = config.updateDialogTitle.ifBlank { Strings.cloudSdkNewVersionTitle.format(version) }
+                val message = if (changelog.isNotBlank()) changelog else Strings.cloudSdkNewVersionMessage
+                val buttonText = config.updateDialogButtonText.ifBlank { Strings.cloudSdkUpdateNow }
 
                 val builder = AlertDialog.Builder(act)
                     .setTitle(title)
@@ -290,7 +291,7 @@ class CloudSdkManager(
                     }
 
                 if (!isForce) {
-                    builder.setNegativeButton("稍后") { d, _ -> d.dismiss() }
+                    builder.setNegativeButton(Strings.cloudSdkLater) { d, _ -> d.dismiss() }
                 }
                 builder.setCancelable(!isForce)
                 builder.show()
@@ -367,7 +368,7 @@ class CloudSdkManager(
                 AlertDialog.Builder(act)
                     .setTitle(title)
                     .setMessage(content)
-                    .setPositiveButton("知道了") { d, _ -> d.dismiss() }
+                    .setPositiveButton(Strings.cloudSdkGotIt) { d, _ -> d.dismiss() }
                     .setCancelable(true)
                     .show()
             } catch (e: Exception) {

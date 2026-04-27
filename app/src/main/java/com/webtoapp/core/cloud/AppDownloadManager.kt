@@ -9,6 +9,7 @@ import android.os.Environment
 import androidx.core.app.NotificationCompat
 import androidx.core.content.FileProvider
 import com.webtoapp.R
+import com.webtoapp.core.i18n.Strings
 import com.webtoapp.core.logging.AppLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -281,10 +282,10 @@ class AppDownloadManager private constructor(private val context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "应用下载",
+                Strings.notifDownloadChannelName,
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "应用市场下载进度通知"
+                description = Strings.notifDownloadChannelDesc
                 setShowBadge(false)
             }
             notificationManager.createNotificationChannel(channel)
@@ -294,8 +295,8 @@ class AppDownloadManager private constructor(private val context: Context) {
     private fun showProgressNotification(appId: Int, appName: String, progress: Int, indeterminate: Boolean) {
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_sys_download)
-            .setContentTitle("正在下载: $appName")
-            .setContentText(if (indeterminate) "准备中..." else "$progress%")
+            .setContentTitle(Strings.notifDownloading.format(appName))
+            .setContentText(if (indeterminate) Strings.notifPreparing else "$progress%")
             .setProgress(100, progress, indeterminate)
             .setOngoing(true)
             .setSilent(true)
@@ -307,8 +308,8 @@ class AppDownloadManager private constructor(private val context: Context) {
     private fun showCompleteNotification(appId: Int, appName: String, filePath: String) {
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_sys_download_done)
-            .setContentTitle("$appName 下载完成")
-            .setContentText("点击安装")
+            .setContentTitle(Strings.notifDownloadComplete.format(appName))
+            .setContentText(Strings.notifClickToInstall)
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .build()
@@ -318,8 +319,8 @@ class AppDownloadManager private constructor(private val context: Context) {
     private fun showFailedNotification(appId: Int, appName: String) {
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_notify_error)
-            .setContentTitle("$appName 下载失败")
-            .setContentText("请重试")
+            .setContentTitle(Strings.notifDownloadFailed.format(appName))
+            .setContentText(Strings.notifRetry)
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .build()

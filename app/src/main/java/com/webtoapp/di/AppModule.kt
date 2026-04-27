@@ -93,8 +93,8 @@ val useCaseModule = module {
 val viewModelModule = module {
     viewModel { MainViewModel(get(), get(), get()) }
     viewModel { AuthViewModel(get()) }
-    viewModel { CloudViewModel(get()) }
-    viewModel { CommunityViewModel(get()) }
+    viewModel { CloudViewModel(get(), get()) }
+    viewModel { CommunityViewModel(get(), get()) }
 }
 
 /**

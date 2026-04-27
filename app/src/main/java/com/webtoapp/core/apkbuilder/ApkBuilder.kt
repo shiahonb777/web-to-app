@@ -19,6 +19,7 @@ import com.webtoapp.core.crypto.KeyManager
 import com.webtoapp.core.crypto.toHexString
 import com.webtoapp.core.shell.BgmShellItem
 import com.webtoapp.core.shell.LrcShellTheme
+import com.webtoapp.data.model.ApkRuntimePermissions
 import com.webtoapp.data.model.LrcData
 import com.webtoapp.data.model.WebApp
 import com.webtoapp.data.model.getActivationCodeStrings
@@ -37,7 +38,7 @@ import com.webtoapp.util.TextFileClassifier
  * Responsible for packaging WebApp configuration into standalone APK installer
  * 
  * How it works:
- * 1. Copy current app APK as template (because current app supports Shell mode)
+ * 1. Prefer the dedicated shell template APK; only fall back to self APK when the template is unavailable
  * 2. Inject app_config.json config file into assets directory
  * 3. Modify package name in AndroidManifest.xml (make each exported app independent)
  * 4. Modify app name in resources.arsc
@@ -54,6 +55,7 @@ class ApkBuilder(private val context: Context) {
     }
 
     private val template = ApkTemplate(context)
+    private val templateProvider = CompositeTemplateProvider.default(context)
     private val signer = JarSigner(context)
     private val axmlEditor = AxmlEditor()
     private val axmlRebuilder = AxmlRebuilder()
@@ -290,14 +292,18 @@ class ApkBuilder(private val context: Context) {
             val prepared = coroutineScope {
                 // Async: Template APK (potentially slow — copies ~50MB)
                 val templateDeferred = async {
-                    getOrCreateTemplate()
+                    getOrCreateTemplate(config)
                 }
                 
                 // Async: Encryption key generation
                 val encKeyDeferred = async {
                     if (encryptionConfig.enabled) {
                         val signatureHash = signer.getCertificateSignatureHash()
-                        keyManager.generateKeyForPackage(packageName, signatureHash)
+                        keyManager.generateKeyForPackage(
+                            packageName, signatureHash,
+                            encryptionConfig.encryptionLevel,
+                            encryptionConfig.customPassword
+                        )
                     } else null
                 }
                 
@@ -571,25 +577,25 @@ class ApkBuilder(private val context: Context) {
     }
 
     /**
-     * Get template APK
-     * Use current app as template (because it supports Shell mode)
-     * Caches the template and only re-copies when the source APK changes.
+     * Get template APK.
+     * Prefer the dedicated shell template to avoid exporting editor-only code and assets.
+     * Falls back to self APK only if the shell template is not present.
      */
-    private fun getOrCreateTemplate(): File? {
+    private fun getOrCreateTemplate(config: ApkConfig): File? {
         return try {
-            val currentApk = File(context.applicationInfo.sourceDir)
-            val templateFile = File(tempDir, "base_template.apk")
-            
-            // Only copy if template doesn't exist or source APK has changed
+            val sourceTemplate = templateProvider.getTemplateFor(config) ?: return null
+            val sourceName = sourceTemplate.name
+            val templateFile = File(tempDir, "base_template_${sourceName.substringBeforeLast('.')}.apk")
+
             val needsCopy = !templateFile.exists() ||
-                templateFile.length() != currentApk.length() ||
-                templateFile.lastModified() < currentApk.lastModified()
-            
+                templateFile.length() != sourceTemplate.length() ||
+                templateFile.lastModified() < sourceTemplate.lastModified()
+
             if (needsCopy) {
-                currentApk.copyTo(templateFile, overwrite = true)
-                AppLogger.d("ApkBuilder", "Template APK copied (source changed)")
+                sourceTemplate.copyTo(templateFile, overwrite = true)
+                AppLogger.i("ApkBuilder", "Template APK copied from ${templateProvider.sourceName}")
             } else {
-                AppLogger.d("ApkBuilder", "Using cached template APK")
+                AppLogger.d("ApkBuilder", "Using cached template APK from ${templateProvider.sourceName}")
             }
             templateFile
         } catch (e: Exception) {
@@ -695,7 +701,8 @@ class ApkBuilder(private val context: Context) {
                                 config.versionName,
                                 aliasCount,
                                 config.appName,
-                                config.deepLinkHosts
+                                config.deepLinkHosts,
+                                buildRequiredPermissions(config)
                             )
                             writeEntryDeflated(zipOut, entry.name, modifiedData)
                             if (aliasCount > 0) {
@@ -2389,22 +2396,23 @@ builtins.__import__ = _w2a_import
             val configJson = template.createConfigJson(config)
             val encryptedData = encryptor.encryptJson(configJson, "app_config.json")
             writeEntryDeflated(zipOut, ApkTemplate.CONFIG_PATH + ".enc", encryptedData)
-            // 安全降级: 写入最小化存根配置（不含 targetUrl、激活码等敏感字段）
+            // SECURITY: 写入最小化存根配置，仅保留运行时必需的最小字段
+            // 不含 targetUrl、激活码、appType 等任何可推断敏感信息的字段
             // 目的是让解密失败时 App 仍以 Shell 模式运行（显示错误提示），而非回退为 WebToApp 编辑器
             val stubJson = """
             {
                 "appName": "${template.escapeJson(config.appName)}",
                 "packageName": "${template.escapeJson(config.packageName)}",
                 "targetUrl": "",
-                "appType": "${config.appType}",
-                "versionCode": ${config.versionCode},
-                "versionName": "${template.escapeJson(config.versionName)}",
+                "appType": "",
+                "versionCode": 0,
+                "versionName": "",
                 "webViewConfig": {}
             }
             """.trimIndent()
             val stubData = stubJson.toByteArray(Charsets.UTF_8)
             writeEntryDeflated(zipOut, ApkTemplate.CONFIG_PATH, stubData)
-            AppLogger.d("ApkBuilder", "Config file encrypted (stub fallback, no sensitive data)")
+            AppLogger.d("ApkBuilder", "Config file encrypted (minimal stub, no sensitive data)")
         } else {
             // Write plaintext (encryption not enabled)
             val configJson = template.createConfigJson(config)
@@ -2631,6 +2639,141 @@ builtins.__import__ = _w2a_import
         return name.replace(SANITIZE_FILENAME_REGEX, "_").take(50)
     }
 
+    private fun buildRequiredPermissions(config: ApkConfig): List<String> {
+        val permissions = linkedSetOf(
+            "android.permission.INTERNET",
+            "android.permission.ACCESS_NETWORK_STATE"
+        )
+
+        val rp = config.runtimePermissions
+
+        // ── 基础权限 (Basic) ──
+        if (rp.camera) {
+            permissions += "android.permission.CAMERA"
+        }
+        if (rp.microphone) {
+            permissions += "android.permission.RECORD_AUDIO"
+            permissions += "android.permission.MODIFY_AUDIO_SETTINGS"
+        }
+        if (rp.location) {
+            permissions += "android.permission.ACCESS_COARSE_LOCATION"
+            permissions += "android.permission.ACCESS_FINE_LOCATION"
+        }
+        if (rp.notifications) {
+            permissions += "android.permission.POST_NOTIFICATIONS"
+        }
+
+        // ── 存储权限 (Storage) ──
+        if (rp.readExternalStorage) {
+            permissions += "android.permission.READ_EXTERNAL_STORAGE"
+        }
+        if (rp.writeExternalStorage) {
+            permissions += "android.permission.WRITE_EXTERNAL_STORAGE"
+        }
+        if (rp.readMediaImages) {
+            permissions += "android.permission.READ_MEDIA_IMAGES"
+        }
+        if (rp.readMediaVideo) {
+            permissions += "android.permission.READ_MEDIA_VIDEO"
+        }
+        if (rp.readMediaAudio) {
+            permissions += "android.permission.READ_MEDIA_AUDIO"
+        }
+
+        // ── 连接权限 (Connectivity) ──
+        if (rp.bluetooth) {
+            permissions += "android.permission.BLUETOOTH"
+            permissions += "android.permission.BLUETOOTH_ADMIN"
+            permissions += "android.permission.BLUETOOTH_SCAN"
+            permissions += "android.permission.BLUETOOTH_CONNECT"
+            permissions += "android.permission.BLUETOOTH_ADVERTISE"
+        }
+        if (rp.nfc) {
+            permissions += "android.permission.NFC"
+        }
+        if (rp.wifiState) {
+            permissions += "android.permission.ACCESS_WIFI_STATE"
+            permissions += "android.permission.CHANGE_WIFI_STATE"
+        }
+
+        // ── 传感器权限 (Sensors) ──
+        if (rp.bodySensors) {
+            permissions += "android.permission.BODY_SENSORS"
+            permissions += "android.permission.BODY_SENSORS_BACKGROUND"
+        }
+        if (rp.activityRecognition) {
+            permissions += "android.permission.ACTIVITY_RECOGNITION"
+        }
+
+        // ── 系统权限 (System) ──
+        if (rp.readPhoneState) {
+            permissions += "android.permission.READ_PHONE_STATE"
+        }
+        if (rp.callPhone) {
+            permissions += "android.permission.CALL_PHONE"
+        }
+        if (rp.readContacts) {
+            permissions += "android.permission.READ_CONTACTS"
+        }
+        if (rp.writeContacts) {
+            permissions += "android.permission.WRITE_CONTACTS"
+        }
+        if (rp.readCalendar) {
+            permissions += "android.permission.READ_CALENDAR"
+        }
+        if (rp.writeCalendar) {
+            permissions += "android.permission.WRITE_CALENDAR"
+        }
+        if (rp.readSms) {
+            permissions += "android.permission.READ_SMS"
+        }
+        if (rp.sendSms) {
+            permissions += "android.permission.SEND_SMS"
+        }
+        if (rp.receiveSms) {
+            permissions += "android.permission.RECEIVE_SMS"
+        }
+        if (rp.readCallLog) {
+            permissions += "android.permission.READ_CALL_LOG"
+        }
+        if (rp.writeCallLog) {
+            permissions += "android.permission.WRITE_CALL_LOG"
+        }
+        if (rp.processOutgoingCalls) {
+            permissions += "android.permission.PROCESS_OUTGOING_CALLS"
+        }
+
+        // ── 后台/系统高级权限 (Background / Advanced System) ──
+        if (rp.foregroundService) {
+            permissions += "android.permission.FOREGROUND_SERVICE"
+            permissions += "android.permission.FOREGROUND_SERVICE_DATA_SYNC"
+            permissions += "android.permission.FOREGROUND_SERVICE_SPECIAL_USE"
+        }
+        if (rp.wakeLock) {
+            permissions += "android.permission.WAKE_LOCK"
+        }
+        if (rp.requestIgnoreBatteryOptimizations) {
+            permissions += "android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"
+        }
+        if (rp.bootCompleted) {
+            permissions += "android.permission.RECEIVE_BOOT_COMPLETED"
+        }
+        if (rp.vibration) {
+            permissions += "android.permission.VIBRATE"
+        }
+        if (rp.installPackages) {
+            permissions += "android.permission.REQUEST_INSTALL_PACKAGES"
+        }
+        if (rp.requestDeletePackages) {
+            permissions += "android.permission.REQUEST_DELETE_PACKAGES"
+        }
+        if (rp.systemAlertWindow) {
+            permissions += "android.permission.SYSTEM_ALERT_WINDOW"
+        }
+
+        return permissions.toList()
+    }
+
     /**
      * Install APK
      */
@@ -2744,6 +2887,47 @@ fun WebApp.toApkConfig(packageName: String, context: android.content.Context? = 
         versionCode = apkExportConfig?.customVersionCode ?: 1,
         versionName = apkExportConfig?.customVersionName?.takeIf { it.isNotBlank() } ?: "1.0.0",
         iconPath = iconPath,
+        runtimePermissions = (apkExportConfig?.runtimePermissions ?: ApkRuntimePermissions()).let { rp ->
+            var result = rp
+            
+            // 后台运行：需要前台服务、WakeLock、通知权限、电池优化白名单
+            if (apkExportConfig?.backgroundRunEnabled == true) {
+                result = result.copy(
+                    foregroundService = true,
+                    wakeLock = true,
+                    notifications = true,
+                    requestIgnoreBatteryOptimizations = true
+                )
+            }
+            
+            // 通知功能：需要通知权限和前台服务（轮询类型使用前台服务）
+            if (apkExportConfig?.notificationEnabled == true) {
+                result = result.copy(
+                    notifications = true,
+                    foregroundService = true
+                )
+            }
+            
+            // 开机自启动：需要 RECEIVE_BOOT_COMPLETED
+            if (autoStartConfig?.bootStartEnabled == true) {
+                result = result.copy(bootCompleted = true)
+            }
+            
+            // 悬浮小窗：需要 SYSTEM_ALERT_WINDOW
+            if (webViewConfig.floatingWindowConfig.enabled) {
+                result = result.copy(systemAlertWindow = true)
+            }
+            
+            // 强制运行：需要前台服务（GuardService）和 WakeLock（屏幕唤醒）
+            if (forcedRunConfig?.enabled == true) {
+                result = result.copy(
+                    foregroundService = true,
+                    wakeLock = true
+                )
+            }
+            
+            result
+        },
         activationEnabled = activationEnabled,
         activationCodes = getActivationCodeStrings(),
         activationRequireEveryTime = activationRequireEveryTime,
@@ -2766,6 +2950,9 @@ fun WebApp.toApkConfig(packageName: String, context: android.content.Context? = 
         announcementAllowNeverShow = announcement?.allowNeverShow ?: false,
         javaScriptEnabled = webViewConfig.javaScriptEnabled,
         domStorageEnabled = webViewConfig.domStorageEnabled,
+        allowFileAccess = webViewConfig.allowFileAccess,
+        allowContentAccess = webViewConfig.allowContentAccess,
+        cacheEnabled = webViewConfig.cacheEnabled,
         zoomEnabled = webViewConfig.zoomEnabled,
         desktopMode = webViewConfig.desktopMode,
         userAgent = webViewConfig.userAgent,
@@ -2832,6 +3019,7 @@ fun WebApp.toApkConfig(packageName: String, context: android.content.Context? = 
         // 浏览器兼容性增强配置
         initialScale = webViewConfig.initialScale,
         viewportMode = webViewConfig.viewportMode.name,
+        customViewportWidth = webViewConfig.customViewportWidth,
         newWindowBehavior = webViewConfig.newWindowBehavior.name,
         enablePaymentSchemes = webViewConfig.enablePaymentSchemes,
         enableShareBridge = webViewConfig.enableShareBridge,
@@ -2856,6 +3044,14 @@ fun WebApp.toApkConfig(packageName: String, context: android.content.Context? = 
         proxyType = webViewConfig.proxyType,
         pacUrl = webViewConfig.pacUrl,
         proxyBypassRules = webViewConfig.proxyBypassRules,
+        // DNS 配置
+        dnsMode = webViewConfig.dnsMode,
+        dnsConfig = DnsApkConfig(
+            provider = webViewConfig.dnsConfig.provider,
+            customDohUrl = webViewConfig.dnsConfig.customDohUrl,
+            dohMode = webViewConfig.dnsConfig.dohMode,
+            bypassSystemDns = webViewConfig.dnsConfig.bypassSystemDns
+        ),
         // 网络错误页配置
         errorPageMode = webViewConfig.errorPageConfig.mode.name,
         errorPageBuiltInStyle = webViewConfig.errorPageConfig.builtInStyle.name,
@@ -2982,12 +3178,26 @@ fun WebApp.toApkConfig(packageName: String, context: android.content.Context? = 
                 keepCpuAwake = it.keepCpuAwake
             )
         },
+        // Notification config
+        notificationEnabled = apkExportConfig?.notificationEnabled ?: false,
+        notificationConfig = apkExportConfig?.notificationConfig?.let {
+            NotificationConfig(
+                type = it.type.key,
+                pollUrl = it.pollUrl,
+                pollIntervalMinutes = it.pollIntervalMinutes,
+                pollMethod = it.pollMethod,
+                pollHeaders = it.pollHeaders,
+                clickUrl = it.clickUrl
+            )
+        },
         // Black tech feature config (independent module)
         blackTechConfig = blackTechConfig,
         // App disguise config (independent module)
         disguiseConfig = disguiseConfig,
         // Browser disguise config (anti-fingerprint engine)
         browserDisguiseConfig = browserDisguiseConfig,
+        // Device disguise config (device type/brand/model UA spoofing)
+        deviceDisguiseConfig = deviceDisguiseConfig,
         // UI language config - use current app language
         language = com.webtoapp.core.i18n.Strings.currentLanguage.value.name,
         // Browser engine config

@@ -100,7 +100,7 @@ private fun HtmlPreviewScreen(
     // 读取源代码
     LaunchedEffect(filePath, htmlContent) {
         sourceCode = when {
-            filePath != null -> try { File(filePath).readText() } catch (e: Exception) { "无法读取文件" }
+            filePath != null -> try { File(filePath).readText() } catch (e: Exception) { Strings.htmlCannotReadFile }
             htmlContent != null -> htmlContent
             else -> ""
         }
@@ -170,7 +170,7 @@ private fun HtmlPreviewScreen(
                                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                 }
-                                context.startActivity(Intent.createChooser(intent, "选择浏览器"))
+                                context.startActivity(Intent.createChooser(intent, Strings.chooseBrowser))
                             } catch (e: Exception) {
                                 Toast.makeText(context, "${Strings.cannotOpenInBrowser}: ${e.message}", Toast.LENGTH_SHORT).show()
                             }
@@ -178,7 +178,7 @@ private fun HtmlPreviewScreen(
                             Toast.makeText(context, Strings.noFilePathAvailable, Toast.LENGTH_SHORT).show()
                         }
                     }) {
-                        Icon(Icons.Outlined.OpenInBrowser, "在浏览器中打开")
+                        Icon(Icons.Outlined.OpenInBrowser, Strings.openInBrowser)
                     }
                 }
             )

@@ -99,7 +99,8 @@ class WebsiteScraper(private val context: Context) {
         val followLinks: Boolean = true,              // 是否跟踪同域 <a> 链接
         val downloadCdnResources: Boolean = true,     // 是否下载 CDN（跨域）资源
         val userAgent: String = "Mozilla/5.0 (Linux; Android 15; Pixel 9 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36",
-        val skipPatterns: List<String> = emptyList()   // 跳过的 URL 模式（正则）
+        val skipPatterns: List<String> = emptyList(),  // 跳过的 URL 模式（正则）
+        val timeoutSeconds: Int = 30               // 硬超时（秒）
     )
     
     /**
@@ -211,15 +212,26 @@ class WebsiteScraper(private val context: Context) {
             // Phase 2: BFS download all discovered resources
             val semaphore = kotlinx.coroutines.sync.Semaphore(config.concurrency)
             var iteration = 0
+            val maxIterations = config.maxDepth * 20  // safety limit to prevent infinite loops
+            val deadline = System.currentTimeMillis() + config.timeoutSeconds * 1000L
             
-            while (pendingUrls.isNotEmpty() && fileCounter.get() < config.maxFiles) {
+            while (pendingUrls.isNotEmpty() 
+                && fileCounter.get() < config.maxFiles
+                && iteration < maxIterations
+                && System.currentTimeMillis() < deadline
+            ) {
                 iteration++
+                
+                // Trim batch to respect maxFiles limit
+                val remainingSlots = config.maxFiles - fileCounter.get()
                 val batch = pendingUrls.entries.toList()
+                    .sortedBy { it.value }  // process shallower depths first
+                    .take(remainingSlots)
                 pendingUrls.clear()
                 
                 if (batch.isEmpty()) break
                 
-                AppLogger.d(TAG, "Download iteration $iteration: ${batch.size} URLs pending")
+                AppLogger.d(TAG, "Download iteration $iteration: ${batch.size} URLs pending, ${fileCounter.get()} files done")
                 
                 val jobs = batch.map { (url, depth) ->
                     async {
@@ -249,6 +261,10 @@ class WebsiteScraper(private val context: Context) {
                 }
                 
                 jobs.awaitAll()
+            }
+            
+            if (System.currentTimeMillis() >= deadline) {
+                AppLogger.w(TAG, "Scrape timed out after ${config.timeoutSeconds}s, ${fileCounter.get()} files downloaded")
             }
             
             // Phase 3: Rewrite URLs in HTML/CSS files
@@ -540,6 +556,10 @@ class WebsiteScraper(private val context: Context) {
     
     /**
      * 重写所有已下载文件中的 URL 引用为相对路径
+     *
+     * 策略：
+     * - 成功下载的资源 → 替换为本地相对路径（离线可用）
+     * - 下载失败的资源 → 保留原始在线 URL（在线时仍可加载，避免白屏）
      */
     private fun rewriteUrls() {
         projectDir.walkTopDown().filter { it.isFile }.forEach { file ->
@@ -547,20 +567,31 @@ class WebsiteScraper(private val context: Context) {
             if (ext in setOf("html", "htm", "css", "js", "svg")) {
                 try {
                     var content = file.readText(Charsets.UTF_8)
+                    val originalContent = content
                     var modified = false
                     
-                    // Replace all known URLs with relative paths
-                    for ((url, localPath) in downloadedUrls) {
-                        if (localPath == "__pending__") continue
-                        
+                    // Only rewrite URLs for resources that were successfully downloaded
+                    // Sort by localPath length descending so deeper paths get replaced first
+                    val sortedEntries = downloadedUrls.entries
+                        .filter { it.value != "__pending__" }
+                        .filter { entry ->
+                            // Verify the local file actually exists on disk
+                            File(projectDir, entry.value).isFile
+                        }
+                        .sortedByDescending { it.value.length }
+                    
+                    for ((url, localPath) in sortedEntries) {
                         // Calculate relative path from this file to the target
                         val fileRelDir = file.relativeTo(projectDir).parent ?: ""
                         val relativePath = calculateRelativePath(fileRelDir, localPath)
                         
-                        // Replace various URL forms
+                        // Replace various URL forms — only match in ORIGINAL content
+                        // to prevent short variants from matching already-replaced text
                         val urlVariants = generateUrlVariants(url)
+                            .sortedByDescending { it.length }
+                        
                         for (variant in urlVariants) {
-                            if (content.contains(variant)) {
+                            if (originalContent.contains(variant)) {
                                 content = content.replace(variant, relativePath)
                                 modified = true
                             }
@@ -583,13 +614,14 @@ class WebsiteScraper(private val context: Context) {
     private fun generateUrlVariants(url: String): List<String> {
         val variants = mutableListOf(url)
         
-        // Without protocol
+        // Protocol-relative variant: https://host/path → //host/path
+        // This is the only valid short form that appears in HTML (src="//host/path")
+        // Do NOT generate bare "host/path" — it's never a valid HTML URL reference
+        // and will falsely match substrings in already-replaced content.
         if (url.startsWith("https://")) {
-            variants.add(url.removePrefix("https:"))
-            variants.add(url.removePrefix("https://"))
+            variants.add(url.removePrefix("https:"))  // → //host/path
         } else if (url.startsWith("http://")) {
-            variants.add(url.removePrefix("http:"))
-            variants.add(url.removePrefix("http://"))
+            variants.add(url.removePrefix("http:"))    // → //host/path
         }
         
         // Without query parameters

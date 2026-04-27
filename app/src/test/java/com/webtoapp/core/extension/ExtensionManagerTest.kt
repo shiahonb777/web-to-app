@@ -7,6 +7,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -17,6 +18,9 @@ import java.io.File
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33])
 class ExtensionManagerTest {
+
+    @Rule @JvmField
+    val koinRule = com.webtoapp.util.KoinCleanupRule()
 
     private lateinit var context: Context
     private lateinit var modulesDir: File

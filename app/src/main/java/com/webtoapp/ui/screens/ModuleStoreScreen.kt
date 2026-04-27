@@ -34,6 +34,7 @@ import com.webtoapp.core.i18n.Strings
 import com.webtoapp.ui.viewmodel.CloudViewModel
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
+import com.webtoapp.ui.screens.community.ModuleCard
 
 /**
  * 模块市场页面 — 社区扩展模块的发现、搜索与安装
@@ -43,7 +44,8 @@ import com.webtoapp.ui.components.EnhancedElevatedCard
 fun ModuleStoreScreen(
     cloudViewModel: CloudViewModel,
     onBack: () -> Unit,
-    onInstallModule: (String) -> Unit   // share_code -> install locally
+    onInstallModule: (String) -> Unit,   // share_code -> install locally
+    onNavigateToModule: (Int) -> Unit = {}  // moduleId -> ModuleDetailScreen
 ) {
     val modules by cloudViewModel.storeModules.collectAsStateWithLifecycle()
     val loading by cloudViewModel.storeLoading.collectAsStateWithLifecycle()
@@ -75,12 +77,12 @@ fun ModuleStoreScreen(
                 title = {
                     Column {
                         Text(
-                            "模块市场",
+                            Strings.moduleMarketTitle,
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.titleLarge
                         )
                         Text(
-                            "${total} 个模块",
+                            Strings.moduleCount.format(total),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                         )
@@ -101,7 +103,7 @@ fun ModuleStoreScreen(
                                 searchQuery = it
                                 cloudViewModel.loadStoreModules(selectedCategory, it.ifBlank { null }, selectedSort)
                             },
-                            placeholder = { Text("搜索模块...", fontSize = 14.sp) },
+                            placeholder = { Text(Strings.searchModules, fontSize = 14.sp) },
                             modifier = Modifier.width(200.dp).height(48.dp),
                             singleLine = true,
                             colors = TextFieldDefaults.colors(
@@ -143,18 +145,18 @@ fun ModuleStoreScreen(
                                 selectedCategory = null
                                 cloudViewModel.loadStoreModules(null, searchQuery.ifBlank { null }, selectedSort)
                             },
-                            label = { Text("全部", fontSize = 12.sp) }
+                            label = { Text(Strings.allCategories, fontSize = 12.sp) }
                         )
                     }
                     val categories = listOf(
-                        "UI_ENHANCE" to "界面增强",
-                        "MEDIA" to "媒体",
-                        "PRIVACY" to "隐私安全",
-                        "TOOLS" to "工具",
-                        "AD_BLOCK" to "广告拦截",
-                        "SOCIAL" to "社交",
-                        "DEVELOPER" to "开发者",
-                        "OTHER" to "其他"
+                        "UI_ENHANCE" to Strings.catUiEnhance,
+                        "MEDIA" to Strings.catMediaLabel,
+                        "PRIVACY" to Strings.catPrivacyLabel,
+                        "TOOLS" to Strings.catToolsLabel,
+                        "AD_BLOCK" to Strings.catAdBlockLabel,
+                        "SOCIAL" to Strings.catSocialLabel,
+                        "DEVELOPER" to Strings.catDeveloperLabel,
+                        "OTHER" to Strings.catOtherLabel
                     )
                     items(categories) { (key, name) ->
                         PremiumFilterChip(
@@ -172,7 +174,7 @@ fun ModuleStoreScreen(
             // 排序
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    val sorts = listOf("downloads" to "最多下载", "rating" to "最高评分", "created_at" to "最新发布")
+                    val sorts = listOf("downloads" to Strings.sortMostDownloads, "rating" to Strings.sortHighestRating, "created_at" to Strings.sortLatestPublish)
                     sorts.forEach { (key, name) ->
                         PremiumFilterChip(
                             selected = selectedSort == key,
@@ -197,8 +199,9 @@ fun ModuleStoreScreen(
 
             // 模块列表
             items(modules, key = { it.id }) { module ->
-                ModuleStoreCard(
+                ModuleCard(
                     module = module,
+                    onClick = { onNavigateToModule(module.id) },
                     onInstall = {
                         cloudViewModel.downloadStoreModule(
                             moduleId = module.id,
@@ -226,7 +229,7 @@ fun ModuleStoreScreen(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            if (searchQuery.isNotBlank()) "没有找到匹配的模块" else "暂无模块，成为第一个发布者吧",
+                            if (searchQuery.isNotBlank()) Strings.noMatchingModules else Strings.noModulesYet,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                         )
@@ -238,145 +241,3 @@ fun ModuleStoreScreen(
         }
 }
 
-@Composable
-private fun ModuleStoreCard(module: StoreModuleInfo, onInstall: () -> Unit) {
-    val installedTracker = koinInject<com.webtoapp.core.cloud.InstalledItemsTracker>()
-    val isInstalled = installedTracker.isInstalled(module.id)
-    EnhancedElevatedCard(
-        shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                // Icon — Apple-style gradient tinted
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(
-                            Brush.linearGradient(
-                                listOf(
-                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.04f)
-                                )
-                            )
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Outlined.Extension,
-                        null,
-                        modifier = Modifier.size(22.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(module.name, fontWeight = FontWeight.SemiBold,
-                            style = MaterialTheme.typography.titleSmall, maxLines = 1,
-                            overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(weight = 1f, fill = false))
-                        if (module.isFeatured) {
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Surface(
-                                shape = RoundedCornerShape(5.dp),
-                                color = Color(0xFFFFA726).copy(alpha = 0.12f)
-                            ) {
-                                Text("精选", fontSize = 10.sp, color = Color(0xFFFFA726),
-                                    fontWeight = FontWeight.SemiBold,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
-                            }
-                        }
-                    }
-                    Text("by ${module.authorName}", style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
-                }
-            }
-
-            if (!module.description.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(module.description, style = MaterialTheme.typography.bodySmall,
-                    maxLines = 2, overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f))
-            }
-
-            // Tags
-            if (module.tags.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    module.tags.take(3).forEach { tag ->
-                        Surface(shape = RoundedCornerShape(4.dp),
-                            color = MaterialTheme.colorScheme.surfaceContainerHigh) {
-                            Text(tag, fontSize = 10.sp, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Bottom bar: stats + install button
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                // Downloads
-                Icon(Icons.Outlined.Download, null, modifier = Modifier.size(14.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
-                Spacer(modifier = Modifier.width(3.dp))
-                Text("${module.downloads}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                // Rating
-                Icon(Icons.Outlined.Star, null, modifier = Modifier.size(14.dp),
-                    tint = Color(0xFFFFC107))
-                Spacer(modifier = Modifier.width(3.dp))
-                Text(
-                    if (module.ratingCount > 0) "${module.rating}" else "-",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                )
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                // Version
-                module.versionName?.let {
-                    Text("v$it", style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
-                }
-
-                Spacer(modifier = Modifier.weight(weight = 1f, fill = true))
-
-                // Install button — shows "已安装" if already installed
-                if (isInstalled) {
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = Color(0xFF4CAF50).copy(alpha = 0.08f)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Icon(Icons.Filled.CheckCircle, null, modifier = Modifier.size(15.dp),
-                                tint = Color(0xFF4CAF50))
-                            Text("已安装", fontSize = 12.sp, color = Color(0xFF4CAF50),
-                                fontWeight = FontWeight.Medium)
-                        }
-                    }
-                } else {
-                    FilledTonalButton(
-                        onClick = onInstall,
-                        contentPadding = PaddingValues(horizontal = 18.dp, vertical = 4.dp),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Icon(Icons.Outlined.Download, null, modifier = Modifier.size(15.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("安装", fontSize = 12.sp, fontWeight = FontWeight.Medium)
-                    }
-                }
-            }
-        }
-    }
-}

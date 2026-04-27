@@ -10,8 +10,7 @@ import kotlinx.coroutines.launch
 /**
  * 扩展模块面板桥接
  * 
- * 提供统一的扩展模块 UI 管理，支持多种UI类型
- * UI类型包括：悬浮按钮、工具栏、侧边栏、底部栏、悬浮面板、迷你按钮、自定义UI
+ * 提供统一的扩展模块 UI 管理，通过 FAB 统一入口
  */
 class ExtensionPanelBridge(
     private val context: Context,
@@ -38,10 +37,8 @@ class ExtensionPanelBridge(
         val name: String,
         val icon: String,
         val color: String,
-        val uiType: String = "FLOATING_BUTTON",
         val hasPanel: Boolean = false,
-        val panelHtml: String = "",
-        val uiConfigJson: String = "{}"
+        val panelHtml: String = ""
     )
     
     fun setWebView(webView: WebView) {
@@ -73,25 +70,19 @@ class ExtensionPanelBridge(
      * @param moduleId 模块ID
      * @param name 模块名称
      * @param icon 模块图标（emoji）
-     * @param uiType UI类型
-     * @param uiConfigJson UI配置JSON
      */
     @JavascriptInterface
     fun registerModuleWithConfig(
         moduleId: String, 
         name: String, 
-        icon: String, 
-        uiType: String,
-        uiConfigJson: String
+        icon: String
     ) {
         scope.launch(Dispatchers.Main) {
             registeredModules[moduleId] = ModuleUIInfo(
                 id = moduleId,
                 name = name,
                 icon = icon,
-                color = "",
-                uiType = uiType,
-                uiConfigJson = uiConfigJson
+                color = ""
             )
         }
     }
@@ -148,176 +139,6 @@ class ExtensionPanelBridge(
         }
     }
     
-    // ==================== 侧边栏控制 ====================
-    
-    /**
-     * 显示侧边栏
-     */
-    @JavascriptInterface
-    fun showSidebar(moduleId: String) {
-        scope.launch(Dispatchers.Main) {
-            webViewRef?.evaluateJavascript(
-                "__WTA_PANEL__.showSidebar('$moduleId')",
-                null
-            )
-        }
-    }
-    
-    /**
-     * 隐藏侧边栏
-     */
-    @JavascriptInterface
-    fun hideSidebar(moduleId: String) {
-        scope.launch(Dispatchers.Main) {
-            webViewRef?.evaluateJavascript(
-                "__WTA_PANEL__.hideSidebar('$moduleId')",
-                null
-            )
-        }
-    }
-    
-    /**
-     * 切换侧边栏
-     */
-    @JavascriptInterface
-    fun toggleSidebar(moduleId: String) {
-        scope.launch(Dispatchers.Main) {
-            webViewRef?.evaluateJavascript(
-                "__WTA_PANEL__.toggleSidebar('$moduleId')",
-                null
-            )
-        }
-    }
-    
-    // ==================== 悬浮面板控制 ====================
-    
-    /**
-     * 显示悬浮面板
-     */
-    @JavascriptInterface
-    fun showFloatingPanel(moduleId: String) {
-        scope.launch(Dispatchers.Main) {
-            webViewRef?.evaluateJavascript(
-                "__WTA_PANEL__.showFloatingPanel('$moduleId')",
-                null
-            )
-        }
-    }
-    
-    /**
-     * 隐藏悬浮面板
-     */
-    @JavascriptInterface
-    fun hideFloatingPanel(moduleId: String) {
-        scope.launch(Dispatchers.Main) {
-            webViewRef?.evaluateJavascript(
-                "__WTA_PANEL__.hideFloatingPanel('$moduleId')",
-                null
-            )
-        }
-    }
-    
-    /**
-     * 更新悬浮面板内容
-     */
-    @JavascriptInterface
-    fun updateFloatingPanelContent(moduleId: String, html: String) {
-        scope.launch(Dispatchers.Main) {
-            val escapedHtml = html.replace("\\", "\\\\").replace("'", "\\'")
-            webViewRef?.evaluateJavascript(
-                "__WTA_PANEL__.updateFloatingPanelContent('$moduleId', '$escapedHtml')",
-                null
-            )
-        }
-    }
-    
-    // ==================== 底部栏控制 ====================
-    
-    /**
-     * 设置底部栏可见性
-     */
-    @JavascriptInterface
-    fun setBottomBarVisible(visible: Boolean) {
-        scope.launch(Dispatchers.Main) {
-            webViewRef?.evaluateJavascript(
-                "__WTA_PANEL__.setBottomBarVisible($visible)",
-                null
-            )
-        }
-    }
-    
-    // ==================== 工具栏控制 ====================
-    
-    /**
-     * 切换工具栏折叠状态
-     */
-    @JavascriptInterface
-    fun toggleToolbarCollapse(moduleId: String) {
-        scope.launch(Dispatchers.Main) {
-            webViewRef?.evaluateJavascript(
-                "__WTA_PANEL__.toggleToolbarCollapse('$moduleId')",
-                null
-            )
-        }
-    }
-    
-    // ==================== 迷你按钮控制 ====================
-    
-    /**
-     * 更新迷你按钮徽章
-     */
-    @JavascriptInterface
-    fun updateMiniButtonBadge(moduleId: String, count: Int) {
-        scope.launch(Dispatchers.Main) {
-            webViewRef?.evaluateJavascript(
-                "__WTA_PANEL__.updateMiniButtonBadge('$moduleId', $count)",
-                null
-            )
-        }
-    }
-    
-    /**
-     * 显示迷你按钮弹出面板
-     */
-    @JavascriptInterface
-    fun showMiniButtonPanel(moduleId: String) {
-        scope.launch(Dispatchers.Main) {
-            webViewRef?.evaluateJavascript(
-                "__WTA_PANEL__.showMiniButtonPanel('$moduleId')",
-                null
-            )
-        }
-    }
-    
-    /**
-     * 隐藏迷你按钮弹出面板
-     */
-    @JavascriptInterface
-    fun hideMiniButtonPanel(moduleId: String) {
-        scope.launch(Dispatchers.Main) {
-            webViewRef?.evaluateJavascript(
-                "__WTA_PANEL__.hideMiniButtonPanel('$moduleId')",
-                null
-            )
-        }
-    }
-    
-    // ==================== 自定义UI控制 ====================
-    
-    /**
-     * 更新自定义UI内容
-     */
-    @JavascriptInterface
-    fun updateCustomUI(moduleId: String, html: String) {
-        scope.launch(Dispatchers.Main) {
-            val escapedHtml = html.replace("\\", "\\\\").replace("'", "\\'")
-            webViewRef?.evaluateJavascript(
-                "__WTA_PANEL__.updateCustomUI('$moduleId', '$escapedHtml')",
-                null
-            )
-        }
-    }
-    
     // ==================== 通用方法 ====================
     
     /**
@@ -359,7 +180,7 @@ class ExtensionPanelBridge(
     @JavascriptInterface
     fun getRegisteredModules(): String {
         val modules = registeredModules.values.map { info ->
-            """{"id":"${info.id}","name":"${info.name}","icon":"${info.icon}","uiType":"${info.uiType}","hasPanel":${info.hasPanel}}"""
+            """{"id":"${info.id}","name":"${info.name}","icon":"${info.icon}","hasPanel":${info.hasPanel}}"""
         }
         return "[${modules.joinToString(",")}]"
     }
@@ -369,14 +190,6 @@ class ExtensionPanelBridge(
      */
     @JavascriptInterface
     fun getSupportedUITypes(): String {
-        return """["FLOATING_BUTTON","FLOATING_TOOLBAR","SIDEBAR","BOTTOM_BAR","FLOATING_PANEL","MINI_BUTTON","CUSTOM"]"""
-    }
-    
-    /**
-     * 获取支持的位置列表
-     */
-    @JavascriptInterface
-    fun getSupportedPositions(): String {
-        return """["TOP_LEFT","TOP_CENTER","TOP_RIGHT","CENTER_LEFT","CENTER","CENTER_RIGHT","BOTTOM_LEFT","BOTTOM_CENTER","BOTTOM_RIGHT"]"""
+        return """["FLOATING_BUTTON"]"""
     }
 }

@@ -779,500 +779,6 @@ object ExtensionPanelScript {
             transform: translateX(24px);
         }
         
-        /* ==================== 多UI类型支持 ==================== */
-        
-        /* 悬浮工具栏 - FLOATING_TOOLBAR */
-        .wta-toolbar {
-            position: fixed;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 8px;
-            background: var(--wta-surface);
-            border-radius: var(--wta-radius);
-            box-shadow: var(--wta-shadow-lg);
-            z-index: 2147483646;
-            pointer-events: auto;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--wta-outline);
-            transition: all 0.3s ease;
-        }
-        
-        .wta-toolbar.vertical {
-            flex-direction: column;
-        }
-        
-        .wta-toolbar.horizontal {
-            flex-direction: row;
-        }
-        
-        .wta-toolbar.collapsed {
-            padding: 4px;
-        }
-        
-        .wta-toolbar.collapsed .wta-toolbar-item-label,
-        .wta-toolbar.collapsed .wta-toolbar-item-badge {
-            display: none;
-        }
-        
-        .wta-toolbar-toggle {
-            width: 32px;
-            height: 32px;
-            border-radius: 10px;
-            background: var(--wta-gradient);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.25s ease;
-            flex-shrink: 0;
-        }
-        
-        .wta-toolbar-toggle:hover {
-            transform: scale(1.1);
-        }
-        
-        .wta-toolbar-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 14px;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            position: relative;
-            background: transparent;
-            color: var(--wta-on-surface);
-        }
-        
-        .wta-toolbar.vertical .wta-toolbar-item {
-            width: 100%;
-            justify-content: flex-start;
-        }
-        
-        .wta-toolbar-item:hover {
-            background: rgba(59, 130, 246, 0.12);
-        }
-        
-        .wta-toolbar-item:active {
-            transform: scale(0.95);
-        }
-        
-        .wta-toolbar-item-icon {
-            width: 28px;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            flex-shrink: 0;
-        }
-        
-        .wta-toolbar-item-label {
-            font-size: 13px;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-        
-        .wta-toolbar-item-badge {
-            position: absolute;
-            top: 4px;
-            right: 4px;
-            min-width: 16px;
-            height: 16px;
-            border-radius: 8px;
-            background: #ff6b6b;
-            color: white;
-            font-size: 10px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 4px;
-        }
-        
-        /* 侧边栏 - SIDEBAR */
-        .wta-sidebar {
-            position: fixed;
-            top: 0;
-            bottom: 0;
-            width: 280px;
-            max-width: 85vw;
-            background: var(--wta-surface);
-            z-index: 2147483646;
-            pointer-events: auto;
-            transform: translateX(-100%);
-            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            box-shadow: var(--wta-shadow-lg);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        
-        .wta-sidebar.right {
-            left: auto;
-            right: 0;
-            transform: translateX(100%);
-        }
-        
-        .wta-sidebar.left {
-            left: 0;
-            right: auto;
-        }
-        
-        .wta-sidebar.visible {
-            transform: translateX(0);
-        }
-        
-        .wta-sidebar-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 20px;
-            border-bottom: 1px solid var(--wta-outline);
-        }
-        
-        .wta-sidebar-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--wta-on-surface);
-        }
-        
-        .wta-sidebar-close {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            background: var(--wta-surface-dim);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            color: var(--wta-on-surface-variant);
-        }
-        
-        .wta-sidebar-close:hover {
-            background: var(--wta-primary);
-            color: white;
-        }
-        
-        .wta-sidebar-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        .wta-sidebar-trigger {
-            position: fixed;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 24px;
-            height: 80px;
-            background: var(--wta-gradient);
-            z-index: 2147483645;
-            pointer-events: auto;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 12px;
-            transition: all 0.25s ease;
-        }
-        
-        .wta-sidebar-trigger.left {
-            left: 0;
-            border-radius: 0 12px 12px 0;
-        }
-        
-        .wta-sidebar-trigger.right {
-            right: 0;
-            border-radius: 12px 0 0 12px;
-        }
-        
-        .wta-sidebar-trigger:hover {
-            width: 32px;
-        }
-        
-        /* 底部栏 - BOTTOM_BAR */
-        .wta-bottom-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 64px;
-            background: var(--wta-surface);
-            z-index: 2147483646;
-            pointer-events: auto;
-            display: flex;
-            align-items: center;
-            justify-content: space-around;
-            padding: 0 8px;
-            padding-bottom: env(safe-area-inset-bottom, 0);
-            box-shadow: 0 -4px 24px rgba(0,0,0,0.1);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-top: 1px solid var(--wta-outline);
-            transition: transform 0.3s ease;
-        }
-        
-        .wta-bottom-bar.hidden {
-            transform: translateY(100%);
-        }
-        
-        .wta-bottom-bar-item {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 8px 4px;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            position: relative;
-            color: var(--wta-on-surface-variant);
-            max-width: 96px;
-        }
-        
-        .wta-bottom-bar-item:active {
-            transform: scale(0.9);
-        }
-        
-        .wta-bottom-bar-item.active {
-            color: var(--wta-primary);
-        }
-        
-        .wta-bottom-bar-item-icon {
-            width: 28px;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            margin-bottom: 2px;
-        }
-        
-        .wta-bottom-bar-item-label {
-            font-size: 11px;
-            font-weight: 600;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 100%;
-        }
-        
-        .wta-bottom-bar-item-badge {
-            position: absolute;
-            top: 2px;
-            right: calc(50% - 20px);
-            min-width: 16px;
-            height: 16px;
-            border-radius: 8px;
-            background: #ff6b6b;
-            color: white;
-            font-size: 10px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 4px;
-        }
-        
-        /* 悬浮面板 - FLOATING_PANEL */
-        .wta-floating-panel {
-            position: fixed;
-            background: var(--wta-surface);
-            border-radius: var(--wta-radius);
-            box-shadow: var(--wta-shadow-lg);
-            z-index: 2147483646;
-            pointer-events: auto;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--wta-outline);
-            overflow: hidden;
-            min-width: 200px;
-            max-width: 90vw;
-            max-height: 80vh;
-            display: flex;
-            flex-direction: column;
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            opacity: 0;
-            visibility: hidden;
-            transform: scale(0.9);
-        }
-        
-        .wta-floating-panel.visible {
-            opacity: 1;
-            visibility: visible;
-            transform: scale(1);
-        }
-        
-        .wta-floating-panel-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 14px 16px;
-            border-bottom: 1px solid var(--wta-outline);
-            cursor: move;
-            user-select: none;
-        }
-        
-        .wta-floating-panel-title {
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--wta-on-surface);
-        }
-        
-        .wta-floating-panel-actions {
-            display: flex;
-            gap: 6px;
-        }
-        
-        .wta-floating-panel-btn {
-            width: 28px;
-            height: 28px;
-            border-radius: 8px;
-            background: var(--wta-surface-dim);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            color: var(--wta-on-surface-variant);
-            font-size: 12px;
-        }
-        
-        .wta-floating-panel-btn:hover {
-            background: var(--wta-primary);
-            color: white;
-        }
-        
-        .wta-floating-panel-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        .wta-floating-panel-resize {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 16px;
-            height: 16px;
-            cursor: se-resize;
-            background: linear-gradient(-45deg, var(--wta-primary) 30%, transparent 30%);
-            opacity: 0.5;
-        }
-        
-        /* 迷你按钮 - MINI_BUTTON */
-        .wta-mini-btn {
-            position: fixed;
-            width: 44px;
-            height: 44px;
-            border-radius: 14px;
-            background: var(--wta-gradient);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            cursor: pointer;
-            z-index: 2147483646;
-            box-shadow: var(--wta-shadow);
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            pointer-events: auto;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-            border: 1px solid rgba(255,255,255,0.2);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-        }
-        
-        .wta-mini-btn:hover {
-            transform: scale(1.1);
-            box-shadow: var(--wta-shadow-lg);
-        }
-        
-        .wta-mini-btn:active {
-            transform: scale(0.92);
-        }
-        
-        .wta-mini-btn .badge {
-            position: absolute;
-            top: -4px;
-            right: -4px;
-            min-width: 16px;
-            height: 16px;
-            border-radius: 8px;
-            background: #ff6b6b;
-            color: white;
-            font-size: 10px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 4px;
-        }
-        
-        .wta-mini-btn-label {
-            position: absolute;
-            top: calc(100% + 6px);
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--wta-surface);
-            color: var(--wta-on-surface);
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 600;
-            white-space: nowrap;
-            box-shadow: var(--wta-shadow);
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.2s ease;
-            pointer-events: none;
-        }
-        
-        .wta-mini-btn:hover .wta-mini-btn-label {
-            opacity: 1;
-            visibility: visible;
-        }
-        
-        /* 自定义UI容器 - CUSTOM */
-        .wta-custom-container {
-            position: fixed;
-            z-index: 2147483640;
-            pointer-events: auto;
-        }
-        
-        /* 位置工具类 */
-        .wta-pos-top-left { top: 16px; left: 16px; }
-        .wta-pos-top-center { top: 16px; left: 50%; transform: translateX(-50%); }
-        .wta-pos-top-right { top: 16px; right: 16px; }
-        .wta-pos-center-left { top: 50%; left: 16px; transform: translateY(-50%); }
-        .wta-pos-center { top: 50%; left: 50%; transform: translate(-50%, -50%); }
-        .wta-pos-center-right { top: 50%; right: 16px; transform: translateY(-50%); }
-        .wta-pos-bottom-left { bottom: 80px; left: 16px; }
-        .wta-pos-bottom-center { bottom: 80px; left: 50%; transform: translateX(-50%); }
-        .wta-pos-bottom-right { bottom: 80px; right: 16px; }
-        
-        /* 可拖动元素 */
-        .wta-draggable {
-            touch-action: none;
-        }
-        
-        .wta-draggable.dragging {
-            opacity: 0.9;
-            cursor: grabbing;
-        }
-
         /* ==================== 搜索栏 ==================== */
         .wta-search-wrap {
             display: flex;
@@ -1601,134 +1107,17 @@ object ExtensionPanelScript {
 
     // ==================== UI 类型常量 ====================
     const UI_TYPE = {
-        FLOATING_BUTTON: 'FLOATING_BUTTON',
-        FLOATING_TOOLBAR: 'FLOATING_TOOLBAR',
-        SIDEBAR: 'SIDEBAR',
-        BOTTOM_BAR: 'BOTTOM_BAR',
-        FLOATING_PANEL: 'FLOATING_PANEL',
-        MINI_BUTTON: 'MINI_BUTTON',
-        CUSTOM: 'CUSTOM'
+        FLOATING_BUTTON: 'FLOATING_BUTTON'  // 统一 FAB 面板按钮（默认）
     };
     
     const RUN_MODE = {
         INTERACTIVE: 'INTERACTIVE',
         AUTO: 'AUTO'
     };
-    
-    const UI_POSITION = {
-        TOP_LEFT: 'TOP_LEFT',
-        TOP_CENTER: 'TOP_CENTER',
-        TOP_RIGHT: 'TOP_RIGHT',
-        CENTER_LEFT: 'CENTER_LEFT',
-        CENTER: 'CENTER',
-        CENTER_RIGHT: 'CENTER_RIGHT',
-        BOTTOM_LEFT: 'BOTTOM_LEFT',
-        BOTTOM_CENTER: 'BOTTOM_CENTER',
-        BOTTOM_RIGHT: 'BOTTOM_RIGHT'
-    };
-    
-    // 位置到CSS类的映射
-    const positionClassMap = {
-        TOP_LEFT: 'wta-pos-top-left',
-        TOP_CENTER: 'wta-pos-top-center',
-        TOP_RIGHT: 'wta-pos-top-right',
-        CENTER_LEFT: 'wta-pos-center-left',
-        CENTER: 'wta-pos-center',
-        CENTER_RIGHT: 'wta-pos-center-right',
-        BOTTOM_LEFT: 'wta-pos-bottom-left',
-        BOTTOM_CENTER: 'wta-pos-bottom-center',
-        BOTTOM_RIGHT: 'wta-pos-bottom-right'
-    };
-
-    // ==================== 拖动管理器 ====================
-    const DragManager = {
-        makeDraggable(element, handle = null) {
-            const dragHandle = handle || element;
-            let isDragging = false;
-            let startX, startY, startLeft, startTop;
-            
-            const onStart = (e) => {
-                if (e.target.closest('.wta-floating-panel-btn')) return;
-                if (e.target.closest('.wta-floating-panel-resize')) return;
-                isDragging = true;
-                element.classList.add('dragging');
-                const touch = e.touches ? e.touches[0] : e;
-                startX = touch.clientX;
-                startY = touch.clientY;
-                const rect = element.getBoundingClientRect();
-                startLeft = rect.left;
-                startTop = rect.top;
-                e.preventDefault();
-            };
-            
-            const onMove = (e) => {
-                if (!isDragging) return;
-                const touch = e.touches ? e.touches[0] : e;
-                const dx = touch.clientX - startX;
-                const dy = touch.clientY - startY;
-                element.style.left = (startLeft + dx) + 'px';
-                element.style.top = (startTop + dy) + 'px';
-                element.style.right = 'auto';
-                element.style.bottom = 'auto';
-                element.style.transform = 'none';
-            };
-            
-            const onEnd = () => {
-                isDragging = false;
-                element.classList.remove('dragging');
-            };
-            
-            dragHandle.addEventListener('mousedown', onStart);
-            dragHandle.addEventListener('touchstart', onStart, { passive: false });
-            document.addEventListener('mousemove', onMove);
-            document.addEventListener('touchmove', onMove, { passive: false });
-            document.addEventListener('mouseup', onEnd);
-            document.addEventListener('touchend', onEnd);
-            
-            element.classList.add('wta-draggable');
-        },
-        
-        makeResizable(panel, handle, minW = 200, minH = 150) {
-            let isResizing = false;
-            let startX, startY, startW, startH;
-            
-            const onStart = (e) => {
-                isResizing = true;
-                const touch = e.touches ? e.touches[0] : e;
-                startX = touch.clientX;
-                startY = touch.clientY;
-                startW = panel.offsetWidth;
-                startH = panel.offsetHeight;
-                e.preventDefault();
-                e.stopPropagation();
-            };
-            
-            const onMove = (e) => {
-                if (!isResizing) return;
-                const touch = e.touches ? e.touches[0] : e;
-                const newW = Math.max(minW, startW + (touch.clientX - startX));
-                const newH = Math.max(minH, startH + (touch.clientY - startY));
-                panel.style.width = newW + 'px';
-                panel.style.height = newH + 'px';
-            };
-            
-            const onEnd = () => {
-                isResizing = false;
-            };
-            
-            handle.addEventListener('mousedown', onStart);
-            handle.addEventListener('touchstart', onStart, { passive: false });
-            document.addEventListener('mousemove', onMove);
-            document.addEventListener('touchmove', onMove, { passive: false });
-            document.addEventListener('mouseup', onEnd);
-            document.addEventListener('touchend', onEnd);
-        }
-    };
 
     // ==================== 面板管理器 ====================
     const WTA_PANEL = {
         modules: [],
-        uiContainers: {}, // Storage各模块的UI容器
         isOpen: false,
         activeModuleId: null,
         activeTab: 'all',
@@ -2138,380 +1527,19 @@ object ExtensionPanelScript {
             } catch (e) { /* localStorage unavailable */ }
         },
 
-        // 注册模块 - 支持多种UI类型和运行模式
+        // 注册模块 - 统一通过 FAB 面板管理
         registerModule(moduleInfo) {
             const existing = this.modules.findIndex(m => m.id === moduleInfo.id);
-            let finalInfo;
             if (existing >= 0) {
                 // Update现有模块
-                this.removeModuleUI(this.modules[existing].id);
                 this.modules[existing] = { ...this.modules[existing], ...moduleInfo };
-                finalInfo = this.modules[existing];
             } else {
                 this.modules.push(moduleInfo);
-                finalInfo = moduleInfo;
             }
             
-            const moduleRunMode = finalInfo.runMode || RUN_MODE.INTERACTIVE;
-            const uiType = finalInfo.uiConfig?.type || UI_TYPE.FLOATING_BUTTON;
-            
-            // AUTO 模式：只注册到 FAB 列表，不创建独立 UI 元素
-            // INTERACTIVE 模式：创建对应 UI 元素 + 注册到 FAB 列表
-            if (moduleRunMode === RUN_MODE.INTERACTIVE) {
-                switch (uiType) {
-                    case UI_TYPE.FLOATING_TOOLBAR:
-                        this.createToolbar(finalInfo);
-                        break;
-                    case UI_TYPE.SIDEBAR:
-                        this.createSidebar(finalInfo);
-                        break;
-                    case UI_TYPE.BOTTOM_BAR:
-                        this.createBottomBar(finalInfo);
-                        break;
-                    case UI_TYPE.FLOATING_PANEL:
-                        this.createFloatingPanel(finalInfo);
-                        break;
-                    case UI_TYPE.MINI_BUTTON:
-                        this.createMiniButton(finalInfo);
-                        break;
-                    case UI_TYPE.CUSTOM:
-                        this.createCustomUI(finalInfo);
-                        break;
-                    case UI_TYPE.FLOATING_BUTTON:
-                    default:
-                        break;
-                }
-            }
-            
-            // 所有模块都注册到 FAB 列表
+            // 所有模块统一注册到 FAB 列表
             this.updateModules();
             this.updateBadge();
-        },
-        
-        // 移除模块UI
-        removeModuleUI(moduleId) {
-            const container = this.uiContainers[moduleId];
-            if (container) {
-                if (Array.isArray(container)) {
-                    container.forEach(el => el.remove());
-                } else {
-                    container.remove();
-                }
-                delete this.uiContainers[moduleId];
-            }
-        },
-        
-        // ==================== 创建悬浮工具栏 ====================
-        createToolbar(moduleInfo) {
-            const config = moduleInfo.uiConfig || {};
-            const position = config.position || UI_POSITION.BOTTOM_RIGHT;
-            const orientation = config.toolbarOrientation || 'HORIZONTAL';
-            const items = config.toolbarItems || [];
-            const draggable = config.draggable === true;
-            const collapsible = config.collapsible !== false;
-            
-            const toolbar = document.createElement('div');
-            toolbar.id = `wta-toolbar-${"$"}{moduleInfo.id}`;
-            toolbar.className = `wta-toolbar ${"$"}{orientation.toLowerCase()} ${"$"}{positionClassMap[position] || ''}`;
-            
-            let html = '';
-            
-            // 如果可折叠，添加切换按钮
-            if (collapsible) {
-                html += `<div class="wta-toolbar-toggle" onclick="__WTA_PANEL__.toggleToolbarCollapse('${"$"}{moduleInfo.id}')">☰</div>`;
-            }
-            
-            // 添加工具栏项
-            items.forEach((item, idx) => {
-                html += `
-                    <div class="wta-toolbar-item" onclick="__WTA_PANEL__.onToolbarItemClick('${"$"}{moduleInfo.id}', ${"$"}{idx})" title="${"$"}{item.tooltip || ''}">
-                        <div class="wta-toolbar-item-icon">${"$"}{item.icon || '⚙️'}</div>
-                        ${"$"}{item.showLabel !== false ? `<span class="wta-toolbar-item-label">${"$"}{item.label || ''}</span>` : ''}
-                        ${"$"}{item.badge ? `<span class="wta-toolbar-item-badge">${"$"}{item.badge}</span>` : ''}
-                    </div>
-                `;
-            });
-            
-            toolbar.innerHTML = html;
-            document.body.appendChild(toolbar);
-            
-            if (draggable) {
-                DragManager.makeDraggable(toolbar);
-            }
-            
-            this.uiContainers[moduleInfo.id] = toolbar;
-        },
-        
-        toggleToolbarCollapse(moduleId) {
-            const toolbar = document.getElementById(`wta-toolbar-${"$"}{moduleId}`);
-            if (toolbar) {
-                toolbar.classList.toggle('collapsed');
-            }
-        },
-        
-        onToolbarItemClick(moduleId, itemIndex) {
-            const module = this.modules.find(m => m.id === moduleId);
-            if (!module) return;
-            
-            const items = module.uiConfig?.toolbarItems || [];
-            const item = items[itemIndex];
-            if (item && item.action) {
-                // 尝试调用action函数
-                try {
-                    if (typeof item.action === 'function') {
-                        item.action();
-                    } else if (typeof item.action === 'string') {
-                        eval(item.action);
-                    }
-                } catch (e) {
-                    console.error('[WTA] Toolbar item action error:', e);
-                }
-            }
-            // 通知模块
-            if (module.onToolbarClick) {
-                module.onToolbarClick(itemIndex, item);
-            }
-        },
-        
-        // ==================== 创建侧边栏 ====================
-        createSidebar(moduleInfo) {
-            const config = moduleInfo.uiConfig || {};
-            const sidebarPosition = config.sidebarPosition || 'LEFT';
-            const width = config.sidebarWidth || 280;
-            
-            // Create触发条
-            const trigger = document.createElement('div');
-            trigger.id = `wta-sidebar-trigger-${"$"}{moduleInfo.id}`;
-            trigger.className = `wta-sidebar-trigger ${"$"}{sidebarPosition.toLowerCase()}`;
-            trigger.innerHTML = sidebarPosition === 'LEFT' ? '❯' : '❮';
-            trigger.onclick = () => this.toggleSidebar(moduleInfo.id);
-            
-            // Create侧边栏
-            const sidebar = document.createElement('div');
-            sidebar.id = `wta-sidebar-${"$"}{moduleInfo.id}`;
-            sidebar.className = `wta-sidebar ${"$"}{sidebarPosition.toLowerCase()}`;
-            sidebar.style.width = width + 'px';
-            
-            sidebar.innerHTML = `
-                <div class="wta-sidebar-header">
-                    <span class="wta-sidebar-title">${"$"}{moduleInfo.name || T.unnamed}</span>
-                    <div class="wta-sidebar-close" onclick="__WTA_PANEL__.hideSidebar('${"$"}{moduleInfo.id}')">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                            <path d="M18 6L6 18M6 6l12 12"/>
-                        </svg>
-                    </div>
-                </div>
-                <div class="wta-sidebar-content" id="wta-sidebar-content-${"$"}{moduleInfo.id}">
-                    ${"$"}{moduleInfo.panelHtml || ''}
-                </div>
-            `;
-            
-            document.body.appendChild(trigger);
-            document.body.appendChild(sidebar);
-            
-            this.uiContainers[moduleInfo.id] = [trigger, sidebar];
-            
-            // 如果有onAction回调，执行它
-            if (moduleInfo.onAction) {
-                const content = document.getElementById(`wta-sidebar-content-${"$"}{moduleInfo.id}`);
-                moduleInfo.onAction(content);
-            }
-        },
-        
-        toggleSidebar(moduleId) {
-            const sidebar = document.getElementById(`wta-sidebar-${"$"}{moduleId}`);
-            if (sidebar) {
-                sidebar.classList.toggle('visible');
-            }
-        },
-        
-        hideSidebar(moduleId) {
-            const sidebar = document.getElementById(`wta-sidebar-${"$"}{moduleId}`);
-            if (sidebar) {
-                sidebar.classList.remove('visible');
-            }
-        },
-        
-        showSidebar(moduleId) {
-            const sidebar = document.getElementById(`wta-sidebar-${"$"}{moduleId}`);
-            if (sidebar) {
-                sidebar.classList.add('visible');
-            }
-        },
-        
-        // ==================== 创建底部栏 ====================
-        createBottomBar(moduleInfo) {
-            const config = moduleInfo.uiConfig || {};
-            const items = config.toolbarItems || [];
-            
-            // Check是否已经有底部栏，如果有则合并
-            let bottomBar = document.getElementById('wta-bottom-bar');
-            if (!bottomBar) {
-                bottomBar = document.createElement('div');
-                bottomBar.id = 'wta-bottom-bar';
-                bottomBar.className = 'wta-bottom-bar';
-                bottomBar.innerHTML = '';
-                document.body.appendChild(bottomBar);
-            }
-            
-            // 添加模块的底部栏项
-            items.forEach((item, idx) => {
-                const itemEl = document.createElement('div');
-                itemEl.className = 'wta-bottom-bar-item';
-                itemEl.id = `wta-bb-item-${"$"}{moduleInfo.id}-${"$"}{idx}`;
-                itemEl.onclick = () => this.onBottomBarItemClick(moduleInfo.id, idx);
-                itemEl.innerHTML = `
-                    <div class="wta-bottom-bar-item-icon">${"$"}{item.icon || '⚙️'}</div>
-                    <div class="wta-bottom-bar-item-label">${"$"}{item.label || ''}</div>
-                    ${"$"}{item.badge ? `<span class="wta-bottom-bar-item-badge">${"$"}{item.badge}</span>` : ''}
-                `;
-                bottomBar.appendChild(itemEl);
-            });
-            
-            this.uiContainers[moduleInfo.id] = { type: 'bottomBar', items: items.length };
-        },
-        
-        onBottomBarItemClick(moduleId, itemIndex) {
-            const module = this.modules.find(m => m.id === moduleId);
-            if (!module) return;
-            
-            const items = module.uiConfig?.toolbarItems || [];
-            const item = items[itemIndex];
-            
-            // 移除其他活动状态
-            document.querySelectorAll('.wta-bottom-bar-item').forEach(el => el.classList.remove('active'));
-            document.getElementById(`wta-bb-item-${"$"}{moduleId}-${"$"}{itemIndex}`)?.classList.add('active');
-            
-            if (item && item.action) {
-                try {
-                    if (typeof item.action === 'function') {
-                        item.action();
-                    } else if (typeof item.action === 'string') {
-                        eval(item.action);
-                    }
-                } catch (e) {
-                    console.error('[WTA] Bottom bar item action error:', e);
-                }
-            }
-            if (module.onBottomBarClick) {
-                module.onBottomBarClick(itemIndex, item);
-            }
-        },
-        
-        setBottomBarVisible(visible) {
-            const bar = document.getElementById('wta-bottom-bar');
-            if (bar) {
-                bar.classList.toggle('hidden', !visible);
-            }
-        },
-        
-        // ==================== 创建悬浮面板 ====================
-        createFloatingPanel(moduleInfo) {
-            const config = moduleInfo.uiConfig || {};
-            const position = config.position || UI_POSITION.CENTER;
-            const draggable = config.draggable !== false;
-            const resizable = config.resizable !== false;
-            const width = config.panelWidth || 320;
-            const height = config.panelHeight || 400;
-            const showCloseButton = config.showCloseButton !== false;
-            const showMinimizeButton = config.showMinimizeButton !== false;
-            
-            const panel = document.createElement('div');
-            panel.id = `wta-fpanel-${"$"}{moduleInfo.id}`;
-            panel.className = `wta-floating-panel ${"$"}{positionClassMap[position] || ''}`;
-            panel.style.width = width + 'px';
-            panel.style.height = height + 'px';
-            
-            let actionsHtml = '';
-            if (showMinimizeButton) {
-                actionsHtml += `<div class="wta-floating-panel-btn" onclick="__WTA_PANEL__.minimizeFloatingPanel('${"$"}{moduleInfo.id}')">−</div>`;
-            }
-            if (showCloseButton) {
-                actionsHtml += `<div class="wta-floating-panel-btn" onclick="__WTA_PANEL__.hideFloatingPanel('${"$"}{moduleInfo.id}')">×</div>`;
-            }
-            
-            panel.innerHTML = `
-                <div class="wta-floating-panel-header">
-                    <span class="wta-floating-panel-title">${"$"}{moduleInfo.name || T.unnamed}</span>
-                    <div class="wta-floating-panel-actions">${"$"}{actionsHtml}</div>
-                </div>
-                <div class="wta-floating-panel-content" id="wta-fpanel-content-${"$"}{moduleInfo.id}">
-                    ${"$"}{moduleInfo.panelHtml || ''}
-                </div>
-                ${"$"}{resizable ? '<div class="wta-floating-panel-resize"></div>' : ''}
-            `;
-            
-            document.body.appendChild(panel);
-            
-            if (draggable) {
-                DragManager.makeDraggable(panel, panel.querySelector('.wta-floating-panel-header'));
-            }
-            
-            // Do NOT auto-show: panel starts hidden, user opens from FAB module list
-            // Only auto-show if user previously had it open (check sessionStorage)
-            const storageKey = `wta-fpanel-visible-${"$"}{moduleInfo.id}`;
-            const wasOpen = sessionStorage.getItem(storageKey) === '1';
-            if (wasOpen) {
-                setTimeout(() => panel.classList.add('visible'), 10);
-            }
-            
-            this.uiContainers[moduleInfo.id] = panel;
-            
-            if (moduleInfo.onAction) {
-                const content = document.getElementById(`wta-fpanel-content-${"$"}{moduleInfo.id}`);
-                moduleInfo.onAction(content);
-            }
-            
-            // Setup resize if resizable
-            if (resizable) {
-                const resizeHandle = panel.querySelector('.wta-floating-panel-resize');
-                if (resizeHandle) {
-                    DragManager.makeResizable(panel, resizeHandle, 200, 150);
-                }
-            }
-        },
-        
-        showFloatingPanel(moduleId) {
-            const panel = document.getElementById(`wta-fpanel-${"$"}{moduleId}`);
-            if (panel) {
-                panel.classList.add('visible');
-                sessionStorage.setItem(`wta-fpanel-visible-${"$"}{moduleId}`, '1');
-                // Re-trigger onAction to refresh content
-                const module = this.modules.find(m => m.id === moduleId);
-                if (module && module.onAction) {
-                    const content = document.getElementById(`wta-fpanel-content-${"$"}{moduleId}`);
-                    if (content) module.onAction(content);
-                }
-            }
-        },
-        
-        hideFloatingPanel(moduleId) {
-            const panel = document.getElementById(`wta-fpanel-${"$"}{moduleId}`);
-            if (panel) {
-                panel.classList.remove('visible');
-                sessionStorage.setItem(`wta-fpanel-visible-${"$"}{moduleId}`, '0');
-            }
-        },
-        
-        toggleFloatingPanel(moduleId) {
-            const panel = document.getElementById(`wta-fpanel-${"$"}{moduleId}`);
-            if (panel && panel.classList.contains('visible')) {
-                this.hideFloatingPanel(moduleId);
-            } else {
-                this.showFloatingPanel(moduleId);
-            }
-        },
-        
-        minimizeFloatingPanel(moduleId) {
-            this.hideFloatingPanel(moduleId);
-            this.showToast(T.panelMinimized);
-        },
-        
-        updateFloatingPanelContent(moduleId, html) {
-            const content = document.getElementById(`wta-fpanel-content-${"$"}{moduleId}`);
-            if (content) {
-                content.innerHTML = html;
-            }
         },
         
         // ==================== 启动独立窗口 ====================
@@ -2525,46 +1553,29 @@ object ExtensionPanelScript {
             // 检查是否已有独立窗口
             const existingWin = document.getElementById(`wta-modwin-${"$"}{moduleId}`);
             if (existingWin) {
-                existingWin.classList.add('visible');
+                existingWin.style.display = 'flex';
                 sessionStorage.setItem(`wta-modwin-visible-${"$"}{moduleId}`, '1');
                 return;
             }
             
-            // 创建独立窗口（基于浮动面板）
-            const config = module.uiConfig || {};
-            const width = config.panelWidth || 380;
-            const height = config.panelHeight || 500;
-            
+            // 创建独立窗口
             const win = document.createElement('div');
             win.id = `wta-modwin-${"$"}{moduleId}`;
-            win.className = 'wta-floating-panel wta-pos-center';
-            win.style.width = width + 'px';
-            win.style.height = height + 'px';
-            win.style.zIndex = '2147483644';
+            win.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:380px;height:500px;z-index:2147483644;display:flex;flex-direction:column;overflow:hidden;pointer-events:auto;background:var(--wta-surface);border-radius:var(--wta-radius);box-shadow:var(--wta-shadow-lg);border:1px solid var(--wta-outline);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)';
             
             win.innerHTML = `
-                <div class="wta-floating-panel-header">
-                    <span class="wta-floating-panel-title">${"$"}{module.icon || '📦'} ${"$"}{module.name || T.unnamed}</span>
-                    <div class="wta-floating-panel-actions">
-                        <div class="wta-floating-panel-btn" onclick="__WTA_PANEL__.minimizeModuleWindow('${"$"}{moduleId}')">−</div>
-                        <div class="wta-floating-panel-btn" onclick="__WTA_PANEL__.closeModuleWindow('${"$"}{moduleId}')">×</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--wta-outline);cursor:move;user-select:none">
+                    <span style="font-size:15px;font-weight:700;color:var(--wta-on-surface)">${"$"}{module.icon || '📦'} ${"$"}{module.name || T.unnamed}</span>
+                    <div style="display:flex;gap:6px">
+                        <div style="width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--wta-on-surface-variant);font-size:12px" onclick="__WTA_PANEL__.minimizeModuleWindow('${"$"}{moduleId}')">−</div>
+                        <div style="width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--wta-on-surface-variant);font-size:12px" onclick="__WTA_PANEL__.closeModuleWindow('${"$"}{moduleId}')">×</div>
                     </div>
                 </div>
-                <div class="wta-floating-panel-content" id="wta-modwin-content-${"$"}{moduleId}" style="padding:16px;overflow-y:auto">
+                <div id="wta-modwin-content-${"$"}{moduleId}" style="flex:1;overflow-y:auto;padding:16px;-webkit-overflow-scrolling:touch">
                 </div>
-                <div class="wta-floating-panel-resize"></div>
             `;
             
             document.body.appendChild(win);
-            
-            // 拖拽
-            DragManager.makeDraggable(win, win.querySelector('.wta-floating-panel-header'));
-            
-            // 缩放
-            const resizeHandle = win.querySelector('.wta-floating-panel-resize');
-            if (resizeHandle) {
-                DragManager.makeResizable(win, resizeHandle, 280, 200);
-            }
             
             // 填充内容
             const contentEl = document.getElementById(`wta-modwin-content-${"$"}{moduleId}`);
@@ -2574,15 +1585,13 @@ object ExtensionPanelScript {
                 contentEl.innerHTML = module.panelHtml;
             }
             
-            // 显示窗口
-            setTimeout(() => win.classList.add('visible'), 10);
             sessionStorage.setItem(`wta-modwin-visible-${"$"}{moduleId}`, '1');
         },
         
         closeModuleWindow(moduleId) {
             const win = document.getElementById(`wta-modwin-${"$"}{moduleId}`);
             if (win) {
-                win.classList.remove('visible');
+                win.style.display = 'none';
                 sessionStorage.setItem(`wta-modwin-visible-${"$"}{moduleId}`, '0');
                 setTimeout(() => win.remove(), 300);
             }
@@ -2591,141 +1600,10 @@ object ExtensionPanelScript {
         minimizeModuleWindow(moduleId) {
             const win = document.getElementById(`wta-modwin-${"$"}{moduleId}`);
             if (win) {
-                win.classList.remove('visible');
+                win.style.display = 'none';
                 sessionStorage.setItem(`wta-modwin-visible-${"$"}{moduleId}`, '0');
             }
             this.showToast(T.panelMinimized);
-        },
-        
-        // ==================== 创建迷你按钮 ====================
-        createMiniButton(moduleInfo) {
-            const config = moduleInfo.uiConfig || {};
-            const position = config.position || UI_POSITION.BOTTOM_RIGHT;
-            const draggable = config.draggable === true;
-            
-            const btn = document.createElement('div');
-            btn.id = `wta-mini-${"$"}{moduleInfo.id}`;
-            btn.className = `wta-mini-btn ${"$"}{positionClassMap[position] || ''}`;
-            btn.innerHTML = `
-                ${"$"}{moduleInfo.icon || '🔧'}
-                ${"$"}{config.showBadge !== false ? '<span class="badge" style="display:none"></span>' : ''}
-                ${"$"}{config.showLabelOnHover !== false ? `<span class="wta-mini-btn-label">${"$"}{moduleInfo.name || ''}</span>` : ''}
-            `;
-            
-            btn.onclick = () => this.onMiniButtonClick(moduleInfo.id);
-            
-            document.body.appendChild(btn);
-            
-            if (draggable) {
-                DragManager.makeDraggable(btn);
-            }
-            
-            this.uiContainers[moduleInfo.id] = btn;
-        },
-        
-        onMiniButtonClick(moduleId) {
-            const module = this.modules.find(m => m.id === moduleId);
-            if (!module) return;
-            
-            if (module.panelHtml || module.onAction) {
-                // Create或显示弹出面板
-                this.showMiniButtonPanel(moduleId);
-            } else if (module.onClick) {
-                module.onClick();
-            }
-        },
-        
-        showMiniButtonPanel(moduleId) {
-            const module = this.modules.find(m => m.id === moduleId);
-            if (!module) return;
-            
-            // Check是否已有弹出面板
-            let popup = document.getElementById(`wta-mini-popup-${"$"}{moduleId}`);
-            if (!popup) {
-                popup = document.createElement('div');
-                popup.id = `wta-mini-popup-${"$"}{moduleId}`;
-                popup.className = 'wta-floating-panel';
-                popup.style.width = '300px';
-                popup.style.maxHeight = '400px';
-                
-                const btn = document.getElementById(`wta-mini-${"$"}{moduleId}`);
-                if (btn) {
-                    const rect = btn.getBoundingClientRect();
-                    popup.style.bottom = (window.innerHeight - rect.top + 10) + 'px';
-                    popup.style.right = (window.innerWidth - rect.right) + 'px';
-                }
-                
-                popup.innerHTML = `
-                    <div class="wta-floating-panel-header">
-                        <span class="wta-floating-panel-title">${"$"}{module.name || T.unnamed}</span>
-                        <div class="wta-floating-panel-actions">
-                            <div class="wta-floating-panel-btn" onclick="__WTA_PANEL__.hideMiniButtonPanel('${"$"}{moduleId}')">×</div>
-                        </div>
-                    </div>
-                    <div class="wta-floating-panel-content" id="wta-mini-popup-content-${"$"}{moduleId}">
-                        ${"$"}{module.panelHtml || ''}
-                    </div>
-                `;
-                
-                document.body.appendChild(popup);
-                
-                if (module.onAction) {
-                    const content = document.getElementById(`wta-mini-popup-content-${"$"}{moduleId}`);
-                    module.onAction(content);
-                }
-            }
-            
-            setTimeout(() => popup.classList.add('visible'), 10);
-        },
-        
-        hideMiniButtonPanel(moduleId) {
-            const popup = document.getElementById(`wta-mini-popup-${"$"}{moduleId}`);
-            if (popup) {
-                popup.classList.remove('visible');
-            }
-        },
-        
-        updateMiniButtonBadge(moduleId, count) {
-            const btn = document.getElementById(`wta-mini-${"$"}{moduleId}`);
-            if (btn) {
-                const badge = btn.querySelector('.badge');
-                if (badge) {
-                    badge.textContent = count;
-                    badge.style.display = count > 0 ? 'flex' : 'none';
-                }
-            }
-        },
-        
-        // ==================== 创建自定义UI ====================
-        createCustomUI(moduleInfo) {
-            const config = moduleInfo.uiConfig || {};
-            const position = config.position || UI_POSITION.BOTTOM_RIGHT;
-            const customHtml = config.customHtml || moduleInfo.panelHtml || '';
-            
-            const container = document.createElement('div');
-            container.id = `wta-custom-${"$"}{moduleInfo.id}`;
-            container.className = `wta-custom-container ${"$"}{positionClassMap[position] || ''}`;
-            container.innerHTML = customHtml;
-            
-            document.body.appendChild(container);
-            
-            if (config.draggable) {
-                DragManager.makeDraggable(container);
-            }
-            
-            this.uiContainers[moduleInfo.id] = container;
-            
-            // 调用onCustomInit回调
-            if (moduleInfo.onCustomInit) {
-                moduleInfo.onCustomInit(container);
-            }
-        },
-        
-        updateCustomUI(moduleId, html) {
-            const container = document.getElementById(`wta-custom-${"$"}{moduleId}`);
-            if (container) {
-                container.innerHTML = html;
-            }
         },
         
         // ==================== 通用方法 ====================
@@ -3091,18 +1969,6 @@ object ExtensionPanelScript {
             const modwinContent = document.getElementById('wta-modwin-content-' + moduleId);
             if (modwinContent) {
                 modwinContent.innerHTML = html;
-                return;
-            }
-            // MINI_BUTTON 类型：弹出面板内容
-            const miniContent = document.getElementById('wta-mini-popup-content-' + moduleId);
-            if (miniContent) {
-                miniContent.innerHTML = html;
-                return;
-            }
-            // FLOATING_PANEL 类型
-            const fpContent = document.getElementById('wta-fpanel-content-' + moduleId);
-            if (fpContent) {
-                fpContent.innerHTML = html;
             }
         },
 
@@ -3188,13 +2054,7 @@ object ExtensionPanelScript {
     
     // UI 类型常量
     const UI_TYPE = {
-        FLOATING_BUTTON: 'FLOATING_BUTTON',   // Default统一面板按钮
-        FLOATING_TOOLBAR: 'FLOATING_TOOLBAR', // 悬浮工具栏
-        SIDEBAR: 'SIDEBAR',                   // 侧边栏
-        BOTTOM_BAR: 'BOTTOM_BAR',             // 底部栏
-        FLOATING_PANEL: 'FLOATING_PANEL',     // 悬浮面板
-        MINI_BUTTON: 'MINI_BUTTON',           // 迷你按钮
-        CUSTOM: 'CUSTOM'                      // CustomUI
+        FLOATING_BUTTON: 'FLOATING_BUTTON'  // 统一 FAB 面板按钮（默认）
     };
     
     // 运行模式常量
@@ -3203,25 +2063,11 @@ object ExtensionPanelScript {
         AUTO: 'AUTO'                 // 自动模式
     };
     
-    // 位置常量
-    const UI_POSITION = {
-        TOP_LEFT: 'TOP_LEFT',
-        TOP_CENTER: 'TOP_CENTER',
-        TOP_RIGHT: 'TOP_RIGHT',
-        CENTER_LEFT: 'CENTER_LEFT',
-        CENTER: 'CENTER',
-        CENTER_RIGHT: 'CENTER_RIGHT',
-        BOTTOM_LEFT: 'BOTTOM_LEFT',
-        BOTTOM_CENTER: 'BOTTOM_CENTER',
-        BOTTOM_RIGHT: 'BOTTOM_RIGHT'
-    };
-    
     // Module UI 辅助对象
     window.__WTA_MODULE_UI__ = {
         // Export常量
         UI_TYPE: UI_TYPE,
         RUN_MODE: RUN_MODE,
-        UI_POSITION: UI_POSITION,
         
         /**
          * 注册模块
@@ -3233,20 +2079,6 @@ object ExtensionPanelScript {
          * @param {Function} config.onClick 点击回调
          * @param {Function} config.onAction 动态生成面板内容的回调
          * @param {Object} config.uiConfig UI配置对象
-         * @param {string} config.uiConfig.type UI类型（UI_TYPE常量）
-         * @param {string} config.uiConfig.position 位置（UI_POSITION常量）
-         * @param {boolean} config.uiConfig.draggable 是否可拖动
-         * @param {boolean} config.uiConfig.collapsible 是否可折叠（工具栏）
-         * @param {string} config.uiConfig.toolbarOrientation 工具栏方向（'HORIZONTAL'|'VERTICAL'）
-         * @param {Array} config.uiConfig.toolbarItems 工具栏项数组
-         * @param {string} config.uiConfig.sidebarPosition 侧边栏位置（'LEFT'|'RIGHT'）
-         * @param {number} config.uiConfig.sidebarWidth 侧边栏宽度
-         * @param {number} config.uiConfig.panelWidth 悬浮面板宽度
-         * @param {number} config.uiConfig.panelHeight 悬浮面板高度
-         * @param {boolean} config.uiConfig.resizable 是否可调整大小
-         * @param {boolean} config.uiConfig.showCloseButton 显示关闭按钮
-         * @param {boolean} config.uiConfig.showMinimizeButton 显示最小化按钮
-         * @param {string} config.uiConfig.customHtml 自定义UI的HTML
          */
         register(config) {
             waitForPanel(panel => {
@@ -3255,113 +2087,11 @@ object ExtensionPanelScript {
         },
         
         /**
-         * 创建工具栏项
-         * @param {string} id 项ID
-         * @param {string} icon 图标(emoji)
-         * @param {string} label 标签
-         * @param {Function|string} action 点击动作
-         * @param {Object} options 额外选项
-         * @returns {Object} 工具栏项配置
-         */
-        createToolbarItem(id, icon, label, action, options = {}) {
-            return {
-                id: id,
-                icon: icon,
-                label: label,
-                action: action,
-                tooltip: options.tooltip || label,
-                showLabel: options.showLabel !== false,
-                badge: options.badge || null
-            };
-        },
-        
-        /**
-         * 更新模块面板内容（FLOATING_BUTTON类型）
+         * 更新模块面板内容
          */
         updatePanel(moduleId, html) {
             if (window.__WTA_PANEL__) {
                 window.__WTA_PANEL__.updateModulePanelContent(moduleId, html);
-            }
-        },
-        
-        /**
-         * 更新悬浮面板内容
-         */
-        updateFloatingPanel(moduleId, html) {
-            if (window.__WTA_PANEL__) {
-                window.__WTA_PANEL__.updateFloatingPanelContent(moduleId, html);
-            }
-        },
-        
-        /**
-         * 更新自定义UI内容
-         */
-        updateCustomUI(moduleId, html) {
-            if (window.__WTA_PANEL__) {
-                window.__WTA_PANEL__.updateCustomUI(moduleId, html);
-            }
-        },
-        
-        /**
-         * 更新迷你按钮徽章
-         */
-        updateMiniButtonBadge(moduleId, count) {
-            if (window.__WTA_PANEL__) {
-                window.__WTA_PANEL__.updateMiniButtonBadge(moduleId, count);
-            }
-        },
-        
-        /**
-         * 显示/隐藏侧边栏
-         */
-        showSidebar(moduleId) {
-            if (window.__WTA_PANEL__) {
-                window.__WTA_PANEL__.showSidebar(moduleId);
-            }
-        },
-        
-        hideSidebar(moduleId) {
-            if (window.__WTA_PANEL__) {
-                window.__WTA_PANEL__.hideSidebar(moduleId);
-            }
-        },
-        
-        toggleSidebar(moduleId) {
-            if (window.__WTA_PANEL__) {
-                window.__WTA_PANEL__.toggleSidebar(moduleId);
-            }
-        },
-        
-        /**
-         * 显示/隐藏悬浮面板
-         */
-        showFloatingPanel(moduleId) {
-            if (window.__WTA_PANEL__) {
-                window.__WTA_PANEL__.showFloatingPanel(moduleId);
-            }
-        },
-        
-        hideFloatingPanel(moduleId) {
-            if (window.__WTA_PANEL__) {
-                window.__WTA_PANEL__.hideFloatingPanel(moduleId);
-            }
-        },
-        
-        /**
-         * 显示/隐藏底部栏
-         */
-        setBottomBarVisible(visible) {
-            if (window.__WTA_PANEL__) {
-                window.__WTA_PANEL__.setBottomBarVisible(visible);
-            }
-        },
-        
-        /**
-         * 切换工具栏折叠状态
-         */
-        toggleToolbarCollapse(moduleId) {
-            if (window.__WTA_PANEL__) {
-                window.__WTA_PANEL__.toggleToolbarCollapse(moduleId);
             }
         },
         

@@ -157,6 +157,32 @@ object ShellActivityInit {
     }
 
     /**
+     * 初始化通知服务
+     */
+    fun initNotificationService(activity: AppCompatActivity, config: ShellConfig) {
+        if (config.notificationEnabled && config.notificationConfig != null) {
+            try {
+                val nc = config.notificationConfig
+                if (nc.type == "polling" && nc.pollUrl.isNotBlank()) {
+                    com.webtoapp.core.notification.NotificationPollingService.start(
+                        context = activity,
+                        appName = config.appName,
+                        pollUrl = nc.pollUrl,
+                        pollIntervalMinutes = nc.pollIntervalMinutes,
+                        pollMethod = nc.pollMethod,
+                        pollHeaders = nc.pollHeaders,
+                        clickUrl = nc.clickUrl
+                    )
+                    com.webtoapp.core.shell.ShellLogger.i("ShellActivity", "轮询通知服务已启动: url=${nc.pollUrl}")
+                }
+                // web_api 类型无需额外服务，WebView 中的 Notification polyfill 已自动生效
+            } catch (e: Exception) {
+                com.webtoapp.core.shell.ShellLogger.e("ShellActivity", "通知服务启动失败", e)
+            }
+        }
+    }
+
+    /**
      * 设置任务列表中显示的应用名称
      */
     fun setTaskDescription(activity: AppCompatActivity, appName: String) {

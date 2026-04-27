@@ -47,7 +47,8 @@ private val PACKAGE_NAME_REGEX = AppConstants.PACKAGE_NAME_REGEX
 @Composable
 fun ApkExportSection(
     config: ApkExportConfig,
-    onConfigChange: (ApkExportConfig) -> Unit
+    onConfigChange: (ApkExportConfig) -> Unit,
+    onOpenPermissionConfig: () -> Unit = {}
 ) {
     val coroutineScope = rememberCoroutineScope()
     val packageNameBringIntoViewRequester = remember { BringIntoViewRequester() }
@@ -197,6 +198,99 @@ fun ApkExportSection(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 4.dp)
         )
+
+        Spacer(modifier = Modifier.height(16.dp))
+        HorizontalDivider()
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                Icons.Outlined.Security,
+                null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = Strings.runtimePermissions,
+                style = MaterialTheme.typography.titleSmall
+            )
+        }
+
+        Text(
+            text = Strings.runtimePermissionsDesc,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
+        )
+
+        // 权限配置导航按钮
+        val enabledPermCount = listOf(
+            config.runtimePermissions.camera,
+            config.runtimePermissions.microphone,
+            config.runtimePermissions.location,
+            config.runtimePermissions.notifications,
+            config.runtimePermissions.readExternalStorage,
+            config.runtimePermissions.writeExternalStorage,
+            config.runtimePermissions.readMediaImages,
+            config.runtimePermissions.readMediaVideo,
+            config.runtimePermissions.readMediaAudio,
+            config.runtimePermissions.bluetooth,
+            config.runtimePermissions.nfc,
+            config.runtimePermissions.wifiState,
+            config.runtimePermissions.bodySensors,
+            config.runtimePermissions.activityRecognition,
+            config.runtimePermissions.readPhoneState,
+            config.runtimePermissions.callPhone,
+            config.runtimePermissions.readContacts,
+            config.runtimePermissions.writeContacts,
+            config.runtimePermissions.readCalendar,
+            config.runtimePermissions.writeCalendar,
+            config.runtimePermissions.readSms,
+            config.runtimePermissions.sendSms,
+            config.runtimePermissions.receiveSms,
+            config.runtimePermissions.readCallLog,
+            config.runtimePermissions.writeCallLog,
+            config.runtimePermissions.processOutgoingCalls,
+            config.runtimePermissions.foregroundService,
+            config.runtimePermissions.wakeLock,
+            config.runtimePermissions.requestIgnoreBatteryOptimizations,
+            config.runtimePermissions.bootCompleted,
+            config.runtimePermissions.vibration,
+            config.runtimePermissions.installPackages,
+            config.runtimePermissions.requestDeletePackages,
+            config.runtimePermissions.systemAlertWindow
+        ).count { it }
+
+        OutlinedButton(
+            onClick = { onOpenPermissionConfig() },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Icon(
+                Icons.Outlined.Settings,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = if (enabledPermCount > 0)
+                    Strings.permissionConfigButton + " ($enabledPermCount)"
+                else
+                    Strings.permissionConfigButton,
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Icon(
+                Icons.Outlined.ChevronRight,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+            )
+        }
         
         Spacer(modifier = Modifier.height(16.dp))
         HorizontalDivider()

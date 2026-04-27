@@ -76,7 +76,7 @@ class ExtensionModuleTest {
             code = "window.__flag = getConfig('flag', 'off')",
             cssCode = "body { background: #000; }",
             configValues = mapOf("flag" to "on"),
-            uiConfig = ModuleUiConfig(type = ModuleUiType.MINI_BUTTON)
+            uiConfig = ModuleUiConfig(type = ModuleUiType.FLOATING_BUTTON)
         )
 
         val executable = module.generateExecutableCode()

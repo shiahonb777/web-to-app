@@ -1,37 +1,31 @@
 package com.webtoapp.ui.components
 
-import androidx.compose.animation.core.*
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Code
-import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
-import com.webtoapp.core.cloud.TeamBadgeInfo
+import com.webtoapp.core.cloud.SubscriptionTier
 import com.webtoapp.core.i18n.Strings
-
 
 // ═══════════════════════════════════════════
 // Developer Badge
 // ═══════════════════════════════════════════
 
-/**
- * Gradient "Developer" badge — shown next to username when
- * the user has published ≥1 app/module to the store.
- */
 @Composable
 fun DeveloperBadge(modifier: Modifier = Modifier) {
     Surface(
@@ -73,81 +67,172 @@ fun DeveloperBadge(modifier: Modifier = Modifier) {
     }
 }
 
-
 // ═══════════════════════════════════════════
-// Team Badge
+// Hand-drawn Badge Icons
 // ═══════════════════════════════════════════
 
-/**
- * Team identity badge — shows team name with role-based coloring.
- * Owner = gold, Admin = blue, Member = gray.
- * Clicking navigates to team detail.
- */
+/** Diamond icon — hand-drawn for Pro badge */
 @Composable
-fun TeamBadge(
-    badge: TeamBadgeInfo,
-    onClick: (() -> Unit)? = null,
-    modifier: Modifier = Modifier
-) {
-    val (bgColor, textColor) = when (badge.role) {
-        "owner" -> Color(0xFFFFB300).copy(alpha = 0.12f) to Color(0xFFFFB300)
-        "admin" -> Color(0xFF2196F3).copy(alpha = 0.12f) to Color(0xFF2196F3)
-        "editor" -> Color(0xFF4CAF50).copy(alpha = 0.12f) to Color(0xFF4CAF50)
-        else -> MaterialTheme.colorScheme.surfaceContainerHighest to
-                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+private fun DiamondIcon(modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val cx = w / 2f
+        val cy = h / 2f
+        val path = Path().apply {
+            moveTo(cx, 0f)
+            lineTo(w, cy)
+            lineTo(cx, h)
+            lineTo(0f, cy)
+            close()
+        }
+        drawPath(path, Color.White)
     }
+}
 
-    val roleLabel = when (badge.role) {
-        "owner" -> Strings.badgeTeamOwner
-        "admin" -> Strings.badgeTeamAdmin
-        else -> Strings.badgeTeamMember
+/** Lightning bolt icon — hand-drawn for Ultra badge */
+@Composable
+private fun LightningIcon(modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val path = Path().apply {
+            moveTo(w * 0.7f, 0f)
+            lineTo(w * 0.25f, h * 0.5f)
+            lineTo(w * 0.5f, h * 0.5f)
+            lineTo(w * 0.3f, h)
+            lineTo(w * 0.75f, h * 0.5f)
+            lineTo(w * 0.5f, h * 0.5f)
+            close()
+        }
+        drawPath(path, Color.White)
     }
+}
 
+/** Infinity icon — hand-drawn for Lifetime badge */
+@Composable
+private fun InfinityIcon(modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val cy = h / 2f
+        val rx = w * 0.3f   // horizontal radius of each loop
+        val ry = h * 0.4f   // vertical radius of each loop
+        val cx1 = w * 0.3f  // center of left loop
+        val cx2 = w * 0.7f  // center of right loop
+        val path = Path().apply {
+            // Start at center crossing point, top
+            moveTo(w * 0.5f, cy - ry * 0.15f)
+            // Right loop: top-right curve
+            cubicTo(cx2 + rx * 0.6f, cy - ry * 1.3f, cx2 + rx * 1.1f, cy + ry * 0.5f, cx2, cy + ry * 0.7f)
+            // Right loop: bottom-right curve back to center
+            cubicTo(cx2 - rx * 0.5f, cy + ry * 1.1f, w * 0.5f, cy + ry * 0.5f, w * 0.5f, cy + ry * 0.15f)
+            // Left loop: bottom-left curve
+            cubicTo(cx1 - rx * 0.6f, cy + ry * 1.3f, cx1 - rx * 1.1f, cy - ry * 0.5f, cx1, cy - ry * 0.7f)
+            // Left loop: top-left curve back to center
+            cubicTo(cx1 + rx * 0.5f, cy - ry * 1.1f, w * 0.5f, cy - ry * 0.5f, w * 0.5f, cy - ry * 0.15f)
+            close()
+        }
+        drawPath(path, Color.White)
+    }
+}
+
+// ═══════════════════════════════════════════
+// Subscription Badges
+// ═══════════════════════════════════════════
+
+/** Pro badge — blue gradient + hand-drawn diamond */
+@Composable
+fun ProBadge(modifier: Modifier = Modifier) {
     Surface(
-        modifier = modifier.then(
-            if (onClick != null) Modifier.clickable { onClick() } else Modifier
-        ),
+        modifier = modifier,
         shape = RoundedCornerShape(6.dp),
-        color = bgColor
+        color = Color.Transparent
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(3.dp)
+        Box(
+            modifier = Modifier
+                .background(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(Color(0xFF2196F3), Color(0xFF42A5F5))
+                    ),
+                    shape = RoundedCornerShape(6.dp)
+                )
+                .padding(horizontal = 7.dp, vertical = 2.dp)
         ) {
-            // Team avatar mini
-            if (badge.avatarUrl != null) {
-                AsyncImage(
-                    model = badge.avatarUrl,
-                    contentDescription = null,
-                    modifier = Modifier.size(12.dp).clip(CircleShape)
-                )
-            } else {
-                Icon(
-                    Icons.Filled.Groups, null,
-                    modifier = Modifier.size(11.dp),
-                    tint = textColor
-                )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
+                DiamondIcon(Modifier.size(11.dp))
+                Text(Strings.badgePro, fontSize = 10.sp, fontWeight = FontWeight.Bold,
+                    color = Color.White, letterSpacing = 0.3.sp)
             }
-            Text(
-                badge.name,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = textColor,
-                maxLines = 1
-            )
-            // Role indicator dot
-            Surface(
-                shape = CircleShape,
-                color = textColor.copy(alpha = 0.6f),
-                modifier = Modifier.size(3.dp)
-            ) {}
-            Text(
-                roleLabel,
-                fontSize = 9.sp,
-                fontWeight = FontWeight.Medium,
-                color = textColor.copy(alpha = 0.7f)
-            )
+        }
+    }
+}
+
+/** Ultra badge — gold gradient + hand-drawn lightning bolt */
+@Composable
+fun UltraBadge(modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(6.dp),
+        color = Color.Transparent
+    ) {
+        Box(
+            modifier = Modifier
+                .background(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(Color(0xFFFFB300), Color(0xFFFF6D00))
+                    ),
+                    shape = RoundedCornerShape(6.dp)
+                )
+                .padding(horizontal = 7.dp, vertical = 2.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
+                LightningIcon(Modifier.size(11.dp))
+                Text(Strings.badgeUltra, fontSize = 10.sp, fontWeight = FontWeight.Bold,
+                    color = Color.White, letterSpacing = 0.3.sp)
+            }
+        }
+    }
+}
+
+/** Lifetime badge — rainbow gradient + hand-drawn infinity */
+@Composable
+fun LifetimeBadge(modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(6.dp),
+        color = Color.Transparent
+    ) {
+        Box(
+            modifier = Modifier
+                .background(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(
+                            Color(0xFFE91E63),
+                            Color(0xFF9C27B0),
+                            Color(0xFF2196F3),
+                            Color(0xFF4CAF50),
+                            Color(0xFFFFB300)
+                        )
+                    ),
+                    shape = RoundedCornerShape(6.dp)
+                )
+                .padding(horizontal = 7.dp, vertical = 2.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
+                InfinityIcon(Modifier.size(11.dp))
+                Text(Strings.badgeLifetime, fontSize = 10.sp, fontWeight = FontWeight.Bold,
+                    color = Color.White, letterSpacing = 0.3.sp)
+            }
         }
     }
 }
@@ -158,35 +243,31 @@ fun TeamBadge(
 // ═══════════════════════════════════════════
 
 /**
- * Displays developer badge + team badges inline.
+ * Displays all applicable badges inline.
  * Use this next to any username display.
  *
  * @param isDeveloper Whether the user has published ≥1 module
- * @param teamBadges List of team memberships
- * @param onTeamClick Callback when a team badge is tapped
+ * @param subscriptionTier "free"|"pro"|"ultra"|"lifetime"
  */
 @Composable
 fun UserTitleBadges(
-    isDeveloper: Boolean,
-    teamBadges: List<TeamBadgeInfo>,
-    onTeamClick: ((Int) -> Unit)? = null,
+    isDeveloper: Boolean = false,
+    subscriptionTier: String = SubscriptionTier.FREE,
     modifier: Modifier = Modifier
 ) {
-    if (!isDeveloper && teamBadges.isEmpty()) return
+    if (!isDeveloper && subscriptionTier == SubscriptionTier.FREE) return
 
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (isDeveloper) {
-            DeveloperBadge()
+        // Subscription badge takes priority: lifetime > ultra > pro
+        when (subscriptionTier) {
+            SubscriptionTier.LIFETIME -> LifetimeBadge()
+            SubscriptionTier.ULTRA -> UltraBadge()
+            SubscriptionTier.PRO -> ProBadge()
         }
-        teamBadges.forEach { badge ->
-            TeamBadge(
-                badge = badge,
-                onClick = onTeamClick?.let { { it(badge.id) } }
-            )
-        }
+        if (isDeveloper) DeveloperBadge()
     }
 }

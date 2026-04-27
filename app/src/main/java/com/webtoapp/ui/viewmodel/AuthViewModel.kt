@@ -11,6 +11,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import com.webtoapp.core.i18n.Strings
 import kotlinx.coroutines.launch
 
 /**
@@ -108,7 +109,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
 
     fun login(account: String, password: String) {
         if (account.isBlank() || password.isBlank()) {
-            _loginState.value = FormState.Error("请填写账号和密码")
+            _loginState.value = FormState.Error(Strings.authLoginFillAccountPassword)
             return
         }
         viewModelScope.launch {
@@ -116,7 +117,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
             when (val result = authRepository.login(account, password)) {
                 is AuthResult.Success -> {
                     _authState.value = AuthState.LoggedIn(result.data)
-                    _loginState.value = FormState.Success("登录成功")
+                    _loginState.value = FormState.Success(Strings.authLoginSuccess)
                     loadProStatus()
                     startHeartbeat()
                 }
@@ -131,7 +132,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
 
     fun sendVerificationCode(email: String) {
         if (email.isBlank()) {
-            _sendCodeState.value = FormState.Error("请输入邮箱")
+            _sendCodeState.value = FormState.Error(Strings.authEmailRequired)
             return
         }
         viewModelScope.launch {
@@ -151,23 +152,23 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
 
     fun register(email: String, username: String, password: String, confirmPassword: String, verificationCode: String) {
         if (email.isBlank() || username.isBlank() || password.isBlank()) {
-            _registerState.value = FormState.Error("请填写所有字段")
+            _registerState.value = FormState.Error(Strings.authFillAllFields)
             return
         }
         if (verificationCode.isBlank()) {
-            _registerState.value = FormState.Error("请输入验证码")
+            _registerState.value = FormState.Error(Strings.authCodeRequired)
             return
         }
         if (password != confirmPassword) {
-            _registerState.value = FormState.Error("两次密码不一致")
+            _registerState.value = FormState.Error(Strings.authPasswordMismatch)
             return
         }
         if (password.length < 6) {
-            _registerState.value = FormState.Error("密码至少 6 位")
+            _registerState.value = FormState.Error(Strings.authPasswordMinLength)
             return
         }
         if (!username.matches(Regex("^[a-zA-Z0-9_]+$"))) {
-            _registerState.value = FormState.Error("用户名只能包含字母、数字和下划线")
+            _registerState.value = FormState.Error(Strings.authUsernameFormatError)
             return
         }
         viewModelScope.launch {
@@ -175,7 +176,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
             when (val result = authRepository.register(email, username, password, verificationCode)) {
                 is AuthResult.Success -> {
                     _authState.value = AuthState.LoggedIn(result.data)
-                    _registerState.value = FormState.Success("注册成功")
+                    _registerState.value = FormState.Success(Strings.authRegisterSuccess)
                 }
                 is AuthResult.Error -> {
                     _registerState.value = FormState.Error(result.message)
@@ -237,15 +238,15 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
      */
     fun changePassword(currentPassword: String, newPassword: String, confirmNewPassword: String) {
         if (currentPassword.isBlank() || newPassword.isBlank()) {
-            _passwordState.value = FormState.Error("请填写所有字段")
+            _passwordState.value = FormState.Error(Strings.authFillAllFields)
             return
         }
         if (newPassword != confirmNewPassword) {
-            _passwordState.value = FormState.Error("两次新密码不一致")
+            _passwordState.value = FormState.Error(Strings.authNewPasswordMismatch)
             return
         }
         if (newPassword.length < 6) {
-            _passwordState.value = FormState.Error("新密码至少 6 位")
+            _passwordState.value = FormState.Error(Strings.authNewPasswordMinLength)
             return
         }
         viewModelScope.launch {
@@ -269,7 +270,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
      */
     fun sendResetCode(email: String) {
         if (email.isBlank()) {
-            _resetCodeState.value = FormState.Error("请输入邮箱")
+            _resetCodeState.value = FormState.Error(Strings.authEmailRequired)
             return
         }
         viewModelScope.launch {
@@ -290,15 +291,15 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
      */
     fun resetPassword(email: String, code: String, newPassword: String) {
         if (email.isBlank() || code.isBlank() || newPassword.isBlank()) {
-            _forgotPasswordState.value = FormState.Error("请填写所有字段")
+            _forgotPasswordState.value = FormState.Error(Strings.authFillAllFields)
             return
         }
         if (code.length != 6) {
-            _forgotPasswordState.value = FormState.Error("验证码为 6 位数字")
+            _forgotPasswordState.value = FormState.Error(Strings.authCodeSixDigits)
             return
         }
         if (newPassword.length < 6) {
-            _forgotPasswordState.value = FormState.Error("密码至少 6 位")
+            _forgotPasswordState.value = FormState.Error(Strings.authPasswordMinLength)
             return
         }
         viewModelScope.launch {
@@ -307,7 +308,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
                 is AuthResult.Success -> {
                     // Auto-login: set auth state → UI auto-transitions to ProfileScreen
                     _authState.value = AuthState.LoggedIn(result.data)
-                    _forgotPasswordState.value = FormState.Success("密码已重置")
+                    _forgotPasswordState.value = FormState.Success(Strings.authPasswordResetDone)
                     loadProStatus()
                     startHeartbeat()
                 }
@@ -325,7 +326,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
      */
     fun deleteAccount(password: String, reason: String = "") {
         if (password.isBlank()) {
-            _deleteAccountState.value = FormState.Error("请输入密码确认删除")
+            _deleteAccountState.value = FormState.Error(Strings.authDeleteAccountConfirmPassword)
             return
         }
         viewModelScope.launch {
@@ -353,7 +354,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
             _avatarUploadState.value = FormState.Loading
             when (val result = authRepository.uploadAvatar(imageBytes, mimeType)) {
                 is AuthResult.Success -> {
-                    _avatarUploadState.value = FormState.Success("头像上传成功")
+                    _avatarUploadState.value = FormState.Success(Strings.authAvatarUploadSuccess)
                     // 刷新用户信息以获取新头像 URL
                     refreshProfile()
                 }
@@ -372,7 +373,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
             when (val result = authRepository.googleLogin(idToken)) {
                 is AuthResult.Success -> {
                     _authState.value = AuthState.LoggedIn(result.data)
-                    _loginState.value = FormState.Success("Google 登录成功")
+                    _loginState.value = FormState.Success(Strings.authGoogleLoginSuccess)
                     loadProStatus()
                     startHeartbeat()
                 }
@@ -427,7 +428,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
             _updateProfileState.value = FormState.Loading
             when (val result = authRepository.updateProfile(username = username)) {
                 is AuthResult.Success -> {
-                    _updateProfileState.value = FormState.Success("资料已更新")
+                    _updateProfileState.value = FormState.Success(Strings.authProfileUpdated)
                     _authState.value = AuthState.LoggedIn(result.data)
                 }
                 is AuthResult.Error -> {
@@ -448,11 +449,11 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
 
     fun bindEmail(email: String, verificationCode: String) {
         if (email.isBlank()) {
-            _bindEmailState.value = FormState.Error("请输入邮箱")
+            _bindEmailState.value = FormState.Error(Strings.authEmailRequired)
             return
         }
         if (verificationCode.isBlank()) {
-            _bindEmailState.value = FormState.Error("请输入验证码")
+            _bindEmailState.value = FormState.Error(Strings.authBindEmailCodeRequired)
             return
         }
         viewModelScope.launch {

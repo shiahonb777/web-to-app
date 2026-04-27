@@ -8,7 +8,9 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.os.PowerManager
 import com.webtoapp.core.logging.AppLogger
 import androidx.core.app.NotificationCompat
@@ -26,6 +28,9 @@ class BackgroundRunService : Service() {
         private const val TAG = "BackgroundRunService"
         private const val CHANNEL_ID = "background_run_channel"
         private const val NOTIFICATION_ID = 10001
+        private const val WAKELOCK_TIMEOUT_MS = 4 * 60 * 60 * 1000L // 4 hours per acquire
+        private const val WAKELOCK_RENEWAL_INTERVAL_MS = 3 * 60 * 60 * 1000L // renew every 3 hours
+        private const val ACTION_STOP = "com.webtoapp.action.STOP_BACKGROUND_RUN"
         
         private const val EXTRA_APP_NAME = "app_name"
         private const val EXTRA_NOTIFICATION_TITLE = "notification_title"
@@ -87,11 +92,44 @@ class BackgroundRunService : Service() {
          * 检查服务是否正在运行
          */
         fun isServiceRunning(): Boolean = isRunning
+
+        /**
+         * 请求忽略电池优化（Android 6+）
+         * 建议在开启后台运行时调用，引导用户将应用加入电池优化白名单
+         */
+        fun requestIgnoreBatteryOptimizations(context: Context) {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    val powerManager = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
+                    if (powerManager?.isIgnoringBatteryOptimizations(context.packageName) == false) {
+                        val intent = Intent(
+                            android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+                        ).apply {
+                            data = android.net.Uri.parse("package:${context.packageName}")
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        context.startActivity(intent)
+                        AppLogger.i(TAG, "已请求忽略电池优化")
+                    } else {
+                        AppLogger.i(TAG, "已在电池优化白名单中")
+                    }
+                }
+            } catch (e: Exception) {
+                AppLogger.e(TAG, "请求忽略电池优化失败", e)
+            }
+        }
     }
     
     private var wakeLock: PowerManager.WakeLock? = null
     private var appName: String = ""
     private var keepCpuAwake: Boolean = true
+    private val wakeLockRenewalHandler = Handler(Looper.getMainLooper())
+    private val wakeLockRenewalRunnable = object : Runnable {
+        override fun run() {
+            renewWakeLock()
+            wakeLockRenewalHandler.postDelayed(this, WAKELOCK_RENEWAL_INTERVAL_MS)
+        }
+    }
     
     override fun onCreate() {
         super.onCreate()
@@ -100,29 +138,51 @@ class BackgroundRunService : Service() {
     }
     
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // 处理停止动作
+        if (intent?.action == ACTION_STOP) {
+            stopSelf()
+            return START_NOT_STICKY
+        }
+
         AppLogger.w(TAG, "后台运行服务启动")
-        
+
         appName = intent?.getStringExtra(EXTRA_APP_NAME) ?: ""
         val notificationTitle = intent?.getStringExtra(EXTRA_NOTIFICATION_TITLE)
         val notificationContent = intent?.getStringExtra(EXTRA_NOTIFICATION_CONTENT)
         val showNotification = intent?.getBooleanExtra(EXTRA_SHOW_NOTIFICATION, true) ?: true
         keepCpuAwake = intent?.getBooleanExtra(EXTRA_KEEP_CPU_AWAKE, true) ?: true
-        
-        // Start前台服务
-        val notification = createNotification(
-            title = notificationTitle ?: (if (appName.isNotEmpty()) appName else "App") + " ${Strings.appRunningInBackground}",
-            content = notificationContent ?: Strings.tapToReturnToApp
-        )
-        startForeground(NOTIFICATION_ID, notification)
-        isRunning = true
-        
+
+        // Start前台服务（try-catch 防止 Android 12+ 后台启动限制）
+        try {
+            val notification = createNotification(
+                title = notificationTitle ?: (if (appName.isNotEmpty()) appName else "App") + " ${Strings.appRunningInBackground}",
+                content = notificationContent ?: Strings.tapToReturnToApp
+            )
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                // Android 14+ 需要指定 foregroundServiceType
+                startForeground(NOTIFICATION_ID, notification,
+                    android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+            } else {
+                startForeground(NOTIFICATION_ID, notification)
+            }
+            isRunning = true
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "startForeground 失败，服务无法启动", e)
+            stopSelf()
+            return START_NOT_STICKY
+        }
+
         // Get WakeLock 保持 CPU 运行
         if (keepCpuAwake) {
             acquireWakeLock()
+            // 启动 WakeLock 续期机制
+            wakeLockRenewalHandler.removeCallbacks(wakeLockRenewalRunnable)
+            wakeLockRenewalHandler.postDelayed(wakeLockRenewalRunnable, WAKELOCK_RENEWAL_INTERVAL_MS)
         }
-        
+
         AppLogger.w(TAG, "Background service started: appName=$appName, keepCpuAwake=$keepCpuAwake")
-        
+
         return START_STICKY
     }
     
@@ -131,8 +191,9 @@ class BackgroundRunService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         AppLogger.w(TAG, "后台运行服务销毁")
-        
+
         isRunning = false
+        wakeLockRenewalHandler.removeCallbacks(wakeLockRenewalRunnable)
         releaseWakeLock()
     }
     
@@ -164,9 +225,20 @@ class BackgroundRunService : Service() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
         } else null
-        
+
+        // 停止后台运行的 Action
+        val stopIntent = Intent(this, BackgroundRunService::class.java).apply {
+            action = ACTION_STOP
+        }
+        val stopPendingIntent = PendingIntent.getService(
+            this,
+            0,
+            stopIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         val iconResId = applicationInfo.icon.takeIf { it != 0 } ?: R.mipmap.ic_launcher
-        
+
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(title)
             .setContentText(content)
@@ -179,6 +251,11 @@ class BackgroundRunService : Service() {
                     setContentIntent(pendingIntent)
                 }
             }
+            .addAction(
+                android.R.drawable.ic_menu_close_clear_cancel,
+                Strings.backgroundRunStop,
+                stopPendingIntent
+            )
             .build()
     }
     
@@ -188,22 +265,41 @@ class BackgroundRunService : Service() {
             wakeLock = powerManager.newWakeLock(
                 PowerManager.PARTIAL_WAKE_LOCK,
                 "WebToApp:BackgroundRunWakeLock"
-            )
+            ).apply {
+                setReferenceCounted(false)
+            }
         }
-        
+
         wakeLock?.let {
             if (!it.isHeld) {
-                it.acquire(24 * 60 * 60 * 1000L)
-                AppLogger.w(TAG, "WakeLock 已获取")
+                it.acquire(WAKELOCK_TIMEOUT_MS)
+                AppLogger.w(TAG, "WakeLock 已获取 (超时=${WAKELOCK_TIMEOUT_MS}ms)")
             }
         }
     }
-    
+
+    /**
+     * 续期 WakeLock：先释放再重新获取，避免超时后自动释放导致后台运行中断
+     */
+    private fun renewWakeLock() {
+        try {
+            releaseWakeLock()
+            acquireWakeLock()
+            AppLogger.d(TAG, "WakeLock 已续期")
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "WakeLock 续期失败", e)
+        }
+    }
+
     private fun releaseWakeLock() {
         wakeLock?.let {
             if (it.isHeld) {
-                it.release()
-                AppLogger.w(TAG, "WakeLock 已释放")
+                try {
+                    it.release()
+                    AppLogger.w(TAG, "WakeLock 已释放")
+                } catch (e: Exception) {
+                    AppLogger.e(TAG, "WakeLock 释放异常", e)
+                }
             }
         }
         wakeLock = null

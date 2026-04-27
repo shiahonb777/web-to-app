@@ -257,6 +257,7 @@ fun ShellTheme(
     CompositionLocalProvider(
         LocalAppTheme provides currentTheme,
         LocalAnimationSettings provides animationSettings,
+        LocalIsDarkTheme provides useDarkTheme,
     ) {
         MaterialTheme(
             colorScheme = colorScheme,

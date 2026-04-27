@@ -42,11 +42,6 @@ object BuiltInModules {
         permissions = listOf(ModulePermission.DOM_ACCESS, ModulePermission.DOWNLOAD),
         code = VIDEO_DOWNLOADER_CODE,
         runMode = ModuleRunMode.INTERACTIVE,
-        uiConfig = ModuleUiConfig(
-            type = ModuleUiType.MINI_BUTTON,
-            position = UiPosition.BOTTOM_LEFT,
-            draggable = true
-        )
     )
 
     // ==================== B站视频提取 ====================
@@ -67,11 +62,6 @@ object BuiltInModules {
         urlMatches = listOf(UrlMatchRule("*bilibili.com*")),
         code = BILIBILI_EXTRACTOR_CODE,
         runMode = ModuleRunMode.INTERACTIVE,
-        uiConfig = ModuleUiConfig(
-            type = ModuleUiType.MINI_BUTTON,
-            position = UiPosition.BOTTOM_LEFT,
-            draggable = true
-        )
     )
     
     // ==================== 抖音视频提取 ====================
@@ -92,11 +82,6 @@ object BuiltInModules {
         urlMatches = listOf(UrlMatchRule("*douyin.com*")),
         code = DOUYIN_EXTRACTOR_CODE,
         runMode = ModuleRunMode.INTERACTIVE,
-        uiConfig = ModuleUiConfig(
-            type = ModuleUiType.MINI_BUTTON,
-            position = UiPosition.BOTTOM_LEFT,
-            draggable = true
-        )
     )
     
     // ==================== 小红书提取 ====================
@@ -117,11 +102,6 @@ object BuiltInModules {
         urlMatches = listOf(UrlMatchRule("*xiaohongshu.com*"), UrlMatchRule("*xhslink.com*")),
         code = XIAOHONGSHU_EXTRACTOR_CODE,
         runMode = ModuleRunMode.INTERACTIVE,
-        uiConfig = ModuleUiConfig(
-            type = ModuleUiType.MINI_BUTTON,
-            position = UiPosition.BOTTOM_LEFT,
-            draggable = true
-        )
     )
 
     // ==================== 视频增强 ====================
@@ -141,19 +121,6 @@ object BuiltInModules {
         permissions = listOf(ModulePermission.DOM_ACCESS, ModulePermission.MEDIA),
         code = VIDEO_ENHANCER_CODE,
         runMode = ModuleRunMode.INTERACTIVE,
-        uiConfig = ModuleUiConfig(
-            type = ModuleUiType.FLOATING_TOOLBAR,
-            position = UiPosition.MIDDLE_RIGHT,
-            toolbarOrientation = ToolbarOrientation.VERTICAL,
-            draggable = true,
-            toolbarCollapsible = true,
-            toolbarItems = listOf(
-                ToolbarItem(icon = "fast_forward", label = Strings.toolbarSpeed, tooltip = Strings.toolbarSpeedTooltip, action = "changeSpeed()"),
-                ToolbarItem(icon = "picture_in_picture", label = Strings.toolbarPiP, tooltip = Strings.toolbarPiPTooltip, action = "togglePip()"),
-                ToolbarItem(icon = "repeat", label = Strings.toolbarLoop, tooltip = Strings.toolbarLoopTooltip, action = "toggleLoop()"),
-                ToolbarItem(icon = "photo_camera", label = Strings.toolbarScreenshot, tooltip = Strings.toolbarScreenshotTooltip, action = "screenshot()")
-            )
-        )
     )
     
     // ==================== 网页分析 ====================
@@ -173,11 +140,6 @@ object BuiltInModules {
         permissions = listOf(ModulePermission.DOM_ACCESS, ModulePermission.NETWORK),
         code = WEB_ANALYZER_CODE,
         runMode = ModuleRunMode.INTERACTIVE,
-        uiConfig = ModuleUiConfig(
-            type = ModuleUiType.SIDEBAR,
-            sidebarPosition = SidebarPosition.RIGHT,
-            sidebarWidth = 320
-        )
     )
     
     // ==================== 深色模式 ====================
@@ -197,11 +159,6 @@ object BuiltInModules {
         permissions = listOf(ModulePermission.CSS_INJECT, ModulePermission.STORAGE),
         code = DARK_MODE_CODE,
         runMode = ModuleRunMode.INTERACTIVE,
-        uiConfig = ModuleUiConfig(
-            type = ModuleUiType.MINI_BUTTON,
-            position = UiPosition.TOP_RIGHT,
-            draggable = true
-        )
     )
 
     // ==================== 隐私保护 ====================
@@ -221,9 +178,6 @@ object BuiltInModules {
         permissions = listOf(ModulePermission.DOM_ACCESS, ModulePermission.STORAGE),
         code = PRIVACY_PROTECTION_CODE,
         runMode = ModuleRunMode.INTERACTIVE,
-        uiConfig = ModuleUiConfig(
-            type = ModuleUiType.FLOATING_BUTTON  // 保持默认，因为有设置面板
-        )
     )
     
     // ==================== 元素屏蔽器 ====================
@@ -243,15 +197,6 @@ object BuiltInModules {
         permissions = listOf(ModulePermission.DOM_ACCESS, ModulePermission.STORAGE),
         code = ELEMENT_BLOCKER_CODE,
         runMode = ModuleRunMode.INTERACTIVE,
-        uiConfig = ModuleUiConfig(
-            type = ModuleUiType.FLOATING_PANEL,
-            position = UiPosition.MIDDLE_CENTER,
-            panelWidth = 350,
-            panelHeight = 450,
-            draggable = true,
-            panelResizable = true,
-            panelMinimizable = true
-        )
     )
     
     // ==================== 内容增强 ====================
@@ -271,18 +216,6 @@ object BuiltInModules {
         permissions = listOf(ModulePermission.DOM_ACCESS, ModulePermission.CLIPBOARD),
         code = CONTENT_ENHANCER_CODE,
         runMode = ModuleRunMode.INTERACTIVE,
-        uiConfig = ModuleUiConfig(
-            type = ModuleUiType.FLOATING_TOOLBAR,
-            position = UiPosition.BOTTOM_CENTER,
-            toolbarOrientation = ToolbarOrientation.HORIZONTAL,
-            draggable = true,
-            toolbarCollapsible = true,
-            toolbarItems = listOf(
-                ToolbarItem(icon = "content_copy", label = Strings.toolbarCopy, tooltip = Strings.toolbarCopyTooltip, action = "copyContent()"),
-                ToolbarItem(icon = "translate", label = Strings.toolbarTranslate, tooltip = Strings.toolbarTranslateTooltip, action = "translatePage()"),
-                ToolbarItem(icon = "photo_camera", label = Strings.toolbarScreenshot, tooltip = Strings.toolbarWebScreenshotTooltip, action = "screenshot()")
-            )
-        )
     )
 
 

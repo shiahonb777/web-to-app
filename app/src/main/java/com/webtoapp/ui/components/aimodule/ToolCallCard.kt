@@ -247,10 +247,10 @@ private fun ToolIcon(
 @Composable
 private fun ToolStatusBadge(status: ToolStatus) {
     val (text, color, backgroundColor) = when (status) {
-        ToolStatus.PENDING -> Triple("等待中", MaterialTheme.colorScheme.onSurfaceVariant, MaterialTheme.colorScheme.surfaceVariant)
-        ToolStatus.EXECUTING -> Triple("执行中", MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f))
-        ToolStatus.SUCCESS -> Triple("成功", MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
-        ToolStatus.FAILED -> Triple("失败", MaterialTheme.colorScheme.error, MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f))
+        ToolStatus.PENDING -> Triple(Strings.toolStatusPending, MaterialTheme.colorScheme.onSurfaceVariant, MaterialTheme.colorScheme.surfaceVariant)
+        ToolStatus.EXECUTING -> Triple(Strings.toolStatusExecuting, MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f))
+        ToolStatus.SUCCESS -> Triple(Strings.toolStatusSuccess, MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
+        ToolStatus.FAILED -> Triple(Strings.toolStatusFailed, MaterialTheme.colorScheme.error, MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f))
     }
     
     Surface(
@@ -338,7 +338,7 @@ private fun ToolCallParameters(parameters: Map<String, Any?>) {
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Text(
-            text = "参数",
+            text = Strings.toolCallParams,
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
@@ -397,7 +397,7 @@ private fun ToolCallResult(toolCall: ToolCallInfo) {
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Text(
-            text = if (toolCall.status == ToolStatus.SUCCESS) "结果" else "Error",
+            text = if (toolCall.status == ToolStatus.SUCCESS) Strings.toolResultLabel else "Error",
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Medium,
             color = if (toolCall.status == ToolStatus.SUCCESS) {
@@ -420,7 +420,7 @@ private fun ToolCallResult(toolCall: ToolCallInfo) {
             val content = if (toolCall.status == ToolStatus.SUCCESS) {
                 formatResultValue(toolCall.result)
             } else {
-                toolCall.error ?: "未知错误"
+                toolCall.error ?: Strings.toolUnknownError
             }
             
             Text(
@@ -469,15 +469,15 @@ private fun getToolCallColors(status: ToolStatus): Pair<Color, Color> {
  */
 fun getToolDisplayName(toolName: String): String {
     return when (toolName.lowercase()) {
-        "syntax_check", "syntaxcheck" -> "语法检查"
-        "security_scan", "securityscan" -> "安全扫描"
-        "code_format", "codeformat" -> "代码格式化"
-        "code_fix", "codefix" -> "代码修复"
-        "module_save", "modulesave" -> "保存模块"
-        "module_test", "moduletest" -> "测试模块"
-        "web_search", "websearch" -> "网络搜索"
-        "read_file", "readfile" -> "读取文件"
-        "write_file", "writefile" -> "写入文件"
+        "syntax_check", "syntaxcheck" -> Strings.toolSyntaxCheck
+        "security_scan", "securityscan" -> Strings.toolSecurityScan
+        "code_format", "codeformat" -> Strings.toolCodeFormat
+        "code_fix", "codefix" -> Strings.toolCodeFix
+        "module_save", "modulesave" -> Strings.toolModuleSave
+        "module_test", "moduletest" -> Strings.toolModuleTest
+        "web_search", "websearch" -> Strings.toolWebSearch
+        "read_file", "readfile" -> Strings.toolReadFile
+        "write_file", "writefile" -> Strings.toolWriteFile
         else -> toolName.replace("_", " ")
             .split(" ")
             .joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
@@ -513,9 +513,9 @@ private fun formatParameterValue(value: Any?): String {
  */
 private fun formatResultValue(result: Any?): String {
     return when (result) {
-        null -> "无返回值"
+        null -> Strings.toolNoReturnValue
         is String -> if (result.length > 500) "${result.take(500)}..." else result
-        is Boolean -> if (result) "[PASS] 通过" else "[FAIL] 未通过"
+        is Boolean -> if (result) Strings.toolPassResult else Strings.toolFailResult
         is Map<*, *> -> {
             val map = result as Map<String, Any?>
             map.entries.joinToString("\n") { (k, v) -> "$k: $v" }
@@ -530,16 +530,16 @@ private fun formatResultValue(result: Any?): String {
  */
 private fun getResultSummary(toolCall: ToolCallInfo): String {
     return when {
-        toolCall.result is Boolean -> if (toolCall.result) "[PASS] 检查通过" else "[FAIL] 检查未通过"
+        toolCall.result is Boolean -> if (toolCall.result) Strings.toolPassResult else Strings.toolFailResult
         toolCall.result is String -> {
             val str = toolCall.result as String
             if (str.length > 50) "${str.take(50)}..." else str
         }
         toolCall.result is Map<*, *> -> {
             val map = toolCall.result as Map<*, *>
-            "${map.size} 项结果"
+            Strings.toolMapResultCount.format(map.size)
         }
-        else -> "执行完成 (${formatExecutionTime(toolCall.executionTimeMs)})"
+        else -> Strings.toolExecutionComplete.format(formatExecutionTime(toolCall.executionTimeMs))
     }
 }
 

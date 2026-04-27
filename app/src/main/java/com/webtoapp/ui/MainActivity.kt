@@ -307,6 +307,37 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         AppLogger.lifecycle("MainActivity", "onNewIntent")
+        setIntent(intent)
+
+        // 导出后的独立 APK 可能仍然通过 launcher alias / MainActivity 接收新的启动 Intent。
+        // 如果当前处于 Shell 模式，则必须再次转发到 ShellActivity，否则从桌面重新点图标时
+        // 会回到 MainActivity 并触发整条启动链重建，用户体感就是“切后台回来网页重新加载”。
+        val isShell = try {
+            WebToAppApplication.shellMode.isShellMode()
+        } catch (e: Exception) {
+            AppLogger.e("MainActivity", "Shell mode re-check failed in onNewIntent", e)
+            false
+        } catch (e: Error) {
+            AppLogger.e("MainActivity", "Shell mode re-check critical error in onNewIntent", Error(e))
+            false
+        }
+
+        if (isShell) {
+            AppLogger.i("MainActivity", "Shell mode onNewIntent, redirecting to ShellActivity")
+            try {
+                startActivity(Intent(this, ShellActivity::class.java).apply {
+                    action = intent.action
+                    data = intent.data
+                    flags = intent.flags
+                    intent.extras?.let { putExtras(it) }
+                })
+                finish()
+                return
+            } catch (e: Exception) {
+                AppLogger.e("MainActivity", "Failed to redirect ShellActivity from onNewIntent", e)
+            }
+        }
+
         // 处理 Google OAuth 回调（从浏览器返回时）
         handleGoogleOAuthIfNeeded(intent)
     }

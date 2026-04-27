@@ -217,14 +217,30 @@ object NativeCryptoOptimized {
      * 从包名和签名派生密钥 (与 AesCryptoEngine.deriveKeyFromPackage 兼容)
      */
     fun deriveKeyFromPackage(packageName: String, signature: ByteArray, iterations: Int = CryptoConstants.PBKDF2_ITERATIONS): ByteArray? {
+        return deriveKeyFromPackage(packageName, signature, iterations, null)
+    }
+
+    /**
+     * 从包名、签名和可选自定义密码派生密钥 (与 AesCryptoEngine.deriveKeyFromPackage 兼容)
+     * SECURITY: customPassword 参与密钥派生；盐值完全动态生成
+     */
+    fun deriveKeyFromPackage(packageName: String, signature: ByteArray, iterations: Int, customPassword: String?): ByteArray? {
         if (!isAvailable) return null
 
         val sigHash = sha256(signature) ?: return null
-        val password = (packageName + ":" + sigHash.toHexString()).toByteArray()
+        val password = if (!customPassword.isNullOrBlank()) {
+            (packageName + ":" + sigHash.toHexString() + ":" + customPassword).toByteArray()
+        } else {
+            (packageName + ":" + sigHash.toHexString()).toByteArray()
+        }
 
-        val baseSalt = CryptoConstants.KEY_DERIVATION_SALT
-        val pkgHash = sha256(packageName.toByteArray()) ?: return null
-        val salt = baseSalt + pkgHash.copyOf(16)
+        // SECURITY: 盐值完全动态生成，不再使用硬编码 KEY_DERIVATION_SALT
+        val saltInput = if (!customPassword.isNullOrBlank()) {
+            packageName.toByteArray() + sigHash + customPassword.toByteArray()
+        } else {
+            packageName.toByteArray() + sigHash
+        }
+        val salt = sha256(saltInput) ?: return null
 
         return pbkdf2(password, salt, iterations, 32)
     }

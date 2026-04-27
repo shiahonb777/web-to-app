@@ -141,7 +141,6 @@ class WebViewActivity : AppCompatActivity() {
     private var statusBarDarkIcons: Boolean? = null
     private var statusBarBackgroundType: com.webtoapp.data.model.StatusBarBackgroundType = com.webtoapp.data.model.StatusBarBackgroundType.COLOR
     internal var keyboardAdjustMode: KeyboardAdjustMode = KeyboardAdjustMode.RESIZE  // 键盘调整模式
-    internal var blockSystemNavigationGesture: Boolean = false
 
     private fun applyStatusBarColor(
         colorMode: com.webtoapp.data.model.StatusBarColorMode,
@@ -163,7 +162,6 @@ class WebViewActivity : AppCompatActivity() {
             statusBarDarkIcons = statusBarDarkIcons,
             statusBarBgType = statusBarBackgroundType.name,
             keyboardAdjustMode = keyboardAdjustMode,
-            blockSystemNavigationGesture = immersiveFullscreenEnabled && blockSystemNavigationGesture,
             tag = "WebViewActivity"
         )
     }
@@ -701,23 +699,23 @@ class WebViewActivity : AppCompatActivity() {
 
     override fun onTrimMemory(level: Int) {
         super.onTrimMemory(level)
-        if (level >= android.content.ComponentCallbacks2.TRIM_MEMORY_MODERATE) {
-            webView?.clearCache(false)
-            com.webtoapp.core.logging.AppLogger.w("WebViewActivity", "Memory pressure (level=$level), cleared WebView cache")
-        }
-        if (level >= android.content.ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL) {
-            webView?.freeMemory()
+        // ★ FIX: 不再在内存压力时调用 clearCache() / freeMemory()
+        // 这些方法会销毁 WebView 的缓存和内部内存，导致页面重新加载
+        // 滚动时触发内存回收 → 缓存清除 → 页面重载 → 再次滚动 → 循环
+        // 仅使用 System.gc() 作为温和的内存压力提示
+        if (level >= android.content.ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) {
             System.gc()
-            com.webtoapp.core.logging.AppLogger.w("WebViewActivity", "Critical memory pressure, freed WebView memory")
+            com.webtoapp.core.logging.AppLogger.w("WebViewActivity", "Memory pressure (level=$level), requested GC (no cache clear)")
         }
     }
 
     override fun onLowMemory() {
         super.onLowMemory()
-        webView?.clearCache(false)
-        webView?.freeMemory()
+        // ★ FIX: 不再调用 clearCache() / freeMemory()
+        // freeMemory() 会使当前渲染的页面失效，导致用户可见的重新加载
+        // clearCache(false) 清除磁盘+内存缓存，后续资源请求必须重新网络获取
         System.gc()
-        com.webtoapp.core.logging.AppLogger.w("WebViewActivity", "Low memory, cleared cache and freed WebView memory")
+        com.webtoapp.core.logging.AppLogger.w("WebViewActivity", "Low memory, requested GC (no cache clear / freeMemory)")
     }
 
     override fun onDestroy() {
@@ -880,16 +878,10 @@ fun WebViewScreen(
             (context as? WebViewActivity)?.let { activity ->
                 activity.showNavigationBarInFullscreen = app.webViewConfig.showNavigationBarInFullscreen
                 activity.keyboardAdjustMode = app.webViewConfig.keyboardAdjustMode
-                activity.blockSystemNavigationGesture = app.webViewConfig.blockSystemNavigationGesture
                 // ★ 立即应用键盘模式（配置加载后必须生效，不能等到全屏切换时才设置）
                 WindowHelper.applyKeyboardModeOnly(
                     activity = activity,
                     keyboardAdjustMode = app.webViewConfig.keyboardAdjustMode,
-                    tag = "WebViewActivity"
-                )
-                WindowHelper.applySystemNavigationGestureBlocking(
-                    activity = activity,
-                    enabled = app.webViewConfig.hideToolbar && app.webViewConfig.blockSystemNavigationGesture,
                     tag = "WebViewActivity"
                 )
             }
@@ -2180,6 +2172,18 @@ fun WebViewScreen(
                 errorMessage = null
                 // 自增 key 强制 AndroidView 重新创建并加载 URL
                 webViewRecreationKey++
+                // 服务端应用（PHP/Node.js/Python/Go/WordPress）加载 about:blank，
+                // 实际 URL 由 LaunchedEffect 异步加载，但 LaunchedEffect 的 key 未变化不会重新触发，
+                // 必须递增对应的 retryTrigger 以重启服务器并重新加载 URL
+                val app = webApp
+                when (app?.appType) {
+                    com.webtoapp.data.model.AppType.PHP_APP -> phpAppRetryTrigger++
+                    com.webtoapp.data.model.AppType.NODEJS_APP -> nodeJsAppRetryTrigger++
+                    com.webtoapp.data.model.AppType.PYTHON_APP -> pythonAppRetryTrigger++
+                    com.webtoapp.data.model.AppType.GO_APP -> goAppRetryTrigger++
+                    com.webtoapp.data.model.AppType.WORDPRESS -> wpRetryTrigger++
+                    else -> { /* 普通网页应用：webViewRecreationKey++ 已足够 */ }
+                }
             }
         }
     }

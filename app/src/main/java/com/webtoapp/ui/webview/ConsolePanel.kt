@@ -344,7 +344,7 @@ private fun ConsoleLogItem(
             ) {
                 Icon(
                     Icons.Outlined.ContentCopy,
-                    "复制",
+                    Strings.btnCopy,
                     tint = onSurfaceVariant.copy(alpha = 0.6f),
                     modifier = Modifier.size(16.dp)
                 )

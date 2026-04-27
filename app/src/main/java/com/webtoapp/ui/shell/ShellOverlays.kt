@@ -8,16 +8,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.webtoapp.WebToAppApplication
@@ -26,7 +23,6 @@ import com.webtoapp.core.i18n.Strings
 import com.webtoapp.ui.components.ForcedRunCountdownOverlay
 import com.webtoapp.ui.components.VirtualNavigationBar
 import com.webtoapp.core.forcedrun.ForcedRunManager
-import kotlinx.coroutines.delay
 
 /**
  * BGM 歌词显示覆盖层
@@ -95,70 +91,6 @@ fun BoxScope.ShellForcedRunOverlay(
                 activity.finish()
             }
         )
-    }
-}
-
-/**
- * 全屏模式下的悬浮返回按钮（自动淡出）
- */
-@Composable
-fun BoxScope.ShellFloatingBackButton(
-    hideToolbar: Boolean,
-    showToolbar: Boolean = false,
-    canGoBack: Boolean,
-    forcedRunActive: Boolean,
-    showFloatingBackButton: Boolean = true,
-    actualStatusBarPadding: Dp,
-    webViewRef: WebView?
-) {
-    val context = LocalContext.current
-
-    // 仅在工具栏未显示时才显示悬浮返回按钮（且用户未禁用）
-    // hideToolbar=全屏模式, showToolbar=false 表示toolbar被隐藏
-    // 也支持 hideBrowserToolbar 模式（仅隐藏工具栏，非全屏）
-    if (showFloatingBackButton && (hideToolbar || !showToolbar) && !showToolbar && canGoBack && !forcedRunActive) {
-        var fabAlpha by remember { mutableFloatStateOf(0.9f) }
-        var fadeKey by remember { mutableIntStateOf(0) }
-
-        LaunchedEffect(canGoBack, fadeKey) {
-            fabAlpha = 0.9f
-            delay(3000L)
-            val steps = 20
-            val stepDelay = 30L
-            for (i in 1..steps) {
-                fabAlpha = 0.9f - (0.65f * i / steps)
-                delay(stepDelay)
-            }
-        }
-
-        SmallFloatingActionButton(
-            onClick = {
-                fadeKey++
-                webViewRef?.let { wv ->
-                    val list = wv.copyBackForwardList()
-                    val prev = list.getItemAtIndex(list.currentIndex - 1)?.url
-                    if (prev == "about:blank") {
-                        (context as? AppCompatActivity)?.finish()
-                    } else {
-                        wv.goBack()
-                    }
-                }
-            },
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(start = 12.dp, top = actualStatusBarPadding + 8.dp)
-                .graphicsLayer { alpha = fabAlpha },
-            elevation = FloatingActionButtonDefaults.elevation(
-                defaultElevation = 0.dp,
-                pressedElevation = 0.dp,
-                focusedElevation = 0.dp,
-                hoveredElevation = 0.dp
-            ),
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
-            contentColor = MaterialTheme.colorScheme.onSurface
-        ) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = Strings.cdBack)
-        }
     }
 }
 

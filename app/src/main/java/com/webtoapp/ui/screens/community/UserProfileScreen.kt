@@ -32,9 +32,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.webtoapp.core.cloud.CommunityModuleDetail
+import com.webtoapp.core.cloud.ModuleItem
 import com.webtoapp.core.cloud.CommunityPostItem
-import com.webtoapp.core.cloud.TeamWorkItem
+import com.webtoapp.core.cloud.GitHubAccelerator
 import com.webtoapp.core.cloud.UserActivityInfo
 import com.webtoapp.ui.viewmodel.CommunityViewModel
 import com.webtoapp.ui.viewmodel.OperationFailureReport
@@ -58,7 +58,6 @@ fun UserProfileScreen(
 ) {
     val profile by communityViewModel.userProfile.collectAsStateWithLifecycle()
     val modules by communityViewModel.userModules.collectAsStateWithLifecycle()
-    val teamWorks by communityViewModel.userTeamWorks.collectAsStateWithLifecycle()
     val userPosts by communityViewModel.userPosts.collectAsStateWithLifecycle()
     val userActivity by communityViewModel.userActivity.collectAsStateWithLifecycle()
     val loading by communityViewModel.userProfileLoading.collectAsStateWithLifecycle()
@@ -72,7 +71,8 @@ fun UserProfileScreen(
     val followersList by communityViewModel.followersList.collectAsStateWithLifecycle()
     val followingList by communityViewModel.followingList.collectAsStateWithLifecycle()
 
-    LaunchedEffect(userId) { communityViewModel.loadUserProfile(userId) }
+    val resumeKey = rememberResumeKey()
+    LaunchedEffect(userId, resumeKey) { communityViewModel.loadUserProfile(userId) }
     LaunchedEffect(message) { message?.let { snackbarHostState.showSnackbar(it); communityViewModel.clearMessage() } }
 
     Scaffold(
@@ -116,7 +116,7 @@ fun UserProfileScreen(
                                                 if (user.avatarUrl != null) {
                                                     AsyncImage(
                                                         model = ImageRequest.Builder(LocalContext.current)
-                                                            .data(user.avatarUrl).crossfade(true).build(),
+                                                            .data(GitHubAccelerator.accelerate(user.avatarUrl)).crossfade(true).build(),
                                                         contentDescription = null,
                                                         modifier = Modifier.fillMaxSize().clip(CircleShape),
                                                         contentScale = ContentScale.Crop
@@ -171,11 +171,8 @@ fun UserProfileScreen(
                                             user.displayName ?: user.username,
                                             fontWeight = FontWeight.Bold, fontSize = 22.sp
                                         )
-                                        if (user.isDeveloper) {
-                                            Spacer(Modifier.width(6.dp))
-                                            Icon(Icons.Filled.Verified, null, Modifier.size(20.dp),
-                                                tint = MaterialTheme.colorScheme.primary)
-                                        }
+                                        Spacer(Modifier.width(6.dp))
+                                        UserTitleBadges(isDeveloper = user.isDeveloper, subscriptionTier = user.subscriptionTier)
                                     }
 
                                     // @username + online/offline status
@@ -203,15 +200,6 @@ fun UserProfileScreen(
                                                 )
                                             }
                                         }
-                                    }
-
-                                    // Team badges
-                                    if (user.teamBadges.isNotEmpty()) {
-                                        Spacer(Modifier.height(8.dp))
-                                        UserTitleBadges(
-                                            isDeveloper = user.isDeveloper,
-                                            teamBadges = user.teamBadges
-                                        )
                                     }
 
                                     // Bio
@@ -312,7 +300,6 @@ fun UserProfileScreen(
                             StaggeredItem(index = tabIndex) {
                                 val tabs = listOf(
                                     Triple(Icons.Outlined.Extension, Strings.communityModules, modules.size),
-                                    Triple(Icons.Outlined.Groups, Strings.communityTeamWorks, teamWorks.size),
                                     Triple(Icons.Outlined.Forum, Strings.communityPosts, userPosts.size),
                                     Triple(Icons.Outlined.Timeline, Strings.communityActivity, -1)
                                 )
@@ -378,18 +365,6 @@ fun UserProfileScreen(
                                 }
                             }
                             1 -> {
-                                // ── Team Works ──
-                                if (teamWorks.isEmpty()) {
-                                    item { EmptyState(Icons.Outlined.Groups, Strings.communityNoTeamWorksYet, Strings.communityNoTeamWorksHint) }
-                                }
-                                itemsIndexed(teamWorks, key = { _, w -> "tw_${w.id}" }) { index, work ->
-                                    StaggeredItem(index = index + 3) {
-                                        TeamWorkRow(work, onClick = { onModuleClick(work.id) })
-                                    }
-                                    GlassDivider()
-                                }
-                            }
-                            2 -> {
                                 // ── Posts ──
                                 if (userPosts.isEmpty()) {
                                     item { EmptyState(Icons.Outlined.Forum, Strings.communityNoPosts, null) }
@@ -401,7 +376,7 @@ fun UserProfileScreen(
                                     GlassDivider()
                                 }
                             }
-                            3 -> {
+                            2 -> {
                                 // ── Activity ──
                                 item {
                                     StaggeredItem(index = 3) {
@@ -647,7 +622,7 @@ private fun StatLabel(count: Int, label: String, onClick: (() -> Unit)? = null) 
 // ═══ Module Row ═══
 
 @Composable
-private fun ModuleRow(module: CommunityModuleDetail, onClick: () -> Unit) {
+private fun ModuleRow(module: ModuleItem, onClick: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.Top
@@ -660,7 +635,7 @@ private fun ModuleRow(module: CommunityModuleDetail, onClick: () -> Unit) {
         ) {
             if (module.icon != null) {
                 AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current).data(module.icon).crossfade(true).build(),
+                    model = ImageRequest.Builder(LocalContext.current).data(GitHubAccelerator.accelerate(module.icon)).crossfade(true).build(),
                     contentDescription = null,
                     modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(10.dp)),
                     contentScale = ContentScale.Crop
@@ -743,94 +718,6 @@ private fun ModuleRow(module: CommunityModuleDetail, onClick: () -> Unit) {
     }
 }
 
-// ═══ Team Work Row ═══
-
-@Composable
-private fun TeamWorkRow(work: TeamWorkItem, onClick: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.Top
-    ) {
-        Surface(
-            shape = RoundedCornerShape(10.dp),
-            color = if (work.moduleType == "app")
-                MaterialTheme.colorScheme.tertiaryContainer
-            else MaterialTheme.colorScheme.primaryContainer,
-            modifier = Modifier.size(40.dp)
-        ) {
-            if (work.icon != null) {
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current).data(work.icon).crossfade(true).build(),
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(10.dp)),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                    Icon(
-                        if (work.moduleType == "app") Icons.Outlined.Apps else Icons.Outlined.Extension,
-                        null, Modifier.size(20.dp),
-                        tint = if (work.moduleType == "app") MaterialTheme.colorScheme.tertiary
-                        else MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
-        }
-        Spacer(Modifier.width(10.dp))
-        Column(Modifier.weight(1f)) {
-            Text(work.name, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Spacer(Modifier.height(4.dp))
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                // Role badge
-                Surface(
-                    shape = RoundedCornerShape(4.dp),
-                    color = if (work.contributorRole == "lead")
-                        Color(0xFFFFB300).copy(alpha = 0.15f)
-                    else MaterialTheme.colorScheme.surfaceContainerHighest
-                ) {
-                    Text(
-                        if (work.contributorRole == "lead") Strings.communityLead else Strings.communityMember,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                        fontSize = 10.sp, fontWeight = FontWeight.Bold,
-                        color = if (work.contributorRole == "lead") Color(0xFFFFB300)
-                        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                    )
-                }
-                if (work.contributionPoints > 0) {
-                    Text(String.format(Strings.communityPoints, work.contributionPoints), fontSize = 11.sp, fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f))
-                }
-                work.teamName?.let {
-                    Text("·", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
-                    Text(it, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                        maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
-            }
-            work.contributionDescription?.let {
-                Spacer(Modifier.height(3.dp))
-                Text(it, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
-            }
-            Spacer(Modifier.height(4.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Outlined.Download, null, Modifier.size(13.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f))
-                    Spacer(Modifier.width(2.dp))
-                    Text("${work.downloads}", fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f))
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("★", fontSize = 12.sp, color = Color(0xFFFFB300).copy(alpha = 0.8f))
-                    Spacer(Modifier.width(2.dp))
-                    Text(String.format("%.1f", work.rating), fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f))
-                }
-            }
-        }
-    }
-}
-
 // ═══ Post Row ═══
 
 @Composable
@@ -846,7 +733,7 @@ private fun PostRow(post: CommunityPostItem, onClick: () -> Unit = {}) {
         if (post.media.isNotEmpty()) {
             Spacer(Modifier.height(8.dp))
             val m = post.media[0]
-            val url = m.urlGitee ?: m.urlGithub
+            val url = GitHubAccelerator.pickBestUrl(m.urlGitee, m.urlGithub)
             if (url != null) {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current).data(url).crossfade(true).build(),

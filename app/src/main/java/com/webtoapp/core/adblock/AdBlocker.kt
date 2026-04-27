@@ -69,7 +69,9 @@ class AdBlocker {
         val thirdPartyOnly: Boolean,
         val firstPartyOnly: Boolean,
         // Raw host anchor for fast O(1) pre-check (||domain^ → "domain")
-        val anchorDomain: String?
+        val anchorDomain: String?,
+        // Original rule string for removal
+        val rawRule: String = ""
     )
 
     /**
@@ -79,7 +81,9 @@ class AdBlocker {
         val selector: String,
         val isException: Boolean,
         val domains: Set<String>,       // apply only on these domains (empty = all)
-        val excludedDomains: Set<String>
+        val excludedDomains: Set<String>,
+        // Original rule string for removal
+        val rawRule: String = ""
     )
 
     companion object {
@@ -1064,6 +1068,10 @@ class AdBlocker {
 
     fun removeRule(rule: String) {
         exactHosts.remove(rule)
+        networkBlockFilters.removeAll { it.rawRule == rule }
+        networkExceptionFilters.removeAll { it.rawRule == rule }
+        cosmeticBlockFilters.removeAll { it.rawRule == rule }
+        cosmeticExceptionFilters.removeAll { it.rawRule == rule }
         synchronized(blockResultCache) { blockResultCache.clear() }
     }
 
@@ -1136,7 +1144,8 @@ class AdBlocker {
             selector = selector,
             isException = isException,
             domains = domains,
-            excludedDomains = excludedDomains
+            excludedDomains = excludedDomains,
+            rawRule = rule
         )
 
         if (isException) cosmeticExceptionFilters.add(filter)
@@ -1241,7 +1250,8 @@ class AdBlocker {
             excludedTypes = excludedTypes,
             thirdPartyOnly = thirdPartyOnly,
             firstPartyOnly = firstPartyOnly,
-            anchorDomain = anchorDomain
+            anchorDomain = anchorDomain,
+            rawRule = rule
         )
 
         if (isException) {

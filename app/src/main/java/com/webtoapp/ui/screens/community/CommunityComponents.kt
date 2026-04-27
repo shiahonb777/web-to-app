@@ -5,6 +5,7 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
@@ -13,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,6 +28,9 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -404,4 +409,189 @@ fun GlassDivider(modifier: Modifier = Modifier) {
                 )
             }
     )
+}
+
+// ═══════════════════════════════════════════════════════════
+// 统一模块卡片 — 市场与社区共用
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * 统一模块卡片组件
+ *
+ * 从市场浏览或社区发现页均可使用，点击跳转到统一的 ModuleDetailScreen。
+ * 无论入口如何，模块只有一个身份、一张卡片。
+ */
+@Composable
+fun ModuleCard(
+    module: com.webtoapp.core.cloud.ModuleItem,
+    onClick: () -> Unit,
+    onInstall: () -> Unit,
+    hasUpdate: Boolean = false
+) {
+    val installedTracker = org.koin.compose.koinInject<com.webtoapp.core.cloud.InstalledItemsTracker>()
+    val isInstalled = installedTracker.isInstalled(module.id)
+
+    com.webtoapp.ui.components.EnhancedElevatedCard(
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        androidx.compose.foundation.layout.Column(
+            modifier = Modifier
+                .clickable(onClick = onClick)
+                .padding(16.dp)
+        ) {
+            // Header: icon + name + author
+            androidx.compose.foundation.layout.Row(verticalAlignment = Alignment.CenterVertically) {
+                androidx.compose.foundation.layout.Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+                        .background(
+                            Brush.linearGradient(
+                                listOf(
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.04f)
+                                )
+                            )
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Outlined.Extension, null,
+                        modifier = Modifier.size(22.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                androidx.compose.foundation.layout.Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
+                    androidx.compose.foundation.layout.Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(module.name, fontWeight = FontWeight.SemiBold,
+                            style = MaterialTheme.typography.titleSmall, maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(weight = 1f, fill = false))
+                        if (module.isFeatured) {
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Surface(shape = androidx.compose.foundation.shape.RoundedCornerShape(5.dp),
+                                color = Color(0xFFFFA726).copy(alpha = 0.12f)) {
+                                Text(com.webtoapp.core.i18n.Strings.featured, fontSize = 10.sp,
+                                    color = Color(0xFFFFA726), fontWeight = FontWeight.SemiBold,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                            }
+                        }
+                    }
+                    Text("by ${module.authorName}", style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                }
+            }
+
+            // Description
+            if (!module.description.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(module.description, style = MaterialTheme.typography.bodySmall,
+                    maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f))
+            }
+
+            // Tags
+            if (module.tags.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                androidx.compose.foundation.layout.Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(4.dp)) {
+                    module.tags.take(3).forEach { tag ->
+                        Surface(shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp),
+                            color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+                            Text(tag, fontSize = 10.sp,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Bottom bar: stats + install
+            androidx.compose.foundation.layout.Row(verticalAlignment = Alignment.CenterVertically) {
+                // Downloads
+                Icon(Icons.Outlined.Download, null,
+                    modifier = Modifier.size(14.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                Spacer(modifier = Modifier.width(3.dp))
+                Text("${module.downloads}", style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                // Likes
+                Icon(Icons.Outlined.FavoriteBorder, null,
+                    modifier = Modifier.size(14.dp),
+                    tint = Color(0xFFE91E63).copy(alpha = 0.6f))
+                Spacer(modifier = Modifier.width(3.dp))
+                Text("${module.likeCount}", style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                // Rating
+                Icon(Icons.Outlined.Star, null,
+                    modifier = Modifier.size(14.dp), tint = Color(0xFFFFC107))
+                Spacer(modifier = Modifier.width(3.dp))
+                Text(if (module.ratingCount > 0) "${module.rating}" else "-",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                // Version
+                module.versionName?.let {
+                    Text("v$it", style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
+                }
+
+                Spacer(modifier = Modifier.weight(weight = 1f, fill = true))
+
+                // Install / Installed / Update button
+                if (hasUpdate) {
+                    androidx.compose.material3.Button(
+                        onClick = onInstall,
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 18.dp, vertical = 4.dp),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF2196F3)
+                        )
+                    ) {
+                        Icon(Icons.Outlined.SystemUpdate, null,
+                            modifier = Modifier.size(15.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(com.webtoapp.core.i18n.Strings.update, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                    }
+                } else if (isInstalled) {
+                    Surface(
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+                        color = Color(0xFF4CAF50).copy(alpha = 0.08f)
+                    ) {
+                        androidx.compose.foundation.layout.Row(
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(4.dp)
+                        ) {
+                                Icon(Icons.Filled.Check, null,
+                                modifier = Modifier.size(15.dp), tint = Color(0xFF4CAF50))
+                            Text(com.webtoapp.core.i18n.Strings.installed, fontSize = 12.sp,
+                                color = Color(0xFF4CAF50), fontWeight = FontWeight.Medium)
+                        }
+                    }
+                } else {
+                    androidx.compose.material3.FilledTonalButton(
+                        onClick = onInstall,
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 18.dp, vertical = 4.dp),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+                    ) {
+                        Icon(Icons.Outlined.FileDownload, null,
+                            modifier = Modifier.size(15.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(com.webtoapp.core.i18n.Strings.install, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                    }
+                }
+            }
+        }
+    }
 }

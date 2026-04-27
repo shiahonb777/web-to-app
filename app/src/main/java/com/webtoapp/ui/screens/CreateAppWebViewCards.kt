@@ -36,9 +36,6 @@ import com.webtoapp.ui.viewmodel.EditState
 import com.webtoapp.ui.animation.CardExpandTransition
 import com.webtoapp.ui.animation.CardCollapseTransition
 
-/**
- * 长按菜单设置卡片 - 精简优雅版 + iOS 丝滑动画
- */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun LongPressMenuCard(
@@ -47,7 +44,7 @@ fun LongPressMenuCard(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    // 箭头旋转动画 — iOS 风格弹簧
+    // iOS 风格弹簧动画
     val arrowRotation by animateFloatAsState(
         targetValue = if (expanded) 180f else 0f,
         animationSpec = spring(
@@ -57,7 +54,6 @@ fun LongPressMenuCard(
         label = "arrowRotation"
     )
 
-    // 展开内容透明度动画 — 渐显效果
     val contentAlpha by animateFloatAsState(
         targetValue = if (expanded) 1f else 0f,
         animationSpec = tween(
@@ -67,7 +63,6 @@ fun LongPressMenuCard(
         label = "contentAlpha"
     )
 
-    // 样式选项配置
     data class StyleOption(
         val style: LongPressMenuStyle,
         val name: String,
@@ -90,7 +85,7 @@ fun LongPressMenuCard(
 
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // 标题行
+            // 标题
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -141,7 +136,6 @@ fun LongPressMenuCard(
                         }
                     }
                 }
-                // 旋转箭头
                 Icon(
                     Icons.Outlined.ExpandMore,
                     contentDescription = null,
@@ -152,7 +146,6 @@ fun LongPressMenuCard(
                 )
             }
 
-            // 展开内容 — iOS 弹簧物理动画
             AnimatedVisibility(
                 visible = expanded,
                 enter = CardExpandTransition,
@@ -164,7 +157,7 @@ fun LongPressMenuCard(
                         .graphicsLayer { alpha = contentAlpha },
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // 样式选择 - FlowRow 紧凑布局
+                    // FlowRow 紧凑布局
                     FlowRow(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -189,7 +182,7 @@ fun LongPressMenuCard(
                         }
                     }
 
-                    // 选中样式的描述 + 预览 — 带 crossfade 切换
+                    // crossfade 切换
                     Crossfade(
                         targetState = selectedOption,
                         animationSpec = tween(
@@ -213,7 +206,6 @@ fun LongPressMenuCard(
                                 modifier = Modifier.padding(14.dp),
                                 verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                // 描述文字
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -244,7 +236,6 @@ fun LongPressMenuCard(
                                     }
                                 }
 
-                                // 预览（非禁用状态时显示）
                                 if (currentOption.style != LongPressMenuStyle.DISABLED) {
                                     LongPressMenuStylePreview(
                                         style = currentOption.style,
@@ -260,9 +251,6 @@ fun LongPressMenuCard(
     }
 }
 
-/**
- * 长按菜单样式预览组件 —— 紧凑精美版
- */
 @Composable
 private fun LongPressMenuStylePreview(
     style: LongPressMenuStyle,
@@ -286,7 +274,6 @@ private fun LongPressMenuStylePreview(
     ) {
         when (style) {
             LongPressMenuStyle.FULL, LongPressMenuStyle.SIMPLE -> {
-                // BottomSheet 预览
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.Bottom
@@ -341,7 +328,6 @@ private fun LongPressMenuStylePreview(
             }
 
             LongPressMenuStyle.IOS -> {
-                // iOS 风格预览
                 Surface(
                     modifier = Modifier.width(160.dp),
                     shape = RoundedCornerShape(12.dp),
@@ -387,7 +373,6 @@ private fun LongPressMenuStylePreview(
             }
 
             LongPressMenuStyle.FLOATING -> {
-                // 悬浮气泡风格预览
                 Box(modifier = Modifier.fillMaxSize()) {
                     Surface(
                         modifier = Modifier.align(Alignment.Center),
@@ -445,7 +430,6 @@ private fun LongPressMenuStylePreview(
             }
 
             LongPressMenuStyle.CONTEXT -> {
-                // 右键菜单风格预览
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.TopStart
@@ -496,16 +480,11 @@ private fun LongPressMenuStylePreview(
                 }
             }
 
-            LongPressMenuStyle.DISABLED -> {
-                // 不显示预览
-            }
+            LongPressMenuStyle.DISABLED -> {}
         }
     }
 }
 
-/**
- * 广告拦截卡片
- */
 @Composable
 fun AdBlockCard(
     editState: EditState,
@@ -567,8 +546,7 @@ fun AdBlockCard(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                
-                // Allow用户切换广告拦截
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -650,16 +628,14 @@ fun AdBlockCard(
     }
 }
 
-/**
- * WebView configuration卡片
- */
 @Composable
 @OptIn(ExperimentalLayoutApi::class)
 fun WebViewConfigCard(
     config: WebViewConfig,
     onConfigChange: (WebViewConfig) -> Unit,
     apkExportConfig: ApkExportConfig = ApkExportConfig(),
-    onApkExportConfigChange: (ApkExportConfig) -> Unit = {}
+    onApkExportConfigChange: (ApkExportConfig) -> Unit = {},
+    onOpenPermissionConfig: () -> Unit = {}
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -711,9 +687,7 @@ fun WebViewConfigCard(
                     modifier = Modifier.padding(top = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
-                    // ═══════════════════════════════════════════
                     // § 1 — Engine
-                    // ═══════════════════════════════════════════
                     AdvancedSettingsSection(
                         title = Strings.sectionWebEngine,
                         icon = Icons.Outlined.Memory
@@ -740,9 +714,7 @@ fun WebViewConfigCard(
                         )
                     }
 
-                    // ═══════════════════════════════════════════
                     // § 2 — Content & Display
-                    // ═══════════════════════════════════════════
                     AdvancedSettingsSection(
                         title = Strings.sectionContentDisplay,
                         icon = Icons.Outlined.Visibility
@@ -761,13 +733,11 @@ fun WebViewConfigCard(
                             onCheckedChange = { onConfigChange(config.copy(fullscreenEnabled = it)) }
                         )
 
-                        // 视口适配模式 (inline)
+                        // 视口适配模式
                         ViewportModeSelector(config = config, onConfigChange = onConfigChange)
                     }
 
-                    // ═══════════════════════════════════════════
                     // § 3 — Navigation & Interaction
-                    // ═══════════════════════════════════════════
                     AdvancedSettingsSection(
                         title = Strings.sectionNavigation,
                         icon = Icons.Outlined.Navigation
@@ -791,6 +761,13 @@ fun WebViewConfigCard(
                             subtitle = Strings.deepLinkSettingHint,
                             checked = apkExportConfig.deepLinkEnabled,
                             onCheckedChange = { onApkExportConfigChange(apkExportConfig.copy(deepLinkEnabled = it)) }
+                        )
+
+                        SettingsSwitch(
+                            title = Strings.popupBlockerSetting,
+                            subtitle = Strings.popupBlockerSettingHint,
+                            checked = config.popupBlockerEnabled,
+                            onCheckedChange = { onConfigChange(config.copy(popupBlockerEnabled = it)) }
                         )
 
                         AnimatedVisibility(
@@ -838,18 +815,9 @@ fun WebViewConfigCard(
                             checked = config.showFloatingBackButton,
                             onCheckedChange = { onConfigChange(config.copy(showFloatingBackButton = it)) }
                         )
-
-                        SettingsSwitch(
-                            title = Strings.blockSystemNavigationGestureLabel,
-                            subtitle = Strings.blockSystemNavigationGestureHint,
-                            checked = config.blockSystemNavigationGesture,
-                            onCheckedChange = { onConfigChange(config.copy(blockSystemNavigationGesture = it)) }
-                        )
                     }
 
-                    // ═══════════════════════════════════════════
                     // § 4 — Offline & Performance
-                    // ═══════════════════════════════════════════
                     AdvancedSettingsSection(
                         title = Strings.sectionOfflinePerformance,
                         icon = Icons.Outlined.CloudOff
@@ -903,21 +871,17 @@ fun WebViewConfigCard(
                             }
                         }
 
-                        // 自定义无网络页面
                         ErrorPageConfigCard(
                             config = config.errorPageConfig,
                             onConfigChange = { onConfigChange(config.copy(errorPageConfig = it)) }
                         )
                     }
 
-                    // ═══════════════════════════════════════════
                     // § 5 — Developer Tools
-                    // ═══════════════════════════════════════════
                     AdvancedSettingsSection(
                         title = Strings.sectionDeveloper,
                         icon = Icons.Outlined.Code
                     ) {
-                        // 键盘调整模式
                         KeyboardAdjustModeCard(
                             mode = config.keyboardAdjustMode,
                             onModeChange = { onConfigChange(config.copy(keyboardAdjustMode = it)) }
@@ -925,7 +889,6 @@ fun WebViewConfigCard(
 
                         Spacer(modifier = Modifier.height(4.dp))
 
-                        // 用户脚本
                         UserScriptsSection(
                             scripts = config.injectScripts,
                             onScriptsChange = { onConfigChange(config.copy(injectScripts = it)) }
@@ -933,16 +896,14 @@ fun WebViewConfigCard(
 
                         Spacer(modifier = Modifier.height(4.dp))
 
-                        // APK 导出
                         ApkExportSection(
                             config = apkExportConfig,
-                            onConfigChange = onApkExportConfigChange
+                            onConfigChange = onApkExportConfigChange,
+                            onOpenPermissionConfig = onOpenPermissionConfig
                         )
                     }
 
-                    // ═══════════════════════════════════════════
                     // § 6 — Network / Proxy
-                    // ═══════════════════════════════════════════
                     AdvancedSettingsSection(
                         title = Strings.proxySectionTitle,
                         icon = Icons.Outlined.VpnKey
@@ -954,7 +915,6 @@ fun WebViewConfigCard(
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
 
-                        // 代理模式选择
                         Text(
                             text = Strings.proxyModeLabel,
                             style = MaterialTheme.typography.labelMedium,
@@ -988,14 +948,13 @@ fun WebViewConfigCard(
                             }
                         }
 
-                        // STATIC 模式 — 固定代理配置
+                        // STATIC 代理配置
                         AnimatedVisibility(
                             visible = config.proxyMode == "STATIC",
                             enter = CardExpandTransition,
                             exit = CardCollapseTransition
                         ) {
                             Column(modifier = Modifier.padding(start = 8.dp, top = 4.dp, bottom = 4.dp)) {
-                                // 协议选择
                                 Text(
                                     text = Strings.proxyTypeLabel,
                                     style = MaterialTheme.typography.labelMedium,
@@ -1016,7 +975,6 @@ fun WebViewConfigCard(
                                     }
                                 }
 
-                                // 主机和端口
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1046,7 +1004,6 @@ fun WebViewConfigCard(
 
                                 Spacer(modifier = Modifier.height(8.dp))
 
-                                // 绕过规则
                                 var bypassText by remember(config.proxyBypassRules) {
                                     mutableStateOf(config.proxyBypassRules.joinToString("\n"))
                                 }
@@ -1080,7 +1037,7 @@ fun WebViewConfigCard(
                             }
                         }
 
-                        // PAC 模式 — PAC 脚本 URL
+                        // PAC 脚本 URL
                         AnimatedVisibility(
                             visible = config.proxyMode == "PAC",
                             enter = CardExpandTransition,
@@ -1099,7 +1056,6 @@ fun WebViewConfigCard(
 
                                 Spacer(modifier = Modifier.height(8.dp))
 
-                                // 绕过规则
                                 var pacBypassText by remember(config.proxyBypassRules) {
                                     mutableStateOf(config.proxyBypassRules.joinToString("\n"))
                                 }
@@ -1139,15 +1095,8 @@ fun WebViewConfigCard(
     }
 }
 
-// ApkExportSection and CustomSigningSection moved to CreateAppApkSection.kt
-
-// ═══════════════════════════════════════════
-// Section Group Component for Advanced Settings
-// ═══════════════════════════════════════════
-
 /**
- * 高级设置分组容器 — 参考 iOS Settings 的分组美学
- * 每个 section 使用微妙的调色背景 + 小型图标标签头部
+ * iOS Settings 风格的分组容器
  */
 @Composable
 private fun AdvancedSettingsSection(
@@ -1162,7 +1111,6 @@ private fun AdvancedSettingsSection(
         MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
 
     Column {
-        // Section header — minimal, with micro-accent
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(bottom = 8.dp, start = 4.dp)
@@ -1183,7 +1131,6 @@ private fun AdvancedSettingsSection(
             )
         }
 
-        // Section body
         Surface(
             shape = RoundedCornerShape(14.dp),
             color = sectionBg,
@@ -1197,13 +1144,6 @@ private fun AdvancedSettingsSection(
     }
 }
 
-// ═══════════════════════════════════════════
-// Viewport Mode Selector (extracted)
-// ═══════════════════════════════════════════
-
-/**
- * 视口适配模式选择器 — 从 WebViewConfigCard 中提取
- */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ViewportModeSelector(
@@ -1240,7 +1180,6 @@ private fun ViewportModeSelector(
                 modifier = Modifier.padding(bottom = 12.dp)
             )
 
-            // 模式选择 FilterChip
             val viewportOptions = listOf(
                 ViewportMode.DEFAULT to Pair(Strings.viewportModeDefault, Icons.Outlined.Web),
                 ViewportMode.FIT_SCREEN to Pair(Strings.viewportModeFitScreen, Icons.Outlined.Fullscreen),
@@ -1285,7 +1224,6 @@ private fun ViewportModeSelector(
                 }
             }
 
-            // CUSTOM 模式：预设宽度 + 自定义输入
             if (config.viewportMode == ViewportMode.CUSTOM) {
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -1384,9 +1322,6 @@ private fun ViewportModeSelector(
     }
 }
 
-/**
- * 浏览器伪装卡片（User-Agent 配置）
- */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun UserAgentCard(
@@ -1398,7 +1333,6 @@ fun UserAgentCard(
     
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // 卡片头部
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1444,10 +1378,8 @@ fun UserAgentCard(
                 )
             }
             
-            // Expand内容 - 使用 AnimatedVisibility 实现平滑动画
             AnimatedVisibility(visible = expanded) {
                 Column(modifier = Modifier.padding(top = 12.dp)) {
-                    // 提示文字
                 Surface(
                     color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
                     shape = RoundedCornerShape(8.dp)
@@ -1473,7 +1405,6 @@ fun UserAgentCard(
                 
                 Spacer(modifier = Modifier.height(12.dp))
                 
-                // 浏览器选择
                 Text(
                     text = Strings.mobileVersion,
                     style = MaterialTheme.typography.labelMedium,
@@ -1486,7 +1417,6 @@ fun UserAgentCard(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // 移动版浏览器
                     listOf(
                         UserAgentMode.DEFAULT to Strings.userAgentDefault,
                         UserAgentMode.CHROME_MOBILE to "Chrome",
@@ -1516,7 +1446,6 @@ fun UserAgentCard(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // 桌面版浏览器
                     listOf(
                         UserAgentMode.CHROME_DESKTOP to "Chrome",
                         UserAgentMode.SAFARI_DESKTOP to "Safari",
@@ -1533,7 +1462,6 @@ fun UserAgentCard(
                 
                 Spacer(modifier = Modifier.height(12.dp))
                 
-                // Custom选项
                 PremiumFilterChip(
                     selected = config.userAgentMode == UserAgentMode.CUSTOM,
                     onClick = { onConfigChange(config.copy(userAgentMode = UserAgentMode.CUSTOM)) },
@@ -1547,7 +1475,6 @@ fun UserAgentCard(
                     },
                 )
                 
-                // Custom输入框
                 if (config.userAgentMode == UserAgentMode.CUSTOM) {
                     Spacer(modifier = Modifier.height(8.dp))
                     PremiumTextField(
@@ -1561,8 +1488,7 @@ fun UserAgentCard(
                         maxLines = 4
                     )
                 }
-                
-                    // Show当前 User-Agent
+
                     if (config.userAgentMode != UserAgentMode.DEFAULT && config.userAgentMode != UserAgentMode.CUSTOM) {
                         Spacer(modifier = Modifier.height(12.dp))
                         Surface(
@@ -1592,10 +1518,7 @@ fun UserAgentCard(
     }
 }
 
-/**
- * 隐藏浏览器工具栏卡片 — 独立于全屏模式
- * 仅隐藏顶部 TopAppBar，不触发系统沉浸式模式
- */
+/** 仅隐藏 TopAppBar，不触发系统沉浸式模式 */
 @Composable
 fun HideBrowserToolbarCard(
     enabled: Boolean,
@@ -1647,9 +1570,6 @@ fun HideBrowserToolbarCard(
     }
 }
 
-/**
- * 全屏模式卡片
- */
 @Composable
 fun FullscreenModeCard(
     enabled: Boolean,
@@ -1673,8 +1593,7 @@ fun FullscreenModeCard(
                 checked = enabled,
                 onCheckedChange = onEnabledChange
             )
-            
-            // Fullscreen模式下显示状态栏选项
+
             AnimatedVisibility(
                 visible = enabled,
                 enter = CardExpandTransition,
@@ -1707,7 +1626,6 @@ fun FullscreenModeCard(
                     )
                 }
                 
-                // 显示导航栏选项
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -1732,7 +1650,6 @@ fun FullscreenModeCard(
                     )
                 }
                 
-                // 显示顶部导航栏选项
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -1757,11 +1674,9 @@ fun FullscreenModeCard(
                     )
                 }
                 
-                // Status bar配置（仅在显示状态栏时可用）
                 if (showStatusBar) {
                     Spacer(modifier = Modifier.height(12.dp))
-                    
-                    // Status bar配置展开/收起
+
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -1805,8 +1720,7 @@ fun FullscreenModeCard(
                             )
                         }
                     }
-                    
-                    // Status bar配置内容
+
                     AnimatedVisibility(
                         visible = statusBarConfigExpanded,
                         enter = CardExpandTransition,
@@ -1828,12 +1742,7 @@ fun FullscreenModeCard(
 }
 
 /**
- * 屏幕方向模式卡片 — 支持 7 种方向模式的完整选择器
- *
- * 设计理念：
- * - 基础模式（竖屏 / 横屏 / 自动旋转）直接展示
- * - 高级模式（反向竖屏 / 反向横屏 / 感应竖屏 / 感应横屏）折叠展示
- * - 每个模式带图标 + 描述，用户一目了然
+ * 基础模式直接展示，高级模式（反向/感应）折叠展示
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -1845,11 +1754,9 @@ fun LandscapeModeCard(
         onEnabledChange(mode == com.webtoapp.data.model.OrientationMode.LANDSCAPE)
     }
 ) {
-    // 是否非默认竖屏 — 用于控制开关状态
     val isCustomOrientation = orientationMode != com.webtoapp.data.model.OrientationMode.PORTRAIT
-    // 高级选项展开状态
     var advancedExpanded by remember { mutableStateOf(
-        // 如果当前已选中高级模式，默认展开
+        // 当前已选中高级模式时默认展开
         orientationMode in listOf(
             com.webtoapp.data.model.OrientationMode.REVERSE_PORTRAIT,
             com.webtoapp.data.model.OrientationMode.REVERSE_LANDSCAPE,
@@ -1883,7 +1790,6 @@ fun LandscapeModeCard(
                     HorizontalDivider()
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // 提示文字
                     Text(
                         text = Strings.orientationModeHint,
                         style = MaterialTheme.typography.bodySmall,
@@ -1892,7 +1798,6 @@ fun LandscapeModeCard(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // ── 基础模式 ──
                     Text(
                         text = Strings.orientationBasicLabel,
                         style = MaterialTheme.typography.labelMedium,
@@ -1900,7 +1805,6 @@ fun LandscapeModeCard(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // 竖屏 / 横屏 / 自动旋转 — 三个可视化选择卡
                     val basicModes = listOf(
                         Triple(com.webtoapp.data.model.OrientationMode.LANDSCAPE, Icons.Outlined.StayCurrentLandscape, Strings.orientationLandscape),
                         Triple(com.webtoapp.data.model.OrientationMode.AUTO, Icons.Outlined.ScreenRotation, Strings.orientationAuto)
@@ -1923,7 +1827,6 @@ fun LandscapeModeCard(
                         }
                     }
 
-                    // ── 高级模式展开按钮 ──
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Surface(
@@ -1970,7 +1873,6 @@ fun LandscapeModeCard(
                         }
                     }
 
-                    // ── 高级模式内容 ──
                     AnimatedVisibility(
                         visible = advancedExpanded,
                         enter = CardExpandTransition,
@@ -1979,7 +1881,6 @@ fun LandscapeModeCard(
                         Column {
                             Spacer(modifier = Modifier.height(10.dp))
 
-                            // 反向模式
                             Text(
                                 text = Strings.orientationReversedLabel,
                                 style = MaterialTheme.typography.labelMedium,
@@ -2007,7 +1908,6 @@ fun LandscapeModeCard(
 
                             Spacer(modifier = Modifier.height(12.dp))
 
-                            // 感应模式
                             Text(
                                 text = Strings.orientationSensorLabel,
                                 style = MaterialTheme.typography.labelMedium,
@@ -2033,7 +1933,6 @@ fun LandscapeModeCard(
                         }
                     }
 
-                    // ── 当前模式提示信息 ──
                     val currentModeHint = when (orientationMode) {
                         com.webtoapp.data.model.OrientationMode.AUTO -> Strings.orientationAutoHint
                         com.webtoapp.data.model.OrientationMode.SENSOR_PORTRAIT -> Strings.orientationSensorPortraitHint
@@ -2080,10 +1979,7 @@ fun LandscapeModeCard(
     }
 }
 
-/**
- * 方向模式选择项 — 可复用的单行卡片选择器
- * 支持图标旋转以直观表达方向含义
- */
+/** 图标旋转可直观表达方向含义 */
 @Composable
 private fun OrientationModeItem(
     icon: ImageVector,
@@ -2122,7 +2018,6 @@ private fun OrientationModeItem(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 图标
             Surface(
                 modifier = Modifier.size(36.dp),
                 shape = RoundedCornerShape(8.dp),
@@ -2142,7 +2037,6 @@ private fun OrientationModeItem(
                 }
             }
             Spacer(modifier = Modifier.width(12.dp))
-            // 标题 + 副标
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
@@ -2161,7 +2055,6 @@ private fun OrientationModeItem(
                     )
                 }
             }
-            // 选中指示器
             if (selected) {
                 Spacer(modifier = Modifier.width(8.dp))
                 Icon(
@@ -2175,11 +2068,6 @@ private fun OrientationModeItem(
     }
 }
 
-/**
- * 保持屏幕常亮卡片 — 高级版
- * 支持 OFF / ALWAYS / TIMED 三种模式
- * 包含超时时间滑块、亮度控制、电量影响提示
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun KeepScreenOnCard(
@@ -2193,7 +2081,6 @@ fun KeepScreenOnCard(
     val isEnabled = screenAwakeMode != com.webtoapp.data.model.ScreenAwakeMode.OFF
     val primary = MaterialTheme.colorScheme.primary
     
-    // 模式选项定义
     data class AwakeModeOption(
         val mode: com.webtoapp.data.model.ScreenAwakeMode,
         val icon: ImageVector,
@@ -2224,7 +2111,6 @@ fun KeepScreenOnCard(
     
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // ── 头部：图标 + 标题 + 开关 ──
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -2272,15 +2158,13 @@ fun KeepScreenOnCard(
                     }
                 )
             }
-            
-            // ── 展开面板（仅启用时显示）──
+
             AnimatedVisibility(
                 visible = isEnabled,
                 enter = CardExpandTransition,
                 exit = CardCollapseTransition
             ) {
                 Column(modifier = Modifier.padding(top = 16.dp)) {
-                    // ── 模式选择器 ──
                     Text(
                         text = Strings.screenAwakeModeLabel,
                         style = MaterialTheme.typography.labelMedium,
@@ -2334,7 +2218,6 @@ fun KeepScreenOnCard(
                                     
                                     Spacer(modifier = Modifier.width(12.dp))
                                     
-                                    // 文本
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
                                             text = option.title,
@@ -2351,7 +2234,6 @@ fun KeepScreenOnCard(
                                         )
                                     }
                                     
-                                    // 选中指示器
                                     if (isSelected) {
                                         Icon(
                                             imageVector = Icons.Filled.CheckCircle,
@@ -2364,8 +2246,7 @@ fun KeepScreenOnCard(
                             }
                         }
                     }
-                    
-                    // ── 定时模式：超时时间滑块 ──
+
                     AnimatedVisibility(
                         visible = screenAwakeMode == com.webtoapp.data.model.ScreenAwakeMode.TIMED,
                         enter = fadeIn(animationSpec = tween(200)) + expandVertically(animationSpec = tween(300)),
@@ -2406,7 +2287,6 @@ fun KeepScreenOnCard(
                                 modifier = Modifier.fillMaxWidth()
                             )
                             
-                            // 预设快捷按钮
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -2429,9 +2309,8 @@ fun KeepScreenOnCard(
                         }
                     }
                     
-                    // ── 亮度控制 ──
                     Spacer(modifier = Modifier.height(16.dp))
-                    
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,

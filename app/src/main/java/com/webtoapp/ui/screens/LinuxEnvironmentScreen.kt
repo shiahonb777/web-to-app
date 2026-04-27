@@ -233,7 +233,7 @@ private fun StatusCard(
                             is EnvironmentState.NotInstalled -> Strings.envNotInstalled
                             is EnvironmentState.Downloading -> "${Strings.envDownloading}: ${state.component}"
                             is EnvironmentState.Installing -> "${Strings.envInstalling}: ${state.step}"
-                            is EnvironmentState.Error -> "构建环境安装失败"
+                            is EnvironmentState.Error -> Strings.envInstallFailed
                             else -> Strings.ready
                         },
                         style = MaterialTheme.typography.titleLarge,
@@ -284,11 +284,11 @@ private fun StatusCard(
                     PremiumButton(onClick = onInstall, modifier = Modifier.fillMaxWidth()) {
                         Icon(if (state is EnvironmentState.Error) Icons.Default.Refresh else Icons.Default.Download, null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(if (state is EnvironmentState.Error) "重新安装 esbuild" else Strings.installAdvancedBuildTool)
+                        Text(if (state is EnvironmentState.Error) Strings.reinstallEsbuild else Strings.installAdvancedBuildTool)
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        if (state is EnvironmentState.Error) "安装失败不会再伪装成可用状态。修复环境后再继续构建。"
+                        if (state is EnvironmentState.Error) Strings.installFailedHint
                         else Strings.optionalEsbuildHint,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant

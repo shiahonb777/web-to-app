@@ -3092,7 +3092,7 @@ private fun analyzeFolder(
     }
     
     if (allFiles.any { it.size > 50 * 1024 * 1024 }) {
-        warnings.add("存在超过 50MB 的大文件，打包 APK 时可能影响安装包大小")
+        warnings.add(Strings.largeFileWarning)
     }
     
     val stats = ZipProjectImporter.ResourceType.entries

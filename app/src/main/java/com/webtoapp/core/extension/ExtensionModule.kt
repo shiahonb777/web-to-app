@@ -399,139 +399,26 @@ data class ModuleConfigItem(
 /**
  * 模块 UI 类型
  * 定义模块在网页中的展示形式
+ * 现在统一使用 FAB 管理悬浮窗作为入口，不再为每个模块创建独立悬浮 UI
  */
 enum class ModuleUiType {
-    FLOATING_BUTTON,    // 悬浮按钮（默认，点击显示面板）
-    FLOATING_TOOLBAR,   // 悬浮工具栏（多个按钮水平/垂直排列）
-    SIDEBAR,            // 侧边栏（可展开/收起的面板）
-    BOTTOM_BAR,         // 底部操作栏（固定在底部）
-    FLOATING_PANEL,     // 可拖动悬浮面板
-    MINI_BUTTON,        // 迷你悬浮按钮（更小，不显示模块数量）
-    CUSTOM;             // 完全自定义（使用 customHtml）
-    
-    fun getDisplayName(): String = when (this) {
-        FLOATING_BUTTON -> Strings.uiTypeFloatingButton
-        FLOATING_TOOLBAR -> Strings.uiTypeFloatingToolbar
-        SIDEBAR -> Strings.uiTypeSidebar
-        BOTTOM_BAR -> Strings.uiTypeBottomBar
-        FLOATING_PANEL -> Strings.uiTypeFloatingPanel
-        MINI_BUTTON -> Strings.uiTypeMiniButton
-        CUSTOM -> Strings.uiTypeCustom
-    }
-    
-    fun getDescription(): String = when (this) {
-        FLOATING_BUTTON -> Strings.uiTypeFloatingButtonDesc
-        FLOATING_TOOLBAR -> Strings.uiTypeFloatingToolbarDesc
-        SIDEBAR -> Strings.uiTypeSidebarDesc
-        BOTTOM_BAR -> Strings.uiTypeBottomBarDesc
-        FLOATING_PANEL -> Strings.uiTypeFloatingPanelDesc
-        MINI_BUTTON -> Strings.uiTypeMiniButtonDesc
-        CUSTOM -> Strings.uiTypeCustomDesc
-    }
-    
-    fun getIcon(): String = when (this) {
-        FLOATING_BUTTON -> "radio_button"
-        FLOATING_TOOLBAR -> "wrench"
-        SIDEBAR -> "side_navigation"
-        BOTTOM_BAR -> "dock_to_bottom"
-        FLOATING_PANEL -> "picture_in_picture"
-        MINI_BUTTON -> "radio_button"
-        CUSTOM -> "palette"
-    }
+    FLOATING_BUTTON    // 统一 FAB 面板按钮（默认）
 }
 
-/**
- * UI 位置
- */
-enum class UiPosition {
-    TOP_LEFT, TOP_CENTER, TOP_RIGHT,
-    MIDDLE_LEFT, MIDDLE_CENTER, MIDDLE_RIGHT,
-    BOTTOM_LEFT, BOTTOM_CENTER, BOTTOM_RIGHT;
-    
-    fun toCssPosition(): String = when (this) {
-        TOP_LEFT -> "top:80px;left:16px"
-        TOP_CENTER -> "top:80px;left:50%;transform:translateX(-50%)"
-        TOP_RIGHT -> "top:80px;right:16px"
-        MIDDLE_LEFT -> "top:50%;left:16px;transform:translateY(-50%)"
-        MIDDLE_CENTER -> "top:50%;left:50%;transform:translate(-50%,-50%)"
-        MIDDLE_RIGHT -> "top:50%;right:16px;transform:translateY(-50%)"
-        BOTTOM_LEFT -> "bottom:80px;left:16px"
-        BOTTOM_CENTER -> "bottom:80px;left:50%;transform:translateX(-50%)"
-        BOTTOM_RIGHT -> "bottom:80px;right:16px"
-    }
-    
-    fun getDisplayName(): String = when (this) {
-        TOP_LEFT -> Strings.posTopLeft
-        TOP_CENTER -> Strings.posTopCenter
-        TOP_RIGHT -> Strings.posTopRight
-        MIDDLE_LEFT -> Strings.posMiddleLeft
-        MIDDLE_CENTER -> Strings.posMiddleCenter
-        MIDDLE_RIGHT -> Strings.posMiddleRight
-        BOTTOM_LEFT -> Strings.posBottomLeft
-        BOTTOM_CENTER -> Strings.posBottomCenter
-        BOTTOM_RIGHT -> Strings.posBottomRight
-    }
-}
 
-/**
- * 工具栏方向
- */
-enum class ToolbarOrientation {
-    HORIZONTAL,  // 水平排列
-    VERTICAL;    // 垂直排列
-    
-    fun getDisplayName(): String = when (this) {
-        HORIZONTAL -> Strings.orientationHorizontal
-        VERTICAL -> Strings.orientationVertical
-    }
-}
 
-/**
- * 侧边栏位置
- */
-enum class SidebarPosition {
-    LEFT,   // 左侧
-    RIGHT;  // 右侧
-    
-    fun getDisplayName(): String = when (this) {
-        LEFT -> Strings.sidebarLeft
-        RIGHT -> Strings.sidebarRight
-    }
-}
 
-/**
- * 工具栏项 - 定义工具栏中的单个按钮
- */
-data class ToolbarItem(
-    @SerializedName("id")
-    val id: String = UUID.randomUUID().toString(),  // 唯一ID
-    @SerializedName("icon")
-    val icon: String,                               // Icon（emoji）
-    @SerializedName("label")
-    val label: String = "",                         // 标签文字（可选）
-    @SerializedName("tooltip")
-    val tooltip: String = "",                       // 悬停提示
-    @SerializedName("action")
-    val action: String,                             // 点击时执行的 JS 代码或函数名
-    @SerializedName("showLabel")
-    val showLabel: Boolean = false,                 // Yes否显示标签
-    @SerializedName("badge")
-    val badge: String = ""                          // 徽章文字（如数量）
-)
 
 /**
  * 模块 UI 配置
  * 定义模块的 UI 样式和行为
+ * 现在统一使用 FAB 管理悬浮窗，不再为每个模块创建独立悬浮 UI
  */
 data class ModuleUiConfig(
     @SerializedName("type")
     val type: ModuleUiType = ModuleUiType.FLOATING_BUTTON,
     
     // 通用配置
-    @SerializedName("position")
-    val position: UiPosition = UiPosition.BOTTOM_RIGHT,  // UI 位置
-    @SerializedName("draggable")
-    val draggable: Boolean = false,                      // Yes否可拖动
     @SerializedName("autoHide")
     val autoHide: Boolean = false,                       // 滚动时自动隐藏
     @SerializedName("autoHideDelay")
@@ -539,84 +426,11 @@ data class ModuleUiConfig(
     @SerializedName("initiallyHidden")
     val initiallyHidden: Boolean = false,                // 初始是否隐藏
     @SerializedName("showOnlyOnMatch")
-    val showOnlyOnMatch: Boolean = true,                 // 仅在匹配 URL 时显示
-    
-    // 悬浮按钮配置
-    @SerializedName("buttonSize")
-    val buttonSize: Int = 56,                            // 按钮大小（dp）
-    @SerializedName("buttonColor")
-    val buttonColor: String = "",                        // 按钮颜色（空则使用主题色）
-    
-    // Toolbar配置
-    @SerializedName("toolbarItems")
-    val toolbarItems: List<ToolbarItem> = emptyList(),   // Toolbar按钮列表
-    @SerializedName("toolbarOrientation")
-    val toolbarOrientation: ToolbarOrientation = ToolbarOrientation.HORIZONTAL,
-    @SerializedName("toolbarCollapsible")
-    val toolbarCollapsible: Boolean = true,              // Yes否可折叠
-    @SerializedName("toolbarCollapsed")
-    val toolbarCollapsed: Boolean = false,               // 初始是否折叠
-    
-    // 侧边栏配置
-    @SerializedName("sidebarPosition")
-    val sidebarPosition: SidebarPosition = SidebarPosition.RIGHT,
-    @SerializedName("sidebarWidth")
-    val sidebarWidth: Int = 300,                         // 侧边栏宽度（px）
-    @SerializedName("sidebarCollapsed")
-    val sidebarCollapsed: Boolean = true,                // 初始是否折叠
-    
-    // 底部栏配置
-    @SerializedName("bottomBarHeight")
-    val bottomBarHeight: Int = 56,                       // 底部栏高度（px）
-    @SerializedName("bottomBarTransparent")
-    val bottomBarTransparent: Boolean = false,           // Yes否半透明背景
-    
-    // 悬浮面板配置
-    @SerializedName("panelWidth")
-    val panelWidth: Int = 320,                           // 面板宽度（px）
-    @SerializedName("panelHeight")
-    val panelHeight: Int = 400,                          // 面板高度（px）
-    @SerializedName("panelResizable")
-    val panelResizable: Boolean = true,                  // Yes否可调整大小
-    @SerializedName("panelMinimizable")
-    val panelMinimizable: Boolean = true,                // Yes否可最小化
-    
-    // Custom HTML（仅 CUSTOM 类型）
-    @SerializedName("customHtml")
-    val customHtml: String = "",                         // Custom HTML 模板
-    @SerializedName("customCss")
-    val customCss: String = ""                           // Custom CSS
+    val showOnlyOnMatch: Boolean = true                  // 仅在匹配 URL 时显示
 ) {
     companion object {
-        /** 默认悬浮按钮配置 */
+        /** 默认配置 */
         val DEFAULT = ModuleUiConfig()
-        
-        /** 视频增强工具栏预设 */
-        val VIDEO_TOOLBAR = ModuleUiConfig(
-            type = ModuleUiType.FLOATING_TOOLBAR,
-            position = UiPosition.BOTTOM_CENTER,
-            toolbarCollapsible = true
-        )
-        
-        /** 侧边栏预设 */
-        val SIDEBAR_DEFAULT = ModuleUiConfig(
-            type = ModuleUiType.SIDEBAR,
-            sidebarPosition = SidebarPosition.RIGHT,
-            sidebarWidth = 300
-        )
-        
-        /** 底部栏预设 */
-        val BOTTOM_BAR_DEFAULT = ModuleUiConfig(
-            type = ModuleUiType.BOTTOM_BAR,
-            bottomBarHeight = 56
-        )
-        
-        /** 迷你按钮预设 */
-        val MINI_BUTTON_DEFAULT = ModuleUiConfig(
-            type = ModuleUiType.MINI_BUTTON,
-            position = UiPosition.BOTTOM_RIGHT,
-            buttonSize = 40
-        )
     }
 }
 
@@ -968,39 +782,10 @@ data class ExtensionModule(
         val configJson = gson.toJson(configValues)
         val uiConfigJson = gson.toJson(mapOf(
             "type" to uiConfig.type.name,
-            "position" to uiConfig.position.name,
-            "draggable" to uiConfig.draggable,
             "autoHide" to uiConfig.autoHide,
             "autoHideDelay" to uiConfig.autoHideDelay,
             "initiallyHidden" to uiConfig.initiallyHidden,
-            "showOnlyOnMatch" to uiConfig.showOnlyOnMatch,
-            "buttonSize" to uiConfig.buttonSize,
-            "buttonColor" to uiConfig.buttonColor,
-            "toolbarItems" to uiConfig.toolbarItems.map { item ->
-                mapOf(
-                    "id" to item.id,
-                    "icon" to item.icon,
-                    "label" to item.label,
-                    "tooltip" to item.tooltip,
-                    "action" to item.action,
-                    "showLabel" to item.showLabel,
-                    "badge" to item.badge
-                )
-            },
-            "toolbarOrientation" to uiConfig.toolbarOrientation.name,
-            "toolbarCollapsible" to uiConfig.toolbarCollapsible,
-            "toolbarCollapsed" to uiConfig.toolbarCollapsed,
-            "sidebarPosition" to uiConfig.sidebarPosition.name,
-            "sidebarWidth" to uiConfig.sidebarWidth,
-            "sidebarCollapsed" to uiConfig.sidebarCollapsed,
-            "bottomBarHeight" to uiConfig.bottomBarHeight,
-            "bottomBarTransparent" to uiConfig.bottomBarTransparent,
-            "panelWidth" to uiConfig.panelWidth,
-            "panelHeight" to uiConfig.panelHeight,
-            "panelResizable" to uiConfig.panelResizable,
-            "panelMinimizable" to uiConfig.panelMinimizable,
-            "customHtml" to uiConfig.customHtml,
-            "customCss" to uiConfig.customCss
+            "showOnlyOnMatch" to uiConfig.showOnlyOnMatch
         ))
         val runModeStr = runMode.name
         // 决定使用哪种代码源：多文件 codeFiles 优先，否则使用单一 code 字段

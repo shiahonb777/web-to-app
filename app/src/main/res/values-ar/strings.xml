@@ -703,4 +703,90 @@
     <string name="protection_level_basic">أساسي (حظر زر الرجوع فقط)</string>
     <string name="protection_level_standard">قياسي (يتطلب إمكانية الوصول)</string>
     <string name="protection_level_maximum">أقصى (يتطلب إمكانية الوصول + وصول الاستخدام)</string>
+
+    <!-- صفحة الملف الشخصي -->
+    <string name="change_password">تغيير كلمة المرور</string>
+    <string name="update_login_password">تحديث كلمة مرور الدخول</string>
+    <string name="logout_all_devices">تسجيل الخروج من جميع الأجهزة</string>
+    <string name="logout_all_confirm_title">تسجيل الخروج من جميع الأجهزة</string>
+    <string name="logout_all_confirm_message">هل أنت متأكد من تسجيل الخروج من جميع الأجهزة؟ ستحتاج جميع الأجهزة إلى تسجيل الدخول مرة أخرى.</string>
+    <string name="logout_all">تسجيل الخروج من الكل</string>
+    <string name="current_password">كلمة المرور الحالية</string>
+    <string name="new_password">كلمة المرور الجديدة</string>
+    <string name="confirm_new_password">تأكيد كلمة المرور الجديدة</string>
+    <string name="password_min_length">6 أحرف على الأقل</string>
+    <string name="confirm_change">تأكيد التغيير</string>
+
+    <!-- قوالب الإعلانات -->
+    <string name="template_minimal">بسيط</string>
+    <string name="template_minimal_desc">تخطيط مساحات بيضاء نظيف ومحتشم</string>
+    <string name="template_xiaohongshu">شياوهونغشو</string>
+    <string name="template_xiaohongshu_desc">أسلوب بطاقات اجتماعية نابض بالحياة</string>
+    <string name="template_gradient">متدرج</string>
+    <string name="template_gradient_desc">طبقات بصرية متدرجة ناعمة وحالمة</string>
+    <string name="template_glassmorphism">تأثير الزجاج</string>
+    <string name="template_glassmorphism_desc">ضبابية شفافة مع ملمس عائم</string>
+    <string name="template_neon">نيون</string>
+    <string name="template_neon_desc">تأثير إشعار لافت عالي التباين</string>
+    <string name="template_cute">لطيف</string>
+    <string name="template_cute_desc">تعبير مرح وخفيف الظل</string>
+    <string name="template_elegant">أنيق</string>
+    <string name="template_elegant_desc">إحساس فاخر ناعم ورقيق</string>
+    <string name="template_festive">احتفالي</string>
+    <string name="template_festive_desc">أجواء احتفالية حيوية ومشرقة</string>
+    <string name="template_dark">داكن</string>
+    <string name="template_dark_desc">تركيز معلومات عالي التباين داكن</string>
+    <string name="template_nature">طبيعي</string>
+    <string name="template_nature_desc">تعبير متوازن مهدئ ومنعش</string>
+
+    <!-- بطاقة خطأ AI -->
+    <string name="retry_action">إعادة محاولة العملية الأخيرة</string>
+    <string name="retry_different_model">إعادة المحاولة بنموذج مختلف</string>
+    <string name="retry_different_model_desc">إعادة المحاولة باستخدام نموذج AI آخر</string>
+    <string name="show_raw_response">عرض الاستجابة الخام</string>
+    <string name="show_raw_response_desc">عرض المحتوى الخام الذي أعاده AI</string>
+    <string name="go_to_settings">الذهاب إلى الإعدادات</string>
+    <string name="go_to_settings_desc">التحقق من إعدادات مفتاح API</string>
+    <string name="manual_edit">تحرير يدوي</string>
+    <string name="manual_edit_desc">تعديل الكود يدويًا</string>
+    <string name="dismiss_error">إغلاق رسالة الخطأ</string>
+    <string name="error_auth">خطأ المصادقة</string>
+    <string name="error_rate_limit">تم تحديد الطلبات</string>
+    <string name="error_server">خطأ الخادم</string>
+    <string name="error_network">خطأ الشبكة</string>
+    <string name="error_parse">خطأ التحليل</string>
+    <string name="error_timeout">انتهت مهلة الطلب</string>
+    <string name="error_response_parse_failed">فشل تحليل الاستجابة</string>
+    <string name="error_severe">خطأ جسيم</string>
+    <string name="error_code_label">رمز الخطأ: %s</string>
+    <string name="recoverable">قابل للاسترداد</string>
+    <string name="network_unavailable">اتصال الشبكة غير متاح</string>
+    <string name="check_network_retry">يرجى التحقق من الشبكة وإعادة المحاولة</string>
+    <string name="request_too_frequent">طلبات كثيرة جدًا</string>
+    <string name="auto_retry_after_seconds">إعادة محاولة تلقائية بعد %d ثانية</string>
+    <string name="retrying">جاري إعادة المحاولة...</string>
+
+    <!-- واجهة تطوير وحدات AI -->
+    <string name="you">أنت</string>
+    <string name="generating">جاري التوليد</string>
+    <string name="copy_code">نسخ</string>
+    <string name="verify_code">تحقق</string>
+    <string name="thinking_label">جاري التفكير...</string>
+
+    <!-- صفحة حول - إخلاء المسؤولية القانونية -->
+    <string name="legal_disclaimer_content_1">هذا البرنامج هو أداة بحث تقني مفتوح المصدر وعرض تعليمي. جميع الميزات مبنية على واجهات برمجة تطبيقات Android العامة، وتهدف إلى عرض تقنيات تطوير تطبيقات الهاتف المحمول. لا يشجع هذا البرنامج ولا يدعم أي استخدام غير قانوني.</string>
+    <string name="legal_disclaimer_content_2">يجب على المستخدمين التأكد من استخدام البرنامج في سيناريوهات قانونية ومشروعة، بما في ذلك على سبيل المثال لا الحصر:\n• الإدارة الذاتية: لتدريب التركيز الشخصي وإدارة وقت الدراسة\n• العرض التجاري: لأجهزة العرض في المعارض والمراكز التجارية\n• الإشراف الأبوي: للاستخدام المعقول بموافقة القاصرين المستنيرة\n• البحث التعليمي: للتعلم التقني وأبحاث الأمان\n\nيُمنع منعًا باتًا استخدام هذا البرنامج لأي سلوك ينتهك الحرية الشخصية أو الخصوصية أو الممتلكات أو الحقوق المشروعة الأخرى للآخرين.</string>
+    <string name="legal_disclaimer_content_3">ميزات \"التشغيل القسري\" والتحكم في الأجهزة ذات الصلة (المشار إليها فيما يلي باسم \"الميزات المتقدمة\") في هذا البرنامج ذات طبيعة عرض تقني:\n\n1. [مبدأ الموافقة المستنيرة] يجب تفعيل الميزات المتقدمة فقط مع المعرفة الكاملة والموافقة الصريحة من مالك الجهاز أو المستخدم\n\n2. [مبدأ التحكم الذاتي] توفر جميع الميزات آليات خروج طارئ، ويمكن للمستخدمين إنهاؤها في أي وقت عبر كلمة المرور\n\n3. [مبدأ الحياد التقني] الميزات بحد ذاتها غير غير قانونية بطبيعتها؛ ويعتمد قانونيتها على الاستخدام والغرض المحدد للمستخدم\n\n</string>
+
+    <!-- صفحة حول - أخطاء التحديث -->
+    <string name="update_check_failed_title">فشل التحقق من التحديثات</string>
+    <string name="update_check_manual_stage">تحقق يدوي من التحديثات</string>
+    <string name="update_check_request_failed">فشل طلب خدمة التحديث، تم إيقاف المعالجة.</string>
+    <string name="update_check_uncaught_exception">استثناء غير معالج أثناء التحقق من التحديثات، تم إيقاف المعالجة.</string>
+    <string name="update_download_start_failed_title">فشل بدء تحميل التحديث</string>
+    <string name="update_download_start_stage">بدء تحميل التحديث</string>
+    <string name="update_download_create_failed">فشل إنشاء مهمة التحميل، لم يتم متابعة عملية التثبيت.</string>
+    <string name="update_download_prepare_stage">تحضير تحميل التحديث</string>
+    <string name="update_download_no_link">استجابة التحديث تفتقر إلى رابط تحميل صالح، لم يتم متابعة عملية التحميل.</string>
+    <string name="no_exception_object">لم يتم إرجاع كائن استثناء</string>
 </resources>

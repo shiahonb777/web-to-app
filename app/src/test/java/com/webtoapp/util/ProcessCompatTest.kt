@@ -2,6 +2,7 @@ package com.webtoapp.util
 
 import com.google.common.truth.Truth.assertThat
 import java.util.concurrent.TimeUnit
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -10,6 +11,9 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33])
 class ProcessCompatTest {
+
+    @Rule @JvmField
+    val koinRule = KoinCleanupRule()
 
     @Test
     fun `isAliveCompat and waitForCompat reflect running process state`() {

@@ -5,13 +5,16 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.BatteryStd
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.webtoapp.core.background.BackgroundRunService
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.data.model.BackgroundRunExportConfig
 
@@ -117,6 +120,31 @@ fun BackgroundRunConfigCard(
                             checked = config.keepCpuAwake,
                             onCheckedChange = { onConfigChange(config.copy(keepCpuAwake = it)) }
                         )
+                    }
+
+                    // 电池优化白名单引导
+                    val context = LocalContext.current
+                    OutlinedButton(
+                        onClick = { BackgroundRunService.requestIgnoreBatteryOptimizations(context) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            Icons.Outlined.BatteryStd,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                Strings.backgroundRunBatteryOptimization,
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                            Text(
+                                Strings.backgroundRunBatteryOptimizationDesc,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                     
                     // Expand更多设置

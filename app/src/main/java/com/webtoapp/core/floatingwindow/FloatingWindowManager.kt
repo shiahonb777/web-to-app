@@ -295,6 +295,39 @@ class FloatingWindowManager(private val context: Context) {
             setPadding((12 * density).toInt(), 0, (4 * density).toInt(), 0)
         }
 
+        // Mac 风格交通灯按钮组（关闭/最小化/最大化）
+        val trafficLightContainer = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, 0, (10 * density).toInt(), 0)
+        }
+
+        // 关闭按钮 (红色)
+        val closeBtn = createTrafficLightButton("✕", 0xFFFF5F57.toInt(), 0x99000000.toInt(), density, Strings.close) {
+            dismiss()
+        }
+        trafficLightContainer.addView(closeBtn, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT
+        ).apply { setMargins(0, 0, (8 * density).toInt(), 0) })
+
+        // 最小化按钮 (黄色)
+        val minimizeBtn = createTrafficLightButton("─", 0xFFFFBD2E.toInt(), 0x99000000.toInt(), density, Strings.floatingWindowMinimize) {
+            minimize()
+        }
+        trafficLightContainer.addView(minimizeBtn, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT
+        ).apply { setMargins(0, 0, (8 * density).toInt(), 0) })
+
+        // 最大化按钮 (绿色)
+        fullscreenButtonView = createTrafficLightButton("↗", 0xFF28C840.toInt(), 0x99000000.toInt(), density, Strings.floatingWindowEnterFullscreen) {
+            toggleFullscreen()
+        }
+        trafficLightContainer.addView(fullscreenButtonView, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT
+        ))
+
+        titleBar.addView(trafficLightContainer)
+
         // 拖拽指示器
         val dragIndicator = TextView(context).apply {
             text = "⠿"
@@ -324,23 +357,6 @@ class FloatingWindowManager(private val context: Context) {
             navigateForward()
         }
         titleBar.addView(forwardButtonView)
-
-        fullscreenButtonView = createTitleButton("□", 0xFFD0D0E0.toInt(), density, Strings.floatingWindowEnterFullscreen) {
-            toggleFullscreen()
-        }
-        titleBar.addView(fullscreenButtonView)
-
-        // 最小化按钮
-        val minimizeBtn = createTitleButton("─", 0xFFD0D0E0.toInt(), density, Strings.floatingWindowMinimize) {
-            minimize()
-        }
-        titleBar.addView(minimizeBtn)
-
-        // 关闭按钮
-        val closeBtn = createTitleButton("✕", 0xFFFF6B6B.toInt(), density, Strings.close) {
-            dismiss()
-        }
-        titleBar.addView(closeBtn)
 
         updateNavigationButtons()
         updateFullscreenButton()
@@ -373,6 +389,40 @@ class FloatingWindowManager(private val context: Context) {
             minimumWidth = size
             minimumHeight = size
             setPadding((4 * density).toInt(), 0, (4 * density).toInt(), 0)
+            setOnClickListener { onClick() }
+        }
+    }
+
+    /**
+     * 创建 Mac 风格交通灯按钮（彩色圆点）
+     * 模仿 macOS 窗口标题栏的红/黄/绿三色圆点按钮
+     */
+    @SuppressLint("ClickableViewAccessibility")
+    private fun createTrafficLightButton(
+        symbol: String,
+        bgColor: Int,
+        symbolColor: Int,
+        density: Float,
+        contentDescriptionText: String,
+        onClick: () -> Unit
+    ): TextView {
+        val dotSize = (14 * density).toInt()
+        val padding = (2 * density).toInt()
+        return TextView(context).apply {
+            text = symbol
+            contentDescription = contentDescriptionText
+            setTextColor(symbolColor)
+            textSize = 8f
+            gravity = Gravity.CENTER
+            minWidth = dotSize
+            minHeight = dotSize
+            minimumWidth = dotSize
+            minimumHeight = dotSize
+            setPadding(padding, padding, padding, padding)
+            background = android.graphics.drawable.GradientDrawable().apply {
+                shape = android.graphics.drawable.GradientDrawable.OVAL
+                setColor(bgColor)
+            }
             setOnClickListener { onClick() }
         }
     }
@@ -629,7 +679,7 @@ class FloatingWindowManager(private val context: Context) {
 
     private fun updateFullscreenButton() {
         fullscreenButtonView?.apply {
-            text = if (isFullscreen) "❐" else "□"
+            text = if (isFullscreen) "↙" else "↗"
             contentDescription = if (isFullscreen) {
                 Strings.floatingWindowExitFullscreen
             } else {

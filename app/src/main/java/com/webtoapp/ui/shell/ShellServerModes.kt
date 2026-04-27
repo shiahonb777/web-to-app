@@ -151,7 +151,8 @@ fun WordPressShellMode(
                                     config.extensionModuleIds,
                                     config.embeddedExtensionModules,
                                     config.extensionFabIcon, allowGlobalModuleFallback = false,
-                                    browserDisguiseConfig = config.browserDisguiseConfig)
+                                    browserDisguiseConfig = config.browserDisguiseConfig,
+                                    deviceDisguiseConfig = config.deviceDisguiseConfig)
                                 // WordPress 通过 localhost 加载，允许混合内容
                                 settings.mixedContentMode =
                                     android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
@@ -176,7 +177,7 @@ fun WordPressShellMode(
 
                                 onWebViewCreated(this)
                                 webViewRef = this
-                                loadUrl(url)
+                                if (tag != "state_restored") loadUrl(url)
                             }
                             swipeChildWebView = createdWebView
                             addView(createdWebView)
@@ -529,7 +530,8 @@ fun NodeJsShellMode(
                                     this, webViewConfig, webViewCallbacks,
                                     config.extensionModuleIds, config.embeddedExtensionModules,
                                     config.extensionFabIcon, allowGlobalModuleFallback = false,
-                                    browserDisguiseConfig = config.browserDisguiseConfig)
+                                    browserDisguiseConfig = config.browserDisguiseConfig,
+                                    deviceDisguiseConfig = config.deviceDisguiseConfig)
                                 settings.mixedContentMode =
                                     android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
 
@@ -550,7 +552,7 @@ fun NodeJsShellMode(
 
                                 onWebViewCreated(this)
                                 webViewRef = this
-                                loadUrl(url)
+                                if (tag != "state_restored") loadUrl(url)
                             }
                             swipeChildWebView = createdWebView
                             addView(createdWebView)
@@ -718,7 +720,7 @@ fun PhpAppShellMode(
                             }
                             val createdWebView = WebView(ctx).apply {
                                 layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                                webViewManager.configureWebView(this, webViewConfig, webViewCallbacks, config.extensionModuleIds, config.embeddedExtensionModules, config.extensionFabIcon, allowGlobalModuleFallback = false, browserDisguiseConfig = config.browserDisguiseConfig)
+                                webViewManager.configureWebView(this, webViewConfig, webViewCallbacks, config.extensionModuleIds, config.embeddedExtensionModules, config.extensionFabIcon, allowGlobalModuleFallback = false, browserDisguiseConfig = config.browserDisguiseConfig, deviceDisguiseConfig = config.deviceDisguiseConfig)
                                 settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                                 var lastTouchX = 0f; var lastTouchY = 0f
                                 setOnTouchListener { view, event ->
@@ -732,7 +734,7 @@ fun PhpAppShellMode(
                                     false
                                 }
                                 setOnLongClickListener { webViewCallbacks.onLongPress(this, lastTouchX, lastTouchY) }
-                                onWebViewCreated(this); webViewRef = this; loadUrl(url)
+                                onWebViewCreated(this); webViewRef = this; if (tag != "state_restored") loadUrl(url)
                             }
                             swipeChildWebView = createdWebView
                             addView(createdWebView)
@@ -938,7 +940,7 @@ fun PythonAppShellMode(
                                     ViewGroup.LayoutParams.MATCH_PARENT,
                                     ViewGroup.LayoutParams.MATCH_PARENT
                                 )
-                                webViewManager.configureWebView(this, webViewConfig, webViewCallbacks, config.extensionModuleIds, config.embeddedExtensionModules, config.extensionFabIcon, allowGlobalModuleFallback = false, browserDisguiseConfig = config.browserDisguiseConfig)
+                                webViewManager.configureWebView(this, webViewConfig, webViewCallbacks, config.extensionModuleIds, config.embeddedExtensionModules, config.extensionFabIcon, allowGlobalModuleFallback = false, browserDisguiseConfig = config.browserDisguiseConfig, deviceDisguiseConfig = config.deviceDisguiseConfig)
                                 settings.apply {
                                     mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                                     javaScriptEnabled = true
@@ -961,7 +963,7 @@ fun PythonAppShellMode(
                                     false
                                 }
                                 setOnLongClickListener { webViewCallbacks.onLongPress(this, lastTouchX, lastTouchY) }
-                                onWebViewCreated(this); webViewRef = this; loadUrl(url)
+                                onWebViewCreated(this); webViewRef = this; if (tag != "state_restored") loadUrl(url)
                             }
                             swipeChildWebView = createdWebView
                             addView(createdWebView)
@@ -1148,7 +1150,7 @@ fun GoAppShellMode(
                                     ViewGroup.LayoutParams.MATCH_PARENT,
                                     ViewGroup.LayoutParams.MATCH_PARENT
                                 )
-                                webViewManager.configureWebView(this, webViewConfig, webViewCallbacks, config.extensionModuleIds, config.embeddedExtensionModules, config.extensionFabIcon, allowGlobalModuleFallback = false, browserDisguiseConfig = config.browserDisguiseConfig)
+                                webViewManager.configureWebView(this, webViewConfig, webViewCallbacks, config.extensionModuleIds, config.embeddedExtensionModules, config.extensionFabIcon, allowGlobalModuleFallback = false, browserDisguiseConfig = config.browserDisguiseConfig, deviceDisguiseConfig = config.deviceDisguiseConfig)
                                 settings.apply {
                                     mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                                     javaScriptEnabled = true
@@ -1171,7 +1173,7 @@ fun GoAppShellMode(
                                     false
                                 }
                                 setOnLongClickListener { webViewCallbacks.onLongPress(this, lastTouchX, lastTouchY) }
-                                onWebViewCreated(this); webViewRef = this; loadUrl(url)
+                                onWebViewCreated(this); webViewRef = this; if (tag != "state_restored") loadUrl(url)
                             }
                             swipeChildWebView = createdWebView
                             addView(createdWebView)
@@ -1371,7 +1373,7 @@ fun ServerAppShellMode(
                             }
                             val createdWebView = WebView(ctx).apply {
                                 layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                                webViewManager.configureWebView(this, webViewConfig, webViewCallbacks, config.extensionModuleIds, config.embeddedExtensionModules, config.extensionFabIcon, allowGlobalModuleFallback = false, browserDisguiseConfig = config.browserDisguiseConfig)
+                                webViewManager.configureWebView(this, webViewConfig, webViewCallbacks, config.extensionModuleIds, config.embeddedExtensionModules, config.extensionFabIcon, allowGlobalModuleFallback = false, browserDisguiseConfig = config.browserDisguiseConfig, deviceDisguiseConfig = config.deviceDisguiseConfig)
                                 settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                                 settings.apply {
                                     allowFileAccess = true
@@ -1406,8 +1408,8 @@ fun ServerAppShellMode(
                                     }
                                 }
                                 onWebViewCreated(this)
-                                AppLogger.i("ServerAppShellMode", "WebView created, calling loadUrl('$url')")
-                                loadUrl(url)
+                                AppLogger.i("ServerAppShellMode", "WebView created, tag=$tag")
+                                if (tag != "state_restored") loadUrl(url)
                             }
                             swipeChildWebView = createdWebView
                             addView(createdWebView)

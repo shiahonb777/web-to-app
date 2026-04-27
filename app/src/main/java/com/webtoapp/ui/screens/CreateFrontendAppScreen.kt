@@ -559,7 +559,7 @@ fun CreateFrontendAppScreen(
                         ) {
                             Icon(Icons.Outlined.BugReport, null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("查看完整报错")
+                            Text(Strings.viewFullError)
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                         PremiumButton(
@@ -602,7 +602,7 @@ fun CreateFrontendAppScreen(
 
     if (showErrorReportDialog && currentBuildState is BuildState.Error) {
         FullErrorReportDialog(
-            title = "完整报错",
+            title = Strings.fullErrorReport,
             summary = currentBuildState.message,
             report = buildFrontendErrorReport(
                 mode = buildMode,
@@ -1074,7 +1074,7 @@ private fun FullErrorReportDialog(
                     ) {
                         Icon(Icons.Outlined.ContentCopy, null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("复制")
+                        Text(Strings.copy)
                     }
                 }
             }
@@ -1099,7 +1099,7 @@ private fun getFrameworkDisplayName(framework: FrontendFramework): String {
         FrontendFramework.ANGULAR -> "Angular"
         FrontendFramework.SVELTE -> "Svelte"
         FrontendFramework.VITE -> "Vite"
-        FrontendFramework.UNKNOWN -> "静态网站"
+        FrontendFramework.UNKNOWN -> Strings.staticWebsite
     }
 }
 

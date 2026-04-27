@@ -88,11 +88,8 @@ fun BoxScope.ShellScaffoldLayout(
     Scaffold(
         // 根据键盘调整模式设置 contentWindowInsets
         // RESIZE 模式且全屏：保留 IME insets 以便 Compose 响应键盘
-        // blockSystemNavigationGesture=true 且全屏：不为内容额外预留系统手势区域
-        // 真正的系统返回手势屏蔽由 WindowHelper 中的 systemGestureExclusionRects 处理
         contentWindowInsets = when {
             keyboardAdjustMode == KeyboardAdjustMode.RESIZE && hideToolbar -> WindowInsets.ime
-            hideToolbar && webViewConfig.blockSystemNavigationGesture -> WindowInsets(0)
             else -> ScaffoldDefaults.contentWindowInsets
         },
         modifier = Modifier,
@@ -188,17 +185,6 @@ fun BoxScope.ShellScaffoldLayout(
                 config = config,
                 forcedRunActive = forcedRunActive,
                 forcedRunRemainingMs = forcedRunRemainingMs
-            )
-
-            // 悬浮返回按钮（逻辑已提取到 ShellOverlays.kt）
-            ShellFloatingBackButton(
-                hideToolbar = hideToolbar,
-                showToolbar = showToolbar,
-                canGoBack = canGoBack,
-                forcedRunActive = forcedRunActive,
-                showFloatingBackButton = config.webViewConfig.showFloatingBackButton,
-                actualStatusBarPadding = actualStatusBarPadding,
-                webViewRef = webViewRef
             )
 
             // Error提示（逻辑已提取到 ShellOverlays.kt）

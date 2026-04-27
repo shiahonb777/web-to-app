@@ -170,7 +170,7 @@ fun LrcEditorDialog(
             Column(modifier = Modifier.fillMaxSize().systemBarsPadding()) {
                 // 标题栏
                 TopAppBar(
-                    title = { Text("编辑 LRC") },
+                    title = { Text(Strings.editLrc) },
                     navigationIcon = {
                         IconButton(onClick = {
                             mediaPlayer?.release()
@@ -195,7 +195,7 @@ fun LrcEditorDialog(
                             ) {
                                 Icon(Icons.Default.Save, null, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("保存")
+                                Text(Strings.lrcSave)
                             }
                         }
                     }
@@ -238,7 +238,7 @@ fun LrcEditorDialog(
                                 selectedLineIndex = editingLines.size - 1
                             }
                         ) {
-                            Icon(Icons.Default.Add, "添加行")
+                            Icon(Icons.Default.Add, Strings.lrcAddLine)
                         }
                     }
                 }
@@ -380,7 +380,7 @@ fun LrcEditorDialog(
                                     currentPosition = newPos.toLong()
                                 }
                             }) {
-                                Icon(Icons.Default.Replay5, "后退5秒")
+                                Icon(Icons.Default.Replay5, Strings.lrcBackward5s)
                             }
                             
                             Spacer(modifier = Modifier.width(16.dp))
@@ -416,7 +416,7 @@ fun LrcEditorDialog(
                                     currentPosition = newPos.toLong()
                                 }
                             }) {
-                                Icon(Icons.Default.Forward5, "前进5秒")
+                                Icon(Icons.Default.Forward5, Strings.lrcForward5s)
                             }
                         }
                     }
@@ -546,7 +546,7 @@ private fun LrcLineEditor(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        "时间调整:",
+                        Strings.lrcTimeAdjust,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -592,7 +592,7 @@ private fun LrcLineEditor(
                     ) {
                         Icon(Icons.Default.Timer, null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("设为当前", style = MaterialTheme.typography.labelSmall)
+                        Text(Strings.setAsCurrent, style = MaterialTheme.typography.labelSmall)
                     }
                 }
                 
@@ -609,7 +609,7 @@ private fun LrcLineEditor(
                             onClick = onMoveUp,
                             modifier = Modifier.size(32.dp)
                         ) {
-                            Icon(Icons.Default.KeyboardArrowUp, "上移", modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.KeyboardArrowUp, Strings.lrcMoveUp, modifier = Modifier.size(18.dp))
                         }
                     }
                     
@@ -619,7 +619,7 @@ private fun LrcLineEditor(
                             onClick = onMoveDown,
                             modifier = Modifier.size(32.dp)
                         ) {
-                            Icon(Icons.Default.KeyboardArrowDown, "下移", modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.KeyboardArrowDown, Strings.lrcMoveDown, modifier = Modifier.size(18.dp))
                         }
                     }
                     

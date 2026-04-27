@@ -111,6 +111,25 @@ class KeyManager(private val context: Context) {
     }
     
     /**
+     * 为指定包名生成加密密钥（带自定义密码）
+     * SECURITY: customPassword 参与密钥派生，使无密码的逆向者无法重建密钥
+     */
+    fun generateKeyForPackage(
+        packageName: String,
+        signatureHash: ByteArray,
+        encryptionLevel: EncryptionLevel,
+        customPassword: String?
+    ): SecretKey {
+        AppLogger.d(TAG, "为包名生成密钥: $packageName, level=${encryptionLevel.name}, hasCustomPassword=${!customPassword.isNullOrBlank()}")
+        return AesCryptoEngine.deriveKeyFromPackage(
+            packageName,
+            signatureHash,
+            encryptionLevel.iterations,
+            customPassword
+        )
+    }
+    
+    /**
      * 使用增强版 HKDF 派生密钥
      */
     fun deriveKeyWithHKDF(
@@ -207,13 +226,16 @@ class KeyManager(private val context: Context) {
 /**
  * 密钥派生参数
  * 用于在打包时传递密钥信息
+ * NOTE: salt 字段已废弃，盐值现在由 deriveKeyFromPackage() 动态生成
  */
 data class KeyDerivationParams(
     val packageName: String,
     val signatureHash: ByteArray,
-    val salt: ByteArray = CryptoConstants.KEY_DERIVATION_SALT,
+    @Deprecated("盐值现在由 deriveKeyFromPackage() 动态生成，此字段不再使用") 
+    val salt: ByteArray = ByteArray(0),
     val iterations: Int = CryptoConstants.PBKDF2_ITERATIONS,
-    val encryptionLevel: EncryptionLevel = EncryptionLevel.STANDARD
+    val encryptionLevel: EncryptionLevel = EncryptionLevel.STANDARD,
+    val customPassword: String? = null
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -221,17 +243,17 @@ data class KeyDerivationParams(
         other as KeyDerivationParams
         return packageName == other.packageName &&
                 signatureHash.contentEquals(other.signatureHash) &&
-                salt.contentEquals(other.salt) &&
                 iterations == other.iterations &&
-                encryptionLevel == other.encryptionLevel
+                encryptionLevel == other.encryptionLevel &&
+                customPassword == other.customPassword
     }
     
     override fun hashCode(): Int {
         var result = packageName.hashCode()
         result = 31 * result + signatureHash.contentHashCode()
-        result = 31 * result + salt.contentHashCode()
         result = 31 * result + iterations
         result = 31 * result + encryptionLevel.hashCode()
+        result = 31 * result + (customPassword?.hashCode() ?: 0)
         return result
     }
 }

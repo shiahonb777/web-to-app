@@ -169,6 +169,39 @@ class CloudRepository(
     suspend fun downloadStoreModule(moduleId: Int) =
         cloudApi.downloadStoreModule(moduleId)
 
+    // ─── 模块互动（统一 API，市场+社区共用） ───
+
+    suspend fun toggleModuleLike(moduleId: Int) = cloudApi.toggleModuleLike(moduleId)
+
+    suspend fun getModuleLikeStatus(moduleId: Int) = cloudApi.getModuleLikeStatus(moduleId)
+
+    suspend fun addFavorite(moduleId: Int) = cloudApi.addFavorite(moduleId)
+
+    suspend fun removeFavorite(moduleId: Int) = cloudApi.removeFavorite(moduleId)
+
+    suspend fun listFavorites(page: Int = 1, size: Int = 20) = cloudApi.listFavorites(page, size)
+
+    suspend fun addComment(moduleId: Int, content: String, parentId: Int? = null) =
+        cloudApi.addComment(moduleId, content, parentId)
+
+    suspend fun listComments(moduleId: Int, page: Int = 1, size: Int = 20) =
+        cloudApi.listComments(moduleId, page, size)
+
+    suspend fun deleteComment(commentId: Int) = cloudApi.deleteComment(commentId)
+
+    suspend fun reportModule(moduleId: Int, reason: String, details: String? = null) =
+        cloudApi.reportModule(moduleId, reason, details)
+
+    suspend fun getStoreModuleById(moduleId: Int) = cloudApi.getStoreModuleById(moduleId)
+
+    suspend fun getFeaturedModules(page: Int = 1, size: Int = 20) = cloudApi.getFeaturedModules(page, size)
+
+    suspend fun reviewStoreModule(moduleId: Int, rating: Int, comment: String? = null) =
+        cloudApi.reviewStoreModule(moduleId, rating, comment)
+
+    suspend fun getModuleReviews(moduleId: Int, page: Int = 1, size: Int = 20) =
+        cloudApi.getModuleReviews(moduleId, page, size)
+
     // ─── 远程脚本 ───
 
     suspend fun listRemoteScripts(projectId: Int) =

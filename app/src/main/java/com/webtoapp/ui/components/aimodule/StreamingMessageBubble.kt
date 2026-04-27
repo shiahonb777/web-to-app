@@ -2,6 +2,7 @@ package com.webtoapp.ui.components.aimodule
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import com.webtoapp.core.i18n.Strings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -69,7 +70,7 @@ fun StreamingMessageBubble(
         ) {
             if (isUser) {
                 Text(
-                    "你",
+                    Strings.aiYou,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Medium
@@ -217,7 +218,7 @@ private fun StreamingIndicator() {
         color = MaterialTheme.colorScheme.primary.copy(alpha = alpha * 0.2f)
     ) {
         Text(
-            "生成中",
+            Strings.aiGenerating,
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.primary.copy(alpha = alpha),
             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
