@@ -68,7 +68,7 @@ ShellConfig
 ├── versionCode: Int                   # 版本号
 ├── versionName: String                # 版本名
 ├── iconPath: String?                  # 图标路径
-├── webViewConfig: WebViewShellConfig  # WebView 配置（含 dnsMode + dnsConfig）
+├── webViewConfig: WebViewShellConfig  # WebView 配置（含 dnsMode + dnsConfig + 暗色主题状态栏）
 ├── htmlConfig: HtmlShellConfig?       # HTML 项目配置
 ├── splashConfig: SplashShellConfig?   # 闪屏配置
 ├── bgmConfig: BgmShellConfig?         # BGM 配置

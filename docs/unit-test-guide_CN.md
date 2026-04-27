@@ -25,8 +25,8 @@
 
 ### 1.3 当前规模
 
-- **58 个测试类**，**477 个测试用例**，**0 失败**
-- 覆盖 `core/` 下 16 个子模块 + `util/` + `data/` + `ui/data/`
+- **65 个测试类**，**502 个测试用例**，**0 失败**
+- 覆盖 `core/` 下 16 个子模块 + `util/` + `data/` + `ui/data/` + `core/shell/`
 
 ---
 
@@ -173,7 +173,8 @@
 | `ProcessPortScannerTest` | `core/port/` | 3 | 进程端口扫描 |
 | `WebAppModelTest` | `data/model/` | 6 | `getAllActivationCodes`/`getActivationCodeStrings`、`HtmlConfig.getValidEntryFile`、`GalleryConfig`、`ApkArchitecture.fromName`、`ApkEncryptionConfig.toEncryptionConfig` |
 | `WebAppModelExtendedTest` | `data/model/` | 16 | `AppType` 枚举完整性（12 值）、`ApkArchitecture` 枚举/abiFilters/fromName、`HtmlConfig` 边界、`GalleryConfig` 空列表、`ActivationCode` 空列表边界、`ApkEncryptionConfig.EncryptionLevel` 迭代次数/DISABLED/BASIC 预设 |
-| `ConvertersTest` | `ui/data/converter/` | 7 | Room 类型转换器 |
+| `WebViewConfigDarkModeTest` | `data/model/` | 12 | Dark mode 状态栏默认值、light/dark 独立性、copy 保留、枚举完整性 |
+| `WebViewShellConfigDarkModeTest` | `core/shell/` | 3 | Shell 配置 dark mode 默认值、独立性、copy 保留 |
 | `GsonProviderTest` | `util/` | 2 | Gson 单例与序列化 |
 | `ProcessCompatTest` | `util/` | 2 | 进程兼容性 |
 | `ThreadLocalCompatTest` | `util/` | 3 | ThreadLocal 兼容性 |
@@ -367,3 +368,4 @@ ls app/build/test-results/testDebugUnitTest/*.xml | wc -l
 |------|---------|--------|
 | 2026-04-24 | 初始创建 | Cascade |
 | 2026-04-24 | 新增 `core/cloud/` 3 个测试类（38 用例），更新规模统计 | Cascade |
+| 2026-04-28 | PR #61：新增 `WebViewConfigDarkModeTest`（12 用例）+ `WebViewShellConfigDarkModeTest`（3 用例），删除 fork 不兼容测试，更新规模统计（65 类/502 用例） | Cascade |

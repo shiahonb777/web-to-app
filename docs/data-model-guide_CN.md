@@ -134,7 +134,19 @@ enum class AppType {
 
 | 字段 | 默认值 | 说明 |
 |------|--------|------|
-| `statusBarColorMode` | THEME | 状态栏颜色模式 |
+| `statusBarColorMode` | THEME | 状态栏颜色模式（亮色主题） |
+| `statusBarColor` | null | 状态栏自定义颜色 |
+| `statusBarDarkIcons` | null | 状态栏使用深色图标 |
+| `statusBarBackgroundType` | COLOR | 状态栏背景类型（COLOR/IMAGE） |
+| `statusBarBackgroundImage` | null | 状态栏背景图片路径 |
+| `statusBarBackgroundAlpha` | 1.0f | 状态栏背景透明度 |
+| `statusBarHeightDp` | 0 | 状态栏高度（dp） |
+| `statusBarColorModeDark` | THEME | 状态栏颜色模式（暗色主题） |
+| `statusBarColorDark` | null | 暗色主题状态栏自定义颜色 |
+| `statusBarDarkIconsDark` | false | 暗色主题状态栏使用深色图标 |
+| `statusBarBackgroundTypeDark` | COLOR | 暗色主题状态栏背景类型 |
+| `statusBarBackgroundImageDark` | null | 暗色主题状态栏背景图片路径 |
+| `statusBarBackgroundAlphaDark` | 1.0f | 暗色主题状态栏背景透明度 |
 | `longPressMenuStyle` | FULL | 长按菜单样式 |
 | `screenAwakeMode` | OFF | 屏幕常亮 |
 | `keyboardAdjustMode` | RESIZE | 键盘调整模式 |
