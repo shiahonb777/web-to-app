@@ -5616,12 +5616,6 @@ object Strings {
         AppLanguage.ARABIC -> "إخفاء شريط أدوات المتصفح"
     }
     
-    val hideBrowserToolbarHint: String get() = when (lang) {
-        AppLanguage.CHINESE -> "仅隐藏顶部导航栏，保留系统状态栏和导航栏，让应用看起来更像原生应用"
-        AppLanguage.ENGLISH -> "Hide only the top navigation bar while keeping system status bar and navigation bar visible, giving a more native app look"
-        AppLanguage.ARABIC -> "إخفاء شريط التنقل العلوي فقط مع الحفاظ على شريط الحالة وشريط التنقل مرئيين، مما يمنح مظهر تطبيق أصلي"
-    }
-    
     val splashScreen: String get() = when (lang) {
         AppLanguage.CHINESE -> "启动画面"
         AppLanguage.ENGLISH -> "Splash Screen"
@@ -18463,6 +18457,30 @@ object Strings {
         AppLanguage.CHINESE -> "状态栏样式配置"
         AppLanguage.ENGLISH -> "Status Bar Style Config"
         AppLanguage.ARABIC -> "إعدادات نمط شريط الحالة"
+    }
+
+    val statusBarLightModeLabel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "浅色模式"
+        AppLanguage.ENGLISH -> "Light Mode"
+        AppLanguage.ARABIC -> "الوضع الفاتح"
+    }
+
+    val statusBarDarkModeLabel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "深色模式"
+        AppLanguage.ENGLISH -> "Dark Mode"
+        AppLanguage.ARABIC -> "الوضع الداكن"
+    }
+
+    val hideBrowserToolbarLabel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "隐藏浏览器工具栏"
+        AppLanguage.ENGLISH -> "Hide Browser Toolbar"
+        AppLanguage.ARABIC -> "إخفاء شريط أدوات المتصفح"
+    }
+
+    val hideBrowserToolbarHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "隐藏顶部浏览器导航栏（独立于全屏模式）"
+        AppLanguage.ENGLISH -> "Hide the top browser navigation bar (independent of fullscreen mode)"
+        AppLanguage.ARABIC -> "إخفاء شريط التنقل العلوي للمتصفح (مستقل عن وضع ملء الشاشة)"
     }
     
     val splashHint: String get() = when (lang) {

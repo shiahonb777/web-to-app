@@ -1728,10 +1728,55 @@ fun FullscreenModeCard(
                     ) {
                         Column {
                             Spacer(modifier = Modifier.height(12.dp))
-                            StatusBarConfigCard(
-                                config = webViewConfig,
-                                onConfigChange = onWebViewConfigChange
-                            )
+                            // Light/Dark mode tab selector for status bar config
+                            var statusBarModeTab by remember { mutableStateOf(0) } // 0 = Light, 1 = Dark
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                FilterChip(
+                                    selected = statusBarModeTab == 0,
+                                    onClick = { statusBarModeTab = 0 },
+                                    label = { Text(Strings.statusBarLightModeLabel) }
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                FilterChip(
+                                    selected = statusBarModeTab == 1,
+                                    onClick = { statusBarModeTab = 1 },
+                                    label = { Text(Strings.statusBarDarkModeLabel) }
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            if (statusBarModeTab == 0) {
+                                StatusBarConfigCard(
+                                    config = webViewConfig,
+                                    onConfigChange = onWebViewConfigChange
+                                )
+                            } else {
+                                // Dark mode status bar config
+                                StatusBarConfigCard(
+                                    config = webViewConfig.copy(
+                                        statusBarColorMode = webViewConfig.statusBarColorModeDark,
+                                        statusBarColor = webViewConfig.statusBarColorDark,
+                                        statusBarDarkIcons = webViewConfig.statusBarDarkIconsDark,
+                                        statusBarBackgroundType = webViewConfig.statusBarBackgroundTypeDark,
+                                        statusBarBackgroundImage = webViewConfig.statusBarBackgroundImageDark,
+                                        statusBarBackgroundAlpha = webViewConfig.statusBarBackgroundAlphaDark
+                                    ),
+                                    onConfigChange = { newConfig ->
+                                        onWebViewConfigChange(
+                                            webViewConfig.copy(
+                                                statusBarColorModeDark = newConfig.statusBarColorMode,
+                                                statusBarColorDark = newConfig.statusBarColor,
+                                                statusBarDarkIconsDark = newConfig.statusBarDarkIcons ?: false,
+                                                statusBarBackgroundTypeDark = newConfig.statusBarBackgroundType,
+                                                statusBarBackgroundImageDark = newConfig.statusBarBackgroundImage,
+                                                statusBarBackgroundAlphaDark = newConfig.statusBarBackgroundAlpha
+                                            )
+                                        )
+                                    }
+                                )
+                            }
                         }
                     }
                 }

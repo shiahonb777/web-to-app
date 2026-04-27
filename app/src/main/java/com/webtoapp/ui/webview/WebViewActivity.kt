@@ -140,6 +140,11 @@ class WebViewActivity : AppCompatActivity() {
     private var statusBarCustomColor: String? = null
     private var statusBarDarkIcons: Boolean? = null
     private var statusBarBackgroundType: com.webtoapp.data.model.StatusBarBackgroundType = com.webtoapp.data.model.StatusBarBackgroundType.COLOR
+    // Dark mode status bar config cache
+    private var statusBarColorModeDark: com.webtoapp.data.model.StatusBarColorMode = com.webtoapp.data.model.StatusBarColorMode.THEME
+    private var statusBarCustomColorDark: String? = null
+    private var statusBarDarkIconsDark: Boolean = false
+    private var statusBarBackgroundTypeDark: com.webtoapp.data.model.StatusBarBackgroundType = com.webtoapp.data.model.StatusBarBackgroundType.COLOR
     internal var keyboardAdjustMode: KeyboardAdjustMode = KeyboardAdjustMode.RESIZE  // 键盘调整模式
 
     private fun applyStatusBarColor(
@@ -549,13 +554,18 @@ class WebViewActivity : AppCompatActivity() {
                     previewApp = previewApp,
                     testUrl = testUrl,
                     testModuleIds = testModuleIds,
-                    onStatusBarConfigChanged = { colorMode, customColor, darkIcons, showStatusBar, backgroundType ->
+                    onStatusBarConfigChanged = { colorMode, customColor, darkIcons, showStatusBar, backgroundType, colorModeDark, customColorDark, darkIconsDark, backgroundTypeDark ->
                         // Update state栏配置
                         statusBarColorMode = colorMode
                         statusBarCustomColor = customColor
                         statusBarDarkIcons = darkIcons
                         showStatusBarInFullscreen = showStatusBar
                         statusBarBackgroundType = backgroundType
+                        // Update dark mode state栏配置
+                        statusBarColorModeDark = colorModeDark
+                        statusBarCustomColorDark = customColorDark
+                        statusBarDarkIconsDark = darkIconsDark
+                        statusBarBackgroundTypeDark = backgroundTypeDark
                     },
                     onWebViewCreated = { wv -> 
                         webView = wv
@@ -749,7 +759,7 @@ fun WebViewScreen(
     previewApp: com.webtoapp.data.model.WebApp? = null,
     testUrl: String? = null,
     testModuleIds: List<String>? = null,
-    onStatusBarConfigChanged: ((com.webtoapp.data.model.StatusBarColorMode, String?, Boolean?, Boolean, com.webtoapp.data.model.StatusBarBackgroundType) -> Unit)? = null,
+    onStatusBarConfigChanged: ((com.webtoapp.data.model.StatusBarColorMode, String?, Boolean?, Boolean, com.webtoapp.data.model.StatusBarBackgroundType, com.webtoapp.data.model.StatusBarColorMode, String?, Boolean, com.webtoapp.data.model.StatusBarBackgroundType) -> Unit)? = null,
     onWebViewCreated: (WebView) -> Unit,
     onFileChooser: (ValueCallback<Array<Uri>>?, WebChromeClient.FileChooserParams?) -> Boolean,
     onShowCustomView: (View, WebChromeClient.CustomViewCallback?) -> Unit,
@@ -827,6 +837,11 @@ fun WebViewScreen(
     var statusBarBackgroundImage by remember { mutableStateOf<String?>(null) }
     var statusBarBackgroundAlpha by remember { mutableFloatStateOf(1.0f) }
     var statusBarHeightDp by remember { mutableIntStateOf(0) }
+    // Dark mode status bar背景配置
+    var statusBarBackgroundTypeDarkLocal by remember { mutableStateOf("COLOR") }
+    var statusBarBackgroundColorDark by remember { mutableStateOf<String?>(null) }
+    var statusBarBackgroundImageDark by remember { mutableStateOf<String?>(null) }
+    var statusBarBackgroundAlphaDark by remember { mutableFloatStateOf(1.0f) }
     
     // WordPress 预览状态
     var wordPressPreviewState by remember { mutableStateOf<WordPressPreviewState>(WordPressPreviewState.Idle) }
@@ -866,7 +881,11 @@ fun WebViewScreen(
                 app.webViewConfig.statusBarColor,
                 app.webViewConfig.statusBarDarkIcons,
                 app.webViewConfig.showStatusBarInFullscreen,
-                app.webViewConfig.statusBarBackgroundType
+                app.webViewConfig.statusBarBackgroundType,
+                app.webViewConfig.statusBarColorModeDark,
+                app.webViewConfig.statusBarColorDark,
+                app.webViewConfig.statusBarDarkIconsDark,
+                app.webViewConfig.statusBarBackgroundTypeDark
             )
             // Update state栏背景配置
             statusBarBackgroundType = app.webViewConfig.statusBarBackgroundType.name
@@ -874,6 +893,11 @@ fun WebViewScreen(
             statusBarBackgroundImage = app.webViewConfig.statusBarBackgroundImage
             statusBarBackgroundAlpha = app.webViewConfig.statusBarBackgroundAlpha
             statusBarHeightDp = app.webViewConfig.statusBarHeightDp
+            // Update dark mode state栏背景配置
+            statusBarBackgroundTypeDarkLocal = app.webViewConfig.statusBarBackgroundTypeDark.name
+            statusBarBackgroundColorDark = app.webViewConfig.statusBarColorDark
+            statusBarBackgroundImageDark = app.webViewConfig.statusBarBackgroundImageDark
+            statusBarBackgroundAlphaDark = app.webViewConfig.statusBarBackgroundAlphaDark
             // Update导航栏配置和键盘调整模式
             (context as? WebViewActivity)?.let { activity ->
                 activity.showNavigationBarInFullscreen = app.webViewConfig.showNavigationBarInFullscreen
@@ -937,7 +961,7 @@ fun WebViewScreen(
                     activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
                 }
                 com.webtoapp.data.model.OrientationMode.AUTO -> {
-                    activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR
+                    activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
                 }
                 com.webtoapp.data.model.OrientationMode.PORTRAIT -> {
                     if (com.webtoapp.util.TvUtils.isTv(context)) {

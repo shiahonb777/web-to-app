@@ -61,6 +61,14 @@ class ShellActivity : AppCompatActivity() {
     private var statusBarBackgroundImage: String? = null
     private var statusBarBackgroundAlpha: Float = 1.0f
     private var statusBarHeightDp: Int = 0
+    // Dark mode status bar config cache
+    private var statusBarColorModeDark: String = "THEME"
+    private var statusBarCustomColorDark: String? = null
+    private var statusBarDarkIconsDark: Boolean? = null
+    private var statusBarBackgroundTypeDark: String = "COLOR"
+    private var statusBarBackgroundImageDark: String? = null
+    private var statusBarBackgroundAlphaDark: Float = 1.0f
+    private var currentIsDarkTheme: Boolean = false
     private var forceHideSystemUi: Boolean = false
     private var keyboardAdjustMode: KeyboardAdjustMode = KeyboardAdjustMode.RESIZE  // 键盘调整模式
     private var forcedRunConfig: ForcedRunConfig? = null
@@ -293,6 +301,13 @@ class ShellActivity : AppCompatActivity() {
         statusBarBackgroundImage = config.webViewConfig.statusBarBackgroundImage
         statusBarBackgroundAlpha = config.webViewConfig.statusBarBackgroundAlpha
         statusBarHeightDp = config.webViewConfig.statusBarHeightDp
+        // Dark mode status bar config
+        statusBarColorModeDark = config.webViewConfig.statusBarColorModeDark
+        statusBarCustomColorDark = config.webViewConfig.statusBarColorDark
+        statusBarDarkIconsDark = config.webViewConfig.statusBarDarkIconsDark
+        statusBarBackgroundTypeDark = config.webViewConfig.statusBarBackgroundTypeDark
+        statusBarBackgroundImageDark = config.webViewConfig.statusBarBackgroundImageDark
+        statusBarBackgroundAlphaDark = config.webViewConfig.statusBarBackgroundAlphaDark
         showStatusBarInFullscreen = config.webViewConfig.showStatusBarInFullscreen
         showNavigationBarInFullscreen = config.webViewConfig.showNavigationBarInFullscreen
         // 读取键盘调整模式
@@ -385,11 +400,16 @@ class ShellActivity : AppCompatActivity() {
             ) {
                 // Get当前主题状态
                 val isDarkTheme = com.webtoapp.ui.theme.LocalIsDarkTheme.current
+                // Sync isDarkTheme to Activity level for onWindowFocusChanged
+                currentIsDarkTheme = isDarkTheme
                 
-                // 当主题变化时更新状态栏颜色
-                LaunchedEffect(isDarkTheme, statusBarColorMode) {
+                // 当主题变化时更新状态栏颜色（根据当前主题选择对应配置）
+                LaunchedEffect(isDarkTheme, statusBarColorMode, statusBarColorModeDark) {
                     if (!immersiveFullscreenEnabled) {
-                        applyStatusBarColor(statusBarColorMode, statusBarCustomColor, statusBarDarkIcons, isDarkTheme)
+                        val effectiveColorMode = if (isDarkTheme) statusBarColorModeDark else statusBarColorMode
+                        val effectiveCustomColor = if (isDarkTheme) statusBarCustomColorDark else statusBarCustomColor
+                        val effectiveDarkIcons = if (isDarkTheme) statusBarDarkIconsDark else statusBarDarkIcons
+                        applyStatusBarColor(effectiveColorMode, effectiveCustomColor, effectiveDarkIcons, isDarkTheme)
                     }
                 }
                 
@@ -454,7 +474,12 @@ class ShellActivity : AppCompatActivity() {
                     statusBarBackgroundColor = statusBarCustomColor,
                     statusBarBackgroundImage = statusBarBackgroundImage,
                     statusBarBackgroundAlpha = statusBarBackgroundAlpha,
-                    statusBarHeightDp = statusBarHeightDp
+                    statusBarHeightDp = statusBarHeightDp,
+                    // Dark mode status bar配置
+                    statusBarBackgroundTypeDark = statusBarBackgroundTypeDark,
+                    statusBarBackgroundColorDark = statusBarCustomColorDark,
+                    statusBarBackgroundImageDark = statusBarBackgroundImageDark,
+                    statusBarBackgroundAlphaDark = statusBarBackgroundAlphaDark
                 )
             }
         }
@@ -532,7 +557,14 @@ class ShellActivity : AppCompatActivity() {
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
-            applyImmersiveFullscreen(customView != null || immersiveFullscreenEnabled || forceHideSystemUi)
+            if (customView != null || immersiveFullscreenEnabled || forceHideSystemUi) {
+                applyImmersiveFullscreen(true, isDarkTheme = currentIsDarkTheme)
+            } else {
+                val effectiveColorMode = if (currentIsDarkTheme) statusBarColorModeDark else statusBarColorMode
+                val effectiveCustomColor = if (currentIsDarkTheme) statusBarCustomColorDark else statusBarCustomColor
+                val effectiveDarkIcons = if (currentIsDarkTheme) statusBarDarkIconsDark else statusBarDarkIcons
+                applyStatusBarColor(effectiveColorMode, effectiveCustomColor, effectiveDarkIcons, currentIsDarkTheme)
+            }
         }
     }
 

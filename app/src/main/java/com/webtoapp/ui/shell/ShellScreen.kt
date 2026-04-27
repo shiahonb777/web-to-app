@@ -49,7 +49,12 @@ fun ShellScreen(
     statusBarBackgroundColor: String? = null,
     statusBarBackgroundImage: String? = null,
     statusBarBackgroundAlpha: Float = 1.0f,
-    statusBarHeightDp: Int = 0
+    statusBarHeightDp: Int = 0,
+    // Dark mode status bar配置
+    statusBarBackgroundTypeDark: String = "COLOR",
+    statusBarBackgroundColorDark: String? = null,
+    statusBarBackgroundImageDark: String? = null,
+    statusBarBackgroundAlphaDark: Float = 1.0f
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -237,8 +242,8 @@ fun ShellScreen(
                 activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
             }
             "AUTO" -> {
-                // ★ 自动旋转：跟随重力感应，平板设备友好
-                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR
+                // ★ 自动旋转：跟随系统自动旋转设置（尊重用户偏好），平板设备友好
+                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
             }
             else -> {
                 if (TvUtils.isTv(context)) {
@@ -458,18 +463,39 @@ fun ShellScreen(
         )
     }
     
-    // Status bar背景覆盖层（在全屏模式下显示状态栏时）
+    // Status bar背景覆盖层
     // 放在 Box 内部最上层，覆盖在所有内容之上，使用 align 固定在顶部
-    if (hideToolbar && config.webViewConfig.showStatusBarInFullscreen) {
+    // 全屏模式 + 非全屏模式（有自定义配置时）都显示覆盖层
+    val isDarkTheme = com.webtoapp.ui.theme.LocalIsDarkTheme.current
+    val effectiveBgType = if (isDarkTheme) statusBarBackgroundTypeDark else statusBarBackgroundType
+    val effectiveBgColor = if (isDarkTheme) statusBarBackgroundColorDark else statusBarBackgroundColor
+    val effectiveBgImage = if (isDarkTheme) statusBarBackgroundImageDark else statusBarBackgroundImage
+    val effectiveBgAlpha = if (isDarkTheme) statusBarBackgroundAlphaDark else statusBarBackgroundAlpha
+    val showOverlay = (hideToolbar && config.webViewConfig.showStatusBarInFullscreen) ||
+            (!hideToolbar && (effectiveBgType != "COLOR" || effectiveBgColor != null))
+    if (showOverlay) {
         com.webtoapp.ui.components.StatusBarOverlay(
             show = true,
-            backgroundType = statusBarBackgroundType,
-            backgroundColor = statusBarBackgroundColor,
-            backgroundImagePath = statusBarBackgroundImage,
-            alpha = statusBarBackgroundAlpha,
+            backgroundType = effectiveBgType,
+            backgroundColor = effectiveBgColor,
+            backgroundImagePath = effectiveBgImage,
+            alpha = effectiveBgAlpha,
             heightDp = statusBarHeightDp,
             modifier = Modifier.align(Alignment.TopStart)
         )
+        // Force status bar icon color based on overlay background brightness
+        val view = activity.window.decorView
+        val insetsController = androidx.core.view.WindowInsetsControllerCompat(activity.window, view)
+        val isLightOverlay = effectiveBgType == "COLOR" && effectiveBgColor != null && run {
+            try {
+                val color = android.graphics.Color.parseColor(effectiveBgColor)
+                val luminance = (0.299 * android.graphics.Color.red(color) +
+                        0.587 * android.graphics.Color.green(color) +
+                        0.114 * android.graphics.Color.blue(color)) / 255.0
+                luminance > 0.5
+            } catch (e: Exception) { false }
+        }
+        insetsController.isAppearanceLightStatusBars = isLightOverlay
     }
     
     } // 关闭外层 Box
