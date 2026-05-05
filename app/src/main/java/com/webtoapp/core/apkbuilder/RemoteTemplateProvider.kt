@@ -60,8 +60,9 @@ class RemoteTemplateProvider(
     }
 
     override fun getTemplate(): File? {
-        val variant = if (BuildConfig.BUNDLED_SHELL_TEMPLATE) "full" else "slim"
-        val url = "$baseUrl$ENDPOINT_PATH?versionCode=${BuildConfig.VERSION_CODE}&variant=$variant"
+        // Single-flavor build: always request the standard template. Kept as
+        // a parameter so the server can still advertise variants server-side.
+        val url = "$baseUrl$ENDPOINT_PATH?versionCode=${BuildConfig.VERSION_CODE}&variant=standard"
         val etagFile = File(cacheDir, "remote.etag")
         val cachedVersion = if (etagFile.exists()) etagFile.readText().trim() else ""
         val cachedApk = if (cachedVersion.isNotEmpty()) {
