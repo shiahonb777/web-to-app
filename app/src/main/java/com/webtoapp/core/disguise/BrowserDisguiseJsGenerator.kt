@@ -2,68 +2,68 @@ package com.webtoapp.core.disguise
 
 import com.webtoapp.core.logging.AppLogger
 
-/**
- * 浏览器伪装 JavaScript 生成器 v3.0 — 万向隐身核心
- * 
- * ## 架构设计 (v3.0 重大重构)
- * 
- * v2.0 的问题: 22 个独立开关让用户手动选择向量，容易遗漏，留下检测缝隙。
- * 
- * v3.0 新思路: **一旦开启浏览器伪装，ALL 表层 API 全部伪装**。
- * 
- * ```
- * ┌─────────────────────────────────────────────────────────────┐
- * │  UNIVERSAL STEALTH CORE (≈50+ 个检测面, 零性能成本, 始终注入) │
- * │  ✓ navigator 全属性伪装 (webdriver/vendor/platform/appVersion│
- * │    /userAgentData/plugins/mimeTypes/languages/connection...) │
- * │  ✓ window.chrome 完整 runtime/app/loadTimes/csi 模拟       │
- * │  ✓ Permissions/Notification/Credential/Keyboard API 补全    │
- * │  ✓ 自动化标志清除 (selenium/puppeteer/phantomjs/playwright)  │
- * │  ✓ Error stack / console debug 痕迹清理                     │
- * │  ✓ 原型链 toString 保护 (所有 hook → [native code])         │
- * │  ✓ iframe contentWindow 自动传播                            │
- * ├─────────────────────────────────────────────────────────────┤
- * │  PARAMETERIZED OVERLAYS (由 config 控制具体参数值)           │
- * │  ◆ Canvas 噪声强度                                         │
- * │  ◆ WebGL 渲染器型号                                        │
- * │  ◆ Audio 频率偏移                                          │
- * │  ◆ Screen 分辨率/DPR                                       │
- * │  ◆ Timezone IANA 值                                        │
- * │  ◆ Language 列表                                           │
- * │  ◆ Platform / HW / Memory                                  │
- * └─────────────────────────────────────────────────────────────┘
- * ```
- * 
- * ## 检测面覆盖 (50+)
- * 
- * 人看不穿: UI 层面完全像 Chrome
- * 数据看不穿: 所有 API 返回值与 Chrome 131 一致
- * 代码看不穿: toString() 返回 [native code], 属性描述符/枚举顺序/原型链全部正确
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 object BrowserDisguiseJsGenerator {
 
     private const val TAG = "BrowserDisguiseJs"
 
-    /**
-     * 根据配置生成完整的反检测 JavaScript
-     * 
-     * v3.0: 一旦 enabled=true，自动注入万向隐身核心 + 参数化叠加层
-     */
+
+
+
+
+
     fun generate(config: BrowserDisguiseConfig): String {
         if (!config.enabled) return ""
-        
-        val sb = StringBuilder(32768) // 预分配 32KB
+
+        val sb = StringBuilder(32768)
         sb.append("(function(){'use strict';\n")
         sb.append("if(window.__wta_browser_disguise__)return;\n")
         sb.append("window.__wta_browser_disguise__=1;\n\n")
-        
-        // ===== 第一层: 原型链保护基础设施 (必须最先注入) =====
+
+
         sb.append(PROTOTYPE_SHIELD_JS)
-        
-        // ===== 第二层: 万向隐身核心 (50+ 检测面, 一律全开) =====
+
+
         sb.append(UNIVERSAL_STEALTH_CORE_JS)
-        
-        // ===== 第三层: 参数化叠加层 (根据 config 定制具体值) =====
+
+
         sb.append(generateCanvasNoiseJs(config.canvasNoiseIntensity))
         sb.append(generateWebGLSpoofJs(config.webglRenderer))
         sb.append(AUDIO_NOISE_JS)
@@ -75,25 +75,25 @@ object BrowserDisguiseJsGenerator {
         sb.append(generateHardwareConcurrencyJs(config.targetConcurrency))
         sb.append(generateDeviceMemoryJs(config.targetMemoryGB))
         sb.append(generateUserAgentDataJs(config.targetPlatform))
-        
-        // ===== 第四层: 深度伪装 (WebRTC/MediaDevices/Font/性能计时) =====
+
+
         sb.append(DEEP_DISGUISE_JS)
-        
-        // ===== 第五层: iframe 传播 + 最终封印 =====
+
+
         sb.append(IFRAME_PROPAGATION_JS)
         sb.append(FINAL_SEAL_JS)
-        
+
         sb.append("\n})();")
-        
+
         val js = sb.toString()
         AppLogger.d(TAG, "Generated UNIVERSAL stealth JS: ${js.length} chars (50+ detection vectors)")
         return js
     }
-    
-    // ==================================================================================
-    // 第一层: 原型链保护基础设施
-    // ==================================================================================
-    
+
+
+
+
+
     private const val PROTOTYPE_SHIELD_JS = """
 // ══════════════════════════════════════════════════════════════
 // [L0] PROTOTYPE SHIELD — toString() / getOwnPropertyDescriptor 保护
@@ -115,10 +115,10 @@ Object.getOwnPropertyDescriptor=_mn(function(obj,prop){
 });
 """
 
-    // ==================================================================================
-    // 第二层: 万向隐身核心 — 50+ 检测面全覆盖
-    // ==================================================================================
-    
+
+
+
+
     private val UNIVERSAL_STEALTH_CORE_JS = """
 // ══════════════════════════════════════════════════════════════
 // [CORE] UNIVERSAL STEALTH — 表层 API 全伪装
@@ -500,10 +500,10 @@ Object.keys(document).forEach(function(k){if(k.match(/^cdc_/)||k.match(/^\${"$"}
 }catch(e){}
 """
 
-    // ==================================================================================
-    // 第三层: 参数化叠加层 — 根据 config 定制具体值
-    // ==================================================================================
-    
+
+
+
+
     private fun generateCanvasNoiseJs(intensity: Float): String = """
 // ── [OVERLAY] Canvas fingerprint noise (intensity=$intensity) ──
 try{
@@ -711,12 +711,12 @@ try{Object.defineProperty(navigator,'hardwareConcurrency',{get:_mn(function(){re
 try{Object.defineProperty(navigator,'deviceMemory',{get:_mn(function(){return $memoryGB}),enumerable:true,configurable:true});}catch(e){}
 """
 
-    /**
-     * navigator.userAgentData (Client Hints API) — 关键検出面
-     * 
-     * Chrome 90+ 使用 User-Agent Client Hints 替代传统 UA 字符串。
-     * 如果这个 API 缺失或返回错误值，立即暴露非 Chrome 身份。
-     */
+
+
+
+
+
+
     private fun generateUserAgentDataJs(platform: String): String {
         val (pName, pVersion) = when {
             platform.contains("Win") -> "Windows" to "15.0.0"
@@ -757,9 +757,9 @@ Object.defineProperty(navigator,'userAgentData',{get:_mn(function(){return _uad}
 """
     }
 
-    // ==================================================================================
-    // 第四层: 深度伪装
-    // ==================================================================================
+
+
+
 
     private const val DEEP_DISGUISE_JS = """
 // ══════════════════════════════════════════════════════════════
@@ -851,9 +851,9 @@ if(window.chrome&&!window.chrome.webstore){
 }catch(e){}
 """
 
-    // ==================================================================================
-    // 第五层: iframe 传播 + 最终封印
-    // ==================================================================================
+
+
+
 
     private const val IFRAME_PROPAGATION_JS = """
 // ══════════════════════════════════════════════════════════════

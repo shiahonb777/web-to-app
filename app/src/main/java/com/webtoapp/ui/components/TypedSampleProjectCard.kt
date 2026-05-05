@@ -14,7 +14,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -22,14 +24,13 @@ import androidx.compose.ui.unit.sp
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.core.sample.TypedSampleProject
 import com.webtoapp.ui.theme.LocalAppTheme
-import androidx.compose.ui.graphics.Color
 
-/**
- * 通用示例项目卡片
- * 
- * 支持 PHP / Python / Go / DocsSite 等各类型示例项目展示。
- * UI 模式参考 SampleProjectCard.kt（渐变边框、Play 按钮、标签行）。
- */
+
+
+
+
+
+
 @Composable
 fun TypedSampleProjectsCard(
     title: String,
@@ -39,15 +40,16 @@ fun TypedSampleProjectsCard(
     modifier: Modifier = Modifier
 ) {
     val theme = LocalAppTheme.current
-    
+    val accent = MaterialTheme.colorScheme.onSurface
+
     val containerModifier = modifier
         .fillMaxWidth()
         .clip(RoundedCornerShape(theme.shapes.cardRadius))
         .background(MaterialTheme.colorScheme.surface)
-    
+
     Box(modifier = containerModifier) {
         Column(modifier = Modifier.padding(20.dp)) {
-            // 标题区域
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -59,8 +61,8 @@ fun TypedSampleProjectsCard(
                         .background(
                             Brush.linearGradient(
                                 colors = listOf(
-                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                                    MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f)
+                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
                                 )
                             )
                         ),
@@ -69,13 +71,13 @@ fun TypedSampleProjectsCard(
                     Icon(
                         Icons.Outlined.Science,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = accent,
                         modifier = Modifier.size(24.dp)
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.width(14.dp))
-                
+
                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                     Text(
                         title,
@@ -89,24 +91,24 @@ fun TypedSampleProjectsCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                
+
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(theme.shapes.buttonRadius))
-                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                 ) {
                     Text(
                         Strings.quickExperience,
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                        color = accent
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(20.dp))
-            
+
             samples.forEachIndexed { index, sample ->
                 TypedSampleProjectItem(
                     sample = sample,
@@ -120,24 +122,24 @@ fun TypedSampleProjectsCard(
     }
 }
 
-/**
- * 单个示例项目项
- */
+
+
+
 @Composable
 private fun TypedSampleProjectItem(
     sample: TypedSampleProject,
     onClick: () -> Unit
 ) {
     val theme = LocalAppTheme.current
-    val sampleColor = Color(sample.brandColor)
-    
+    val sampleColor = MaterialTheme.colorScheme.onSurface
+
     var isPressed by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.98f else 1f,
         animationSpec = spring(stiffness = Spring.StiffnessHigh),
         label = "scale"
     )
-    
+
     val itemModifier = Modifier
         .fillMaxWidth()
         .graphicsLayer { scaleX = scale; scaleY = scale }
@@ -148,12 +150,12 @@ private fun TypedSampleProjectItem(
             onClick()
         }
         .padding(14.dp)
-    
+
     Row(
         modifier = itemModifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 图标容器
+
         Box(
             modifier = Modifier
                 .size(52.dp)
@@ -161,18 +163,18 @@ private fun TypedSampleProjectItem(
                 .background(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            sampleColor.copy(alpha = 0.15f),
-                            sampleColor.copy(alpha = 0.05f)
+                            sampleColor.copy(alpha = 0.10f),
+                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f)
                         )
                     )
                 ),
             contentAlignment = Alignment.Center
         ) {
-            Icon(com.webtoapp.util.SvgIconMapper.getIcon(sample.icon), contentDescription = null, modifier = Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
+            Icon(com.webtoapp.util.SvgIconMapper.getIcon(sample.icon), contentDescription = null, modifier = Modifier.size(24.dp), tint = sampleColor)
         }
-        
+
         Spacer(modifier = Modifier.width(14.dp))
-        
+
         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
             Text(
                 sample.name,
@@ -180,9 +182,9 @@ private fun TypedSampleProjectItem(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            
+
             Spacer(modifier = Modifier.height(3.dp))
-            
+
             Text(
                 sample.description,
                 style = MaterialTheme.typography.bodySmall,
@@ -190,9 +192,9 @@ private fun TypedSampleProjectItem(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 sample.tags.take(3).forEach { tag ->
                     Box(
@@ -211,10 +213,10 @@ private fun TypedSampleProjectItem(
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.width(8.dp))
-        
-        // Play 按钮
+
+
         Box(
             modifier = Modifier
                 .size(36.dp)

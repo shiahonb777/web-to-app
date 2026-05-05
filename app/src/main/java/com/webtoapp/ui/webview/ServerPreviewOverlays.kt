@@ -14,9 +14,9 @@ import androidx.compose.ui.unit.dp
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.core.wordpress.WordPressDependencyManager
 
-/**
- * WordPress 加载覆盖层
- */
+
+
+
 @Composable
 fun WordPressLoadingOverlay(
     state: WordPressPreviewState,
@@ -66,7 +66,7 @@ fun WordPressLoadingOverlay(
                             Text(Strings.wpDownloading)
                         }
                     }
-                    // 镜像源信息
+
                     MirrorSourceInfo()
                 }
                 is WordPressPreviewState.CreatingProject -> {
@@ -86,9 +86,9 @@ fun WordPressLoadingOverlay(
     }
 }
 
-/**
- * PHP 应用加载覆盖层
- */
+
+
+
 @Composable
 fun PhpAppLoadingOverlay(
     state: PhpAppPreviewState,
@@ -134,7 +134,7 @@ fun PhpAppLoadingOverlay(
                             Text(Strings.phpAppDownloading)
                         }
                     }
-                    // 镜像源信息
+
                     MirrorSourceInfo()
                 }
                 is PhpAppPreviewState.StartingServer -> {
@@ -150,9 +150,9 @@ fun PhpAppLoadingOverlay(
     }
 }
 
-/**
- * Python 应用加载覆盖层
- */
+
+
+
 @Composable
 fun PythonAppLoadingOverlay(
     state: PythonAppPreviewState,
@@ -183,9 +183,9 @@ fun PythonAppLoadingOverlay(
     }
 }
 
-/**
- * Node.js 应用加载覆盖层（与 Go 共用简单模板）
- */
+
+
+
 @Composable
 fun SimpleAppLoadingOverlay(
     isStarting: Boolean,
@@ -214,7 +214,7 @@ fun SimpleAppLoadingOverlay(
     }
 }
 
-// ===== 共享内部组件 =====
+
 
 @Composable
 private fun ErrorWithRetry(message: String, onRetry: () -> Unit) {

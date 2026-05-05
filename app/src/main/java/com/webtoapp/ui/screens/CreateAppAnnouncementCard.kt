@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedVisibility
 import com.webtoapp.ui.animation.CardExpandTransition
 import com.webtoapp.ui.animation.CardCollapseTransition
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
@@ -22,12 +21,15 @@ import com.webtoapp.ui.components.announcement.AnnouncementDialog
 import com.webtoapp.ui.components.announcement.AnnouncementConfig
 import com.webtoapp.ui.components.announcement.AnnouncementTemplate
 import com.webtoapp.ui.components.announcement.AnnouncementTemplateSelector
+import com.webtoapp.ui.components.announcement.toStoredTemplate
+import com.webtoapp.ui.components.announcement.toUiTemplate
+import com.webtoapp.ui.design.*
 import com.webtoapp.ui.viewmodel.EditState
 
-/**
- * 公告设置卡片
- * 遵循项目统一 UI 规范：CollapsibleCardHeader + SettingsSwitch + PremiumTextField + PremiumFilterChip
- */
+
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnnouncementCard(
@@ -37,29 +39,27 @@ fun AnnouncementCard(
 ) {
     var showPreview by remember { mutableStateOf(false) }
 
-    // 预览弹窗
+
     if (showPreview && (editState.announcement.title.isNotBlank() || editState.announcement.content.isNotBlank())) {
         AnnouncementDialog(
             config = AnnouncementConfig(
                 announcement = editState.announcement,
-                template = AnnouncementTemplate.valueOf(editState.announcement.template.name),
+                template = editState.announcement.template.toUiTemplate(),
                 showEmoji = editState.announcement.showEmoji,
                 animationEnabled = editState.announcement.animationEnabled
             ),
             onDismiss = { showPreview = false },
-            onLinkClick = { /* 预览模式不处理链接 */ }
+            onLinkClick = {  }
         )
     }
 
-    EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // 头部：图标 + 标题 + 开关
-            CollapsibleCardHeader(
+    WtaSettingCard {
+        Column(verticalArrangement = Arrangement.spacedBy(WtaSpacing.ContentGap)) {
+
+            WtaToggleRow(
                 icon = Icons.Outlined.Campaign,
                 title = Strings.popupAnnouncement,
+                subtitle = if (editState.announcementEnabled) Strings.enabled else Strings.disabled,
                 checked = editState.announcementEnabled,
                 onCheckedChange = onEnabledChange
             )
@@ -69,27 +69,29 @@ fun AnnouncementCard(
                 enter = CardExpandTransition,
                 exit = CardCollapseTransition
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(
+                    modifier = Modifier.padding(
+                        horizontal = WtaSpacing.RowHorizontal,
+                        vertical = WtaSpacing.ContentGap
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
 
-                    // ── 模板选择器 ──
+
                     AnnouncementTemplateSelector(
-                        selectedTemplate = AnnouncementTemplate.valueOf(
-                            editState.announcement.template.name
-                        ),
+                        selectedTemplate = editState.announcement.template.toUiTemplate(),
                         onTemplateSelected = { template ->
                             onAnnouncementChange(
                                 editState.announcement.copy(
-                                    template = AnnouncementTemplateType.valueOf(template.name)
+                                    template = template.toStoredTemplate()
                                 )
                             )
                         }
                     )
 
-                    HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                    )
+                    WtaSectionDivider(modifier = Modifier.padding(horizontal = 0.dp))
 
-                    // ── 公告标题 ──
+
                     PremiumTextField(
                         value = editState.announcement.title,
                         onValueChange = {
@@ -100,7 +102,7 @@ fun AnnouncementCard(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    // ── 公告内容 ──
+
                     PremiumTextField(
                         value = editState.announcement.content,
                         onValueChange = {
@@ -121,7 +123,7 @@ fun AnnouncementCard(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    // ── 链接 URL ──
+
                     PremiumTextField(
                         value = editState.announcement.linkUrl ?: "",
                         onValueChange = {
@@ -133,7 +135,7 @@ fun AnnouncementCard(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    // ── 链接按钮文字（仅当 URL 不为空时显示）──
+
                     AnimatedVisibility(
                         visible = !editState.announcement.linkUrl.isNullOrBlank()
                     ) {
@@ -149,11 +151,9 @@ fun AnnouncementCard(
                         )
                     }
 
-                    HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                    )
+                    WtaSectionDivider(modifier = Modifier.padding(horizontal = 0.dp))
 
-                    // ── 显示频率 ──
+
                     Text(
                         Strings.displayFrequency,
                         style = MaterialTheme.typography.labelLarge
@@ -181,85 +181,64 @@ fun AnnouncementCard(
                         )
                     }
 
-                    HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                    )
+                    WtaSectionDivider(modifier = Modifier.padding(horizontal = 0.dp))
 
-                    // ── 触发设置 ──
+
                     Text(
                         Strings.announcementTriggerSettings,
                         style = MaterialTheme.typography.labelLarge
                     )
 
-                    SettingsSwitch(
+                    WtaToggleRow(
                         title = Strings.announcementTriggerOnLaunch,
                         subtitle = Strings.announcementTriggerOnLaunchHint,
+                        icon = Icons.Outlined.RocketLaunch,
                         checked = editState.announcement.triggerOnLaunch,
                         onCheckedChange = {
                             onAnnouncementChange(editState.announcement.copy(triggerOnLaunch = it))
                         }
                     )
 
-                    SettingsSwitch(
+                    WtaToggleRow(
                         title = Strings.announcementTriggerOnNoNetwork,
                         subtitle = Strings.announcementTriggerOnNoNetworkHint,
+                        icon = Icons.Outlined.CloudOff,
                         checked = editState.announcement.triggerOnNoNetwork,
                         onCheckedChange = {
                             onAnnouncementChange(editState.announcement.copy(triggerOnNoNetwork = it))
                         }
                     )
 
-                    // ── 定时间隔触发 ──
+
                     var intervalExpanded by remember { mutableStateOf(false) }
                     val intervalOptions = listOf(0, 1, 3, 5, 10, 15, 30, 60)
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    WtaSettingRow(
+                        title = Strings.announcementTriggerInterval,
+                        subtitle = Strings.announcementTriggerIntervalHint,
+                        icon = Icons.Outlined.Timer
                     ) {
-                        Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
-                            Text(
-                                Strings.announcementTriggerInterval,
-                                style = MaterialTheme.typography.bodyLarge.copy(
-                                    fontWeight = androidx.compose.ui.text.font.FontWeight.Medium
-                                )
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                Strings.announcementTriggerIntervalHint,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-
                         ExposedDropdownMenuBox(
                             expanded = intervalExpanded,
                             onExpandedChange = { intervalExpanded = it },
                             modifier = Modifier.width(110.dp)
                         ) {
-                            Surface(
-                                shape = RoundedCornerShape(10.dp),
-                                color = MaterialTheme.colorScheme.secondaryContainer,
-                                modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                            FilledTonalButton(
+                                onClick = { intervalExpanded = true },
+                                modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(WtaRadius.Button)
                             ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    Text(
-                                        if (editState.announcement.triggerIntervalMinutes == 0)
-                                            Strings.announcementIntervalDisabled
-                                        else
-                                            "${editState.announcement.triggerIntervalMinutes} ${Strings.minutesShort}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = intervalExpanded)
-                                }
+                                Text(
+                                    if (editState.announcement.triggerIntervalMinutes == 0)
+                                        Strings.announcementIntervalDisabled
+                                    else
+                                        "${editState.announcement.triggerIntervalMinutes} ${Strings.minutesShort}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    maxLines = 1
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = intervalExpanded)
                             }
                             ExposedDropdownMenu(
                                 expanded = intervalExpanded,
@@ -293,13 +272,14 @@ fun AnnouncementCard(
                         }
                     }
 
-                    // 启动时也立即触发一次
+
                     AnimatedVisibility(
                         visible = editState.announcement.triggerIntervalMinutes > 0
                     ) {
-                        SettingsSwitch(
+                        WtaToggleRow(
                             title = Strings.announcementTriggerIntervalIncludeLaunch,
                             subtitle = Strings.announcementTriggerOnLaunchHint,
+                            icon = Icons.Outlined.PlayCircle,
                             checked = editState.announcement.triggerIntervalIncludeLaunch,
                             onCheckedChange = {
                                 onAnnouncementChange(editState.announcement.copy(triggerIntervalIncludeLaunch = it))
@@ -307,53 +287,55 @@ fun AnnouncementCard(
                         )
                     }
 
-                    HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                    )
+                    WtaSectionDivider(modifier = Modifier.padding(horizontal = 0.dp))
 
-                    // ── 高级选项 ──
+
                     Text(
                         Strings.announcementAdvancedOptions,
                         style = MaterialTheme.typography.labelLarge
                     )
 
-                    SettingsSwitch(
+                    WtaToggleRow(
                         title = Strings.showEmoji,
                         subtitle = Strings.announcementEmojiHint,
+                        icon = Icons.Outlined.EmojiEmotions,
                         checked = editState.announcement.showEmoji,
                         onCheckedChange = {
                             onAnnouncementChange(editState.announcement.copy(showEmoji = it))
                         }
                     )
 
-                    SettingsSwitch(
+                    WtaToggleRow(
                         title = Strings.enableAnimation,
                         subtitle = Strings.announcementAnimationHint,
+                        icon = Icons.Outlined.Animation,
                         checked = editState.announcement.animationEnabled,
                         onCheckedChange = {
                             onAnnouncementChange(editState.announcement.copy(animationEnabled = it))
                         }
                     )
 
-                    SettingsSwitch(
+                    WtaToggleRow(
                         title = Strings.announcementRequireConfirmLabel,
                         subtitle = Strings.announcementRequireConfirmHint,
+                        icon = Icons.Outlined.TaskAlt,
                         checked = editState.announcement.requireConfirmation,
                         onCheckedChange = {
                             onAnnouncementChange(editState.announcement.copy(requireConfirmation = it))
                         }
                     )
 
-                    SettingsSwitch(
+                    WtaToggleRow(
                         title = Strings.announcementAllowNeverShowLabel,
                         subtitle = Strings.announcementAllowNeverShowHint,
+                        icon = Icons.Outlined.VisibilityOff,
                         checked = editState.announcement.allowNeverShow,
                         onCheckedChange = {
                             onAnnouncementChange(editState.announcement.copy(allowNeverShow = it))
                         }
                     )
 
-                    // ── 预览按钮 ──
+
                     PremiumOutlinedButton(
                         onClick = { showPreview = true },
                         modifier = Modifier.fillMaxWidth(),

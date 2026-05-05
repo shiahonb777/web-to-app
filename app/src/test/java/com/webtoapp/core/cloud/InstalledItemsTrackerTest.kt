@@ -3,17 +3,17 @@ package com.webtoapp.core.cloud
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
-/**
- * InstalledItemsTracker 纯逻辑测试
- *
- * 覆盖：版本号解析、版本名解析、版本比较逻辑
- * 不依赖 Android SharedPreferences，直接测试解析算法
- */
+
+
+
+
+
+
 class InstalledItemsTrackerTest {
 
-    // ═══════════════════════════════════════════
-    // 版本号解析 — 复现 InstalledItemsTracker 内部逻辑
-    // ═══════════════════════════════════════════
+
+
+
 
     private fun parseVersionCode(entry: String): Int {
         val parts = entry.split("=", limit = 2)
@@ -32,9 +32,9 @@ class InstalledItemsTrackerTest {
         return entries.find { it.startsWith(prefix) }
     }
 
-    // ═══════════════════════════════════════════
-    // parseVersionCode
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `parseVersionCode extracts integer after equals sign`() {
@@ -54,9 +54,9 @@ class InstalledItemsTrackerTest {
         assertThat(parseVersionCode("42")).isEqualTo(0)
     }
 
-    // ═══════════════════════════════════════════
-    // parseVersionName
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `parseVersionName extracts string after equals sign`() {
@@ -79,9 +79,9 @@ class InstalledItemsTrackerTest {
         assertThat(parseVersionName("invalid")).isEmpty()
     }
 
-    // ═══════════════════════════════════════════
-    // findEntryForId
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `findEntryForId finds matching entry`() {
@@ -101,9 +101,9 @@ class InstalledItemsTrackerTest {
         assertThat(findEntryForId(emptySet(), 42)).isNull()
     }
 
-    // ═══════════════════════════════════════════
-    // 版本比较逻辑（用于更新检测）
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `higher remote versionCode indicates update available`() {
@@ -126,9 +126,9 @@ class InstalledItemsTrackerTest {
         assertThat(0 > 0).isFalse()
     }
 
-    // ═══════════════════════════════════════════
-    // 集成：从 entries 集合中获取版本号
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `getInstalledVersionCode from entries set`() {

@@ -5,11 +5,11 @@ import com.webtoapp.core.i18n.Strings
 import com.webtoapp.core.sample.SampleProjectExtractor
 import com.webtoapp.core.sample.TypedSampleProject
 
-/**
- * WordPress 示例项目管理器
- */
+
+
+
 object WordPressSampleManager {
-    
+
     fun getSampleProjects(): List<TypedSampleProject> {
         val suffix = SampleProjectExtractor.getLanguageSuffix()
         return listOf(
@@ -42,7 +42,7 @@ object WordPressSampleManager {
             )
         )
     }
-    
+
     suspend fun extractSampleProject(
         context: Context,
         projectId: String

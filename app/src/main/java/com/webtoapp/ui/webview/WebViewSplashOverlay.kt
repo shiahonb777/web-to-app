@@ -26,27 +26,27 @@ import com.webtoapp.data.model.SplashType
 import kotlinx.coroutines.delay
 import java.io.File
 
-/**
- * 启动画面覆盖层
- * 支持图片和视频（含裁剪播放）
- */
+
+
+
+
 @Composable
 fun SplashOverlay(
     splashConfig: SplashConfig,
     countdown: Int,
-    onSkip: (() -> Unit)?,           // 点击跳过回调
-    onComplete: (() -> Unit)? = null // Play完成回调
+    onSkip: (() -> Unit)?,
+    onComplete: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val mediaPath = splashConfig.mediaPath ?: return
 
-    // Video裁剪相关
+
     val videoStartMs = splashConfig.videoStartMs
     val videoEndMs = splashConfig.videoEndMs
     val videoDurationMs = videoEndMs - videoStartMs
     val contentScaleMode = if (splashConfig.fillScreen) ContentScale.Crop else ContentScale.Fit
-    
-    // Video剩余时间（用于动态倒计时显示）
+
+
     var videoRemainingMs by remember { mutableLongStateOf(videoDurationMs) }
 
     Box(
@@ -67,7 +67,7 @@ fun SplashOverlay(
     ) {
         when (splashConfig.type) {
             SplashType.IMAGE -> {
-                // Image启动画面
+
                 Image(
                     painter = rememberAsyncImagePainter(
                         ImageRequest.Builder(context)
@@ -81,37 +81,37 @@ fun SplashOverlay(
                 )
             }
             SplashType.VIDEO -> {
-                // Video启动画面 - 支持裁剪播放
+
                 var mediaPlayer by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
                 var isPlayerReady by remember { mutableStateOf(false) }
-                
-                // 监控播放进度，到达结束时间时停止
-                // 仅在播放器准备就绪后开始监控
+
+
+
                 LaunchedEffect(isPlayerReady) {
                     if (!isPlayerReady) return@LaunchedEffect
                     mediaPlayer?.let { mp ->
-                        // 等待播放器真正开始播放
+
                         while (!mp.isPlaying) {
                             delay(50)
-                            // 如果播放器被释放则退出
+
                             if (mediaPlayer == null) return@LaunchedEffect
                         }
-                        // 监控播放进度并更新剩余时间
+
                         while (mp.isPlaying) {
                             val currentPos = mp.currentPosition
-                            // Update剩余时间用于倒计时显示
+
                             videoRemainingMs = (videoEndMs - currentPos).coerceAtLeast(0L)
                             if (currentPos >= videoEndMs) {
                                 mp.pause()
-                                // 使用 onComplete 回调
+
                                 onComplete?.invoke()
                                 break
                             }
-                            delay(100) // 100ms 更新一次倒计时显示
+                            delay(100)
                         }
                     }
                 }
-                
+
                 AndroidView(
                     factory = { ctx ->
                         android.view.SurfaceView(ctx).apply {
@@ -121,12 +121,12 @@ fun SplashOverlay(
                                         mediaPlayer = android.media.MediaPlayer().apply {
                                             setDataSource(mediaPath)
                                             setSurface(holder.surface)
-                                            // 根据配置决定是否启用音频
+
                                             val volume = if (splashConfig.enableAudio) 1f else 0f
                                             setVolume(volume, volume)
                                             isLooping = false
-                                            setOnPreparedListener { 
-                                                // 跳到裁剪起始位置
+                                            setOnPreparedListener {
+
                                                 seekTo(videoStartMs.toInt())
                                                 start()
                                                 isPlayerReady = true
@@ -149,8 +149,8 @@ fun SplashOverlay(
                     },
                     modifier = Modifier.fillMaxSize()
                 )
-                
-                // 组件销毁时释放 MediaPlayer
+
+
                 DisposableEffect(Unit) {
                     onDispose {
                         mediaPlayer?.release()
@@ -160,14 +160,14 @@ fun SplashOverlay(
             }
         }
 
-        // 倒计时/跳过提示
-        // Video使用动态剩余时间，图片使用传入的 countdown
+
+
         val displayTime = if (splashConfig.type == SplashType.VIDEO) {
             ((videoRemainingMs + 999) / 1000).toInt()
         } else {
             countdown
         }
-        
+
         Surface(
             modifier = Modifier
                 .align(Alignment.TopEnd)
@@ -206,9 +206,9 @@ fun SplashOverlay(
     }
 }
 
-/**
- * 激活码对话框
- */
+
+
+
 @Composable
 fun ActivationDialog(
     onDismiss: () -> Unit,

@@ -3,73 +3,73 @@ package com.webtoapp.core.webview
 import android.net.Uri
 import com.webtoapp.core.logging.AppLogger
 
-/**
- * 通用 OAuth/登录/支付 WebView 兼容引擎 v3.0
- *
- * 覆盖国际用户 99% 的认证/登录/支付场景，确保在 WebView 内畅通无阻。
- *
- * ## 覆盖范围 (v3.0)
- *
- * ### Tier 1: 全球级 (20亿+ 用户)
- * Google, Facebook/Meta, Apple, Microsoft, Amazon
- *
- * ### Tier 2: 社交/开发者 (5亿+ 用户)
- * Twitter/X, GitHub, Discord, Reddit, LinkedIn, Spotify, Twitch
- *
- * ### Tier 3: 亚太区域 (15亿+ 用户)
- * Line, Kakao, Naver, WeChat, QQ, Alipay, Douyin/TikTok, Yahoo Japan
- *
- * ### Tier 4: 其他区域 (5亿+ 用户)
- * VK, Yandex, Mail.ru (俄罗斯), Shopify, Dropbox, Notion, Slack, Zoom
- *
- * ### Tier 5: 支付/金融 (全球覆盖)
- * PayPal, Stripe, Square, Braintree, Alipay, WeChat Pay
- *
- * ### Tier 6: CAPTCHA/安全 (全球覆盖)
- * Google reCAPTCHA, hCaptcha, Cloudflare Turnstile
- *
- * ## 架构
- *
- * ```
- * shouldOverrideUrlLoading() → isOAuthUrl() → 允许 WebView 内加载
- * onPageStarted()           → getAntiDetectionJs() → 注入反检测 JS
- * shouldInterceptRequest()  → sanitizeHeaders() → 清理 WebView 指纹头
- * onPageFinished()          → getOAuthBlockDetectionJs() → 错误页检测
- * ```
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 object OAuthCompatEngine {
 
     private const val TAG = "OAuthCompatEngine"
 
-    // ==================== 提供商类型 ====================
+
 
     enum class Provider {
-        // Tier 1: 全球级
+
         GOOGLE, FACEBOOK, APPLE, MICROSOFT, AMAZON,
-        // Tier 2: 社交/开发者
+
         TWITTER, GITHUB, DISCORD, REDDIT, LINKEDIN, SPOTIFY, TWITCH,
-        // Tier 3: 亚太
+
         LINE, KAKAO, NAVER, WECHAT, QQ, ALIPAY, TIKTOK, YAHOO_JAPAN,
-        // Tier 4: 其他区域
+
         VK, YANDEX, MAILRU, SHOPIFY, DROPBOX, NOTION, SLACK, ZOOM,
-        // Tier 5: 支付
+
         PAYPAL, STRIPE, SQUARE,
-        // Tier 6: CAPTCHA
+
         RECAPTCHA, HCAPTCHA, CLOUDFLARE,
-        // 通用
+
         YAHOO,
         GENERIC_OAUTH
     }
 
-    // ==================== 提供商域名注册表 ====================
+
 
     private val HOST_TO_PROVIDER: Map<String, Provider> = mapOf(
-        // ── Tier 1: 全球级 ──
-        // Google
+
+
         "accounts.google.com" to Provider.GOOGLE,
         "accounts.youtube.com" to Provider.GOOGLE,
         "myaccount.google.com" to Provider.GOOGLE,
-        // Facebook / Meta
+
         "www.facebook.com" to Provider.FACEBOOK,
         "m.facebook.com" to Provider.FACEBOOK,
         "web.facebook.com" to Provider.FACEBOOK,
@@ -77,16 +77,16 @@ object OAuthCompatEngine {
         "www.instagram.com" to Provider.FACEBOOK,
         "www.messenger.com" to Provider.FACEBOOK,
         "www.threads.net" to Provider.FACEBOOK,
-        // Apple
+
         "appleid.apple.com" to Provider.APPLE,
         "idmsa.apple.com" to Provider.APPLE,
-        // Microsoft
+
         "login.microsoftonline.com" to Provider.MICROSOFT,
         "login.live.com" to Provider.MICROSOFT,
         "login.windows.net" to Provider.MICROSOFT,
         "login.microsoft.com" to Provider.MICROSOFT,
         "account.live.com" to Provider.MICROSOFT,
-        // Amazon
+
         "www.amazon.com" to Provider.AMAZON,
         "apac.account.amazon.com" to Provider.AMAZON,
         "na.account.amazon.com" to Provider.AMAZON,
@@ -96,90 +96,90 @@ object OAuthCompatEngine {
         "www.amazon.de" to Provider.AMAZON,
         "www.amazon.in" to Provider.AMAZON,
 
-        // ── Tier 2: 社交/开发者 ──
-        // Twitter / X
+
+
         "api.twitter.com" to Provider.TWITTER,
         "twitter.com" to Provider.TWITTER,
         "api.x.com" to Provider.TWITTER,
         "x.com" to Provider.TWITTER,
-        // GitHub
+
         "github.com" to Provider.GITHUB,
-        // Discord
+
         "discord.com" to Provider.DISCORD,
         "discordapp.com" to Provider.DISCORD,
-        // Reddit
+
         "www.reddit.com" to Provider.REDDIT,
         "old.reddit.com" to Provider.REDDIT,
         "ssl.reddit.com" to Provider.REDDIT,
-        // LinkedIn
+
         "www.linkedin.com" to Provider.LINKEDIN,
         "linkedin.com" to Provider.LINKEDIN,
-        // Spotify
+
         "accounts.spotify.com" to Provider.SPOTIFY,
-        // Twitch
+
         "id.twitch.tv" to Provider.TWITCH,
         "www.twitch.tv" to Provider.TWITCH,
 
-        // ── Tier 3: 亚太 ──
-        // Line
+
+
         "access.line.me" to Provider.LINE,
         "liff.line.me" to Provider.LINE,
-        // Kakao
+
         "accounts.kakao.com" to Provider.KAKAO,
         "kauth.kakao.com" to Provider.KAKAO,
-        // Naver
+
         "nid.naver.com" to Provider.NAVER,
         "access.naver.com" to Provider.NAVER,
-        // WeChat
+
         "open.weixin.qq.com" to Provider.WECHAT,
         "mp.weixin.qq.com" to Provider.WECHAT,
-        // QQ
+
         "graph.qq.com" to Provider.QQ,
         "connect.qq.com" to Provider.QQ,
         "ssl.ptlogin2.qq.com" to Provider.QQ,
         "xui.ptlogin2.qq.com" to Provider.QQ,
-        // Alipay
+
         "auth.alipay.com" to Provider.ALIPAY,
         "openauth.alipay.com" to Provider.ALIPAY,
-        // TikTok / Douyin
+
         "www.tiktok.com" to Provider.TIKTOK,
         "open-api.tiktok.com" to Provider.TIKTOK,
         "open.douyin.com" to Provider.TIKTOK,
-        // Yahoo Japan
+
         "login.yahoo.co.jp" to Provider.YAHOO_JAPAN,
         "auth.login.yahoo.co.jp" to Provider.YAHOO_JAPAN,
-        // Yahoo Global
+
         "login.yahoo.com" to Provider.YAHOO,
         "api.login.yahoo.com" to Provider.YAHOO,
 
-        // ── Tier 4: 其他区域 ──
-        // VK
+
+
         "oauth.vk.com" to Provider.VK,
         "id.vk.com" to Provider.VK,
         "login.vk.com" to Provider.VK,
-        // Yandex
+
         "oauth.yandex.com" to Provider.YANDEX,
         "oauth.yandex.ru" to Provider.YANDEX,
         "passport.yandex.com" to Provider.YANDEX,
         "passport.yandex.ru" to Provider.YANDEX,
-        // Mail.ru
+
         "connect.mail.ru" to Provider.MAILRU,
         "o2.mail.ru" to Provider.MAILRU,
-        // Shopify
+
         "accounts.shopify.com" to Provider.SHOPIFY,
-        // Dropbox
+
         "www.dropbox.com" to Provider.DROPBOX,
-        // Notion
+
         "www.notion.so" to Provider.NOTION,
-        // Slack
+
         "slack.com" to Provider.SLACK,
         "app.slack.com" to Provider.SLACK,
-        // Zoom
+
         "zoom.us" to Provider.ZOOM,
         "us04web.zoom.us" to Provider.ZOOM,
         "us05web.zoom.us" to Provider.ZOOM,
 
-        // ── Tier 5: 支付 ──
+
         "www.paypal.com" to Provider.PAYPAL,
         "paypal.com" to Provider.PAYPAL,
         "checkout.stripe.com" to Provider.STRIPE,
@@ -187,19 +187,19 @@ object OAuthCompatEngine {
         "squareup.com" to Provider.SQUARE,
         "checkout.square.site" to Provider.SQUARE,
 
-        // ── Tier 6: CAPTCHA ──
-        "www.google.com" to Provider.RECAPTCHA, // /recaptcha 路径检测
+
+        "www.google.com" to Provider.RECAPTCHA,
         "www.gstatic.com" to Provider.RECAPTCHA,
         "hcaptcha.com" to Provider.HCAPTCHA,
         "newassets.hcaptcha.com" to Provider.HCAPTCHA,
         "challenges.cloudflare.com" to Provider.CLOUDFLARE
     )
 
-    /**
-     * 域名 + 路径限制规则
-     */
+
+
+
     private val HOST_PATH_RULES: Map<String, List<String>> = mapOf(
-        // Facebook/Meta — 仅登录/OAuth
+
         "www.facebook.com" to listOf("/login", "/v", "/dialog/oauth", "/oauth"),
         "m.facebook.com" to listOf("/login", "/v", "/dialog/oauth", "/oauth"),
         "web.facebook.com" to listOf("/login", "/v", "/dialog/oauth", "/oauth"),
@@ -208,151 +208,151 @@ object OAuthCompatEngine {
         "www.messenger.com" to listOf("/login"),
         "www.threads.net" to listOf("/login"),
 
-        // Twitter/X
+
         "twitter.com" to listOf("/i/oauth2", "/oauth", "/login/oauth", "/i/flow/login"),
         "x.com" to listOf("/i/oauth2", "/oauth", "/login/oauth", "/i/flow/login"),
         "api.twitter.com" to listOf("/oauth", "/oauth2"),
         "api.x.com" to listOf("/oauth", "/oauth2"),
 
-        // GitHub
+
         "github.com" to listOf("/login/oauth", "/login", "/sessions", "/session"),
 
-        // Discord
+
         "discord.com" to listOf("/login", "/oauth2", "/authorize", "/register"),
         "discordapp.com" to listOf("/login", "/oauth2", "/authorize"),
 
-        // Reddit
+
         "www.reddit.com" to listOf("/login", "/account/login", "/api/v1/authorize"),
         "old.reddit.com" to listOf("/login"),
         "ssl.reddit.com" to listOf("/api/v1/authorize"),
 
-        // LinkedIn
+
         "www.linkedin.com" to listOf("/oauth", "/login", "/uas/login", "/checkpoint", "/authwall"),
         "linkedin.com" to listOf("/oauth", "/login", "/uas/login"),
 
-        // Amazon
+
         "www.amazon.com" to listOf("/ap/signin", "/ap/oa", "/gp/sign-in", "/ap/register"),
         "www.amazon.co.jp" to listOf("/ap/signin", "/ap/oa", "/gp/sign-in"),
         "www.amazon.co.uk" to listOf("/ap/signin", "/ap/oa", "/gp/sign-in"),
         "www.amazon.de" to listOf("/ap/signin", "/ap/oa", "/gp/sign-in"),
         "www.amazon.in" to listOf("/ap/signin", "/ap/oa", "/gp/sign-in"),
 
-        // TikTok
+
         "www.tiktok.com" to listOf("/login", "/auth/authorize", "/auth"),
 
-        // Dropbox
+
         "www.dropbox.com" to listOf("/login", "/oauth2/authorize"),
 
-        // Notion
+
         "www.notion.so" to listOf("/login", "/signup"),
 
-        // Slack
+
         "slack.com" to listOf("/signin", "/oauth", "/openid/connect"),
         "app.slack.com" to listOf("/auth"),
 
-        // Zoom
+
         "zoom.us" to listOf("/signin", "/oauth/authorize", "/login"),
 
-        // PayPal
+
         "www.paypal.com" to listOf("/signin", "/connect", "/webapps/auth", "/checkout"),
         "paypal.com" to listOf("/signin", "/connect", "/webapps/auth"),
 
-        // Twitch
+
         "www.twitch.tv" to listOf("/login"),
 
-        // CAPTCHA (www.google.com 仅 reCAPTCHA 路径)
+
         "www.google.com" to listOf("/recaptcha"),
         "www.gstatic.com" to listOf("/recaptcha")
     )
 
-    /**
-     * 无需路径限制的域名 — 整个域名都是登录/OAuth 用途
-     */
+
+
+
     private val FULL_DOMAIN_OAUTH_HOSTS: Set<String> = setOf(
-        // Google
+
         "accounts.google.com", "accounts.youtube.com", "myaccount.google.com",
-        // Apple
+
         "appleid.apple.com", "idmsa.apple.com",
-        // Microsoft
+
         "login.microsoftonline.com", "login.live.com", "login.windows.net",
         "login.microsoft.com", "account.live.com",
-        // Line
+
         "access.line.me", "liff.line.me",
-        // Kakao
+
         "accounts.kakao.com", "kauth.kakao.com",
-        // Naver
+
         "nid.naver.com", "access.naver.com",
-        // Yahoo
+
         "login.yahoo.com", "api.login.yahoo.com",
         "login.yahoo.co.jp", "auth.login.yahoo.co.jp",
-        // WeChat
+
         "open.weixin.qq.com", "mp.weixin.qq.com",
-        // QQ
+
         "graph.qq.com", "connect.qq.com", "ssl.ptlogin2.qq.com", "xui.ptlogin2.qq.com",
-        // Alipay
+
         "auth.alipay.com", "openauth.alipay.com",
-        // TikTok/Douyin
+
         "open-api.tiktok.com", "open.douyin.com",
-        // VK
+
         "oauth.vk.com", "id.vk.com", "login.vk.com",
-        // Yandex
+
         "oauth.yandex.com", "oauth.yandex.ru", "passport.yandex.com", "passport.yandex.ru",
-        // Mail.ru
+
         "connect.mail.ru", "o2.mail.ru",
-        // Spotify
+
         "accounts.spotify.com",
-        // Twitch
+
         "id.twitch.tv",
-        // Shopify
+
         "accounts.shopify.com",
-        // Stripe
+
         "checkout.stripe.com", "billing.stripe.com",
-        // Square
+
         "squareup.com", "checkout.square.site",
-        // Amazon regional
+
         "apac.account.amazon.com", "na.account.amazon.com", "eu.account.amazon.com",
-        // CAPTCHA
+
         "hcaptcha.com", "newassets.hcaptcha.com", "challenges.cloudflare.com"
     )
 
-    /**
-     * 通用 OAuth/登录路径模式 (用于未知域名)
-     */
+
+
+
     private val GENERIC_OAUTH_PATH_PATTERNS = listOf(
         "/oauth", "/oauth2", "/o/oauth2", "/authorize", "/auth/login",
         "/login/oauth", "/signin/oauth", "/connect/authorize",
         "/.well-known/openid-configuration", "/openid/connect",
-        "/auth/realms", // Keycloak
-        "/api/v1/authorize", // Generic REST APIs
-        "/sso/login", "/saml/login", "/cas/login" // Enterprise SSO
+        "/auth/realms",
+        "/api/v1/authorize",
+        "/sso/login", "/saml/login", "/cas/login"
     )
 
-    /**
-     * 所有 OAuth 提供商域名集合（用于 AdBlocker 白名单等）
-     */
+
+
+
     val ALL_OAUTH_HOSTS: Set<String> = HOST_TO_PROVIDER.keys
 
-    // ==================== 公开 API ====================
 
-    /**
-     * 检测 URL 是否为 OAuth/登录/支付/CAPTCHA 页面
-     */
+
+
+
+
     fun isOAuthUrl(url: String): Boolean {
         val uri = runCatching { Uri.parse(url) }.getOrNull() ?: return false
         val host = uri.host?.lowercase() ?: return false
         val path = uri.path?.lowercase() ?: ""
 
-        // 1. 全域名匹配
+
         if (host in FULL_DOMAIN_OAUTH_HOSTS) return true
 
-        // 2. 域名 + 路径规则
+
         val pathRules = HOST_PATH_RULES[host]
         if (pathRules != null) {
             if (pathRules.any { prefix -> path.startsWith(prefix) }) return true
             return false
         }
 
-        // 3. Google 特殊子域名
+
         if (host.endsWith(".google.com") || host == "google.com") {
             if (path.startsWith("/o/oauth2") || path.startsWith("/signin/oauth") ||
                 path.startsWith("/servicelogin") || path.startsWith("/accounts") ||
@@ -361,29 +361,29 @@ object OAuthCompatEngine {
             }
         }
 
-        // 4. 微信/QQ 泛域名
+
         if (host.endsWith(".qq.com") && (path.startsWith("/oauth") || path.startsWith("/connect"))) {
             return true
         }
 
-        // 5. 支付宝泛域名
+
         if (host.endsWith(".alipay.com") && (path.startsWith("/login") || path.startsWith("/oauth") || path.startsWith("/auth"))) {
             return true
         }
 
-        // 6. Yandex 泛域名
+
         if (host.endsWith(".yandex.ru") || host.endsWith(".yandex.com")) {
             if (path.startsWith("/passport") || path.startsWith("/oauth") || path.startsWith("/auth")) {
                 return true
             }
         }
 
-        // 7. Shopify 商户域名 (*.myshopify.com/account/login)
+
         if (host.endsWith(".myshopify.com") && (path.startsWith("/account/login") || path.startsWith("/account"))) {
             return true
         }
 
-        // 8. 通用 OAuth 路径模式检测
+
         if (GENERIC_OAUTH_PATH_PATTERNS.any { pattern -> path.startsWith(pattern) }) {
             val query = uri.query?.lowercase() ?: ""
             if (query.contains("client_id") || query.contains("redirect_uri") ||
@@ -396,15 +396,15 @@ object OAuthCompatEngine {
         return false
     }
 
-    /**
-     * 获取 URL 对应的 OAuth 提供商类型
-     */
+
+
+
     fun getProviderType(url: String): Provider? {
         val uri = runCatching { Uri.parse(url) }.getOrNull() ?: return null
         val host = uri.host?.lowercase() ?: return null
         val path = uri.path?.lowercase() ?: ""
 
-        // 精确域名匹配
+
         HOST_TO_PROVIDER[host]?.let { provider ->
             val pathRules = HOST_PATH_RULES[host]
             if (pathRules != null) {
@@ -413,7 +413,7 @@ object OAuthCompatEngine {
             return provider
         }
 
-        // Google 子域名
+
         if (host.endsWith(".google.com") || host == "google.com") {
             if (path.startsWith("/recaptcha")) return Provider.RECAPTCHA
             if (path.startsWith("/o/oauth2") || path.startsWith("/signin/oauth") ||
@@ -422,24 +422,24 @@ object OAuthCompatEngine {
             }
         }
 
-        // 微信/QQ 泛域名
+
         if (host.endsWith(".qq.com")) return Provider.QQ
-        // 支付宝
+
         if (host.endsWith(".alipay.com")) return Provider.ALIPAY
-        // Yandex
+
         if (host.endsWith(".yandex.ru") || host.endsWith(".yandex.com")) return Provider.YANDEX
-        // Shopify
+
         if (host.endsWith(".myshopify.com")) return Provider.SHOPIFY
 
         if (isOAuthUrl(url)) return Provider.GENERIC_OAUTH
         return null
     }
 
-    /**
-     * 获取指定 URL 对应的反检测 JavaScript
-     * 
-     * v3.0: 分层组合 = 通用基础层 + 提供商特定层
-     */
+
+
+
+
+
     fun getAntiDetectionJs(url: String): String? {
         val provider = getProviderType(url) ?: return null
         AppLogger.d(TAG, "Anti-detection JS for: $provider (${url.take(60)}...)")
@@ -448,13 +448,13 @@ object OAuthCompatEngine {
         sb.append(BASE_ANTI_DETECTION_JS)
 
         when (provider) {
-            // Tier 1
+
             Provider.GOOGLE -> sb.append(GOOGLE_ANTI_DETECTION_JS)
             Provider.FACEBOOK -> sb.append(FACEBOOK_ANTI_DETECTION_JS)
             Provider.MICROSOFT -> sb.append(MICROSOFT_ANTI_DETECTION_JS)
             Provider.APPLE -> sb.append(APPLE_ANTI_DETECTION_JS)
             Provider.AMAZON -> sb.append(AMAZON_ANTI_DETECTION_JS)
-            // Tier 2
+
             Provider.TWITTER -> sb.append(TWITTER_ANTI_DETECTION_JS)
             Provider.GITHUB -> sb.append(GITHUB_ANTI_DETECTION_JS)
             Provider.DISCORD -> sb.append(DISCORD_ANTI_DETECTION_JS)
@@ -462,14 +462,14 @@ object OAuthCompatEngine {
             Provider.LINKEDIN -> sb.append(LINKEDIN_ANTI_DETECTION_JS)
             Provider.SPOTIFY -> sb.append(SPOTIFY_ANTI_DETECTION_JS)
             Provider.TWITCH -> sb.append(TWITCH_ANTI_DETECTION_JS)
-            // Tier 3: 亚太
+
             Provider.LINE, Provider.KAKAO -> sb.append(LINE_KAKAO_ANTI_DETECTION_JS)
             Provider.NAVER -> sb.append(NAVER_ANTI_DETECTION_JS)
             Provider.WECHAT, Provider.QQ -> sb.append(WECHAT_QQ_ANTI_DETECTION_JS)
             Provider.ALIPAY -> sb.append(ALIPAY_ANTI_DETECTION_JS)
             Provider.TIKTOK -> sb.append(TIKTOK_ANTI_DETECTION_JS)
             Provider.YAHOO_JAPAN -> sb.append(YAHOO_JP_ANTI_DETECTION_JS)
-            // Tier 4
+
             Provider.VK -> sb.append(VK_ANTI_DETECTION_JS)
             Provider.YANDEX -> sb.append(YANDEX_ANTI_DETECTION_JS)
             Provider.MAILRU -> sb.append(MAILRU_ANTI_DETECTION_JS)
@@ -478,25 +478,25 @@ object OAuthCompatEngine {
             Provider.NOTION -> sb.append(NOTION_ANTI_DETECTION_JS)
             Provider.SLACK -> sb.append(SLACK_ANTI_DETECTION_JS)
             Provider.ZOOM -> sb.append(ZOOM_ANTI_DETECTION_JS)
-            // Tier 5: 支付
+
             Provider.PAYPAL -> sb.append(PAYPAL_ANTI_DETECTION_JS)
             Provider.STRIPE -> sb.append(STRIPE_ANTI_DETECTION_JS)
-            Provider.SQUARE -> sb.append(STRIPE_ANTI_DETECTION_JS) // 类似策略
-            // Tier 6: CAPTCHA
+            Provider.SQUARE -> sb.append(STRIPE_ANTI_DETECTION_JS)
+
             Provider.RECAPTCHA -> sb.append(RECAPTCHA_ANTI_DETECTION_JS)
             Provider.HCAPTCHA -> sb.append(HCAPTCHA_ANTI_DETECTION_JS)
             Provider.CLOUDFLARE -> sb.append(CLOUDFLARE_ANTI_DETECTION_JS)
-            // 通用
+
             Provider.YAHOO -> sb.append(YAHOO_ANTI_DETECTION_JS)
-            Provider.GENERIC_OAUTH -> { /* 基础层已足够 */ }
+            Provider.GENERIC_OAUTH -> {  }
         }
 
         return sb.toString()
     }
 
-    /**
-     * 清理请求头
-     */
+
+
+
     fun sanitizeHeaders(url: String, headers: Map<String, String>): Map<String, String> {
         if (!isOAuthUrl(url)) return headers
         val clean = headers.toMutableMap()
@@ -508,26 +508,26 @@ object OAuthCompatEngine {
         return clean
     }
 
-    /**
-     * 检查 HTTP 错误是否为 OAuth 封杀
-     */
+
+
+
     fun isOAuthBlockedError(statusCode: Int, url: String): Boolean {
         if (!isOAuthUrl(url)) return false
         return statusCode == 403 || (statusCode == 400 && getProviderType(url) == Provider.GOOGLE)
     }
 
-    // ==================== Chrome Custom Tab 重定向 ====================
 
-    /**
-     * 判断此 URL 是否应该主动重定向到 Chrome Custom Tab
-     * 仅 Google OAuth 需要 CCT（其他提供商的反检测仍然有效）
-     */
+
+
+
+
+
     fun shouldRedirectToCustomTab(url: String): Boolean {
         val uri = runCatching { Uri.parse(url) }.getOrNull() ?: return false
         val host = uri.host?.lowercase() ?: return false
         val path = uri.path?.lowercase() ?: ""
 
-        if (host == "accounts.google.com") {
+        if (host == "accounts.google.com" || host == "accounts.youtube.com" || host == "myaccount.google.com") {
             if (path.startsWith("/recaptcha") || path.startsWith("/gsi/")) return false
             return true
         }
@@ -540,9 +540,9 @@ object OAuthCompatEngine {
         return false
     }
 
-    /**
-     * 错误页检测 JS (多语言)
-     */
+
+
+
     fun getOAuthBlockDetectionJs(): String {
         return """(function(){
             'use strict';
@@ -575,22 +575,22 @@ object OAuthCompatEngine {
         })();""".trimIndent()
     }
 
-    // ==================== 反检测 JavaScript ====================
 
-    /**
-     * 通用基础反检测层 — 所有提供商共享
-     *
-     * 覆盖:
-     * - navigator.webdriver=false
-     * - window.chrome 完整对象
-     * - plugins/vendor/product 伪装
-     * - outerWidth/outerHeight 修正
-     * - Java Bridge / 自动化标志清除
-     * - ServiceWorker stub
-     * - BroadcastChannel stub
-     * - Notification API stub
-     * - Error stack 清理
-     */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     private val BASE_ANTI_DETECTION_JS = """(function(){'use strict';
         if(window.__wta_oauth_compat__)return;window.__wta_oauth_compat__=true;
 
@@ -681,7 +681,7 @@ object OAuthCompatEngine {
         }catch(e){}
     })();""".trimIndent()
 
-    // ==================== Tier 1: 全球级提供商 ====================
+
 
     private val GOOGLE_ANTI_DETECTION_JS = """(function(){'use strict';
         // chrome.webstore (已弃用但 Google 仍检测)
@@ -756,7 +756,7 @@ object OAuthCompatEngine {
         try{if(!window.localStorage){var _s={};window.localStorage={getItem:function(k){return _s[k]||null},setItem:function(k,v){_s[k]=String(v)},removeItem:function(k){delete _s[k]},clear:function(){_s={}},key:function(i){return Object.keys(_s)[i]||null},get length(){return Object.keys(_s).length}}}}catch(e){}
     })();""".trimIndent()
 
-    // ==================== Tier 2: 社交/开发者 ====================
+
 
     private val TWITTER_ANTI_DETECTION_JS = """(function(){'use strict';
         // Twitter/X 使用 React 大量依赖 IntersectionObserver
@@ -819,11 +819,11 @@ object OAuthCompatEngine {
     private val TWITCH_ANTI_DETECTION_JS = """(function(){'use strict';
         // Twitch 使用 MutationObserver 大量DOM操作
         try{if(!window.MutationObserver&&window.WebKitMutationObserver)window.MutationObserver=window.WebKitMutationObserver}catch(e){}
-        // Twitch 检测 WebGL 
+        // Twitch 检测 WebGL
         // (已由 BrowserDisguise 处理)
     })();""".trimIndent()
 
-    // ==================== Tier 3: 亚太提供商 ====================
+
 
     private val LINE_KAKAO_ANTI_DETECTION_JS = """(function(){'use strict';
         // Line LIFF bridge 清除
@@ -896,7 +896,7 @@ object OAuthCompatEngine {
         }},enumerable:true,configurable:true})}}catch(e){}
     })();""".trimIndent()
 
-    // ==================== Tier 4: 其他区域 ====================
+
 
     private val VK_ANTI_DETECTION_JS = """(function(){'use strict';
         // VK App bridge 清除
@@ -959,7 +959,7 @@ object OAuthCompatEngine {
         try{if(!window.AudioContext&&window.webkitAudioContext)window.AudioContext=window.webkitAudioContext}catch(e){}
     })();""".trimIndent()
 
-    // ==================== Tier 5: 支付 ====================
+
 
     private val PAYPAL_ANTI_DETECTION_JS = """(function(){'use strict';
         // PayPal Checkout SDK 极其严格的环境检测
@@ -990,7 +990,7 @@ object OAuthCompatEngine {
         }}catch(e){}
     })();""".trimIndent()
 
-    // ==================== Tier 6: CAPTCHA ====================
+
 
     private val RECAPTCHA_ANTI_DETECTION_JS = """(function(){'use strict';
         // reCAPTCHA v2/v3 检测的关键信号

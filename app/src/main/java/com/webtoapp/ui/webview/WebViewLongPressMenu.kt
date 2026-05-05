@@ -10,9 +10,9 @@ import com.webtoapp.core.webview.LongPressHandler
 import com.webtoapp.data.model.LongPressMenuStyle
 import com.webtoapp.ui.components.LongPressMenuSheet
 
-/**
- * WebView 长按菜单 - 根据菜单样式选择不同的显示方式
- */
+
+
+
 @Composable
 fun WebViewLongPressMenu(
     menuStyle: LongPressMenuStyle,
@@ -98,7 +98,7 @@ fun WebViewLongPressMenu(
             )
         }
         LongPressMenuStyle.DISABLED -> {
-            // Should not reach here, but dismiss just in case
+
             onDismiss()
         }
     }

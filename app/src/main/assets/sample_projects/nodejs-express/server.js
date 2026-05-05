@@ -1,7 +1,7 @@
-/**
- * 待办事项应用 — 暗色主题版
- * Node.js 内置 http 模块，零依赖
- */
+
+
+
+
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -36,7 +36,7 @@ function sendJson(res, data, status = 200) {
 }
 
 const server = http.createServer(async (req, res) => {
-  const url = new URL(req.url, `http://${req.headers.host}`);
+  const url = new URL(req.url, `http:
   const p = url.pathname, m = req.method;
 
   if (m === 'GET' && p === '/') {
@@ -72,7 +72,7 @@ const server = http.createServer(async (req, res) => {
   sendJson(res, { error: 'Not Found' }, 404);
 });
 
-server.listen(PORT, '0.0.0.0', () => console.log(`✅ Todo on http://0.0.0.0:${PORT}`));
+server.listen(PORT, '0.0.0.0', () => console.log(`✅ Todo on http:
 
 function getPage() {
   return `<!DOCTYPE html>

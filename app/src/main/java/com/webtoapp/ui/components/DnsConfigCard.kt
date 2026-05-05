@@ -16,10 +16,10 @@ import com.webtoapp.core.i18n.Strings
 import com.webtoapp.data.model.DnsConfig
 import com.webtoapp.data.model.DnsProvider
 
-/**
- * DNS 配置卡片
- * 支持系统默认 / DNS-over-HTTPS (DoH) 自定义提供商
- */
+
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DnsConfigCard(
@@ -37,7 +37,7 @@ fun DnsConfigCard(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // 标题行
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -82,20 +82,20 @@ fun DnsConfigCard(
                 )
             }
 
-            // 启用后展示配置
+
             AnimatedVisibility(visible = enabled) {
                 Column(
                     modifier = Modifier.padding(top = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // DNS 提供商选择
+
                     Text(
                         Strings.dnsProviderLabel,
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
-                    // 提供商网格
+
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         DnsProvider.entries.chunked(3).forEach { row ->
                             Row(
@@ -110,7 +110,7 @@ fun DnsConfigCard(
                                         modifier = Modifier.weight(1f)
                                     )
                                 }
-                                // 填充空位
+
                                 repeat(3 - row.size) {
                                     Spacer(Modifier.weight(1f))
                                 }
@@ -118,7 +118,7 @@ fun DnsConfigCard(
                         }
                     }
 
-                    // 自定义 DoH URL
+
                     if (dnsConfig.provider == "custom") {
                         PremiumTextField(
                             value = dnsConfig.customDohUrl,
@@ -130,7 +130,7 @@ fun DnsConfigCard(
                         )
                     }
 
-                    // DoH 模式选择
+
                     Text(
                         Strings.dohModeLabel,
                         style = MaterialTheme.typography.labelMedium,
@@ -152,7 +152,7 @@ fun DnsConfigCard(
                         )
                     }
 
-                    // DoH 模式说明
+
                     Card(
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
@@ -167,7 +167,7 @@ fun DnsConfigCard(
                         )
                     }
 
-                    // 绕过系统 DNS 开关
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,

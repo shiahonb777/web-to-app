@@ -30,16 +30,16 @@ import androidx.compose.ui.unit.dp
 import com.webtoapp.ui.theme.*
 import androidx.compose.animation.core.Spring
 
-/**
- * 主题化组件
- * 根据当前主题应用不同的视觉效果
- */
 
-// ==================== 主题化背景修饰符 ====================
 
-/**
- * 为 Modifier 添加主题纯色背景
- */
+
+
+
+
+
+
+
+
 @Composable
 fun Modifier.themedBackground(): Modifier {
     val theme = LocalAppTheme.current
@@ -56,16 +56,16 @@ fun Modifier.themedBackground(): Modifier {
     }
 }
 
-/**
- * 主题背景容器 — 使用渐变背景
- *
- * 用法：
- * ```
- * ThemedBackgroundBox(modifier = Modifier.fillMaxSize()) {
- *     // 你的页面内容
- * }
- * ```
- */
+
+
+
+
+
+
+
+
+
+
 @Composable
 fun ThemedBackgroundBox(
     modifier: Modifier = Modifier,
@@ -77,29 +77,29 @@ fun ThemedBackgroundBox(
 }
 
 
-/**
- * 获取当前主题的卡片圆角形状
- */
+
+
+
 @Composable
 fun themedCardShape(): RoundedCornerShape {
     val theme = LocalAppTheme.current
     return RoundedCornerShape(theme.shapes.cardRadius)
 }
 
-/**
- * 获取当前主题的按钮圆角形状
- */
+
+
+
 @Composable
 fun themedButtonShape(): RoundedCornerShape {
     val theme = LocalAppTheme.current
     return RoundedCornerShape(theme.shapes.buttonRadius)
 }
 
-// ==================== 主题化按钮 ====================
 
-/**
- * 渐变按钮 - 根据主题动画风格应用不同效果
- */
+
+
+
+
 @Composable
 fun GradientButton(
     onClick: () -> Unit,
@@ -110,11 +110,11 @@ fun GradientButton(
     val theme = LocalAppTheme.current
     val animSettings = LocalAnimationSettings.current
     val view = LocalView.current
-    
+
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    
-    // iOS 26 风格 spring 回弹缩放
+
+
     val scale by animateFloatAsState(
         targetValue = if (isPressed && animSettings.enabled) {
             when (theme.animationStyle) {
@@ -131,14 +131,14 @@ fun GradientButton(
         ),
         label = "buttonScale"
     )
-    
-    // 发光动画
+
+
     val glowAlpha by animateFloatAsState(
         targetValue = if (isPressed && animSettings.enabled && theme.effects.enableGlow) 0.5f else 0.3f,
         animationSpec = tween(150),
         label = "glowAlpha"
     )
-    
+
     Surface(
         onClick = {
             if (animSettings.hapticsEnabled) {
@@ -184,9 +184,9 @@ fun GradientButton(
     }
 }
 
-/**
- * 发光按钮
- */
+
+
+
 @Composable
 fun GlowingButton(
     onClick: () -> Unit,
@@ -197,7 +197,7 @@ fun GlowingButton(
 ) {
     val theme = LocalAppTheme.current
     val animSettings = LocalAnimationSettings.current
-    
+
     val infiniteTransition = rememberInfiniteTransition(label = "glow")
     val glowAlpha by infiniteTransition.animateFloat(
         initialValue = 0.3f,
@@ -208,7 +208,7 @@ fun GlowingButton(
         ),
         label = "glowAlpha"
     )
-    
+
     PremiumButton(
         onClick = onClick,
         modifier = modifier.then(
@@ -232,12 +232,12 @@ fun GlowingButton(
     }
 }
 
-// ==================== 主题化卡片 ====================
 
-/**
- * 玻璃拟态卡片 — iOS 26 液态玻璃风格
- * 使用 liquidGlass Modifier 实现真正的高斯模糊毛玻璃效果
- */
+
+
+
+
+
 @Composable
 fun GlassmorphicCard(
     modifier: Modifier = Modifier,
@@ -247,7 +247,7 @@ fun GlassmorphicCard(
     content: @Composable ColumnScope.() -> Unit
 ) {
     val theme = LocalAppTheme.current
-    
+
     Surface(
         modifier = modifier.liquidGlass(
             cornerRadius = theme.shapes.cardRadius,
@@ -266,9 +266,9 @@ fun GlassmorphicCard(
     }
 }
 
-/**
- * 渐变边框卡片
- */
+
+
+
 @Composable
 fun GradientBorderCard(
     modifier: Modifier = Modifier,
@@ -278,7 +278,7 @@ fun GradientBorderCard(
 ) {
     val theme = LocalAppTheme.current
     val colors = gradientColors ?: theme.gradients.accent
-    
+
     Box(
         modifier = modifier
             .background(
@@ -299,9 +299,9 @@ fun GradientBorderCard(
     }
 }
 
-/**
- * 悬浮卡片 — iOS 26 风格：spring 回弹缩放 + 柔和阴影
- */
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FloatingCard(
@@ -312,11 +312,11 @@ fun FloatingCard(
     val theme = LocalAppTheme.current
     val animSettings = LocalAnimationSettings.current
     val view = LocalView.current
-    
+
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    
-    // iOS 26 spring 回弹
+
+
     val scale by animateFloatAsState(
         targetValue = if (isPressed && animSettings.enabled) 0.96f else 1f,
         animationSpec = spring(
@@ -325,8 +325,8 @@ fun FloatingCard(
         ),
         label = "floatingScale"
     )
-    
-    // 阴影随按压变化
+
+
     val elevation by animateFloatAsState(
         targetValue = if (isPressed) 2f else 8f,
         animationSpec = spring(
@@ -335,7 +335,7 @@ fun FloatingCard(
         ),
         label = "elevation"
     )
-    
+
     Card(
         onClick = {
             if (animSettings.hapticsEnabled) {
@@ -376,11 +376,11 @@ fun FloatingCard(
     }
 }
 
-// ==================== 主题化背景 ====================
 
-/**
- * 渐变背景
- */
+
+
+
+
 @Composable
 fun GradientBackground(
     modifier: Modifier = Modifier,
@@ -389,7 +389,7 @@ fun GradientBackground(
 ) {
     val theme = LocalAppTheme.current
     val backgroundColors = colors ?: theme.gradients.background
-    
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -398,9 +398,9 @@ fun GradientBackground(
     )
 }
 
-/**
- * 动态渐变背景
- */
+
+
+
 @Composable
 fun AnimatedGradientBackground(
     modifier: Modifier = Modifier,
@@ -410,7 +410,7 @@ fun AnimatedGradientBackground(
     val theme = LocalAppTheme.current
     val animSettings = LocalAnimationSettings.current
     val backgroundColors = colors ?: theme.gradients.background
-    
+
     val infiniteTransition = rememberInfiniteTransition(label = "gradientBg")
     val offset by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -421,7 +421,7 @@ fun AnimatedGradientBackground(
         ),
         label = "gradientOffset"
     )
-    
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -444,11 +444,11 @@ fun AnimatedGradientBackground(
     )
 }
 
-// ==================== 主题化指示器 ====================
 
-/**
- * 主题化加载指示器
- */
+
+
+
+
 @Composable
 fun ThemedLoadingIndicator(
     modifier: Modifier = Modifier,
@@ -456,7 +456,7 @@ fun ThemedLoadingIndicator(
 ) {
     val theme = LocalAppTheme.current
     val animSettings = LocalAnimationSettings.current
-    
+
     val infiniteTransition = rememberInfiniteTransition(label = "loading")
     val rotation by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -470,12 +470,12 @@ fun ThemedLoadingIndicator(
         ),
         label = "rotation"
     )
-    
+
     Box(
         modifier = modifier.size(size),
         contentAlignment = Alignment.Center
     ) {
-        // 发光效果
+
         if (theme.effects.enableGlow && animSettings.enabled) {
             Box(
                 modifier = Modifier
@@ -495,7 +495,7 @@ fun ThemedLoadingIndicator(
                     }
             )
         }
-        
+
         CircularProgressIndicator(
             modifier = Modifier
                 .size(size)
@@ -506,9 +506,9 @@ fun ThemedLoadingIndicator(
     }
 }
 
-/**
- * 脉冲点指示器
- */
+
+
+
 @Composable
 fun PulsingDotIndicator(
     modifier: Modifier = Modifier,
@@ -517,7 +517,7 @@ fun PulsingDotIndicator(
     dotSize: Dp = 8.dp
 ) {
     val animSettings = LocalAnimationSettings.current
-    
+
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(dotSize / 2)
@@ -537,7 +537,7 @@ fun PulsingDotIndicator(
                 ),
                 label = "dotScale$index"
             )
-            
+
             Box(
                 modifier = Modifier
                     .size(dotSize)
@@ -549,11 +549,11 @@ fun PulsingDotIndicator(
     }
 }
 
-// ==================== 主题化分隔线 ====================
 
-/**
- * 渐变分隔线
- */
+
+
+
+
 @Composable
 fun GradientDivider(
     modifier: Modifier = Modifier,
@@ -567,7 +567,7 @@ fun GradientDivider(
         theme.gradients.accent.last(),
         Color.Transparent
     )
-    
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -576,11 +576,11 @@ fun GradientDivider(
     )
 }
 
-// ==================== 主题化徽章 ====================
 
-/**
- * 发光徽章
- */
+
+
+
+
 @Composable
 fun GlowingBadge(
     text: String,
@@ -590,7 +590,7 @@ fun GlowingBadge(
 ) {
     val theme = LocalAppTheme.current
     val animSettings = LocalAnimationSettings.current
-    
+
     val infiniteTransition = rememberInfiniteTransition(label = "badge")
     val glowAlpha by infiniteTransition.animateFloat(
         initialValue = 0.2f,
@@ -601,7 +601,7 @@ fun GlowingBadge(
         ),
         label = "badgeGlow"
     )
-    
+
     Surface(
         modifier = modifier.then(
             if (animSettings.enabled && theme.effects.enableGlow) {

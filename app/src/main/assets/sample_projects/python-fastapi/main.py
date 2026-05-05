@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 """
 FastAPI API Monitor — 精美的 API 监控仪表盘
 展示 FastAPI 的高性能异步能力，包含交互式 API 文档

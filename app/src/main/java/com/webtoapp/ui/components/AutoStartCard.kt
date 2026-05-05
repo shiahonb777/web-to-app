@@ -26,19 +26,19 @@ import com.webtoapp.core.autostart.AutoStartManager
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.data.model.AutoStartConfig
 
-/**
- * 自启动配置卡片（v2 — 大幅优化）
- *
- * 优化点：
- * 1. 显示"下次启动时间"让用户确认自启动是否生效
- * 2. 检查并引导精确闹钟权限（Android 12+）
- * 3. 检查并引导电池优化白名单设置（国产 ROM 核心问题）
- * 4. OEM ROM 品牌检测 — 引导用户到品牌特定的自启动管理界面
- * 5. 权限状态在 onResume 时自动刷新（用户从设置页返回后即时更新）
- * 6. 支持自定义开机延迟
- * 7. 支持多时段定时启动
- * 8. 显示上次触发时间和累计触发次数（诊断信息）
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AutoStartCard(
@@ -54,10 +54,10 @@ fun AutoStartCard(
     var scheduledDays by remember(config) { mutableStateOf(config?.scheduledDays ?: listOf(1,2,3,4,5,6,7)) }
     var bootDelay by remember(config) { mutableStateOf(config?.bootDelay ?: AutoStartManager.DEFAULT_BOOT_DELAY_MS) }
 
-    // Time选择对话框
+
     var showTimePicker by remember { mutableStateOf(false) }
 
-    // 下次启动时间预览
+
     val nextTriggerDisplay by remember(scheduledStartEnabled, scheduledTime, scheduledDays) {
         mutableStateOf(
             if (scheduledStartEnabled && scheduledDays.isNotEmpty()) {
@@ -87,7 +87,7 @@ fun AutoStartCard(
         )
     }
 
-    // ★ 权限状态：使用 Lifecycle 观察 onResume 刷新（用户从设置页返回后自动更新）
+
     var canScheduleExact by remember { mutableStateOf(true) }
     var ignoringBatteryOpt by remember { mutableStateOf(true) }
 
@@ -106,7 +106,7 @@ fun AutoStartCard(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    // OEM ROM 品牌信息
+
     val oemBrandName = remember { AutoStartManager(context).getOemBrandName() }
     val oemAutoStartIntent = remember { AutoStartManager(context).getOemAutoStartIntent() }
 
@@ -129,7 +129,7 @@ fun AutoStartCard(
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // 标题行
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -169,7 +169,7 @@ fun AutoStartCard(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         } else {
-                            // 显示简要状态
+
                             val statusParts = mutableListOf<String>()
                             if (bootStartEnabled) statusParts.add(Strings.bootAutoStart)
                             if (scheduledStartEnabled) statusParts.add(scheduledTime)
@@ -189,9 +189,9 @@ fun AutoStartCard(
 
             AnimatedVisibility(visible = expanded) {
                 Column(modifier = Modifier.padding(top = 16.dp)) {
-                    // ═══════════════════════════════
-                    // 开机自启动
-                    // ═══════════════════════════════
+
+
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -217,7 +217,7 @@ fun AutoStartCard(
                         )
                     }
 
-                    // ★ 开机延迟滑块（启用开机自启动时显示）
+
                     AnimatedVisibility(visible = bootStartEnabled) {
                         Column(modifier = Modifier.padding(top = 8.dp)) {
                             Row(
@@ -251,9 +251,9 @@ fun AutoStartCard(
                     HorizontalDivider()
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // ═══════════════════════════════
-                    // 定时自启动
-                    // ═══════════════════════════════
+
+
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -279,10 +279,10 @@ fun AutoStartCard(
                         )
                     }
 
-                    // 定时启动详细配置
+
                     AnimatedVisibility(visible = scheduledStartEnabled) {
                         Column(modifier = Modifier.padding(top = 12.dp)) {
-                            // Time选择
+
                             OutlinedCard(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -314,7 +314,7 @@ fun AutoStartCard(
 
                             Spacer(modifier = Modifier.height(12.dp))
 
-                            // 星期选择
+
                             Text(
                                 Strings.launchDate,
                                 style = MaterialTheme.typography.bodyMedium,
@@ -348,7 +348,7 @@ fun AutoStartCard(
                                 }
                             }
 
-                            // ★ 下次启动时间预览
+
                             nextTriggerDisplay?.let { display ->
                                 Spacer(modifier = Modifier.height(12.dp))
                                 Surface(
@@ -377,13 +377,13 @@ fun AutoStartCard(
                         }
                     }
 
-                    // ═══════════════════════════════
-                    // 权限警告区域
-                    // ═══════════════════════════════
+
+
+
                     if (bootStartEnabled || scheduledStartEnabled) {
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // ★ OEM ROM 自启动白名单提示（国产 ROM 核心问题）
+
                         if (oemBrandName != null && oemAutoStartIntent != null) {
                             Surface(
                                 color = MaterialTheme.colorScheme.secondaryContainer,
@@ -394,7 +394,7 @@ fun AutoStartCard(
                                         try {
                                             context.startActivity(oemAutoStartIntent)
                                         } catch (e: Exception) {
-                                            // OEM 设置页不存在，降级到通用应用详情页
+
                                             try {
                                                 val fallback = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                                                     data = Uri.parse("package:${context.packageName}")
@@ -433,7 +433,7 @@ fun AutoStartCard(
                             Spacer(modifier = Modifier.height(8.dp))
                         }
 
-                        // Android 12+ 精确闹钟权限提示
+
                         if (!canScheduleExact && scheduledStartEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                             Surface(
                                 color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f),
@@ -446,7 +446,7 @@ fun AutoStartCard(
                                                 data = Uri.parse("package:${context.packageName}")
                                             }
                                             context.startActivity(intent)
-                                        } catch (e: Exception) { /* 某些系统可能不支持 */ }
+                                        } catch (e: Exception) {  }
                                     }
                             ) {
                                 Row(
@@ -477,7 +477,7 @@ fun AutoStartCard(
                             Spacer(modifier = Modifier.height(8.dp))
                         }
 
-                        // 电池优化提示
+
                         if (!ignoringBatteryOpt) {
                             Surface(
                                 color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
@@ -491,7 +491,7 @@ fun AutoStartCard(
                                             }
                                             context.startActivity(intent)
                                         } catch (e: Exception) {
-                                            // 降级到通用电池设置
+
                                             try {
                                                 context.startActivity(Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS))
                                             } catch (_: Exception) { }
@@ -526,7 +526,7 @@ fun AutoStartCard(
                             Spacer(modifier = Modifier.height(8.dp))
                         }
 
-                        // ★ 权限全部就绪的成功提示
+
                         if (canScheduleExact && ignoringBatteryOpt) {
                             Surface(
                                 color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
@@ -554,7 +554,7 @@ fun AutoStartCard(
                         }
                     }
 
-                    // 提示信息
+
                     Spacer(modifier = Modifier.height(4.dp))
                     Surface(
                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
@@ -583,7 +583,7 @@ fun AutoStartCard(
         }
     }
 
-    // Time选择对话框
+
     if (showTimePicker) {
         TimePickerDialog(
             initialTime = scheduledTime,
@@ -597,9 +597,9 @@ fun AutoStartCard(
     }
 }
 
-/**
- * 时间选择对话框
- */
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimePickerDialog(

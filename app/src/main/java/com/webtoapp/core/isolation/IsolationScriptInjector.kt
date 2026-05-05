@@ -1,32 +1,32 @@
 package com.webtoapp.core.isolation
 
-/**
- * 隔离脚本注入器 — 综合反指纹 JavaScript 引擎
- *
- * 覆盖所有主要指纹向量:
- * - Navigator 属性 + navigator.userAgentData (Client Hints)
- * - 确定性 Canvas 噪声（seed-based, 会话内一致）
- * - WebGL vendor/renderer 伪装
- * - 确定性 AudioContext 噪声
- * - WebRTC IP 泄漏防护（不破坏功能）
- * - 完整字体指纹防护（FontFace API + 度量归一化）
- * - 屏幕/窗口尺寸伪装
- * - 时区伪装（Intl + Date）
- * - ClientRects / DOMRect 噪声
- * - performance.now() 精度降低
- * - navigator.plugins / mimeTypes 伪装
- * - Battery API 防护
- * - navigator.connection 伪装
- * - MediaDevices 枚举防护
- * - Storage 估计 API 归一化
- * - history.length 固定
- * - Permissions API 归一化
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 object IsolationScriptInjector {
 
-    /**
-     * 生成完整的隔离脚本
-     */
+
+
+
     fun generateIsolationScript(
         config: IsolationConfig,
         fingerprint: GeneratedFingerprint
@@ -35,40 +35,40 @@ object IsolationScriptInjector {
 
         val scripts = mutableListOf<String>()
 
-        // Seeded PRNG (used by canvas/audio/rect noise for deterministic output)
+
         scripts.add(generateSeededPrng(fingerprint.canvasNoiseSeed))
 
-        // Navigator properties + Client Hints + userAgentData
+
         if (config.fingerprintConfig.randomize) {
             scripts.add(generateNavigatorScript(config, fingerprint))
         }
 
-        // Canvas fingerprint — deterministic noise
+
         if (config.protectCanvas) {
             scripts.add(generateCanvasProtectionScript(fingerprint))
         }
 
-        // WebGL vendor/renderer
+
         if (config.protectWebGL) {
             scripts.add(generateWebGLProtectionScript(fingerprint))
         }
 
-        // AudioContext — deterministic noise
+
         if (config.protectAudio) {
             scripts.add(generateAudioProtectionScript(fingerprint))
         }
 
-        // WebRTC — mask local IPs without breaking functionality
+
         if (config.blockWebRTC) {
             scripts.add(generateWebRTCProtectionScript())
         }
 
-        // Font fingerprint — comprehensive
+
         if (config.protectFonts) {
             scripts.add(generateFontProtectionScript())
         }
 
-        // Screen/window dimensions
+
         if (config.spoofScreen) {
             scripts.add(generateScreenSpoofScript(
                 config.customScreenWidth ?: fingerprint.screenWidth,
@@ -77,40 +77,40 @@ object IsolationScriptInjector {
             ))
         }
 
-        // Timezone
+
         if (config.spoofTimezone) {
             scripts.add(generateTimezoneSpoofScript(config.customTimezone ?: fingerprint.timezone))
         }
 
-        // ClientRects noise
+
         if (config.protectCanvas) {
             scripts.add(generateClientRectsNoiseScript())
         }
 
-        // performance.now() precision reduction
+
         scripts.add(generatePerformanceTimingScript())
 
-        // Plugins / mimeTypes
+
         if (config.fingerprintConfig.randomize) {
             scripts.add(generatePluginsSpoofScript(fingerprint))
         }
 
-        // Battery API
+
         scripts.add(generateBatteryProtectionScript())
 
-        // navigator.connection
+
         scripts.add(generateConnectionSpoofScript())
 
-        // MediaDevices enumeration
+
         scripts.add(generateMediaDevicesProtectionScript())
 
-        // Storage estimation
+
         scripts.add(generateStorageEstimateScript())
 
-        // history.length
+
         scripts.add(generateHistoryProtectionScript())
 
-        // Permissions API
+
         scripts.add(generatePermissionsProtectionScript())
 
         return """
@@ -127,7 +127,7 @@ object IsolationScriptInjector {
         """.trimIndent()
     }
 
-    // ==================== Seeded PRNG ====================
+
     private fun generateSeededPrng(seed: Long): String {
         return """
             // Seeded PRNG (mulberry32) — deterministic noise per session
@@ -141,7 +141,7 @@ object IsolationScriptInjector {
         """.trimIndent()
     }
 
-    // ==================== Navigator + Client Hints ====================
+
     private fun generateNavigatorScript(config: IsolationConfig, fp: GeneratedFingerprint): String {
         val userAgent = config.fingerprintConfig.customUserAgent ?: fp.userAgent
         val platform = config.fingerprintConfig.platform ?: fp.platform
@@ -230,7 +230,7 @@ object IsolationScriptInjector {
         """.trimIndent()
     }
 
-    // ==================== Canvas — deterministic noise ====================
+
     private fun generateCanvasProtectionScript(fp: GeneratedFingerprint): String {
         return """
             // Canvas fingerprint — deterministic seed-based noise
@@ -284,7 +284,7 @@ object IsolationScriptInjector {
         """.trimIndent()
     }
 
-    // ==================== WebGL ====================
+
     private fun generateWebGLProtectionScript(fp: GeneratedFingerprint): String {
         return """
             // WebGL fingerprint spoofing
@@ -323,7 +323,7 @@ object IsolationScriptInjector {
         """.trimIndent()
     }
 
-    // ==================== AudioContext — deterministic noise ====================
+
     private fun generateAudioProtectionScript(fp: GeneratedFingerprint): String {
         return """
             // AudioContext fingerprint — deterministic noise
@@ -381,7 +381,7 @@ object IsolationScriptInjector {
         """.trimIndent()
     }
 
-    // ==================== WebRTC — mask local IPs without breaking ====================
+
     private fun generateWebRTCProtectionScript(): String {
         return """
             // WebRTC IP leak protection (keeps functionality, masks local IPs)
@@ -453,7 +453,7 @@ object IsolationScriptInjector {
         """.trimIndent()
     }
 
-    // ==================== Font fingerprint — comprehensive ====================
+
     private fun generateFontProtectionScript(): String {
         return """
             // Font fingerprint protection — normalize metrics + FontFace API
@@ -513,7 +513,7 @@ object IsolationScriptInjector {
         """.trimIndent()
     }
 
-    // ==================== Screen/window dimensions ====================
+
     private fun generateScreenSpoofScript(width: Int, height: Int, colorDepth: Int): String {
         val availHeight = height - 40
         val innerHeight = height - 100
@@ -535,7 +535,7 @@ object IsolationScriptInjector {
         """.trimIndent()
     }
 
-    // ==================== Timezone ====================
+
     private fun generateTimezoneSpoofScript(timezone: String): String {
         return """
             // Timezone spoofing
@@ -566,7 +566,7 @@ object IsolationScriptInjector {
         """.trimIndent()
     }
 
-    // ==================== ClientRects noise ====================
+
     private fun generateClientRectsNoiseScript(): String {
         return """
             // ClientRects / DOMRect noise — defeats rect-based fingerprinting
@@ -592,7 +592,7 @@ object IsolationScriptInjector {
         """.trimIndent()
     }
 
-    // ==================== performance.now() precision reduction ====================
+
     private fun generatePerformanceTimingScript(): String {
         return """
             // performance.now() — reduce precision to 100μs to defeat timing attacks
@@ -603,7 +603,7 @@ object IsolationScriptInjector {
         """.trimIndent()
     }
 
-    // ==================== Plugins / mimeTypes ====================
+
     private fun generatePluginsSpoofScript(fp: GeneratedFingerprint): String {
         val isChromium = fp.browserType == "CHROME" || fp.browserType == "EDGE"
         return if (isChromium) {
@@ -644,7 +644,7 @@ object IsolationScriptInjector {
         }
     }
 
-    // ==================== Battery API ====================
+
     private fun generateBatteryProtectionScript(): String {
         return """
             // Battery API — return consistent fake values (always "plugged in, full")
@@ -661,7 +661,7 @@ object IsolationScriptInjector {
         """.trimIndent()
     }
 
-    // ==================== navigator.connection ====================
+
     private fun generateConnectionSpoofScript(): String {
         return """
             // navigator.connection — normalize to common broadband profile
@@ -678,7 +678,7 @@ object IsolationScriptInjector {
         """.trimIndent()
     }
 
-    // ==================== MediaDevices enumeration ====================
+
     private fun generateMediaDevicesProtectionScript(): String {
         return """
             // MediaDevices.enumerateDevices — return generic device list
@@ -702,7 +702,7 @@ object IsolationScriptInjector {
         """.trimIndent()
     }
 
-    // ==================== Storage estimation ====================
+
     private fun generateStorageEstimateScript(): String {
         return """
             // StorageManager.estimate — return normalized values
@@ -714,7 +714,7 @@ object IsolationScriptInjector {
         """.trimIndent()
     }
 
-    // ==================== history.length ====================
+
     private fun generateHistoryProtectionScript(): String {
         return """
             // history.length — fixed at 1 to prevent history-based tracking
@@ -722,7 +722,7 @@ object IsolationScriptInjector {
         """.trimIndent()
     }
 
-    // ==================== Permissions API ====================
+
     private fun generatePermissionsProtectionScript(): String {
         return """
             // Permissions API — normalize responses

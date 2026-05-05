@@ -7,38 +7,38 @@ import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 
-/**
- * PWA 网站分析器
- *
- * 分析目标网站的 PWA 配置（manifest.json、meta 标签），
- * 提取应用名称、图标、主题色、显示模式等信息，用于一键填充 App 配置。
- *
- * 工作流程:
- * 1. 下载目标网站 HTML
- * 2. 在 HTML 中查找 <link rel="manifest"> 标签
- * 3. 下载并解析 manifest.json
- * 4. 如果没有 manifest，从 HTML meta 标签提取信息（fallback）
- * 5. 返回 PwaAnalysisResult
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
 object PwaAnalyzer {
 
     private const val TAG = "PwaAnalyzer"
-    private const val CONNECT_TIMEOUT = 10_000  // 10s
-    private const val READ_TIMEOUT = 15_000     // 15s
-    private const val MAX_HTML_SIZE = 512 * 1024 // 512 KB — 只需 <head> 部分
+    private const val CONNECT_TIMEOUT = 10_000
+    private const val READ_TIMEOUT = 15_000
+    private const val MAX_HTML_SIZE = 512 * 1024
 
-    /**
-     * 分析指定 URL 的 PWA 配置
-     * 
-     * @param url 目标网站 URL
-     * @return PwaAnalysisResult 分析结果
-     */
+
+
+
+
+
+
     suspend fun analyze(url: String): PwaAnalysisResult = withContext(Dispatchers.IO) {
         try {
             val normalizedUrl = normalizeUrl(url)
             AppLogger.i(TAG, "Starting PWA analysis for: $normalizedUrl")
 
-            // Step 1: 下载 HTML
+
             val html = downloadHtml(normalizedUrl)
             if (html.isNullOrBlank()) {
                 AppLogger.w(TAG, "Failed to download HTML from $normalizedUrl")
@@ -47,11 +47,11 @@ object PwaAnalyzer {
                 )
             }
 
-            // Step 2: 查找 manifest.json URL
+
             val manifestUrl = extractManifestUrl(html, normalizedUrl)
             AppLogger.d(TAG, "Manifest URL: $manifestUrl")
 
-            // Step 3: 尝试下载并解析 manifest.json
+
             if (manifestUrl != null) {
                 val manifestJson = downloadJson(manifestUrl)
                 if (manifestJson != null) {
@@ -61,7 +61,7 @@ object PwaAnalyzer {
                 }
             }
 
-            // Step 4: Fallback — 从 HTML meta 标签提取
+
             AppLogger.d(TAG, "No manifest found, falling back to meta tags")
             return@withContext extractFromMetaTags(html, normalizedUrl)
 
@@ -73,9 +73,9 @@ object PwaAnalyzer {
         }
     }
 
-    // ═══════════════════════════════════════════
-    //  URL 处理
-    // ═══════════════════════════════════════════
+
+
+
 
     private fun normalizeUrl(url: String): String {
         val trimmed = url.trim()
@@ -85,9 +85,9 @@ object PwaAnalyzer {
         }
     }
 
-    /**
-     * 解析相对 URL 为绝对 URL
-     */
+
+
+
     private fun resolveUrl(base: String, relative: String): String {
         if (relative.startsWith("http://") || relative.startsWith("https://")) {
             return relative
@@ -95,7 +95,7 @@ object PwaAnalyzer {
         return try {
             URL(URL(base), relative).toString()
         } catch (e: Exception) {
-            // 手动拼接
+
             val baseUrl = URL(base)
             if (relative.startsWith("/")) {
                 "${baseUrl.protocol}://${baseUrl.host}${if (baseUrl.port > 0 && baseUrl.port != baseUrl.defaultPort) ":${baseUrl.port}" else ""}$relative"
@@ -106,9 +106,9 @@ object PwaAnalyzer {
         }
     }
 
-    /**
-     * 从 URL 中提取域名
-     */
+
+
+
     fun extractHost(url: String): String? {
         return try {
             URL(normalizeUrl(url)).host
@@ -117,9 +117,9 @@ object PwaAnalyzer {
         }
     }
 
-    // ═══════════════════════════════════════════
-    //  网络下载
-    // ═══════════════════════════════════════════
+
+
+
 
     private fun downloadHtml(url: String): String? {
         return try {
@@ -128,7 +128,7 @@ object PwaAnalyzer {
             conn.connectTimeout = CONNECT_TIMEOUT
             conn.readTimeout = READ_TIMEOUT
             conn.instanceFollowRedirects = true
-            conn.setRequestProperty("User-Agent", 
+            conn.setRequestProperty("User-Agent",
                 "Mozilla/5.0 (Linux; Android 15; Pixel 9 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36")
             conn.setRequestProperty("Accept", "text/html,application/xhtml+xml,*/*")
 
@@ -139,7 +139,7 @@ object PwaAnalyzer {
                     return null
                 }
 
-                // 只读取前 MAX_HTML_SIZE 字节（我们只需要 <head> 部分）
+
                 val stream = conn.inputStream
                 val bytes = ByteArray(MAX_HTML_SIZE)
                 var totalRead = 0
@@ -186,21 +186,21 @@ object PwaAnalyzer {
         }
     }
 
-    // ═══════════════════════════════════════════
-    //  HTML 解析
-    // ═══════════════════════════════════════════
 
-    /**
-     * 从 HTML 中提取 manifest.json 的 URL
-     * 查找: <link rel="manifest" href="/manifest.json">
-     */
+
+
+
+
+
+
+
     private fun extractManifestUrl(html: String, baseUrl: String): String? {
-        // 正则匹配 <link rel="manifest" href="...">
-        // 支持属性顺序不同的情况
+
+
         val patterns = listOf(
-            // rel 在 href 前
+
             """<link\s+[^>]*rel\s*=\s*["']manifest["'][^>]*href\s*=\s*["']([^"']+)["'][^>]*/?>""".toRegex(RegexOption.IGNORE_CASE),
-            // href 在 rel 前
+
             """<link\s+[^>]*href\s*=\s*["']([^"']+)["'][^>]*rel\s*=\s*["']manifest["'][^>]*/?>""".toRegex(RegexOption.IGNORE_CASE)
         )
 
@@ -212,7 +212,7 @@ object PwaAnalyzer {
             }
         }
 
-        // 尝试常见路径
+
         val commonPaths = listOf(
             "/manifest.json",
             "/manifest.webmanifest",
@@ -229,13 +229,13 @@ object PwaAnalyzer {
         return null
     }
 
-    // ═══════════════════════════════════════════
-    //  Manifest 解析
-    // ═══════════════════════════════════════════
 
-    /**
-     * 解析 manifest.json
-     */
+
+
+
+
+
+
     private fun parseManifest(jsonStr: String, baseUrl: String): PwaManifest {
         val json = JSONObject(jsonStr)
 
@@ -271,11 +271,11 @@ object PwaAnalyzer {
         )
     }
 
-    /**
-     * 从 manifest 构建分析结果
-     */
+
+
+
     private fun buildResultFromManifest(manifest: PwaManifest, baseUrl: String): PwaAnalysisResult {
-        // 选择最佳图标：优先 maskable 的大图标，其次 any，最后最大的
+
         val bestIcon = manifest.icons
             .sortedWith(compareByDescending<PwaIcon> { it.purpose?.contains("maskable") == true }
                 .thenByDescending { it.maxSizePixels })
@@ -296,13 +296,13 @@ object PwaAnalyzer {
         )
     }
 
-    // ═══════════════════════════════════════════
-    //  Meta 标签 Fallback
-    // ═══════════════════════════════════════════
 
-    /**
-     * 从 HTML meta 标签提取 PWA 相关信息
-     */
+
+
+
+
+
+
     private fun extractFromMetaTags(html: String, baseUrl: String): PwaAnalysisResult {
         val themeColor = extractMetaContent(html, "theme-color")
         val title = extractTitle(html)
@@ -326,9 +326,9 @@ object PwaAnalyzer {
         )
     }
 
-    /**
-     * 提取 <meta name="xxx" content="xxx">
-     */
+
+
+
     private fun extractMetaContent(html: String, name: String): String? {
         val patterns = listOf(
             """<meta\s+[^>]*name\s*=\s*["']$name["'][^>]*content\s*=\s*["']([^"']+)["'][^>]*/?>""",
@@ -341,9 +341,9 @@ object PwaAnalyzer {
         return null
     }
 
-    /**
-     * 提取 <meta property="xxx" content="xxx">
-     */
+
+
+
     private fun extractMetaProperty(html: String, property: String): String? {
         val patterns = listOf(
             """<meta\s+[^>]*property\s*=\s*["']$property["'][^>]*content\s*=\s*["']([^"']+)["'][^>]*/?>""",
@@ -356,18 +356,18 @@ object PwaAnalyzer {
         return null
     }
 
-    /**
-     * 提取 <title>xxx</title>
-     */
+
+
+
     private fun extractTitle(html: String): String? {
         val match = """<title[^>]*>([^<]+)</title>""".toRegex(RegexOption.IGNORE_CASE).find(html)
         return match?.groupValues?.get(1)?.trim()
     }
 
-    /**
-     * 提取 Apple Touch Icon
-     * <link rel="apple-touch-icon" href="xxx">
-     */
+
+
+
+
     private fun extractAppleTouchIcon(html: String, baseUrl: String): String? {
         val patterns = listOf(
             """<link\s+[^>]*rel\s*=\s*["']apple-touch-icon[^"']*["'][^>]*href\s*=\s*["']([^"']+)["'][^>]*/?>""",
@@ -382,11 +382,11 @@ object PwaAnalyzer {
         return null
     }
 
-    /**
-     * 提取 favicon
-     * <link rel="icon" href="xxx">
-     * <link rel="shortcut icon" href="xxx">
-     */
+
+
+
+
+
     private fun extractFavicon(html: String, baseUrl: String): String? {
         val patterns = listOf(
             """<link\s+[^>]*rel\s*=\s*["'](?:shortcut\s+)?icon["'][^>]*href\s*=\s*["']([^"']+)["'][^>]*/?>""",
@@ -398,31 +398,31 @@ object PwaAnalyzer {
                 return resolveUrl(baseUrl, match.groupValues[1])
             }
         }
-        // Default favicon
+
         return resolveUrl(baseUrl, "/favicon.ico")
     }
 
-    // ═══════════════════════════════════════════
-    //  工具方法
-    // ═══════════════════════════════════════════
 
-    /**
-     * 推断 Deep Link 域名
-     * 从 manifest scope、start_url 和原始 URL 中推断应该绑定的域名
-     */
+
+
+
+
+
+
+
     fun suggestDeepLinkHosts(result: PwaAnalysisResult, originalUrl: String): List<String> {
         val hosts = mutableSetOf<String>()
-        
-        // 从原始 URL 提取域名
+
+
         extractHost(originalUrl)?.let { hosts.add(it) }
-        
-        // 从 scope 提取域名
+
+
         result.scope?.let { extractHost(it) }?.let { hosts.add(it) }
-        
-        // 从 start_url 提取域名
+
+
         result.startUrl?.let { extractHost(it) }?.let { hosts.add(it) }
 
-        // 移除 www. 前缀重复
+
         val normalized = hosts.toMutableSet()
         hosts.forEach { host ->
             if (host.startsWith("www.")) {
@@ -435,27 +435,27 @@ object PwaAnalyzer {
         return normalized.toList().sorted()
     }
 
-    /**
-     * JSONObject 工具：返回非空非 blank 的字符串，否则 null
-     */
+
+
+
     private fun JSONObject.optStringOrNull(key: String): String? {
         val value = optString(key, "")
         return value.ifBlank { null }
     }
 
-    /**
-     * 标准化颜色值
-     * 支持: #RGB → #RRGGBB, rgb(r,g,b) → #RRGGBB
-     */
+
+
+
+
     private fun String.normalizeColor(): String? {
         val trimmed = trim()
 
-        // 已经是 #RRGGBB 格式
+
         if (trimmed.matches("""^#[0-9A-Fa-f]{6}$""".toRegex())) {
             return trimmed.uppercase()
         }
 
-        // #RGB 格式
+
         if (trimmed.matches("""^#[0-9A-Fa-f]{3}$""".toRegex())) {
             val r = trimmed[1]
             val g = trimmed[2]
@@ -463,12 +463,12 @@ object PwaAnalyzer {
             return "#$r$r$g$g$b$b".uppercase()
         }
 
-        // #RRGGBBAA 格式 — 截取前6位
+
         if (trimmed.matches("""^#[0-9A-Fa-f]{8}$""".toRegex())) {
             return trimmed.substring(0, 7).uppercase()
         }
-        
-        // rgb(r, g, b) 格式
+
+
         val rgbMatch = """rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)""".toRegex(RegexOption.IGNORE_CASE).find(trimmed)
         if (rgbMatch != null) {
             val r = rgbMatch.groupValues[1].toInt().coerceIn(0, 255)
@@ -477,7 +477,7 @@ object PwaAnalyzer {
             return String.format("#%02X%02X%02X", r, g, b)
         }
 
-        // CSS 命名颜色 — 常见的几种
+
         val namedColors = mapOf(
             "white" to "#FFFFFF", "black" to "#000000",
             "red" to "#FF0000", "green" to "#008000", "blue" to "#0000FF",

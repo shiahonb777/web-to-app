@@ -38,26 +38,26 @@ fun LinuxEnvironmentScreen(onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     val theme = LocalAppTheme.current
-    
-    // Get主题主色调
+
+
     val themeAccentColor = MaterialTheme.colorScheme.primary
-    
+
     val envManager = remember { LinuxEnvironmentManager.getInstance(context) }
     val envState by envManager.state.collectAsStateWithLifecycle()
     val installProgress by envManager.installProgress.collectAsStateWithLifecycle()
-    
+
     var envInfo by remember { mutableStateOf<EnvironmentInfo?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var showResetDialog by remember { mutableStateOf(false) }
     var showClearCacheDialog by remember { mutableStateOf(false) }
-    
+
     LaunchedEffect(envState) {
         isLoading = true
         envManager.checkEnvironment()
         envInfo = envManager.getEnvironmentInfo()
         isLoading = false
     }
-    
+
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
@@ -95,7 +95,7 @@ fun LinuxEnvironmentScreen(onBack: () -> Unit) {
                     envInfo = envManager.getEnvironmentInfo()
                 }
             }
-            
+
             AnimatedVisibility(visible = envInfo != null) {
                 envInfo?.let { info ->
                     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -106,11 +106,11 @@ fun LinuxEnvironmentScreen(onBack: () -> Unit) {
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(32.dp))
         }
     }
-    
+
     if (showResetDialog) {
         AlertDialog(
             onDismissRequest = { showResetDialog = false },
@@ -132,7 +132,7 @@ fun LinuxEnvironmentScreen(onBack: () -> Unit) {
             dismissButton = { TextButton(onClick = { showResetDialog = false }) { Text(Strings.btnCancel) } }
         )
     }
-    
+
     if (showClearCacheDialog) {
         AlertDialog(
             onDismissRequest = { showClearCacheDialog = false },
@@ -154,9 +154,9 @@ fun LinuxEnvironmentScreen(onBack: () -> Unit) {
         }
 }
 
-/**
- * 通用卡片容器 - 完全不使用 Card 组件
- */
+
+
+
 @Composable
 private fun CardContainer(
     modifier: Modifier = Modifier,
@@ -166,7 +166,7 @@ private fun CardContainer(
     val theme = LocalAppTheme.current
     val shape = RoundedCornerShape(theme.shapes.cardRadius)
     val bgColor = backgroundColor ?: MaterialTheme.colorScheme.surface
-    
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -187,21 +187,21 @@ private fun StatusCard(
     val isReady = state is EnvironmentState.Ready
     val isInstalling = state is EnvironmentState.Downloading || state is EnvironmentState.Installing
     val isError = state is EnvironmentState.Error
-    
-    // 使用主题色作为就绪状态的颜色
+
+
     val readyColor = themeColor
-    
+
     val cardColor = when {
         isReady -> readyColor.copy(alpha = 0.15f)
         isError -> MaterialTheme.colorScheme.errorContainer
         isInstalling -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
         else -> MaterialTheme.colorScheme.surfaceVariant
     }
-    
+
     CardContainer(backgroundColor = cardColor) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                // 状态图标 - 使用主题色
+
                 Box(
                     modifier = Modifier
                         .size(56.dp)
@@ -223,9 +223,9 @@ private fun StatusCard(
                         else -> Icon(Icons.Outlined.Build, null, tint = Color.White, modifier = Modifier.size(32.dp))
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.width(16.dp))
-                
+
                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                     Text(
                         text = when (state) {
@@ -278,7 +278,7 @@ private fun StatusCard(
                     }
                 }
             }
-            
+
             AnimatedVisibility(visible = state is EnvironmentState.NotInstalled || state is EnvironmentState.Error) {
                 Column(modifier = Modifier.padding(top = 16.dp)) {
                     PremiumButton(onClick = onInstall, modifier = Modifier.fillMaxWidth()) {
@@ -312,8 +312,8 @@ private fun BuildToolsCard(info: EnvironmentInfo, themeColor: Color) {
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        Icons.Outlined.Build, 
-                        null, 
+                        Icons.Outlined.Build,
+                        null,
                         tint = themeColor,
                         modifier = Modifier.size(20.dp)
                     )
@@ -321,20 +321,20 @@ private fun BuildToolsCard(info: EnvironmentInfo, themeColor: Color) {
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(Strings.buildTools, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             ToolRow(
-                icon = Icons.Outlined.Code, 
-                name = Strings.builtInPackager, 
-                status = Strings.ready, 
-                description = Strings.pureKotlinImpl, 
-                color = themeColor, 
+                icon = Icons.Outlined.Code,
+                name = Strings.builtInPackager,
+                status = Strings.ready,
+                description = Strings.pureKotlinImpl,
+                color = themeColor,
                 isAvailable = true,
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             ToolRow(
                 icon = Icons.Outlined.Speed,
                 name = "esbuild",
@@ -374,9 +374,9 @@ private fun ToolRow(
         ) {
             Icon(icon, null, tint = color, modifier = Modifier.size(22.dp))
         }
-        
+
         Spacer(modifier = Modifier.width(12.dp))
-        
+
         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
@@ -397,8 +397,8 @@ private fun ToolRow(
             }
             Spacer(modifier = Modifier.height(2.dp))
             Text(
-                description, 
-                style = MaterialTheme.typography.bodySmall, 
+                description,
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -418,8 +418,8 @@ private fun StorageCard(info: EnvironmentInfo, themeColor: Color, onClearCache: 
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        Icons.Outlined.Storage, 
-                        null, 
+                        Icons.Outlined.Storage,
+                        null,
                         tint = themeColor,
                         modifier = Modifier.size(20.dp)
                     )
@@ -427,14 +427,14 @@ private fun StorageCard(info: EnvironmentInfo, themeColor: Color, onClearCache: 
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(Strings.storageUsage, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
-            // Storage项
+
+
             StorageRow(Strings.buildTools, formatSize(info.storageUsed))
             Spacer(modifier = Modifier.height(8.dp))
             StorageRow(Strings.cache, formatSize(info.cacheSize))
-            
+
             if (info.cacheSize > 0) {
                 Spacer(modifier = Modifier.height(16.dp))
                 PremiumOutlinedButton(onClick = onClearCache, modifier = Modifier.fillMaxWidth()) {
@@ -477,8 +477,8 @@ private fun FeaturesCard(themeColor: Color) {
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        Icons.Outlined.Lightbulb, 
-                        null, 
+                        Icons.Outlined.Lightbulb,
+                        null,
                         tint = themeColor,
                         modifier = Modifier.size(20.dp)
                     )
@@ -486,9 +486,9 @@ private fun FeaturesCard(themeColor: Color) {
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(Strings.supportedFeatures, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             val features = listOf(
                 Strings.featureImportBuiltProjects,
                 Strings.featureAutoDetectFramework,
@@ -500,7 +500,7 @@ private fun FeaturesCard(themeColor: Color) {
                 Strings.featureNodeTsPreCompile,
                 Strings.featurePerfOptimize
             )
-            
+
             features.forEach { text ->
                 FeatureRow(text, themeColor)
                 Spacer(modifier = Modifier.height(6.dp))
@@ -525,16 +525,16 @@ private fun FeatureRow(text: String, themeColor: Color) {
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                Icons.Filled.Check, 
-                null, 
-                tint = themeColor, 
+                Icons.Filled.Check,
+                null,
+                tint = themeColor,
                 modifier = Modifier.size(14.dp)
             )
         }
         Spacer(modifier = Modifier.width(10.dp))
         Text(
-            text, 
-            style = MaterialTheme.typography.bodyMedium, 
+            text,
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
@@ -543,7 +543,7 @@ private fun FeatureRow(text: String, themeColor: Color) {
 @Composable
 private fun TechCard(themeColor: Color) {
     val bgColor = if (com.webtoapp.ui.theme.LocalIsDarkTheme.current) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.72f)
-    
+
     CardContainer(backgroundColor = bgColor) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -555,8 +555,8 @@ private fun TechCard(themeColor: Color) {
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        Icons.Outlined.Info, 
-                        null, 
+                        Icons.Outlined.Info,
+                        null,
                         tint = themeColor,
                         modifier = Modifier.size(20.dp)
                     )
@@ -564,9 +564,9 @@ private fun TechCard(themeColor: Color) {
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(Strings.techDescription, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             Text(
                 Strings.techDescriptionContent,
                 style = MaterialTheme.typography.bodySmall,

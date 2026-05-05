@@ -2,14 +2,14 @@
 <resources>
     <string name="app_description">تحويل أي موقع إلى تطبيق مستقل</string>
 
-    <!-- الواجهة الرئيسية -->
+    
     <string name="title_my_apps">تطبيقاتي</string>
     <string name="title_create_app">إنشاء تطبيق</string>
     <string name="title_settings">الإعدادات</string>
 
     <string name="search_placeholder">بحث...</string>
 
-    <!-- نموذج إنشاء التطبيق -->
+    
     <string name="label_app_name">اسم التطبيق</string>
     <string name="label_url">عنوان الموقع</string>
     <string name="label_icon">أيقونة التطبيق</string>
@@ -18,7 +18,7 @@
     <string name="label_announcement">إعدادات الإعلان</string>
     <string name="label_ad_block">حظر الإعلانات</string>
 
-    <!-- رمز التفعيل -->
+    
     <string name="enable_activation">تفعيل رمز التفعيل</string>
     <string name="activation_codes">قائمة رموز التفعيل</string>
     <string name="add_activation_code">إضافة رمز تفعيل</string>
@@ -27,7 +27,7 @@
     <string name="invalid_activation_code">رمز التفعيل غير صالح</string>
     <string name="activation_success">تم التفعيل بنجاح</string>
 
-    <!-- الإعلانات -->
+    
     <string name="enable_ads">تفعيل الإعلانات</string>
     <string name="ad_type">نوع الإعلان</string>
     <string name="ad_banner">إعلان بانر</string>
@@ -35,19 +35,19 @@
     <string name="ad_splash">إعلان البداية</string>
     <string name="ad_unit_id">معرف وحدة الإعلان</string>
 
-    <!-- الإعلان -->
+    
     <string name="enable_announcement">تفعيل الإعلان</string>
     <string name="announcement_title">عنوان الإعلان</string>
     <string name="announcement_content">محتوى الإعلان</string>
     <string name="announcement_url">رابط الإعلان</string>
     <string name="show_once">عرض مرة واحدة فقط</string>
 
-    <!-- حظر الإعلانات -->
+    
     <string name="enable_ad_block">تفعيل حظر الإعلانات</string>
     <string name="ad_block_rules">قواعد الحظر</string>
     <string name="custom_rules">قواعد مخصصة</string>
 
-    <!-- أزرار الإجراءات -->
+    
     <string name="btn_create">إنشاء تطبيق</string>
     <string name="btn_preview">معاينة</string>
     <string name="btn_export">تصدير APK</string>
@@ -59,7 +59,7 @@
     <string name="btn_shortcut">إنشاء اختصار</string>
     <string name="btn_select_icon">اختيار أيقونة</string>
 
-    <!-- الرسائل -->
+    
     <string name="msg_app_created">تم إنشاء التطبيق بنجاح</string>
     <string name="msg_app_deleted">تم حذف التطبيق</string>
     <string name="msg_shortcut_created">تم إنشاء الاختصار</string>
@@ -70,7 +70,7 @@
     <string name="msg_loading">جاري التحميل…</string>
     <string name="msg_no_apps">لا توجد تطبيقات بعد، اضغط + للإنشاء</string>
 
-    <!-- WebView -->
+    
     <string name="webview_error">فشل تحميل الصفحة</string>
     <string name="webview_ssl_error">خطأ أمان SSL</string>
     <string name="webview_retry">إعادة المحاولة</string>
@@ -81,14 +81,14 @@
     <string name="webview_open_browser">فتح في المتصفح</string>
     <string name="webview_cannot_open_link">تعذر فتح الرابط</string>
 
-    <!-- اللغة -->
+    
     <string name="language_settings">اللغة</string>
     <string name="language_chinese">الصينية</string>
     <string name="language_english">الإنجليزية</string>
     <string name="language_arabic">العربية</string>
     <string name="language_changed">تم تغيير اللغة، يرجى إعادة تشغيل التطبيق</string>
 
-    <!-- عناصر القائمة -->
+    
     <string name="menu_ai_coding">برمجة AI</string>
     <string name="menu_ai_html_coding">برمجة AI HTML</string>
     <string name="menu_theme_settings">إعدادات السمة</string>
@@ -100,7 +100,7 @@
     <string name="menu_more">المزيد</string>
     <string name="menu_linux_environment">بيئة Linux</string>
 
-    <!-- الوحدات الإضافية -->
+    
     <string name="extension_module">وحدة إضافية</string>
     <string name="create_module">إنشاء وحدة</string>
     <string name="edit_module">تعديل وحدة</string>
@@ -152,7 +152,7 @@
     <string name="community_developer_role">مطوّر</string>
 
 
-    <!-- ميزات AI -->
+    
     <string name="ai_generating">AI يولد…</string>
     <string name="ai_analyzing">تحليل المتطلبات…</string>
     <string name="ai_planning">تخطيط خطوات التطوير…</string>
@@ -163,17 +163,17 @@
     <string name="ai_completed">اكتمل التوليد</string>
     <string name="ai_error">خطأ AI</string>
 
-    <!-- أنواع إنشاء التطبيق -->
+    
     <string name="create_web_app">تطبيق ويب</string>
     <string name="create_media_app">تطبيق وسائط</string>
     <string name="create_html_app">تطبيق HTML</string>
 
-    <!-- الترجمة -->
+    
     <string name="auto_translate">ترجمة تلقائية</string>
     <string name="translate_to">ترجمة إلى</string>
     <string name="translate_enabled">الترجمة مفعلة</string>
 
-    <!-- عام -->
+    
     <string name="confirm">تأكيد</string>
     <string name="cancel">إلغاء</string>
     <string name="ok">موافق</string>
@@ -193,10 +193,10 @@
     <string name="import_text">استيراد</string>
     <string name="export_text">تصدير</string>
 
-    <!-- مكتبة الأيقونات -->
+    
     <string name="icon_library">مكتبة الأيقونات</string>
 
-    <!-- بطاقة وحدة الإضافة -->
+    
     <string name="save_as_scheme">حفظ كمخطط</string>
     <string name="clear_all">مسح الكل</string>
     <string name="select_modules">اختيار الوحدات</string>
@@ -214,10 +214,10 @@
     <string name="brief_description_hint">وصف موجز لغرض المخطط</string>
     <string name="select_icon">اختيار أيقونة</string>
 
-    <!-- قالب الإعلان -->
+    
     <string name="preview_announcement_effect">معاينة تأثير الإعلان</string>
 
-    <!-- محاذاة كلمات الأغنية -->
+    
     <string name="next_step_time_align">التالي: محاذاة الوقت</string>
     <string name="tap_to_mark">انقر للتحديد</string>
     <string name="previous_step">السابق</string>
@@ -225,15 +225,15 @@
     <string name="go_back_to_modify">العودة للتعديل</string>
     <string name="save_lrc">حفظ LRC</string>
 
-    <!-- النسخ الاحتياطي للبيانات -->
+    
     <string name="export_data">تصدير البيانات</string>
     <string name="import_data">استيراد البيانات</string>
 
-    <!-- التشغيل التلقائي -->
+    
     <string name="launch_time">وقت التشغيل</string>
     <string name="select_launch_time">اختيار وقت التشغيل</string>
 
-    <!-- برمجة HTML -->
+    
     <string name="download_file">تحميل</string>
     <string name="export_all">تصدير الكل</string>
     <string name="thinking">التفكير</string>
@@ -241,14 +241,14 @@
     <string name="describe_html_page">صف صفحة HTML التي تريدها…</string>
     <string name="add_new_rule">إضافة قاعدة جديدة…</string>
 
-    <!-- إعدادات العزل -->
+    
     <string name="country_region">البلد/المنطقة</string>
     <string name="country_region_hint">مثال: اليابان، كوريا، المملكة المتحدة…</string>
 
-    <!-- مقتطفات الكود -->
+    
     <string name="search_code_snippets">البحث عن مقتطفات الكود…</string>
 
-    <!-- محرر الوحدات -->
+    
     <string name="module_name_required">اسم الوحدة *</string>
     <string name="input_module_name">أدخل اسم الوحدة</string>
     <string name="description">الوصف</string>
@@ -266,14 +266,14 @@
     <string name="config_type">النوع</string>
     <string name="default_value">القيمة الافتراضية</string>
 
-    <!-- إعدادات AI -->
+    
     <string name="provider">المزود</string>
     <string name="model_id">معرف النموذج</string>
     <string name="model_id_hint">مثال: gpt-4o-mini</string>
     <string name="alias_optional">الاسم المستعار (اختياري)</string>
     <string name="alias">الاسم المستعار</string>
 
-    <!-- إنشاء التطبيق -->
+    
     <string name="activation_code">رمز التفعيل</string>
     <string name="input_activation_code_hint">أدخل رمز التفعيل</string>
     <string name="show_once_only">عرض مرة واحدة فقط</string>
@@ -284,7 +284,7 @@
     <string name="translate_target_language">لغة الترجمة المستهدفة</string>
     <string name="ad_block_rule_hint">مثال: ads.example.com</string>
 
-    <!-- عام -->
+    
     <string name="done">تم</string>
     <string name="save">حفظ</string>
     <string name="add">إضافة</string>
@@ -315,7 +315,7 @@
     <string name="storage_permission_required">مطلوب إذن التخزين</string>
     <string name="grant_permission">منح الإذن</string>
 
-    <!-- بيئة البناء -->
+    
     <string name="build_environment">بيئة البناء</string>
     <string name="env_ready">البيئة جاهزة</string>
     <string name="env_not_installed">متاح</string>
@@ -342,7 +342,7 @@
     <string name="clear_cache_confirm">سيؤدي هذا إلى مسح ذاكرة التخزين المؤقت للبناء والملفات المؤقتة.</string>
     <string name="clean">تنظيف</string>
 
-    <!-- مشروع الواجهة الأمامية -->
+    
     <string name="select_project">اختيار المشروع</string>
     <string name="select_project_folder">اختيار مجلد المشروع</string>
     <string name="select_project_hint">اختر جذر المشروع أو دليل إخراج البناء (dist/build)</string>
@@ -373,7 +373,7 @@
     <string name="usage_steps_content">1. بناء المشروع على الكمبيوتر: npm run build\n2. نسخ مخرجات البناء (dist/build) إلى الهاتف\n3. اختيار مجلد المشروع للاستيراد</string>
     <string name="built_in_engine_ready">محرك البناء المدمج جاهز. يدعم استيراد المشاريع المبنية أو البناء البسيط باستخدام esbuild. يُنصح ببناء المشاريع المعقدة على الكمبيوتر.</string>
 
-    <!-- تطبيق الوسائط -->
+    
     <string name="create_media_app_title">إنشاء تطبيق وسائط</string>
     <string name="select_media_type">اختيار نوع الوسائط</string>
     <string name="image">صورة</string>
@@ -397,7 +397,7 @@
     <string name="fullscreen_display_image">عرض الصورة المختارة بملء الشاشة</string>
     <string name="fullscreen_play_video">تشغيل الفيديو المختار بملء الشاشة</string>
 
-    <!-- تطبيق HTML -->
+    
     <string name="create_html_app_title">إنشاء تطبيق HTML</string>
     <string name="select_files">اختيار الملفات</string>
     <string name="select_files_hint">اختر ملفات HTML و CSS و JS بشكل منفصل (CSS و JS اختياريان)</string>
@@ -426,7 +426,7 @@
     <string name="auto_process_hint">سيقوم التطبيق بالمعالجة التلقائية: إصلاح المسارات، دمج CSS/JS، تحويل الترميز، تكييف viewport</string>
     <string name="got_it">فهمت</string>
 
-    <!-- شاشة إنشاء التطبيق -->
+    
     <string name="edit_app">تعديل التطبيق</string>
     <string name="input_app_name">أدخل اسم عرض التطبيق</string>
     <string name="activation_code_verify">التحقق من رمز التفعيل</string>
@@ -456,7 +456,7 @@
     <string name="video_app">تطبيق فيديو</string>
     <string name="unknown_file">ملف غير معروف</string>
 
-    <!-- شاشة وحدة الإضافة -->
+    
     <string name="search_modules">البحث عن الوحدات…</string>
     <string name="all">الكل</string>
     <string name="total_modules">إجمالي %d وحدات</string>
@@ -483,7 +483,7 @@
     <string name="create_module_label">إنشاء وحدة</string>
     <string name="ai_module_developer_label">مطور وحدات AI</string>
 
-    <!-- إعدادات السمة -->
+    
     <string name="theme_settings_title">إعدادات السمة</string>
     <string name="enhanced_mode">محسّن</string>
     <string name="theme">السمة</string>
@@ -516,7 +516,7 @@
     <string name="glow">توهج</string>
     <string name="particles">جسيمات</string>
 
-    <!-- شاشة حول -->
+    
     <string name="about">حول</string>
     <string name="independent_developer">مطور مستقل · متحمس للذكاء الاصطناعي</string>
     <string name="check_update">التحقق من التحديثات</string>
@@ -542,14 +542,14 @@
     <string name="download_complete">اكتمل التحميل، جاري التثبيت…</string>
     <string name="check_update_failed">فشل التحقق من التحديثات</string>
 
-    <!-- حالة AI -->
+    
     <string name="ai_generating_status">AI يولد…</string>
     <string name="ai_analyzing_status">تحليل المتطلبات…</string>
     <string name="ai_completed_status">اكتمل التوليد</string>
     <string name="ai_planning_status">تخطيط التطوير…</string>
     <string name="ai_coding_status">توليد الكود…</string>
 
-    <!-- التشفير -->
+    
     <string name="encryption_settings">إعدادات التشفير</string>
     <string name="enable_encryption">تفعيل التشفير</string>
     <string name="encryption_hint">تشفير موارد التطبيق للحماية</string>
@@ -558,7 +558,7 @@
     <string name="standard_encryption">قياسي</string>
     <string name="advanced_encryption">متقدم</string>
 
-    <!-- العزل -->
+    
     <string name="isolation_settings">إعدادات العزل</string>
     <string name="enable_isolation">تفعيل العزل</string>
     <string name="isolation_hint">إنشاء بيئة متصفح معزولة</string>
@@ -568,7 +568,7 @@
     <string name="storage_isolation">عزل التخزين</string>
     <string name="regenerate_on_launch">إعادة التوليد عند التشغيل</string>
     
-    <!-- المساعدة -->
+    
     <string name="help">مساعدة</string>
     <string name="usage_help">مساعدة الاستخدام</string>
     <string name="i_understand">فهمت</string>
@@ -576,7 +576,7 @@
     <string name="auto_detect">الكشف التلقائي</string>
     <string name="auto_detect_category_hint">دع الذكاء الاصطناعي يختار الفئة تلقائيًا بناءً على المتطلبات</string>
     
-    <!-- مساعدة تطوير وحدات AI -->
+    
     <string name="help_how_to_use">كيفية الاستخدام</string>
     <string name="help_how_to_use_content">صف الوظيفة التي تريدها بلغة طبيعية في مربع الإدخال، وسيقوم الذكاء الاصطناعي بتحليل المتطلبات تلقائيًا وإنشاء كود وحدة الإضافة المقابل.</string>
     <string name="help_requirement_tips">نصائح وصف المتطلبات</string>
@@ -592,7 +592,7 @@
     <string name="help_save_module">حفظ الوحدة</string>
     <string name="help_save_module_content">بعد اكتمال الإنشاء، انقر على \'حفظ\' لإضافته إلى مكتبة الوحدات الخاصة بك لاستخدامه عند إنشاء التطبيقات.</string>
     
-    <!-- سلاسل واجهة المستخدم الإضافية -->
+    
     <string name="project_template_export">تصدير قالب المشروع</string>
     <string name="encoding_and_size">الترميز: %1$s | الحجم: %2$s</string>
     <string name="file_label">الملف: %s</string>
@@ -606,7 +606,7 @@
     <string name="always_use_dark_theme">استخدام السمة الداكنة دائمًا</string>
     <string name="interaction_style_label">نمط التفاعل: %s</string>
 
-    <!-- حذف الحساب -->
+    
     <string name="delete_account_title">حذف الحساب</string>
     <string name="delete_account_warning">لا يمكن التراجع عن هذا الإجراء. سيتم حذف جميع بياناتك نهائيًا.</string>
     <string name="delete_account_password_label">أدخل كلمة المرور للتأكيد</string>
@@ -614,7 +614,7 @@
     <string name="delete_account_confirm_label">اكتب DELETE للتأكيد</string>
     <string name="delete_account_button">حذف الحساب نهائيًا</string>
 
-    <!-- رسائل استيراد الوحدات -->
+    
     <string name="msg_import_success">تم استيراد الوحدة %s بنجاح</string>
     <string name="msg_import_failed">فشل استيراد الوحدة: %s</string>
 
@@ -673,7 +673,7 @@
     <string name="url_to_shortcut_basic">وظيفة URL إلى اختصار الأساسية</string>
     <string name="activation_code_announcement_ad_block">رمز التفعيل، الإعلان، حظر الإعلانات</string>
 
-    <!-- أيقونات سطح المكتب المتعددة / التمويه -->
+    
     <string name="disguise_multi_icon_title">أيقونات سطح المكتب المتعددة</string>
     <string name="disguise_icon_count_format">%d أيقونات</string>
     <string name="disguise_not_enabled">غير مفعل</string>
@@ -687,7 +687,7 @@
     <string name="disguise_hide_main_icon_desc">الاحتفاظ بأيقونات الاسم المستعار فقط، إخفاء أيقونة Activity الرئيسية</string>
     <string name="disguise_multi_icon_tip">تستخدم ميزة الأيقونات المتعددة آلية activity-alias الأصلية في Android، مع عرض أيقونات سطح المكتب المتعددة تلقائيًا بعد التثبيت، دون الحاجة إلى أذونات إضافية.</string>
 
-    <!-- التشغيل القسري / إمكانية الوصول -->
+    
     <string name="accessibility_service_description">خدمة حماية التشغيل القسري. عند التفعيل، إذا كان التطبيق في وضع التشغيل القسري فسيمنع الانتقال إلى تطبيقات أخرى لضمان التركيز. تعمل هذه الخدمة فقط عند تفعيل وضع التشغيل القسري يدويًا.</string>
     <string name="forced_run_service_name">حارس وضع التركيز</string>
     <string name="forced_run_active">وضع التركيز قيد التشغيل</string>
@@ -704,7 +704,7 @@
     <string name="protection_level_standard">قياسي (يتطلب إمكانية الوصول)</string>
     <string name="protection_level_maximum">أقصى (يتطلب إمكانية الوصول + وصول الاستخدام)</string>
 
-    <!-- صفحة الملف الشخصي -->
+    
     <string name="change_password">تغيير كلمة المرور</string>
     <string name="update_login_password">تحديث كلمة مرور الدخول</string>
     <string name="logout_all_devices">تسجيل الخروج من جميع الأجهزة</string>
@@ -717,7 +717,7 @@
     <string name="password_min_length">6 أحرف على الأقل</string>
     <string name="confirm_change">تأكيد التغيير</string>
 
-    <!-- قوالب الإعلانات -->
+    
     <string name="template_minimal">بسيط</string>
     <string name="template_minimal_desc">تخطيط مساحات بيضاء نظيف ومحتشم</string>
     <string name="template_xiaohongshu">شياوهونغشو</string>
@@ -739,7 +739,7 @@
     <string name="template_nature">طبيعي</string>
     <string name="template_nature_desc">تعبير متوازن مهدئ ومنعش</string>
 
-    <!-- بطاقة خطأ AI -->
+    
     <string name="retry_action">إعادة محاولة العملية الأخيرة</string>
     <string name="retry_different_model">إعادة المحاولة بنموذج مختلف</string>
     <string name="retry_different_model_desc">إعادة المحاولة باستخدام نموذج AI آخر</string>
@@ -766,19 +766,19 @@
     <string name="auto_retry_after_seconds">إعادة محاولة تلقائية بعد %d ثانية</string>
     <string name="retrying">جاري إعادة المحاولة...</string>
 
-    <!-- واجهة تطوير وحدات AI -->
+    
     <string name="you">أنت</string>
     <string name="generating">جاري التوليد</string>
     <string name="copy_code">نسخ</string>
     <string name="verify_code">تحقق</string>
     <string name="thinking_label">جاري التفكير...</string>
 
-    <!-- صفحة حول - إخلاء المسؤولية القانونية -->
+    
     <string name="legal_disclaimer_content_1">هذا البرنامج هو أداة بحث تقني مفتوح المصدر وعرض تعليمي. جميع الميزات مبنية على واجهات برمجة تطبيقات Android العامة، وتهدف إلى عرض تقنيات تطوير تطبيقات الهاتف المحمول. لا يشجع هذا البرنامج ولا يدعم أي استخدام غير قانوني.</string>
     <string name="legal_disclaimer_content_2">يجب على المستخدمين التأكد من استخدام البرنامج في سيناريوهات قانونية ومشروعة، بما في ذلك على سبيل المثال لا الحصر:\n• الإدارة الذاتية: لتدريب التركيز الشخصي وإدارة وقت الدراسة\n• العرض التجاري: لأجهزة العرض في المعارض والمراكز التجارية\n• الإشراف الأبوي: للاستخدام المعقول بموافقة القاصرين المستنيرة\n• البحث التعليمي: للتعلم التقني وأبحاث الأمان\n\nيُمنع منعًا باتًا استخدام هذا البرنامج لأي سلوك ينتهك الحرية الشخصية أو الخصوصية أو الممتلكات أو الحقوق المشروعة الأخرى للآخرين.</string>
     <string name="legal_disclaimer_content_3">ميزات \"التشغيل القسري\" والتحكم في الأجهزة ذات الصلة (المشار إليها فيما يلي باسم \"الميزات المتقدمة\") في هذا البرنامج ذات طبيعة عرض تقني:\n\n1. [مبدأ الموافقة المستنيرة] يجب تفعيل الميزات المتقدمة فقط مع المعرفة الكاملة والموافقة الصريحة من مالك الجهاز أو المستخدم\n\n2. [مبدأ التحكم الذاتي] توفر جميع الميزات آليات خروج طارئ، ويمكن للمستخدمين إنهاؤها في أي وقت عبر كلمة المرور\n\n3. [مبدأ الحياد التقني] الميزات بحد ذاتها غير غير قانونية بطبيعتها؛ ويعتمد قانونيتها على الاستخدام والغرض المحدد للمستخدم\n\n</string>
 
-    <!-- صفحة حول - أخطاء التحديث -->
+    
     <string name="update_check_failed_title">فشل التحقق من التحديثات</string>
     <string name="update_check_manual_stage">تحقق يدوي من التحديثات</string>
     <string name="update_check_request_failed">فشل طلب خدمة التحديث، تم إيقاف المعالجة.</string>

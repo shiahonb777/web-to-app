@@ -9,14 +9,14 @@ import com.webtoapp.core.announcement.AnnouncementManager
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.core.shell.ShellModeManager
 
-/**
- * Shell 专用 Application — 仅包含运行时功能，不含编辑器代码
- * 
- * 与 app 模块的 WebToAppApplication 不同：
- * - 不初始化 Koin DI（Shell 运行时不需要）
- * - 不引用 Database / Repository / Billing / Stats
- * - 直接创建运行时单例，而非通过 Koin inject
- */
+
+
+
+
+
+
+
+
 class WebToAppApplication : Application() {
 
     private var shellActivationManager: ActivationManager? = null
@@ -41,14 +41,14 @@ class WebToAppApplication : Application() {
             android.util.Log.e("WebToAppApplication", "AppLogger initialization failed", e)
         }
 
-        // Shell 运行时 — 直接初始化，不走 Koin
+
         initShellRuntime()
 
-        // C 级系统层极致性能优化
+
         com.webtoapp.core.perf.SystemPerfOptimizer.initSystem(this)
         com.webtoapp.core.perf.SystemPerfOptimizer.readaheadCriticalFiles(this)
 
-        // 预热 WebView 引擎
+
         com.webtoapp.core.webview.WebViewPool.prewarm(this)
 
         AppLogger.system("Application", "onCreate completed (shell)")

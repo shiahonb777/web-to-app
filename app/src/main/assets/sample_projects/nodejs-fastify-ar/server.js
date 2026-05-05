@@ -1,7 +1,7 @@
-/**
- * لوحة مراقبة النظام — وضع داكن
- * Node.js بدون تبعيات
- */
+
+
+
+
 const http = require('http');
 const os = require('os');
 const PORT = process.env.PORT || 3000;
@@ -9,7 +9,7 @@ const stats = { requestCount: 0, startTime: Date.now() };
 function getStats() { stats.requestCount++; const cpus = os.cpus(); const cu = cpus.map(c => { const t = Object.values(c.times).reduce((a, b) => a + b, 0); return Math.round((1 - c.times.idle / t) * 100) }); const avg = Math.round(cu.reduce((a, b) => a + b, 0) / cu.length); const tm = os.totalmem(), fm = os.freemem(), um = tm - fm, mp = Math.round(um / tm * 100); const p = process.memoryUsage(); return { cpu: { cores: cpus.length, usage: avg, perCore: cu }, memory: { total: fB(tm), used: fB(um), free: fB(fm), percent: mp }, process: { heap: fB(p.heapUsed), rss: fB(p.rss), uptime: fT(process.uptime()) }, server: { requests: stats.requestCount, uptime: fT((Date.now() - stats.startTime) / 1000) }, system: { platform: os.platform(), arch: os.arch(), node: process.version } } }
 function fB(b) { if (b < 1048576) return (b / 1024).toFixed(0) + ' KB'; if (b < 1073741824) return (b / 1048576).toFixed(1) + ' MB'; return (b / 1073741824).toFixed(2) + ' GB' }
 function fT(s) { const m = Math.floor(s / 60), h = Math.floor(m / 60); if (h > 0) return h + 'س ' + m % 60 + 'د'; if (m > 0) return m + 'د ' + Math.floor(s % 60) + 'ث'; return Math.floor(s) + 'ث' }
-const server = http.createServer((req, res) => { const p = new URL(req.url, `http://${req.headers.host}`).pathname; if (p === '/api/stats') { res.writeHead(200, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify(getStats())) } if (p === '/') { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); return res.end(getPage()) } res.writeHead(404); res.end('') });
+const server = http.createServer((req, res) => { const p = new URL(req.url, `http:
 server.listen(PORT, '0.0.0.0', () => console.log('Monitor on ' + PORT));
 
 function getPage() {

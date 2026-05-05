@@ -29,7 +29,7 @@ class GeckoEngineDownloader(
     companion object {
         private const val TAG = "GeckoEngineDownloader"
         private const val MAVEN_BASE_URL = "https://maven.mozilla.org/maven2/org/mozilla/geckoview"
-        // Keep in sync with app/build.gradle.kts geckoview dependency version.
+
         const val DEFAULT_VERSION = "128.0.20240704121409"
         val SUPPORTED_ABIS = listOf("arm64-v8a", "armeabi-v7a", "x86_64", "x86")
 
@@ -163,10 +163,14 @@ class GeckoEngineDownloader(
             val response = client.newCall(request).execute()
             if (!response.isSuccessful) {
                 AppLogger.e(TAG, "HTTP " + response.code)
+                response.close()
                 return false
             }
 
-            val body = response.body ?: return false
+            val body = response.body ?: run {
+                response.close()
+                return false
+            }
             val contentLength = body.contentLength()
             val input = body.byteStream()
             val output = FileOutputStream(destFile)
@@ -177,7 +181,10 @@ class GeckoEngineDownloader(
                 var totalBytesRead = 0L
 
                 while (input.read(buffer).also { bytesRead = it } != -1) {
-                    if (cancelRequested) return false
+                    if (cancelRequested) {
+                        destFile.delete()
+                        return false
+                    }
                     output.write(buffer, 0, bytesRead)
                     totalBytesRead += bytesRead
                     if (contentLength > 0) {
@@ -187,6 +194,7 @@ class GeckoEngineDownloader(
             } finally {
                 output.close()
                 input.close()
+                response.close()
             }
 
             return destFile.exists() && destFile.length() > 0

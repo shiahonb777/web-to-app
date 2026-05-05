@@ -49,15 +49,15 @@ import kotlinx.coroutines.launch
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
-/**
- * AI 模块开发器界面
- * 
- * 提供可视化的 Agent 开发体验，包括：
- * - 自然语言输入
- * - 流式思考过程展示
- * - 实时代码生成
- * - 工具调用可视化
- */
+
+
+
+
+
+
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AiModuleDeveloperScreen(
@@ -68,44 +68,44 @@ fun AiModuleDeveloperScreen(
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
 
-    // Agent 引擎
+
     val agentEngine = remember { ModuleAgentEngine(context) }
     val extensionManager = remember { ExtensionManager.getInstance(context) }
-    
-    // UI 状态
+
+
     var userInput by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf<ModuleCategory?>(null) }
     var showCategorySelector by remember { mutableStateOf(false) }
     var showHelpDialog by remember { mutableStateOf(false) }
-    
-    // Agent 状态
+
+
     val agentState by agentEngine.sessionState.collectAsStateWithLifecycle()
     var thoughts by remember { mutableStateOf<List<AgentThought>>(emptyList()) }
     var generatedModule by remember { mutableStateOf<GeneratedModuleData?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var toolResults by remember { mutableStateOf<List<ToolCallResult>>(emptyList()) }
-    
-    // 滚动状态
+
+
     val listState = rememberLazyListState()
-    
-    // Yes否正在开发
-    val isDeveloping = agentState != AgentSessionState.IDLE && 
-                       agentState != AgentSessionState.COMPLETED && 
+
+
+    val isDeveloping = agentState != AgentSessionState.IDLE &&
+                       agentState != AgentSessionState.COMPLETED &&
                        agentState != AgentSessionState.ERROR
-    
-    // Start开发
+
+
     fun startDevelopment() {
         if (userInput.isBlank()) {
             Toast.makeText(context, Strings.pleaseEnterRequirement, Toast.LENGTH_SHORT).show()
             return
         }
-        
+
         focusManager.clearFocus()
         thoughts = emptyList()
         generatedModule = null
         errorMessage = null
         toolResults = emptyList()
-        
+
         scope.launch {
             agentEngine.develop(userInput, selectedCategory).collect { event ->
                 when (event) {
@@ -126,16 +126,16 @@ fun AiModuleDeveloperScreen(
                     }
                     else -> {}
                 }
-                
-                // Auto滚动到底部
+
+
                 if (thoughts.isNotEmpty()) {
                     listState.animateScrollToItem(thoughts.size - 1)
                 }
             }
         }
     }
-    
-    // Reset state
+
+
     fun resetState() {
         userInput = ""
         selectedCategory = null
@@ -144,11 +144,11 @@ fun AiModuleDeveloperScreen(
         errorMessage = null
         toolResults = emptyList()
     }
-    
-    // Save模块
+
+
     fun saveModule() {
         val module = generatedModule?.toExtensionModule() ?: return
-        
+
         scope.launch {
             extensionManager.addModule(module).onSuccess {
                 Toast.makeText(context, Strings.saveSuccess, Toast.LENGTH_SHORT).show()
@@ -158,13 +158,13 @@ fun AiModuleDeveloperScreen(
             }
         }
     }
-    
+
     Scaffold(
         containerColor = Color.Transparent,
         modifier = Modifier.imePadding(),
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -179,8 +179,8 @@ fun AiModuleDeveloperScreen(
                             Strings.aiModuleDevelopment,
                             fontWeight = FontWeight.Bold
                         )
-                        // 移除通用加载指示器，改为在内容区域显示具体状态
-                        // Requirements: 2.5, 3.1, 3.2
+
+
                         if (isDeveloping) {
                             Spacer(modifier = Modifier.width(4.dp))
                             StreamingStatusBadge(state = agentState)
@@ -193,13 +193,13 @@ fun AiModuleDeveloperScreen(
                     }
                 },
                 actions = {
-                    // Reset按钮
+
                     if (thoughts.isNotEmpty() || generatedModule != null) {
                         IconButton(onClick = { resetState() }) {
                             Icon(Icons.Default.Refresh, Strings.restart)
                         }
                     }
-                    // 帮助按钮
+
                     IconButton(onClick = { showHelpDialog = true }) {
                         Icon(Icons.Outlined.Help, Strings.help)
                     }
@@ -218,7 +218,7 @@ fun AiModuleDeveloperScreen(
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
-            // 主内容区域
+
             LazyColumn(
                 state = listState,
                 modifier = Modifier
@@ -227,18 +227,18 @@ fun AiModuleDeveloperScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // 欢迎卡片
+
                 if (thoughts.isEmpty() && generatedModule == null && errorMessage == null) {
                     item {
                         WelcomeCard()
                     }
-                    
-                    // 功能特性
+
+
                     item {
                         FeatureChips()
                     }
-                    
-                    // 示例需求
+
+
                     item {
                         ExampleRequirements(
                             onSelect = { example ->
@@ -247,39 +247,39 @@ fun AiModuleDeveloperScreen(
                         )
                     }
                 }
-                
-                // 当前状态指示器 - 使用流式内容显示替代通用加载指示器
-                // Requirements: 2.5, 3.1, 3.2
+
+
+
                 if (isDeveloping) {
                     item {
                         StreamingStatusCard(state = agentState)
                     }
                 }
-                
-                // 思考过程
+
+
                 items(thoughts) { thought ->
                     ThoughtCard(thought = thought)
                 }
-                
-                // 工具调用结果
+
+
                 items(toolResults) { result ->
                     ToolResultCard(result = result)
                 }
-                
-                // Generate的模块
+
+
                 if (generatedModule != null) {
                     item {
                         GeneratedModuleCard(
                             module = generatedModule!!,
                             onSave = { saveModule() },
-                            onEdit = { 
+                            onEdit = {
                                 Toast.makeText(context, Strings.jumpToModuleEditor, Toast.LENGTH_SHORT).show()
                             }
                         )
                     }
                 }
-                
-                // Error信息
+
+
                 if (errorMessage != null) {
                     item {
                         ErrorCard(
@@ -288,14 +288,14 @@ fun AiModuleDeveloperScreen(
                         )
                     }
                 }
-                
-                // 底部间距
+
+
                 item {
                     Spacer(modifier = Modifier.height(80.dp))
                 }
             }
 
-            // 输入区域
+
             InputSection(
                 userInput = userInput,
                 onInputChange = { userInput = it },
@@ -308,28 +308,28 @@ fun AiModuleDeveloperScreen(
         }
         }
     }
-    
-    // 分类选择对话框
+
+
     if (showCategorySelector) {
         CategorySelectorDialog(
             selectedCategory = selectedCategory,
-            onSelect = { 
+            onSelect = {
                 selectedCategory = it
                 showCategorySelector = false
             },
             onDismiss = { showCategorySelector = false }
         )
     }
-    
-    // 帮助对话框
+
+
     if (showHelpDialog) {
         HelpDialog(onDismiss = { showHelpDialog = false })
     }
 }
 
-/**
- * 输入区域组件
- */
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun InputSection(
@@ -351,7 +351,7 @@ private fun InputSection(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // 分类选择
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -368,18 +368,18 @@ private fun InputSection(
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                
+
                 PremiumFilterChip(
                     selected = selectedCategory != null,
                     onClick = onCategoryClick,
-                    label = { 
+                    label = {
                         Text(
                             selectedCategory?.let { "${it.icon} ${it.getDisplayName()}" } ?: Strings.autoDetectCategory,
                             style = MaterialTheme.typography.labelMedium
                         )
                     }
                 )
-                
+
                 if (selectedCategory != null) {
                     IconButton(
                         onClick = onClearCategory,
@@ -394,13 +394,13 @@ private fun InputSection(
                     }
                 }
             }
-            
-            // 输入框
+
+
             OutlinedTextField(
                 value = userInput,
                 onValueChange = onInputChange,
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { 
+                placeholder = {
                     Text(
                         Strings.inputPlaceholder,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
@@ -414,16 +414,16 @@ private fun InputSection(
                 trailingIcon = {
                     IconButton(onClick = onSend, enabled = !isDeveloping && userInput.isNotBlank()) {
                         if (isDeveloping) {
-                            // 使用动画点替代 CircularProgressIndicator
-                            // Requirements: 2.5, 3.1, 3.2
+
+
                             SendingIndicator()
                         } else {
                             Icon(
                                 Icons.Default.Send,
                                 contentDescription = Strings.startDevelopment,
-                                tint = if (userInput.isNotBlank()) 
-                                    MaterialTheme.colorScheme.primary 
-                                else 
+                                tint = if (userInput.isNotBlank())
+                                    MaterialTheme.colorScheme.primary
+                                else
                                     MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                             )
                         }
@@ -439,9 +439,9 @@ private fun InputSection(
     }
 }
 
-/**
- * 欢迎卡片
- */
+
+
+
 @Composable
 private fun WelcomeCard() {
     EnhancedElevatedCard(
@@ -457,7 +457,7 @@ private fun WelcomeCard() {
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // AI 图标
+
             Box(
                 modifier = Modifier
                     .size(80.dp)
@@ -479,9 +479,9 @@ private fun WelcomeCard() {
                     tint = MaterialTheme.colorScheme.onPrimary
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             Text(
                 Strings.aiAssistant,
                 style = MaterialTheme.typography.headlineSmall,
@@ -489,9 +489,9 @@ private fun WelcomeCard() {
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Text(
                 Strings.aiAssistantDesc,
                 style = MaterialTheme.typography.bodyMedium,
@@ -503,9 +503,9 @@ private fun WelcomeCard() {
     }
 }
 
-/**
- * 功能特性标签
- */
+
+
+
 @Composable
 private fun FeatureChips() {
     Row(
@@ -543,9 +543,9 @@ private fun AiFeatureChip(iconVector: ImageVector, text: String) {
     }
 }
 
-/**
- * 示例需求
- */
+
+
+
 @Composable
 private fun ExampleRequirements(onSelect: (String) -> Unit) {
     val examples = listOf(
@@ -556,7 +556,7 @@ private fun ExampleRequirements(onSelect: (String) -> Unit) {
         Icons.Outlined.FastForward to Strings.exampleVideoSpeed,
         Icons.Outlined.KeyboardArrowUp to Strings.exampleBackToTop
     )
-    
+
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -570,7 +570,7 @@ private fun ExampleRequirements(onSelect: (String) -> Unit) {
                 color = MaterialTheme.colorScheme.onSurface
             )
         }
-        
+
         examples.chunked(2).forEach { row ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -604,7 +604,7 @@ private fun ExampleRequirements(onSelect: (String) -> Unit) {
                         }
                     }
                 }
-                // 填充空位
+
                 if (row.size == 1) {
                     Spacer(modifier = Modifier.weight(weight = 1f, fill = true))
                 }
@@ -613,14 +613,14 @@ private fun ExampleRequirements(onSelect: (String) -> Unit) {
     }
 }
 
-/**
- * 流式状态卡片
- * 
- * 替代原有的 DevelopingStatusCard，移除通用加载指示器
- * 使用具体的状态消息和动画效果
- * 
- * Requirements: 2.5, 3.1, 3.2
- */
+
+
+
+
+
+
+
+
 @Composable
 private fun StreamingStatusCard(state: AgentSessionState) {
     val (iconVector, text, color) = when (state) {
@@ -632,7 +632,7 @@ private fun StreamingStatusCard(state: AgentSessionState) {
         AgentSessionState.FIXING -> Triple(Icons.Outlined.Build, Strings.fixingDetectedIssues, MaterialTheme.colorScheme.tertiary)
         else -> Triple(Icons.Outlined.HourglassEmpty, Strings.statusProcessing, MaterialTheme.colorScheme.primary)
     }
-    
+
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -651,19 +651,19 @@ private fun StreamingStatusCard(state: AgentSessionState) {
                 color = color
             )
             Spacer(modifier = Modifier.weight(weight = 1f, fill = true))
-            // 使用打字动画替代 CircularProgressIndicator
+
             StreamingDots(color = color)
         }
     }
 }
 
-/**
- * 流式状态徽章
- * 
- * 用于顶部栏显示当前状态，替代 CircularProgressIndicator
- * 
- * Requirements: 2.5, 3.1, 3.2
- */
+
+
+
+
+
+
+
 @Composable
 private fun StreamingStatusBadge(state: AgentSessionState) {
     val text = when (state) {
@@ -675,7 +675,7 @@ private fun StreamingStatusBadge(state: AgentSessionState) {
         AgentSessionState.FIXING -> Strings.statusFixing
         else -> Strings.statusProcessing
     }
-    
+
     val infiniteTransition = rememberInfiniteTransition(label = "badge")
     val alpha by infiniteTransition.animateFloat(
         initialValue = 0.5f,
@@ -686,7 +686,7 @@ private fun StreamingStatusBadge(state: AgentSessionState) {
         ),
         label = "badgeAlpha"
     )
-    
+
     Surface(
         shape = RoundedCornerShape(6.dp),
         color = MaterialTheme.colorScheme.primary.copy(alpha = alpha * 0.2f)
@@ -701,18 +701,18 @@ private fun StreamingStatusBadge(state: AgentSessionState) {
     }
 }
 
-/**
- * 流式动画点
- * 
- * 替代 CircularProgressIndicator 的动画效果
- */
+
+
+
+
+
 @Composable
 private fun StreamingDots(
     color: Color,
     modifier: Modifier = Modifier
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "streamingDots")
-    
+
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -733,7 +733,7 @@ private fun StreamingDots(
                 ),
                 label = "dot$index"
             )
-            
+
             Box(
                 modifier = Modifier
                     .size((6 * scale).dp)
@@ -744,30 +744,30 @@ private fun StreamingDots(
     }
 }
 
-/**
- * 开发状态卡片 (保留用于兼容性，但已弃用)
- * @deprecated 使用 StreamingStatusCard 替代
- */
+
+
+
+
 @Deprecated("Use StreamingStatusCard instead", ReplaceWith("StreamingStatusCard(state)"))
 @Composable
 private fun DevelopingStatusCard(state: AgentSessionState) {
     StreamingStatusCard(state)
 }
 
-/**
- * 发送中指示器
- * 
- * 用于输入框中替代 CircularProgressIndicator
- * 显示三个跳动的点表示正在处理
- * 
- * Requirements: 2.5, 3.1, 3.2
- */
+
+
+
+
+
+
+
+
 @Composable
 private fun SendingIndicator(
     modifier: Modifier = Modifier
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "sending")
-    
+
     Row(
         modifier = modifier.size(24.dp),
         horizontalArrangement = Arrangement.Center,
@@ -788,7 +788,7 @@ private fun SendingIndicator(
                 ),
                 label = "sendDot$index"
             )
-            
+
             Box(
                 modifier = Modifier
                     .padding(horizontal = 1.dp)
@@ -801,9 +801,9 @@ private fun SendingIndicator(
     }
 }
 
-/**
- * 思考卡片
- */
+
+
+
 @Composable
 private fun ThoughtCard(thought: AgentThought) {
     val backgroundColor = when (thought.type) {
@@ -817,7 +817,7 @@ private fun ThoughtCard(thought: AgentThought) {
         ThoughtType.CONCLUSION -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
         ThoughtType.ERROR -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
     }
-    
+
     AnimatedVisibility(
         visible = true,
         enter = fadeIn() + slideInVertically { it / 2 }
@@ -832,7 +832,7 @@ private fun ThoughtCard(thought: AgentThought) {
                 verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Icon
+
                 Surface(
                     shape = CircleShape,
                     color = MaterialTheme.colorScheme.surface,
@@ -845,8 +845,8 @@ private fun ThoughtCard(thought: AgentThought) {
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
-                
-                // 内容
+
+
                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                     Text(
                         thought.type.displayName,
@@ -862,8 +862,8 @@ private fun ThoughtCard(thought: AgentThought) {
                         lineHeight = 20.sp
                     )
                 }
-                
-                // 步骤编号
+
+
                 Surface(
                     shape = CircleShape,
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
@@ -881,19 +881,19 @@ private fun ThoughtCard(thought: AgentThought) {
     }
 }
 
-/**
- * 工具结果卡片
- */
+
+
+
 @Composable
 private fun ToolResultCard(result: ToolCallResult) {
     val tool = AgentTools.getToolByName(result.toolName)
-    
+
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        color = if (result.success) 
+        color = if (result.success)
             if (com.webtoapp.ui.theme.LocalIsDarkTheme.current) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.72f)
-        else 
+        else
             MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
@@ -961,7 +961,7 @@ private fun ToolResultCard(result: ToolCallResult) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            
+
             if (!result.success && result.error != null) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
@@ -975,9 +975,9 @@ private fun ToolResultCard(result: ToolCallResult) {
 }
 
 
-/**
- * 生成的模块卡片
- */
+
+
+
 @Composable
 private fun GeneratedModuleCard(
     module: GeneratedModuleData,
@@ -986,7 +986,7 @@ private fun GeneratedModuleCard(
 ) {
     var showCode by remember { mutableStateOf(false) }
     var showCss by remember { mutableStateOf(false) }
-    
+
     EnhancedElevatedCard(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -995,7 +995,7 @@ private fun GeneratedModuleCard(
         shape = RoundedCornerShape(20.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
-            // Success标识
+
             Surface(
                 shape = RoundedCornerShape(8.dp),
                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
@@ -1019,10 +1019,10 @@ private fun GeneratedModuleCard(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
-            // 标题行
+
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -1059,10 +1059,10 @@ private fun GeneratedModuleCard(
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
-            // 状态标签
+
+
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (module.syntaxValid) {
                     StatusChip(
@@ -1079,28 +1079,28 @@ private fun GeneratedModuleCard(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
-            // Description
+
+
             Text(
                 module.description,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 lineHeight = 20.sp
             )
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
-            // JavaScript 代码预览
+
+
             CodePreviewSection(
                 title = "JavaScript",
                 code = module.jsCode,
                 expanded = showCode,
                 onToggle = { showCode = !showCode }
             )
-            
-            // CSS 代码（如果有）
+
+
             if (module.cssCode.isNotBlank()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 CodePreviewSection(
@@ -1110,10 +1110,10 @@ private fun GeneratedModuleCard(
                     onToggle = { showCss = !showCss }
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(20.dp))
-            
-            // 操作按钮
+
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -1127,7 +1127,7 @@ private fun GeneratedModuleCard(
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(Strings.edit)
                 }
-                
+
                 PremiumButton(
                     onClick = onSave,
                     modifier = Modifier.weight(weight = 1f, fill = true),
@@ -1142,9 +1142,9 @@ private fun GeneratedModuleCard(
     }
 }
 
-/**
- * 状态标签
- */
+
+
+
 @Composable
 private fun StatusChip(icon: String, text: String, color: Color) {
     Surface(
@@ -1166,9 +1166,9 @@ private fun StatusChip(icon: String, text: String, color: Color) {
     }
 }
 
-/**
- * 代码预览区域
- */
+
+
+
 @Composable
 private fun CodePreviewSection(
     title: String,
@@ -1182,7 +1182,7 @@ private fun CodePreviewSection(
         color = MaterialTheme.colorScheme.surfaceVariant
     ) {
         Column {
-            // 代码头部
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1230,8 +1230,8 @@ private fun CodePreviewSection(
                     )
                 }
             }
-            
-            // 代码内容
+
+
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 color = Color(0xFF1E1E1E)
@@ -1239,10 +1239,10 @@ private fun CodePreviewSection(
                 val displayCode = if (expanded) {
                     code
                 } else {
-                    code.lines().take(5).joinToString("\n") + 
+                    code.lines().take(5).joinToString("\n") +
                         if (code.lines().size > 5) "\n// ..." else ""
                 }
-                
+
                 Text(
                     displayCode,
                     modifier = Modifier
@@ -1260,9 +1260,9 @@ private fun CodePreviewSection(
     }
 }
 
-/**
- * 错误卡片
- */
+
+
+
 @Composable
 private fun ErrorCard(message: String, onRetry: () -> Unit) {
     EnhancedElevatedCard(
@@ -1303,9 +1303,9 @@ private fun ErrorCard(message: String, onRetry: () -> Unit) {
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             PremiumButton(
                 onClick = onRetry,
                 modifier = Modifier.align(Alignment.End),
@@ -1322,9 +1322,9 @@ private fun ErrorCard(message: String, onRetry: () -> Unit) {
     }
 }
 
-/**
- * 分类选择对话框
- */
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CategorySelectorDialog(
@@ -1334,7 +1334,7 @@ private fun CategorySelectorDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { 
+        title = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1357,7 +1357,7 @@ private fun CategorySelectorDialog(
                     )
                     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 }
-                
+
                 items(ModuleCategory.values().toList()) { category ->
                     CategoryItem(
                         icon = category.icon,
@@ -1390,9 +1390,9 @@ private fun CategoryItem(
             .fillMaxWidth()
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
-        color = if (selected) 
-            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) 
-        else 
+        color = if (selected)
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+        else
             Color.Transparent
     ) {
         Row(
@@ -1425,14 +1425,14 @@ private fun CategoryItem(
     }
 }
 
-/**
- * 帮助对话框
- */
+
+
+
 @Composable
 private fun HelpDialog(onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { 
+        title = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1452,7 +1452,7 @@ private fun HelpDialog(onDismiss: () -> Unit) {
                         content = Strings.howToUseContent
                     )
                 }
-                
+
                 item {
                     HelpSection(
                         icon = "edit_note",
@@ -1460,7 +1460,7 @@ private fun HelpDialog(onDismiss: () -> Unit) {
                         content = Strings.requirementTipsContent
                     )
                 }
-                
+
                 item {
                     HelpSection(
                         icon = "folder",
@@ -1468,7 +1468,7 @@ private fun HelpDialog(onDismiss: () -> Unit) {
                         content = Strings.categorySelectionContent
                     )
                 }
-                
+
                 item {
                     HelpSection(
                         icon = "search",
@@ -1476,7 +1476,7 @@ private fun HelpDialog(onDismiss: () -> Unit) {
                         content = Strings.autoCheckContent
                     )
                 }
-                
+
                 item {
                     HelpSection(
                         icon = "save",
@@ -1484,7 +1484,7 @@ private fun HelpDialog(onDismiss: () -> Unit) {
                         content = Strings.saveModuleContent
                     )
                 }
-                
+
                 item {
                     HelpSection(
                         icon = "warning",

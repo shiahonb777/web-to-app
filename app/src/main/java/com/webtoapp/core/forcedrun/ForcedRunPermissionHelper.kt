@@ -19,11 +19,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.webtoapp.core.i18n.Strings
 
-/**
- * 强制运行权限引导组件
- * 
- * 引导用户授权必要的权限以启用强制运行功能
- */
+
+
+
+
+
 @Composable
 fun ForcedRunPermissionGuide(
     protectionLevel: ProtectionLevel,
@@ -31,28 +31,28 @@ fun ForcedRunPermissionGuide(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    
-    // Permission状态
+
+
     var hasAccessibility by remember { mutableStateOf(false) }
     var hasUsageStats by remember { mutableStateOf(false) }
-    
-    // Refresh权限状态
+
+
     fun refreshPermissions() {
         hasAccessibility = ForcedRunAccessibilityService.isAccessibilityServiceEnabled(context)
         hasUsageStats = ForcedRunGuardService.hasUsageStatsPermission(context)
     }
-    
-    // 初始检查和定期刷新
+
+
     LaunchedEffect(Unit) {
         refreshPermissions()
     }
-    
-    // 每次 resume 时刷新
+
+
     DisposableEffect(Unit) {
         onDispose { }
     }
-    
-    // Check是否所有需要的权限都已授权
+
+
     LaunchedEffect(hasAccessibility, hasUsageStats) {
         val allGranted = when (protectionLevel) {
             ProtectionLevel.BASIC -> true
@@ -63,7 +63,7 @@ fun ForcedRunPermissionGuide(
             onAllPermissionsGranted()
         }
     }
-    
+
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -75,22 +75,22 @@ fun ForcedRunPermissionGuide(
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 标题
+
             Text(
                 text = Strings.forcedRunPermissionTitle,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
-            
+
             Text(
                 text = Strings.forcedRunPermissionDesc,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            
+
             HorizontalDivider()
-            
-            // 辅助功能权限
+
+
             if (protectionLevel != ProtectionLevel.BASIC) {
                 PermissionItem(
                     title = Strings.accessibilityService,
@@ -102,8 +102,8 @@ fun ForcedRunPermissionGuide(
                     onRefresh = { refreshPermissions() }
                 )
             }
-            
-            // 使用情况访问权限
+
+
             if (protectionLevel == ProtectionLevel.MAXIMUM) {
                 PermissionItem(
                     title = Strings.usageAccess,
@@ -115,13 +115,13 @@ fun ForcedRunPermissionGuide(
                     onRefresh = { refreshPermissions() }
                 )
             }
-            
-            // 防护级别说明
+
+
             HorizontalDivider()
-            
+
             ProtectionLevelInfo(protectionLevel)
-            
-            // Refresh按钮
+
+
             OutlinedButton(
                 onClick = { refreshPermissions() },
                 modifier = Modifier.fillMaxWidth()
@@ -145,15 +145,15 @@ private fun PermissionItem(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // 状态图标
+
         Icon(
             imageVector = if (isGranted) Icons.Filled.CheckCircle else Icons.Filled.Warning,
             contentDescription = null,
             tint = if (isGranted) AppColors.Success else AppColors.Warning,
             modifier = Modifier.size(28.dp)
         )
-        
-        // Permission信息
+
+
         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
             Text(
                 text = title,
@@ -166,8 +166,8 @@ private fun PermissionItem(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        
-        // 操作按钮
+
+
         if (!isGranted) {
             FilledTonalButton(
                 onClick = onRequestPermission,
@@ -211,7 +211,7 @@ private fun ProtectionLevelInfo(level: ProtectionLevel) {
             AppColors.Success
         )
     }
-    
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -228,7 +228,7 @@ private fun ProtectionLevelInfo(level: ProtectionLevel) {
                 fontSize = 12.sp
             )
         }
-        
+
         Text(
             text = levelDescription,
             style = MaterialTheme.typography.bodySmall,
@@ -237,9 +237,9 @@ private fun ProtectionLevelInfo(level: ProtectionLevel) {
     }
 }
 
-/**
- * 权限检查对话框
- */
+
+
+
 @Composable
 fun ForcedRunPermissionDialog(
     protectionLevel: ProtectionLevel,
@@ -251,7 +251,7 @@ fun ForcedRunPermissionDialog(
     val permissionStatus = remember(protectionLevel) {
         ForcedRunManager.checkProtectionPermissions(context, protectionLevel)
     }
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {

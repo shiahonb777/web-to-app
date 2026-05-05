@@ -40,10 +40,10 @@ import com.webtoapp.util.BgmStorage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/**
- * 手动 LRC 对齐工具对话框
- * 用户可以输入歌词文本，然后播放音频时点击按钮进行逐句时间对齐
- */
+
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManualLrcAlignerDialog(
@@ -54,44 +54,44 @@ fun ManualLrcAlignerDialog(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    
-    // 步骤状态：1=输入歌词, 2=对齐时间, 3=预览确认
+
+
     var currentStep by remember { mutableIntStateOf(if (existingLrc != null) 2 else 1) }
-    
-    // Lyrics文本（每行一句）
-    var lyricsText by remember { 
-        mutableStateOf(existingLrc?.lines?.joinToString("\n") { it.text } ?: "") 
+
+
+    var lyricsText by remember {
+        mutableStateOf(existingLrc?.lines?.joinToString("\n") { it.text } ?: "")
     }
-    
-    // Parse后的歌词行
-    var lyricLines by remember { 
-        mutableStateOf(existingLrc?.lines?.map { it.text } ?: emptyList()) 
+
+
+    var lyricLines by remember {
+        mutableStateOf<List<String>>(existingLrc?.lines?.map { it.text } ?: emptyList())
     }
-    
-    // 每行的时间戳（毫秒）
-    var timestamps by remember { 
-        mutableStateOf(existingLrc?.lines?.map { it.startTime } ?: emptyList<Long>()) 
+
+
+    var timestamps by remember {
+        mutableStateOf<List<Long>>(existingLrc?.lines?.map { it.startTime } ?: emptyList())
     }
-    
-    // 跟踪哪些行已经对齐了（不能用 timestamp > 0 判断，因为歌词可能从 0ms 开始）
+
+
     var alignedIndices by remember {
-        mutableStateOf(
+        mutableStateOf<Set<Int>>(
             if (existingLrc != null) (existingLrc.lines.indices).toSet() else emptySet<Int>()
         )
     }
-    
-    // 当前正在对齐的行索引
+
+
     var currentAlignIndex by remember { mutableIntStateOf(0) }
-    
-    // 历史状态管理（撤销/重做）
+
+
     data class AlignState(val timestamps: List<Long>, val currentIndex: Int, val aligned: Set<Int>)
     var historyStack by remember { mutableStateOf(listOf<AlignState>()) }
     var historyIndex by remember { mutableIntStateOf(-1) }
-    
-    // Save状态到历史
+
+
     fun saveToHistory() {
         val newState = AlignState(timestamps.toList(), currentAlignIndex, alignedIndices.toSet())
-        // 如果在历史中间位置，删除后面的记录
+
         val trimmedHistory = if (historyIndex < historyStack.size - 1) {
             historyStack.take(historyIndex + 1)
         } else {
@@ -100,8 +100,8 @@ fun ManualLrcAlignerDialog(
         historyStack = trimmedHistory + newState
         historyIndex = historyStack.size - 1
     }
-    
-    // Undo
+
+
     fun undo() {
         if (historyIndex > 0) {
             historyIndex--
@@ -111,8 +111,8 @@ fun ManualLrcAlignerDialog(
             alignedIndices = state.aligned
         }
     }
-    
-    // Redo
+
+
     fun redo() {
         if (historyIndex < historyStack.size - 1) {
             historyIndex++
@@ -122,17 +122,17 @@ fun ManualLrcAlignerDialog(
             alignedIndices = state.aligned
         }
     }
-    
-    // Play器状态
+
+
     var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
     var isPlaying by remember { mutableStateOf(false) }
     var currentPosition by remember { mutableLongStateOf(0L) }
     var duration by remember { mutableLongStateOf(0L) }
-    
-    // List滚动状态
+
+
     val listState = rememberLazyListState()
-    
-    // Initialize播放器
+
+
     LaunchedEffect(bgm.path) {
         try {
             mediaPlayer = MediaPlayer().apply {
@@ -151,8 +151,8 @@ fun ManualLrcAlignerDialog(
             AppLogger.e("ManualLrcAligner", "初始化播放器失败", e)
         }
     }
-    
-    // Update播放进度
+
+
     LaunchedEffect(isPlaying) {
         while (isPlaying) {
             mediaPlayer?.let { mp ->
@@ -160,19 +160,19 @@ fun ManualLrcAlignerDialog(
                     currentPosition = mp.currentPosition.toLong()
                 }
             }
-            delay(50) // 50ms 更新一次，更精确
+            delay(50)
         }
     }
-    
-    // Cleanup播放器
+
+
     DisposableEffect(Unit) {
         onDispose {
             mediaPlayer?.release()
             mediaPlayer = null
         }
     }
-    
-    // 格式化时间
+
+
     fun formatTime(ms: Long): String {
         val totalSeconds = ms / 1000
         val minutes = totalSeconds / 60
@@ -180,38 +180,38 @@ fun ManualLrcAlignerDialog(
         val millis = (ms % 1000) / 10
         return "%02d:%02d.%02d".format(minutes, seconds, millis)
     }
-    
-    // Handle对齐点击
+
+
     fun onAlignClick() {
         if (currentAlignIndex < lyricLines.size) {
-            // Save当前状态到历史（打点前）
+
             saveToHistory()
-            
+
             val newTimestamps = timestamps.toMutableList()
-            // 确保列表足够长
+
             while (newTimestamps.size <= currentAlignIndex) {
                 newTimestamps.add(0L)
             }
             newTimestamps[currentAlignIndex] = currentPosition
             timestamps = newTimestamps
-            // 标记当前行已对齐
+
             alignedIndices = alignedIndices + currentAlignIndex
-            
-            // 移动到下一行
+
+
             if (currentAlignIndex < lyricLines.size - 1) {
                 currentAlignIndex++
-                // 滚动到当前行
+
                 scope.launch {
                     listState.animateScrollToItem(maxOf(0, currentAlignIndex - 2))
                 }
             }
-            
-            // Save打点后的状态
+
+
             saveToHistory()
         }
     }
-    
-    // Build最终的 LrcData
+
+
     fun buildLrcData(): LrcData {
         val lines = lyricLines.mapIndexed { index, text ->
             val startTime = timestamps.getOrElse(index) { 0L }
@@ -220,7 +220,7 @@ fun ManualLrcAlignerDialog(
         }
         return LrcData(lines = lines)
     }
-    
+
     Dialog(
         onDismissRequest = {
             mediaPlayer?.release()
@@ -239,9 +239,9 @@ fun ManualLrcAlignerDialog(
             tonalElevation = 6.dp
         ) {
             Column(modifier = Modifier.fillMaxSize().systemBarsPadding().padding(bottom = 64.dp)) {
-                // 标题栏 - 包含步骤导航按钮
+
                 TopAppBar(
-                    title = { 
+                    title = {
                         Text(when (currentStep) {
                             1 -> com.webtoapp.core.i18n.Strings.inputLyrics
                             2 -> com.webtoapp.core.i18n.Strings.timeAlignment
@@ -250,7 +250,7 @@ fun ManualLrcAlignerDialog(
                     },
                     navigationIcon = {
                         if (currentStep == 1) {
-                            // 步骤1：关闭按钮
+
                             IconButton(onClick = {
                                 mediaPlayer?.release()
                                 mediaPlayer = null
@@ -259,7 +259,7 @@ fun ManualLrcAlignerDialog(
                                 Icon(Icons.Default.Close, com.webtoapp.core.i18n.Strings.close)
                             }
                         } else {
-                            // 步骤2/3：返回上一步
+
                             IconButton(onClick = {
                                 when (currentStep) {
                                     2 -> { currentStep = 1 }
@@ -271,7 +271,7 @@ fun ManualLrcAlignerDialog(
                         }
                     },
                     actions = {
-                        // 步骤指示器
+
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(4.dp),
                             verticalAlignment = Alignment.CenterVertically
@@ -290,8 +290,8 @@ fun ManualLrcAlignerDialog(
                                 )
                             }
                         }
-                        
-                        // 步骤导航：下一步/保存按钮
+
+
                         when (currentStep) {
                             1 -> {
                                 val lineCount = lyricsText.lines().filter { it.trim().isNotEmpty() }.size
@@ -344,8 +344,8 @@ fun ManualLrcAlignerDialog(
                         }
                     }
                 )
-                
-                // 音乐信息
+
+
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -377,13 +377,13 @@ fun ManualLrcAlignerDialog(
                         }
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
-                // 内容区域
+
+
                 when (currentStep) {
                     1 -> {
-                        // 步骤1：输入歌词
+
                         LyricsInputStep(
                             lyricsText = lyricsText,
                             onTextChange = { lyricsText = it },
@@ -393,7 +393,7 @@ fun ManualLrcAlignerDialog(
                         )
                     }
                     2 -> {
-                        // 步骤2：时间对齐
+
                         AlignmentStep(
                             lyricLines = lyricLines,
                             timestamps = timestamps,
@@ -453,7 +453,7 @@ fun ManualLrcAlignerDialog(
                         )
                     }
                     3 -> {
-                        // 步骤3：预览确认
+
                         PreviewStep(
                             lrcData = buildLrcData(),
                             mediaPlayer = mediaPlayer,
@@ -487,9 +487,9 @@ fun ManualLrcAlignerDialog(
     }
 }
 
-/**
- * 步骤1：歌词输入
- */
+
+
+
 @Composable
 private fun LyricsInputStep(
     lyricsText: String,
@@ -502,42 +502,42 @@ private fun LyricsInputStep(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
-        // Lyrics输入框
+
+
         OutlinedTextField(
             value = lyricsText,
             onValueChange = onTextChange,
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(weight = 1f, fill = true),
-            placeholder = { 
+            placeholder = {
                 Text(
                     com.webtoapp.core.i18n.Strings.lyricsPlaceholder,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                ) 
+                )
             },
             textStyle = MaterialTheme.typography.bodyMedium.copy(lineHeight = 24.sp)
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
-        // 统计信息
+
+
         val lineCount = lyricsText.lines().filter { it.trim().isNotEmpty() }.size
         Text(
             com.webtoapp.core.i18n.Strings.totalLinesCount.format(lineCount),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
     }
 }
 
-/**
- * 步骤2：时间对齐
- */
+
+
+
 @Composable
 private fun AlignmentStep(
     lyricLines: List<String>,
@@ -562,32 +562,32 @@ private fun AlignmentStep(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
-        // 说明
+
         Text(
             com.webtoapp.core.i18n.Strings.alignmentHint,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
-        // 根据播放位置自动追踪当前播放行（基于已对齐的时间戳）
+
+
         val scope = rememberCoroutineScope()
         var playingLineIndex by remember { mutableIntStateOf(-1) }
-        
+
         LaunchedEffect(currentPosition, alignedIndices) {
             if (alignedIndices.isEmpty()) {
                 playingLineIndex = -1
                 return@LaunchedEffect
             }
-            // 在已对齐的行中，找到最后一个 timestamp <= currentPosition 的行
+
             val newIndex = timestamps.indices
                 .filter { it in alignedIndices }
                 .lastOrNull { timestamps[it] <= currentPosition }
                 ?: -1
             if (newIndex != playingLineIndex && newIndex >= 0) {
                 playingLineIndex = newIndex
-                // 自动滚动到当前播放行（但不干扰用户手动选择的对齐行）
+
                 if (isPlaying) {
                     scope.launch {
                         listState.animateScrollToItem(maxOf(0, newIndex - 2))
@@ -595,8 +595,8 @@ private fun AlignmentStep(
                 }
             }
         }
-        
-        // Lyrics列表
+
+
         LazyColumn(
             state = listState,
             modifier = Modifier
@@ -609,7 +609,7 @@ private fun AlignmentStep(
                 val isCurrent = index == currentAlignIndex
                 val isPlayingLine = index == playingLineIndex && isPlaying
                 val timestamp = timestamps.getOrElse(index) { 0L }
-                
+
                 AlignmentLineItem(
                     index = index,
                     line = line,
@@ -623,10 +623,10 @@ private fun AlignmentStep(
                 )
             }
         }
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
-        // Play控制区
+
+
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
@@ -634,7 +634,7 @@ private fun AlignmentStep(
             )
         ) {
             Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-                // 进度条
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
@@ -657,14 +657,14 @@ private fun AlignmentStep(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                
-                // 控制按钮
+
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Undo按钮
+
                     IconButton(
                         onClick = onUndo,
                         enabled = canUndo
@@ -672,19 +672,19 @@ private fun AlignmentStep(
                         Icon(
                             Icons.Default.KeyboardArrowLeft,
                             com.webtoapp.core.i18n.Strings.undo,
-                            tint = if (canUndo) 
-                                MaterialTheme.colorScheme.primary 
-                            else 
+                            tint = if (canUndo)
+                                MaterialTheme.colorScheme.primary
+                            else
                                 MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
                         )
                     }
-                    
-                    // 后退3秒
+
+
                     IconButton(onClick = onRewind) {
                         Icon(Icons.Default.Replay, com.webtoapp.core.i18n.Strings.rewind3s)
                     }
-                    
-                    // Play/暂停
+
+
                     FilledIconButton(
                         onClick = onPlay,
                         modifier = Modifier.size(48.dp)
@@ -695,21 +695,21 @@ private fun AlignmentStep(
                             modifier = Modifier.size(28.dp)
                         )
                     }
-                    
-                    // 打点按钮（核心功能）
+
+
                     val buttonScale by animateFloatAsState(
                         targetValue = if (isPlaying) 1.1f else 1f,
                         label = "scale"
                     )
-                    
+
                     FilledTonalButton(
                         onClick = {
-                            // 确保点击事件被正确处理
+
                             onAlignClick()
                         },
                         modifier = Modifier
                             .height(48.dp)
-                            .widthIn(min = 100.dp) // 确保有足够的点击区域
+                            .widthIn(min = 100.dp)
                             .then(
                                 if (buttonScale != 1f) {
                                     Modifier.scale(buttonScale)
@@ -726,8 +726,8 @@ private fun AlignmentStep(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(com.webtoapp.core.i18n.Strings.tap, fontWeight = FontWeight.Bold)
                     }
-                    
-                    // 重新打点按钮 - 清除当前行时间戳
+
+
                     val currentTimestamp = timestamps.getOrElse(currentAlignIndex) { 0L }
                     IconButton(
                         onClick = { onEditTimestamp(currentAlignIndex, 0L) },
@@ -736,14 +736,14 @@ private fun AlignmentStep(
                         Icon(
                             Icons.Default.Refresh,
                             com.webtoapp.core.i18n.Strings.reTap,
-                            tint = if (currentTimestamp > 0) 
-                                MaterialTheme.colorScheme.error 
-                            else 
+                            tint = if (currentTimestamp > 0)
+                                MaterialTheme.colorScheme.error
+                            else
                                 MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
                         )
                     }
-                    
-                    // Redo按钮
+
+
                     IconButton(
                         onClick = onRedo,
                         enabled = canRedo
@@ -751,15 +751,15 @@ private fun AlignmentStep(
                         Icon(
                             Icons.Default.KeyboardArrowRight,
                             com.webtoapp.core.i18n.Strings.redo,
-                            tint = if (canRedo) 
-                                MaterialTheme.colorScheme.primary 
-                            else 
+                            tint = if (canRedo)
+                                MaterialTheme.colorScheme.primary
+                            else
                                 MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
                         )
                     }
                 }
-                
-                // 当前对齐进度
+
+
                 Spacer(modifier = Modifier.height(4.dp))
                 LinearProgressIndicator(
                     progress = { (currentAlignIndex + 1).toFloat() / lyricLines.size },
@@ -773,14 +773,14 @@ private fun AlignmentStep(
                 )
             }
         }
-        
+
         Spacer(modifier = Modifier.height(8.dp))
     }
 }
 
-/**
- * 对齐行项目
- */
+
+
+
 @Composable
 private fun AlignmentLineItem(
     index: Int,
@@ -802,7 +802,7 @@ private fun AlignmentLineItem(
         },
         label = "bg"
     )
-    
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -814,36 +814,36 @@ private fun AlignmentLineItem(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 行号
+
             Text(
                 "${index + 1}",
                 style = MaterialTheme.typography.labelSmall,
                 color = if (isPlayingLine) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.width(24.dp)
             )
-            
-            // Time戳
+
+
             Surface(
                 shape = RoundedCornerShape(4.dp),
-                color = if (isAligned) 
+                color = if (isAligned)
                     MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                else 
+                else
                     MaterialTheme.colorScheme.surfaceVariant
             ) {
                 Text(
                     if (isAligned) "[${formatTime(timestamp)}]" else "[--:--.--]",
                     style = MaterialTheme.typography.labelSmall,
-                    color = if (isAligned) 
-                        MaterialTheme.colorScheme.primary 
-                    else 
+                    color = if (isAligned)
+                        MaterialTheme.colorScheme.primary
+                    else
                         MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                 )
             }
-            
+
             Spacer(modifier = Modifier.width(12.dp))
-            
-            // Lyrics内容
+
+
             Text(
                 line,
                 style = MaterialTheme.typography.bodyMedium,
@@ -857,8 +857,8 @@ private fun AlignmentLineItem(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(weight = 1f, fill = true)
             )
-            
-            // 状态图标
+
+
             when {
                 isPlayingLine -> {
                     Icon(
@@ -889,9 +889,9 @@ private fun AlignmentLineItem(
     }
 }
 
-/**
- * 步骤3：预览确认
- */
+
+
+
 @Composable
 private fun PreviewStep(
     lrcData: LrcData,
@@ -906,11 +906,11 @@ private fun PreviewStep(
 ) {
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
-    
-    // 当前高亮的行
+
+
     var currentLineIndex by remember { mutableIntStateOf(-1) }
-    
-    // 根据播放位置更新高亮行
+
+
     LaunchedEffect(currentPosition) {
         val newIndex = lrcData.lines.indexOfLast { it.startTime <= currentPosition }
         if (newIndex != currentLineIndex && newIndex >= 0) {
@@ -920,17 +920,17 @@ private fun PreviewStep(
             }
         }
     }
-    
+
     Column(modifier = modifier) {
         Text(
             com.webtoapp.core.i18n.Strings.previewLrcHint,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
-        // Lyrics预览
+
+
         LazyColumn(
             state = listState,
             modifier = Modifier
@@ -945,9 +945,9 @@ private fun PreviewStep(
                 val isCurrent = index == currentLineIndex
                 Text(
                     text = line.text,
-                    style = if (isCurrent) 
-                        MaterialTheme.typography.titleMedium 
-                    else 
+                    style = if (isCurrent)
+                        MaterialTheme.typography.titleMedium
+                    else
                         MaterialTheme.typography.bodyMedium,
                     fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
                     color = if (isCurrent)
@@ -961,10 +961,10 @@ private fun PreviewStep(
                 )
             }
         }
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
-        // Play控制
+
+
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
@@ -995,7 +995,7 @@ private fun PreviewStep(
                         style = MaterialTheme.typography.labelSmall
                     )
                 }
-                
+
                 FilledIconButton(
                     onClick = onPlay,
                     modifier = Modifier.size(48.dp)
@@ -1008,7 +1008,7 @@ private fun PreviewStep(
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(8.dp))
     }
 }

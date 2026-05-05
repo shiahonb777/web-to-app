@@ -1,14 +1,14 @@
 package com.webtoapp.core.i18n
 
-/**
- * AI 提示词管理器
- * 为不同语言提供对应的 AI 提示词
- */
+
+
+
+
 object AiPromptManager {
-    
-    /**
-     * 获取模块开发系统提示词
-     */
+
+
+
+
     fun getModuleDevelopmentSystemPrompt(
         language: AppLanguage,
         categoryHint: String = "",
@@ -21,10 +21,10 @@ object AiPromptManager {
             AppLanguage.ARABIC -> getArabicSystemPrompt(categoryHint, existingCodeHint, nativeBridgeApi)
         }
     }
-    
-    /**
-     * 获取代码修复提示词
-     */
+
+
+
+
     fun getCodeFixPrompt(language: AppLanguage, errorMessages: String, code: String, attempt: Int, maxAttempts: Int): String {
         return when (language) {
             AppLanguage.CHINESE -> """
@@ -41,7 +41,7 @@ $code
 请只输出修复后的完整代码，使用 ```javascript 代码块包裹。
 不要添加任何解释，只输出代码。
             """.trimIndent()
-            
+
             AppLanguage.ENGLISH -> """
 Please fix the syntax errors in the following JavaScript code (Attempt $attempt/$maxAttempts):
 
@@ -56,7 +56,7 @@ $code
 Please output only the fixed complete code, wrapped in ```javascript code block.
 Do not add any explanations, only output the code.
             """.trimIndent()
-            
+
             AppLanguage.ARABIC -> """
 يرجى إصلاح أخطاء بناء الجملة في كود JavaScript التالي (المحاولة $attempt/$maxAttempts):
 
@@ -73,10 +73,10 @@ $code
             """.trimIndent()
         }
     }
-    
-    /**
-     * 获取代码修复系统提示词
-     */
+
+
+
+
     fun getCodeFixSystemPrompt(language: AppLanguage): String {
         return when (language) {
             AppLanguage.CHINESE -> "你是一个 JavaScript 代码修复专家。请修复代码中的语法错误，保持原有功能不变。只输出修复后的代码，不要添加任何解释。"
@@ -84,10 +84,10 @@ $code
             AppLanguage.ARABIC -> "أنت خبير في إصلاح كود JavaScript. يرجى إصلاح أخطاء بناء الجملة في الكود مع الحفاظ على الوظائف الأصلية. أخرج الكود المصحح فقط، لا تضف أي تفسيرات."
         }
     }
-    
-    /**
-     * 获取用户消息模板
-     */
+
+
+
+
     fun getUserMessageTemplate(
         language: AppLanguage,
         requirement: String,
@@ -106,7 +106,7 @@ $code
                 }
                 append("\n请生成完整的模块代码，并确保代码质量和安全性。")
             }
-            
+
             AppLanguage.ENGLISH -> buildString {
                 append("Please develop an extension module based on the following requirements:\n\n")
                 append("**Requirement Description**: $requirement\n")
@@ -118,7 +118,7 @@ $code
                 }
                 append("\nPlease generate complete module code and ensure code quality and security.")
             }
-            
+
             AppLanguage.ARABIC -> buildString {
                 append("يرجى تطوير وحدة إضافية بناءً على المتطلبات التالية:\n\n")
                 append("**وصف المتطلبات**: $requirement\n")
@@ -132,8 +132,8 @@ $code
             }
         }
     }
-    
-    // ==================== 中文系统提示词 ====================
+
+
     private fun getChineseSystemPrompt(categoryHint: String, existingCodeHint: String, nativeBridgeApi: String): String = """
 你是一个专业的 WebToApp 扩展模块开发专家。你的任务是根据用户需求生成高质量的扩展模块代码。
 
@@ -169,9 +169,9 @@ $nativeBridgeApi
 9. 优先使用 NativeBridge API 实现原生功能（如保存图片、分享、震动等）
 
 ## 模块分类
-可用分类：CONTENT_FILTER(内容过滤), CONTENT_ENHANCE(内容增强), STYLE_MODIFIER(样式修改), 
+可用分类：CONTENT_FILTER(内容过滤), CONTENT_ENHANCE(内容增强), STYLE_MODIFIER(样式修改),
 THEME(主题美化), FUNCTION_ENHANCE(功能增强), AUTOMATION(自动化), NAVIGATION(导航辅助),
-DATA_EXTRACT(数据提取), MEDIA(媒体处理), VIDEO(视频增强), IMAGE(图片处理), 
+DATA_EXTRACT(数据提取), MEDIA(媒体处理), VIDEO(视频增强), IMAGE(图片处理),
 SECURITY(安全隐私), DEVELOPER(开发调试), OTHER(其他)
 
 ## 执行时机
@@ -216,8 +216,8 @@ $existingCodeHint
 4. config_items 用于让用户自定义模块行为，如果不需要配置项则留空数组
 5. 当需要保存图片/视频、分享、复制、震动等原生功能时，使用 NativeBridge API
     """.trimIndent()
-    
-    // ==================== 英文系统提示词 ====================
+
+
     private fun getEnglishSystemPrompt(categoryHint: String, existingCodeHint: String, nativeBridgeApi: String): String = """
 You are a professional WebToApp extension module development expert. Your task is to generate high-quality extension module code based on user requirements.
 
@@ -253,9 +253,9 @@ $nativeBridgeApi
 9. Prefer NativeBridge API for native features (like saving images, sharing, vibration, etc.)
 
 ## Module Categories
-Available categories: CONTENT_FILTER, CONTENT_ENHANCE, STYLE_MODIFIER, 
+Available categories: CONTENT_FILTER, CONTENT_ENHANCE, STYLE_MODIFIER,
 THEME, FUNCTION_ENHANCE, AUTOMATION, NAVIGATION,
-DATA_EXTRACT, MEDIA, VIDEO, IMAGE, 
+DATA_EXTRACT, MEDIA, VIDEO, IMAGE,
 SECURITY, DEVELOPER, OTHER
 
 ## Execution Timing
@@ -300,8 +300,8 @@ Please strictly follow the JSON format below, do not add any other content:
 4. config_items is for users to customize module behavior, leave empty array if no config items needed
 5. Use NativeBridge API when native features like saving images/videos, sharing, copying, vibration are needed
     """.trimIndent()
-    
-    // ==================== 阿拉伯语系统提示词 ====================
+
+
     private fun getArabicSystemPrompt(categoryHint: String, existingCodeHint: String, nativeBridgeApi: String): String = """
 أنت خبير محترف في تطوير وحدات إضافات WebToApp. مهمتك هي إنشاء كود وحدات إضافية عالية الجودة بناءً على متطلبات المستخدم.
 
@@ -337,9 +337,9 @@ $nativeBridgeApi
 9. فضّل استخدام NativeBridge API للميزات الأصلية (مثل حفظ الصور، المشاركة، الاهتزاز، إلخ)
 
 ## فئات الوحدات
-الفئات المتاحة: CONTENT_FILTER (تصفية المحتوى), CONTENT_ENHANCE (تحسين المحتوى), STYLE_MODIFIER (تعديل الأنماط), 
+الفئات المتاحة: CONTENT_FILTER (تصفية المحتوى), CONTENT_ENHANCE (تحسين المحتوى), STYLE_MODIFIER (تعديل الأنماط),
 THEME (تجميل السمات), FUNCTION_ENHANCE (تحسين الوظائف), AUTOMATION (الأتمتة), NAVIGATION (مساعدة التنقل),
-DATA_EXTRACT (استخراج البيانات), MEDIA (معالجة الوسائط), VIDEO (تحسين الفيديو), IMAGE (معالجة الصور), 
+DATA_EXTRACT (استخراج البيانات), MEDIA (معالجة الوسائط), VIDEO (تحسين الفيديو), IMAGE (معالجة الصور),
 SECURITY (الأمان والخصوصية), DEVELOPER (تصحيح التطوير), OTHER (أخرى)
 
 ## توقيت التنفيذ
@@ -384,12 +384,12 @@ $existingCodeHint
 4. config_items للمستخدمين لتخصيص سلوك الوحدة، اترك مصفوفة فارغة إذا لم تكن هناك حاجة لعناصر التكوين
 5. استخدم NativeBridge API عند الحاجة إلى ميزات أصلية مثل حفظ الصور/الفيديو، المشاركة، النسخ، الاهتزاز
     """.trimIndent()
-    
-    // ==================== HTML 编程 AI 提示词 ====================
-    
-    /**
-     * 获取 HTML 编程系统提示词
-     */
+
+
+
+
+
+
     fun getAiCodingSystemPrompt(
         language: AppLanguage,
         rules: List<String> = emptyList(),
@@ -409,7 +409,7 @@ $existingCodeHint
             AppLanguage.ARABIC -> buildAiCodingPromptArabic(rules, hasImageModel, templateName, templateDesc, templatePromptHint, colorScheme, styleName, styleDesc, styleKeywords, styleColors)
         }
     }
-    
+
     private fun buildAiCodingPromptChinese(
         rules: List<String>,
         hasImageModel: Boolean,
@@ -457,7 +457,7 @@ $existingCodeHint
             appendLine("使用generate_image工具生成图片，返回base64可直接用于img src")
         }
     }.trimEnd()
-    
+
     private fun buildAiCodingPromptEnglish(
         rules: List<String>,
         hasImageModel: Boolean,
@@ -505,7 +505,7 @@ $existingCodeHint
             appendLine("Use generate_image tool to generate images, returns base64 for direct use in img src")
         }
     }.trimEnd()
-    
+
     private fun buildAiCodingPromptArabic(
         rules: List<String>,
         hasImageModel: Boolean,
@@ -553,12 +553,12 @@ $existingCodeHint
             appendLine("استخدم أداة generate_image لتوليد الصور، تُرجع base64 للاستخدام المباشر في img src")
         }
     }.trimEnd()
-    
-    // ==================== AI 编程（多类型）系统提示词 ====================
-    
-    /**
-     * 获取 AI 编程系统提示词（根据编程类型）
-     */
+
+
+
+
+
+
     fun getAiCodingSystemPrompt(
         language: AppLanguage,
         codingType: String,
@@ -570,7 +570,7 @@ $existingCodeHint
             AppLanguage.ARABIC -> buildAiCodingPromptArabic(codingType, rules)
         }
     }
-    
+
     private fun buildAiCodingPromptChinese(codingType: String, rules: List<String>): String = buildString {
         when (codingType) {
             "HTML" -> {
@@ -666,7 +666,7 @@ $existingCodeHint
             appendLine()
         }
     }.trimEnd()
-    
+
     private fun buildAiCodingPromptEnglish(codingType: String, rules: List<String>): String = buildString {
         when (codingType) {
             "HTML" -> {
@@ -762,7 +762,7 @@ $existingCodeHint
             appendLine()
         }
     }.trimEnd()
-    
+
     private fun buildAiCodingPromptArabic(codingType: String, rules: List<String>): String = buildString {
         when (codingType) {
             "HTML" -> {

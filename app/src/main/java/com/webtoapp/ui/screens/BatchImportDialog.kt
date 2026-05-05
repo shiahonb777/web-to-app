@@ -23,9 +23,9 @@ import com.webtoapp.core.stats.BatchImportService
 import kotlinx.coroutines.launch
 import androidx.compose.ui.graphics.Color
 
-/**
- * 批量导入对话框
- */
+
+
+
 @Composable
 fun BatchImportDialog(
     importService: BatchImportService,
@@ -34,14 +34,14 @@ fun BatchImportDialog(
 ) {
     val context = LocalContext.current
     val importScope = rememberCoroutineScope()
-    
+
     var inputText by remember { mutableStateOf("") }
     var parsedEntries by remember { mutableStateOf<List<BatchImportService.ParsedEntry>>(emptyList()) }
     var isImporting by remember { mutableStateOf(false) }
     var importResult by remember { mutableStateOf<Int?>(null) }
     var selectedTab by remember { mutableIntStateOf(0) }
-    
-    // 书签文件选择器
+
+
     val bookmarkLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -51,7 +51,7 @@ fun BatchImportDialog(
             }
         }
     }
-    
+
     AlertDialog(
         onDismissRequest = { if (!isImporting) onDismiss() },
         title = { Text(Strings.batchImportTitle) },
@@ -62,7 +62,7 @@ fun BatchImportDialog(
                     .heightIn(max = 500.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Tab 切换
+
                 TabRow(selectedTabIndex = selectedTab) {
                     Tab(
                         selected = selectedTab == 0,
@@ -77,10 +77,10 @@ fun BatchImportDialog(
                         icon = { Icon(Icons.Outlined.Bookmarks, null, Modifier.size(16.dp)) }
                     )
                 }
-                
+
                 when (selectedTab) {
                     0 -> {
-                        // 文本输入
+
                         OutlinedTextField(
                             value = inputText,
                             onValueChange = {
@@ -95,7 +95,7 @@ fun BatchImportDialog(
                         )
                     }
                     1 -> {
-                        // 书签文件导入
+
                         PremiumOutlinedButton(
                             onClick = { bookmarkLauncher.launch("text/html") },
                             modifier = Modifier.fillMaxWidth()
@@ -106,8 +106,8 @@ fun BatchImportDialog(
                         }
                     }
                 }
-                
-                // 解析结果预览
+
+
                 if (parsedEntries.isNotEmpty()) {
                     HorizontalDivider()
                     Text(
@@ -115,7 +115,7 @@ fun BatchImportDialog(
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.primary
                     )
-                    
+
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -160,8 +160,8 @@ fun BatchImportDialog(
                         }
                     }
                 }
-                
-                // 导入结果
+
+
                 if (importResult != null) {
                     Surface(
                         shape = MaterialTheme.shapes.small,

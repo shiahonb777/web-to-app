@@ -7,12 +7,9 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -32,26 +29,27 @@ import com.webtoapp.core.golang.GoSampleManager
 import com.webtoapp.data.model.GoAppConfig
 import com.webtoapp.ui.components.TypedSampleProjectsCard
 import com.webtoapp.ui.components.*
+import com.webtoapp.ui.screens.create.WtaCreateFlowScaffold
+import com.webtoapp.ui.screens.create.WtaCreateFlowSection
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.first
 import java.io.File
-import com.webtoapp.ui.components.ThemedBackgroundBox
 
-/**
- * 创建/编辑 Go 服务应用页面
- * 
- * 增强功能：
- * - 框架品牌化 Hero 区域（Gin=蓝, Fiber=紫, Echo=青, Chi=红）
- * - go.mod 信息面板（模块路径、Go 版本、依赖数量）
- * - 预编译二进制检测卡片（文件名、大小、ELF 检查）
- * - 目标架构可视化选择器（ARM64, ARM, x86_64）
- * - 静态文件目录配置
- * - 健康检查端点配置
- * - 依赖列表面板
- * - 框架特定提示
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun CreateGoAppScreen(
@@ -66,48 +64,47 @@ fun CreateGoAppScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val scrollState = rememberScrollState()
     val isEdit = existingAppId > 0L
-    
-    // App 信息
+
+
     var appName by remember { mutableStateOf("") }
     var appIcon by remember { mutableStateOf<Uri?>(null) }
-    
-    // Go 配置
+
+
     var binaryName by remember { mutableStateOf("") }
     var staticDir by remember { mutableStateOf("") }
     var landscapeMode by remember { mutableStateOf(false) }
     var envVars by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     var newEnvKey by remember { mutableStateOf("") }
     var newEnvValue by remember { mutableStateOf("") }
-    
-    // 项目检测
+
+
     var selectedProjectDir by remember { mutableStateOf<String?>(null) }
     var detectedFramework by remember { mutableStateOf<String?>(null) }
     var projectId by remember { mutableStateOf<String?>(null) }
-    
-    // 增强：go.mod 信息
+
+
     var goModulePath by remember { mutableStateOf<String?>(null) }
     var goVersion by remember { mutableStateOf<String?>(null) }
     var goDeps by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
     var showAllDeps by remember { mutableStateOf(false) }
-    
-    // 增强：二进制检测
+
+
     var binarySize by remember { mutableStateOf<Long?>(null) }
     var binaryDetected by remember { mutableStateOf(false) }
-    
-    // 增强：目标架构
+
+
     var targetArch by remember { mutableStateOf("arm64") }
-    
-    // 增强：健康检查
+
+
     var healthCheckEndpoint by remember { mutableStateOf("/health") }
-    
-    // 状态
+
+
     var isCreating by remember { mutableStateOf(false) }
     var creationPhase by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    
-    // 编辑模式：加载已有数据
+
+
     LaunchedEffect(existingAppId) {
         if (existingAppId > 0L) {
             val existingApp = org.koin.java.KoinJavaComponent.get<com.webtoapp.data.repository.WebAppRepository>(com.webtoapp.data.repository.WebAppRepository::class.java)
@@ -127,11 +124,11 @@ fun CreateGoAppScreen(
             }
         }
     }
-    
+
     val iconPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri -> uri?.let { appIcon = it } }
-    
+
     val folderPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocumentTree()
     ) { uri ->
@@ -140,7 +137,7 @@ fun CreateGoAppScreen(
                 isCreating = true
                 creationPhase = Strings.frameworkDetected
                 errorMessage = null
-                
+
                 try {
                     withContext(Dispatchers.IO) {
                         val docId = android.provider.DocumentsContract.getTreeDocumentId(treeUri)
@@ -152,25 +149,25 @@ fun CreateGoAppScreen(
                         }
                         val projectPath = "$storageRoot/$path"
                         val projectDir = File(projectPath)
-                        
+
                         if (!projectDir.exists()) {
                             errorMessage = Strings.dirNotExists
                             isCreating = false
                             return@withContext
                         }
-                        
+
                         selectedProjectDir = projectPath
-                        
+
                         val runtime = GoRuntime(context)
                         val framework = runtime.detectFramework(projectDir)
                         detectedFramework = framework
-                        
-                        // 检测预编译二进制
+
+
                         val detectedBinary = runtime.detectBinary(projectDir)
                         if (detectedBinary != null) {
                             binaryName = detectedBinary
                             binaryDetected = true
-                            // 获取文件大小
+
                             val searchDirs = listOf(projectDir, File(projectDir, "bin"), File(projectDir, "build"))
                             for (dir in searchDirs) {
                                 val binFile = File(dir, detectedBinary)
@@ -180,32 +177,32 @@ fun CreateGoAppScreen(
                                 }
                             }
                         }
-                        
-                        // 检测静态文件目录
+
+
                         val detectedStaticDir = runtime.detectStaticDir(projectDir)
                         if (detectedStaticDir.isNotEmpty()) {
                             staticDir = detectedStaticDir
                         }
-                        
-                        // 增强：解析 go.mod
+
+
                         val goMod = File(projectDir, "go.mod")
                         if (goMod.exists()) {
                             try {
                                 val content = goMod.readText()
                                 val lines = content.lines()
-                                
-                                // 模块路径
+
+
                                 lines.firstOrNull { it.startsWith("module ") }?.let { line ->
                                     goModulePath = line.substringAfter("module ").trim()
                                     if (appName.isBlank()) appName = goModulePath!!.substringAfterLast("/")
                                 }
-                                
-                                // Go 版本
+
+
                                 lines.firstOrNull { it.startsWith("go ") }?.let { line ->
                                     goVersion = line.substringAfter("go ").trim()
                                 }
-                                
-                                // 解析直接依赖
+
+
                                 var inRequire = false
                                 val deps = mutableListOf<Pair<String, String>>()
                                 for (line in lines) {
@@ -226,7 +223,7 @@ fun CreateGoAppScreen(
                                             }
                                         }
                                     }
-                                    // 单行 require
+
                                     if (trimmed.startsWith("require ") && !trimmed.contains("(")) {
                                         val reqParts = trimmed.removePrefix("require ").trim().split(" ", limit = 2)
                                         if (reqParts.size == 2) {
@@ -237,8 +234,8 @@ fun CreateGoAppScreen(
                                 goDeps = deps
                             } catch (e: Exception) { android.util.Log.w("CreateGoApp", "Failed to parse go.mod", e) }
                         }
-                        
-                        // 复制项目文件
+
+
                         creationPhase = Strings.copyingProjectFiles
                         val newProjectId = java.util.UUID.randomUUID().toString()
                         runtime.createProject(newProjectId, projectDir)
@@ -253,10 +250,10 @@ fun CreateGoAppScreen(
             }
         }
     }
-    
+
     val canCreate = projectId != null
-    
-    // 获取框架品牌色
+
+
     val frameworkColor = remember(detectedFramework) {
         when (detectedFramework?.lowercase()) {
             "gin" -> Color(0xFF0090FF)
@@ -264,65 +261,52 @@ fun CreateGoAppScreen(
             "echo" -> Color(0xFF00BCD4)
             "chi" -> AppColors.Error
             "net_http" -> Color(0xFF00ADD8)
-            else -> Color(0xFF00ADD8) // Go 默认蓝
+            else -> Color(0xFF00ADD8)
         }
     }
-    
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            TopAppBar(
-                title = { Text(Strings.createGoApp) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+
+    WtaCreateFlowScaffold(
+        title = Strings.createGoApp,
+        onBack = onBack,
+        actions = {
+            TextButton(
+                onClick = {
+                    projectId?.let { pid ->
+                        onCreated(
+                            appName.ifBlank { Strings.createGoApp },
+                            GoAppConfig(
+                                projectId = pid,
+                                projectName = appName.ifBlank { Strings.createGoApp },
+                                framework = detectedFramework ?: "raw",
+                                binaryName = binaryName,
+                                envVars = envVars,
+                                staticDir = staticDir,
+                                hasBuildFromSource = binaryName.isEmpty(),
+                                landscapeMode = landscapeMode
+                            ),
+                            appIcon,
+                            "AURORA"
+                        )
                     }
                 },
-                actions = {
-                    TextButton(
-                        onClick = {
-                            projectId?.let { pid ->
-                                onCreated(
-                                    appName.ifBlank { "Go Service" },
-                                    GoAppConfig(
-                                        projectId = pid,
-                                        projectName = appName.ifBlank { "Go Service" },
-                                        framework = detectedFramework ?: "raw",
-                                        binaryName = binaryName,
-                                        envVars = envVars,
-                                        staticDir = staticDir,
-                                        hasBuildFromSource = binaryName.isEmpty(),
-                                        landscapeMode = landscapeMode
-                                    ),
-                                    appIcon, "AURORA"
-                                )
-                            }
-                        },
-                        enabled = canCreate && !isCreating
-                    ) { Text(if (isEdit) Strings.btnSave else Strings.btnCreate) }
-                }
-            )
+                enabled = canCreate && !isCreating
+            ) {
+                Text(if (isEdit) Strings.btnSave else Strings.btnCreate)
+            }
         }
-    ) { padding ->
-        ThemedBackgroundBox(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
+    ) {
         Column(
-            modifier = Modifier.fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // ========== 1. 框架品牌化 Hero 区域 ==========
+            WtaCreateFlowSection(title = Strings.importProject) {
+
             GoHeroSection(
                 detectedFramework = detectedFramework,
                 frameworkColor = frameworkColor,
                 goVersion = goVersion
             )
-            
-            // ========== 示例项目 ==========
+
+
             if (selectedProjectDir == null) {
                 TypedSampleProjectsCard(
                     title = Strings.sampleProjects,
@@ -362,8 +346,8 @@ fun CreateGoAppScreen(
                     }
                 )
             }
-            
-            // ========== 2. 基本配置（仅新建时显示，编辑时在通用配置中设置） ==========
+
+
             if (!isEdit) {
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
@@ -381,15 +365,15 @@ fun CreateGoAppScreen(
                     )
                 }
             }
-            
-            // ========== 3. 图标选择 ==========
+
+
             RuntimeIconPickerCard(
                 appIcon = appIcon,
                 onSelectIcon = { iconPickerLauncher.launch("image/*") }
             )
             }
-            
-            // ========== 4. 项目选择 ==========
+
+
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     RuntimeSectionHeader(
@@ -403,7 +387,7 @@ fun CreateGoAppScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     if (selectedProjectDir != null) {
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
@@ -440,7 +424,7 @@ fun CreateGoAppScreen(
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                     }
-                    
+
                     PremiumButton(
                         onClick = { folderPickerLauncher.launch(null) },
                         enabled = !isCreating,
@@ -452,11 +436,13 @@ fun CreateGoAppScreen(
                     }
                 }
             }
-            
-            // ========== 以下卡片仅在项目选择后显示 ==========
+            }
+
+
+            WtaCreateFlowSection(title = Strings.appConfig) {
             if (projectId != null) {
-                
-                // ========== 5. Go 模块信息面板 ==========
+
+
                 if (goModulePath != null) {
                     GoModuleInfoCard(
                         modulePath = goModulePath!!,
@@ -465,8 +451,8 @@ fun CreateGoAppScreen(
                         frameworkColor = frameworkColor
                     )
                 }
-                
-                // ========== 6. 二进制检测卡片 ==========
+
+
                 GoBinaryDetectionCard(
                     binaryDetected = binaryDetected,
                     binaryName = binaryName,
@@ -474,27 +460,27 @@ fun CreateGoAppScreen(
                     onBinaryNameChange = { binaryName = it },
                     frameworkColor = frameworkColor
                 )
-                
-                // ========== 7. 目标架构选择器 ==========
+
+
                 GoTargetArchCard(
                     targetArch = targetArch,
                     onArchChange = { targetArch = it },
                     frameworkColor = frameworkColor
                 )
-                
-                // ========== 8. 静态文件配置 ==========
+
+
                 GoStaticFilesCard(
                     staticDir = staticDir,
                     onStaticDirChange = { staticDir = it }
                 )
-                
-                // ========== 9. 健康检查端点 ==========
+
+
                 GoHealthCheckCard(
                     endpoint = healthCheckEndpoint,
                     onEndpointChange = { healthCheckEndpoint = it }
                 )
-                
-                // ========== 10. 依赖面板 ==========
+
+
                 if (goDeps.isNotEmpty()) {
                     GoDepsCard(
                         deps = goDeps,
@@ -503,11 +489,11 @@ fun CreateGoAppScreen(
                         frameworkColor = frameworkColor
                     )
                 }
-                
-                // ========== 11. 框架提示 ==========
+
+
                 GoFrameworkTipCard(framework = detectedFramework)
-                
-                // ========== 12. 环境变量 ==========
+
+
                 RuntimeEnvVarsCard(
                     envVars = envVars,
                     newEnvKey = newEnvKey,
@@ -523,27 +509,29 @@ fun CreateGoAppScreen(
                     onRemove = { key -> envVars = envVars.toMutableMap().apply { remove(key) } }
                 )
             }
-            
-            // 状态提示
-            if (isCreating) {
-                RuntimeLoadingCard(creationPhase)
             }
-            
-            errorMessage?.let { error ->
-                RuntimeErrorCard(error = error, onDismiss = { errorMessage = null })
+
+
+            WtaCreateFlowSection(title = Strings.preview) {
+                if (isCreating) {
+                    RuntimeLoadingCard(creationPhase)
+                }
+
+                errorMessage?.let { error ->
+                    RuntimeErrorCard(error = error, onDismiss = { errorMessage = null })
+                }
             }
-            
+
             Spacer(modifier = Modifier.height(32.dp))
         }
     }
-        }
 }
 
-// ==================== 私有 Composable 组件 ====================
 
-/**
- * Go 框架品牌化 Hero 区域
- */
+
+
+
+
 @Composable
 private fun GoHeroSection(
     detectedFramework: String?,
@@ -553,11 +541,11 @@ private fun GoHeroSection(
     val title = if (detectedFramework != null && detectedFramework != "raw" && detectedFramework != "net_http")
         "${detectedFramework.replaceFirstChar { it.uppercase() }} ${Strings.goHeroTitle}"
     else Strings.goHeroTitle
-    
+
     val tags = buildList {
         goVersion?.let { add("Go $it" to frameworkColor) }
     }
-    
+
     RuntimeHeroSection(
         icon = Icons.Outlined.Code,
         title = title,
@@ -567,9 +555,9 @@ private fun GoHeroSection(
     )
 }
 
-/**
- * Go 模块信息卡片
- */
+
+
+
 @Composable
 private fun GoModuleInfoCard(
     modulePath: String,
@@ -585,7 +573,7 @@ private fun GoModuleInfoCard(
                 brandColor = frameworkColor
             )
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
@@ -623,9 +611,9 @@ private fun GoModuleInfoCard(
     }
 }
 
-/**
- * 预编译二进制检测卡片
- */
+
+
+
 @Composable
 private fun GoBinaryDetectionCard(
     binaryDetected: Boolean,
@@ -641,7 +629,7 @@ private fun GoBinaryDetectionCard(
                 title = Strings.goBinaryDetection
             )
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
@@ -673,7 +661,7 @@ private fun GoBinaryDetectionCard(
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(8.dp))
             PremiumTextField(
                 value = binaryName,
@@ -686,9 +674,9 @@ private fun GoBinaryDetectionCard(
     }
 }
 
-/**
- * 目标架构选择器
- */
+
+
+
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun GoTargetArchCard(
@@ -701,7 +689,7 @@ private fun GoTargetArchCard(
         "arm" to "ARM (armv7a)",
         "x86_64" to "x86_64"
     )
-    
+
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             RuntimeSectionHeader(
@@ -709,7 +697,7 @@ private fun GoTargetArchCard(
                 title = Strings.goTargetArch
             )
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -729,9 +717,9 @@ private fun GoTargetArchCard(
     }
 }
 
-/**
- * 静态文件目录配置卡片
- */
+
+
+
 @Composable
 private fun GoStaticFilesCard(
     staticDir: String,
@@ -754,7 +742,7 @@ private fun GoStaticFilesCard(
                 value = staticDir,
                 onValueChange = onStaticDirChange,
                 label = { Text(Strings.goStaticFiles) },
-                placeholder = { Text("static/") },
+                placeholder = { Text(Strings.goStaticFilesExample) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
@@ -762,9 +750,9 @@ private fun GoStaticFilesCard(
     }
 }
 
-/**
- * 健康检查端点卡片
- */
+
+
+
 @Composable
 private fun GoHealthCheckCard(
     endpoint: String,
@@ -781,7 +769,7 @@ private fun GoHealthCheckCard(
                 value = endpoint,
                 onValueChange = onEndpointChange,
                 label = { Text(Strings.goHealthCheckEndpoint) },
-                placeholder = { Text("/health") },
+                placeholder = { Text(Strings.goHealthCheckEndpointExample) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
@@ -789,9 +777,9 @@ private fun GoHealthCheckCard(
     }
 }
 
-/**
- * 依赖面板
- */
+
+
+
 @Composable
 private fun GoDepsCard(
     deps: List<Pair<String, String>>,
@@ -820,7 +808,7 @@ private fun GoDepsCard(
                 }
             }
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             val visibleDeps = if (showAll) deps else deps.take(6)
             visibleDeps.forEach { (name, version) ->
                 Row(
@@ -853,22 +841,24 @@ private fun GoDepsCard(
     }
 }
 
-/**
- * 框架特定提示
- */
+
+
+
 @Composable
 private fun GoFrameworkTipCard(framework: String?) {
     data class Tip(val tip: String, val color: Color)
-    
-    val tipData = when (framework?.lowercase()) {
-        "gin" -> Tip("Gin: GIN_MODE auto-set to release. Router optimized for production.", Color(0xFF0090FF))
-        "fiber" -> Tip("Fiber: Prefork disabled for Android. Fasthttp engine active.", Color(0xFF8B5CF6))
-        "echo" -> Tip("Echo: Logger & recover middleware auto-configured.", Color(0xFF00BCD4))
-        "chi" -> Tip("Chi: Lightweight stdlib-compatible router. Middleware stack ready.", AppColors.Error)
-        "net_http" -> Tip("net/http: Standard library server. Graceful shutdown enabled.", Color(0xFF00ADD8))
+
+    val tipText = Strings.goFrameworkTip(framework)
+    val tipColor = when (framework?.lowercase()) {
+        "gin" -> Color(0xFF0090FF)
+        "fiber" -> Color(0xFF8B5CF6)
+        "echo" -> Color(0xFF00BCD4)
+        "chi" -> AppColors.Error
+        "net_http" -> Color(0xFF00ADD8)
         else -> null
     }
-    
+    val tipData = if (tipText != null && tipColor != null) Tip(tipText, tipColor) else null
+
     if (tipData != null) {
         Surface(
             modifier = Modifier.fillMaxWidth(),
@@ -897,9 +887,9 @@ private fun GoFrameworkTipCard(framework: String?) {
     }
 }
 
-/**
- * 格式化文件大小
- */
+
+
+
 private fun formatFileSize(bytes: Long): String {
     return when {
         bytes >= 1024 * 1024 -> String.format(java.util.Locale.getDefault(), "%.1f MB", bytes / (1024.0 * 1024.0))

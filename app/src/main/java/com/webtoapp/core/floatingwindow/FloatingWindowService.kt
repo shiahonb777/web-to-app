@@ -21,23 +21,23 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 
-/**
- * 悬浮小窗前台服务
- * 管理悬浮窗的生命周期，确保窗口不会被系统回收
- *
- * 使用前台服务是因为：
- * 1. 悬浮窗需要持续显示，不会因后台限制被杀
- * 2. Android 8.0+ 要求后台服务必须有前台通知
- * 3. 通知可以提供快捷操作（恢复/关闭）
- */
+
+
+
+
+
+
+
+
+
 class FloatingWindowService : Service() {
 
     companion object {
         private const val TAG = "FloatingWindowService"
         private const val NOTIFICATION_CHANNEL_ID = "floating_window_channel"
         private const val NOTIFICATION_ID = 2024
-        
-        // Intent extras
+
+
         const val EXTRA_CONFIG = "extra_floating_window_config"
         const val EXTRA_URL = "extra_url"
         const val EXTRA_APP_NAME = "extra_app_name"
@@ -45,21 +45,21 @@ class FloatingWindowService : Service() {
         const val EXTRA_TRANSLATE_ENABLED = "extra_translate_enabled"
         const val EXTRA_TRANSLATE_TARGET_LANGUAGE = "extra_translate_target_language"
         const val EXTRA_TRANSLATE_SHOW_BUTTON = "extra_translate_show_button"
-        
-        // Actions
+
+
         const val ACTION_SHOW = "action_show"
         const val ACTION_DISMISS = "action_dismiss"
         const val ACTION_MINIMIZE = "action_minimize"
         const val ACTION_RESTORE = "action_restore"
-        
+
         @Volatile
         private var instance: FloatingWindowService? = null
-        
+
         fun getInstance(): FloatingWindowService? = instance
-        
-        /**
-         * 检查是否有悬浮窗权限
-         */
+
+
+
+
         fun canDrawOverlays(context: android.content.Context): Boolean {
             return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 Settings.canDrawOverlays(context)
@@ -67,10 +67,10 @@ class FloatingWindowService : Service() {
                 true
             }
         }
-        
-        /**
-         * 请求悬浮窗权限
-         */
+
+
+
+
         fun requestOverlayPermission(context: android.content.Context) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 val intent = Intent(
@@ -82,10 +82,10 @@ class FloatingWindowService : Service() {
             }
         }
     }
-    
+
     private lateinit var floatingWindowManager: FloatingWindowManager
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-    
+
     override fun onCreate() {
         super.onCreate()
         instance = this
@@ -93,10 +93,10 @@ class FloatingWindowService : Service() {
         createNotificationChannel()
         AppLogger.i(TAG, "FloatingWindowService 已创建")
     }
-    
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val action = intent?.getStringExtra(EXTRA_ACTION) ?: ACTION_SHOW
-        
+
         when (action) {
             ACTION_SHOW -> {
                 val configJson = intent?.getStringExtra(EXTRA_CONFIG)
@@ -105,7 +105,7 @@ class FloatingWindowService : Service() {
                 val translateEnabled = intent?.getBooleanExtra(EXTRA_TRANSLATE_ENABLED, false) == true
                 val translateTargetLanguage = intent?.getStringExtra(EXTRA_TRANSLATE_TARGET_LANGUAGE) ?: "zh-CN"
                 val translateShowButton = intent?.getBooleanExtra(EXTRA_TRANSLATE_SHOW_BUTTON, true) != false
-                
+
                 val config = if (configJson != null) {
                     try {
                         com.webtoapp.util.GsonProvider.gson.fromJson(
@@ -118,8 +118,8 @@ class FloatingWindowService : Service() {
                 } else {
                     FloatingWindowConfig(enabled = true)
                 }
-                
-                // 启动前台通知
+
+
                 startForeground(NOTIFICATION_ID, createNotification(appName))
 
                 val translateBridgeFactory: ((WebView) -> Unit)? = if (translateEnabled) {
@@ -135,7 +135,7 @@ class FloatingWindowService : Service() {
                     webView.addJavascriptInterface(downloadBridge, DownloadBridge.JS_INTERFACE_NAME)
                 }
 
-                // 创建悬浮窗
+
                 floatingWindowManager.onDismiss = {
                     stopSelf()
                 }
@@ -150,29 +150,29 @@ class FloatingWindowService : Service() {
                     webView.evaluateJavascript(DownloadBridge.getInjectionScript(), null)
                 }
                 floatingWindowManager.show(config, appName, url)
-                
+
                 AppLogger.i(TAG, "悬浮窗已启动: url=$url, size=${config.windowSizePercent}%, opacity=${config.opacity}%")
             }
-            
+
             ACTION_DISMISS -> {
                 floatingWindowManager.dismiss()
                 stopSelf()
             }
-            
+
             ACTION_MINIMIZE -> {
                 floatingWindowManager.minimize()
             }
-            
+
             ACTION_RESTORE -> {
                 floatingWindowManager.restore()
             }
         }
-        
+
         return START_NOT_STICKY
     }
-    
+
     override fun onBind(intent: Intent?): IBinder? = null
-    
+
     override fun onDestroy() {
         floatingWindowManager.dismiss()
         serviceScope.cancel()
@@ -180,20 +180,20 @@ class FloatingWindowService : Service() {
         AppLogger.i(TAG, "FloatingWindowService 已销毁")
         super.onDestroy()
     }
-    
-    /**
-     * 获取悬浮窗管理器
-     */
+
+
+
+
     fun getManager(): FloatingWindowManager = floatingWindowManager
-    
-    /**
-     * 获取悬浮窗中的 WebView
-     */
+
+
+
+
     fun getWebView(): WebView? = floatingWindowManager.getWebView()
-    
-    /**
-     * 创建通知渠道
-     */
+
+
+
+
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -208,10 +208,10 @@ class FloatingWindowService : Service() {
             notificationManager.createNotificationChannel(channel)
         }
     }
-    
-    /**
-     * 创建前台通知
-     */
+
+
+
+
     private fun createNotification(appName: String = ""): Notification {
         val title = Strings.floatingWindowNotificationTitle
         val content = if (appName.isNotBlank()) {
@@ -219,8 +219,8 @@ class FloatingWindowService : Service() {
         } else {
             Strings.floatingWindowNotificationContentDefault
         }
-        
-        // 关闭悬浮窗的 PendingIntent
+
+
         val dismissIntent = Intent(this, FloatingWindowService::class.java).apply {
             putExtra(EXTRA_ACTION, ACTION_DISMISS)
         }
@@ -228,14 +228,14 @@ class FloatingWindowService : Service() {
             this, 0, dismissIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        
+
         val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Notification.Builder(this, NOTIFICATION_CHANNEL_ID)
         } else {
             @Suppress("DEPRECATION")
             Notification.Builder(this)
         }
-        
+
         return builder
             .setContentTitle(title)
             .setContentText(content)

@@ -10,10 +10,10 @@ import com.webtoapp.core.webview.WebViewCallbacks
 import com.webtoapp.core.webview.WebViewManager
 import com.webtoapp.data.model.WebViewConfig
 
-/**
- * 系统 WebView 引擎实现
- * 委托给现有的 WebViewManager，保持完全兼容
- */
+
+
+
+
 class SystemWebViewEngine(
     private val context: Context,
     private val adBlocker: AdBlocker
@@ -31,7 +31,7 @@ class SystemWebViewEngine(
     ): View {
         val wv = WebView(context)
 
-        // 桥接 BrowserEngineCallback → WebViewCallbacks
+
         val bridgeCallbacks = object : WebViewCallbacks {
             override fun onPageStarted(url: String?) = callback.onPageStarted(url)
             override fun onPageFinished(url: String?) = callback.onPageFinished(url)
@@ -49,13 +49,13 @@ class SystemWebViewEngine(
             override fun onHideCustomView() = callback.onHideCustomView()
 
             override fun onGeolocationPermission(origin: String?, cb: GeolocationPermissions.Callback?) {
-                // GeckoView 不需要此回调，仅 SystemWebView 使用
-                // 直接允许（保持原有行为）
+
+
                 cb?.invoke(origin, true, false)
             }
 
             override fun onPermissionRequest(request: PermissionRequest?) {
-                // 保持原有行为：直接授权
+
                 request?.grant(request.resources)
             }
 
@@ -63,7 +63,7 @@ class SystemWebViewEngine(
                 filePathCallback: ValueCallback<Array<Uri>>?,
                 fileChooserParams: WebChromeClient.FileChooserParams?
             ): Boolean {
-                // 默认不处理文件选择（由 Activity 级别处理）
+
                 return false
             }
 
@@ -142,7 +142,7 @@ class SystemWebViewEngine(
                         val author = obj.get("author")?.asString ?: ""
                         val content = obj.get("content")?.asString ?: ""
                         val url = obj.get("url")?.asString ?: ""
-                        
+
                         val readerHtml = shields.readerMode.generateReaderHtml(
                             title, siteName, author, content, url
                         )
@@ -157,13 +157,13 @@ class SystemWebViewEngine(
         }
     }
 
-    /**
-     * 获取底层 WebViewManager（用于需要直接访问的场景，如扩展模块注入）
-     */
+
+
+
     fun getWebViewManager(): WebViewManager = webViewManager
 
-    /**
-     * 获取底层 WebView 实例
-     */
+
+
+
     fun getWebView(): WebView? = webView
 }

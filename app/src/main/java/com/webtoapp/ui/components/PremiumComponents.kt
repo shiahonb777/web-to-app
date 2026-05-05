@@ -37,17 +37,17 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-// ==================== ② Premium TextField ====================
 
-/**
- * 精美输入框 — 替代 OutlinedTextField
- *
- * 特性:
- * - 聚焦时渐变边框发光
- * - 平滑的颜色过渡动画
- * - 圆角统一为 14dp
- * - 聚焦时轻微上浮阴影
- */
+
+
+
+
+
+
+
+
+
+
 @Composable
 fun PremiumTextField(
     value: String,
@@ -76,7 +76,7 @@ fun PremiumTextField(
     val isFocused by interactionSource.collectIsFocusedAsState()
     val primary = MaterialTheme.colorScheme.primary
 
-    // 聚焦时的边框发光色
+
     val focusedBorderColor by animateColorAsState(
         targetValue = when {
             isError -> MaterialTheme.colorScheme.error
@@ -122,17 +122,17 @@ fun PremiumTextField(
 }
 
 
-// ==================== ③ Premium FilterChip ====================
 
-/**
- * 精美选择芯片 — 替代 FilterChip
- *
- * 特性:
- * - 选中时渐变背景
- * - 弹簧缩放动效
- * - 柔和的边框和阴影
- * - 选中 ✓ 图标动画
- */
+
+
+
+
+
+
+
+
+
+
 @Composable
 fun PremiumFilterChip(
     selected: Boolean,
@@ -147,7 +147,7 @@ fun PremiumFilterChip(
     val isPressed by interactionSource.collectIsPressedAsState()
     val primary = MaterialTheme.colorScheme.primary
 
-    // 弹簧缩放
+
     val scale by animateFloatAsState(
         targetValue = if (isPressed && enabled) 0.93f else 1f,
         animationSpec = spring(
@@ -157,7 +157,7 @@ fun PremiumFilterChip(
         label = "chipScale"
     )
 
-    // 背景色
+
     val containerColor by animateColorAsState(
         targetValue = if (selected) primary.copy(alpha = 0.12f)
         else Color.Transparent,
@@ -165,7 +165,7 @@ fun PremiumFilterChip(
         label = "chipBg"
     )
 
-    // 边框色
+
     val chipBorderColor by animateColorAsState(
         targetValue = if (selected) primary.copy(alpha = 0.4f)
         else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
@@ -173,7 +173,7 @@ fun PremiumFilterChip(
         label = "chipBorder"
     )
 
-    // 文字色
+
     val contentColor by animateColorAsState(
         targetValue = if (selected) primary
         else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -207,7 +207,7 @@ fun PremiumFilterChip(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            // Leading icon 或 选中 ✓
+
             if (selected) {
                 Icon(
                     Icons.Default.Check,
@@ -231,17 +231,17 @@ fun PremiumFilterChip(
 }
 
 
-// ==================== ⑤ Premium Button ====================
 
-/**
- * 精美按钮 — 替代 Button
- *
- * 特性:
- * - 渐变背景（跟随主题色）
- * - 弹簧缩放按压效果
- * - 柔和发光阴影
- * - 触觉反馈
- */
+
+
+
+
+
+
+
+
+
+
 @Composable
 fun PremiumButton(
     onClick: () -> Unit,
@@ -259,7 +259,7 @@ fun PremiumButton(
     val isPressed by interactionSource.collectIsPressedAsState()
     val primary = MaterialTheme.colorScheme.primary
 
-    // 弹簧缩放
+
     val scale by animateFloatAsState(
         targetValue = if (isPressed && enabled) 0.95f else 1f,
         animationSpec = spring(
@@ -269,7 +269,7 @@ fun PremiumButton(
         label = "btnScale"
     )
 
-    // 阴影
+
     val btnElevation by animateFloatAsState(
         targetValue = if (isPressed) 0.5f else if (enabled) 2f else 0f,
         animationSpec = spring(
@@ -332,9 +332,9 @@ fun PremiumButton(
     }
 }
 
-/**
- * 精美描边按钮 — 替代 OutlinedButton
- */
+
+
+
 @Composable
 fun PremiumOutlinedButton(
     onClick: () -> Unit,

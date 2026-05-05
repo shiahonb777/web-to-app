@@ -1,7 +1,7 @@
-/**
- * System Monitor Dashboard — Dark Theme
- * Node.js built-in modules, zero dependencies
- */
+
+
+
+
 const http = require('http');
 const os = require('os');
 const PORT = process.env.PORT || 3000;
@@ -20,7 +20,7 @@ function fmtB(b) { if (b < 1024 * 1024) return (b / 1024).toFixed(0) + ' KB'; if
 function fmtT(s) { const m = Math.floor(s / 60), h = Math.floor(m / 60); if (h > 0) return h + 'h ' + m % 60 + 'm'; if (m > 0) return m + 'm ' + Math.floor(s % 60) + 's'; return Math.floor(s) + 's' }
 
 const server = http.createServer((req, res) => {
-  const p = new URL(req.url, `http://${req.headers.host}`).pathname;
+  const p = new URL(req.url, `http:
   if (p === '/api/stats') { res.writeHead(200, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify(getStats())) }
   if (p === '/') { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); return res.end(getPage()) }
   res.writeHead(404); res.end('Not Found');

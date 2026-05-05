@@ -20,9 +20,9 @@ import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.core.i18n.Strings
 import kotlinx.coroutines.delay
 
-/**
- * Shell 模式启动画面覆盖层（从 assets 加载媒体，支持视频裁剪）
- */
+
+
+
 @Composable
 fun ShellSplashOverlay(
     splashType: String,
@@ -30,17 +30,17 @@ fun ShellSplashOverlay(
     videoStartMs: Long = 0,
     videoEndMs: Long = 5000,
     fillScreen: Boolean = true,
-    enableAudio: Boolean = false,    // Yes否启用视频音频
-    onSkip: (() -> Unit)?,           // 点击跳过回调
-    onComplete: (() -> Unit)? = null // Play完成回调
+    enableAudio: Boolean = false,
+    onSkip: (() -> Unit)?,
+    onComplete: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val extension = if (splashType == "VIDEO") "mp4" else "png"
     val assetPath = "splash_media.$extension"
     val videoDurationMs = videoEndMs - videoStartMs
     val contentScaleMode = if (fillScreen) ContentScale.Crop else ContentScale.Fit
-    
-    // Video剩余时间（用于动态倒计时显示）
+
+
     var videoRemainingMs by remember { mutableLongStateOf(videoDurationMs) }
 
     Box(
@@ -61,8 +61,8 @@ fun ShellSplashOverlay(
     ) {
         when (splashType) {
             "IMAGE" -> {
-                // Image启动画面（从 assets 加载）
-                // 使用 file:///android_asset/ 前缀加载 assets 中的图片
+
+
                 Image(
                     painter = rememberAsyncImagePainter(
                         ImageRequest.Builder(context)
@@ -76,58 +76,58 @@ fun ShellSplashOverlay(
                 )
             }
             "VIDEO" -> {
-                // Video启动画面（支持裁剪播放，支持加密）
+
                 var mediaPlayer by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
                 var isPlayerReady by remember { mutableStateOf(false) }
                 var tempVideoFile by remember { mutableStateOf<java.io.File?>(null) }
-                
-                // 监控播放进度
-                // 仅在播放器准备就绪后开始监控
+
+
+
                 LaunchedEffect(isPlayerReady) {
                     if (!isPlayerReady) return@LaunchedEffect
                     mediaPlayer?.let { mp ->
-                        // 等待播放器真正开始播放
+
                         while (!mp.isPlaying) {
                             delay(50)
                             if (mediaPlayer == null) return@LaunchedEffect
                         }
-                        // 监控播放进度并更新剩余时间
+
                         while (mp.isPlaying) {
                             val currentPos = mp.currentPosition
-                            // Update剩余时间用于倒计时显示
+
                             videoRemainingMs = (videoEndMs - currentPos).coerceAtLeast(0L)
                             if (currentPos >= videoEndMs) {
                                 mp.pause()
-                                // 使用 onComplete 回调，因为这是播放完成
+
                                 onComplete?.invoke()
                                 break
                             }
-                            delay(100) // 100ms 更新一次倒计时显示
+                            delay(100)
                         }
                     }
                 }
-                
+
                 AndroidView(
                     factory = { ctx ->
                         android.view.SurfaceView(ctx).apply {
                             holder.addCallback(object : android.view.SurfaceHolder.Callback {
                                 override fun surfaceCreated(holder: android.view.SurfaceHolder) {
                                     try {
-                                        // Check是否存在加密版本
+
                                         val encryptedPath = "$assetPath.enc"
                                         val hasEncrypted = try {
                                             ctx.assets.open(encryptedPath).use { true }
                                         } catch (e: Exception) { false }
-                                        
+
                                         if (hasEncrypted) {
-                                            // Encryption视频：解密到临时文件后播放
+
                                             AppLogger.d("ShellSplash", "检测到加密启动画面视频")
                                             val decryptor = com.webtoapp.core.crypto.AssetDecryptor(ctx)
                                             val decryptedData = decryptor.loadAsset(assetPath)
                                             val tempFile = java.io.File(ctx.cacheDir, "splash_video_${System.currentTimeMillis()}.mp4")
                                             tempFile.writeBytes(decryptedData)
                                             tempVideoFile = tempFile
-                                            
+
                                             mediaPlayer = android.media.MediaPlayer().apply {
                                                 setDataSource(tempFile.absolutePath)
                                                 setSurface(holder.surface)
@@ -143,7 +143,7 @@ fun ShellSplashOverlay(
                                                 prepareAsync()
                                             }
                                         } else {
-                                            // 非加密视频：直接使用 openFd
+
                                             val afd = ctx.assets.openFd(assetPath)
                                             mediaPlayer = android.media.MediaPlayer().apply {
                                                 setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
@@ -176,12 +176,12 @@ fun ShellSplashOverlay(
                     },
                     modifier = Modifier.fillMaxSize()
                 )
-                
+
                 DisposableEffect(Unit) {
                     onDispose {
                         mediaPlayer?.release()
                         mediaPlayer = null
-                        // Cleanup temp files
+
                         tempVideoFile?.delete()
                         tempVideoFile = null
                     }
@@ -189,10 +189,10 @@ fun ShellSplashOverlay(
             }
         }
 
-        // 倒计时/跳过提示
-        // Video使用动态剩余时间，图片使用传入的 countdown
+
+
         val displayTime = if (splashType == "VIDEO") ((videoRemainingMs + 999) / 1000).toInt() else countdown
-        
+
         Surface(
             modifier = Modifier
                 .align(Alignment.TopEnd)
@@ -231,16 +231,16 @@ fun ShellSplashOverlay(
     }
 }
 
-/**
- * 媒体内容显示组件（Shell 模式下的图片/视频展示）
- */
+
+
+
 @Composable
 fun MediaContentDisplay(
     isVideo: Boolean,
     mediaConfig: com.webtoapp.core.shell.MediaShellConfig
 ) {
     val context = LocalContext.current
-    
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -248,32 +248,32 @@ fun MediaContentDisplay(
         contentAlignment = Alignment.Center
     ) {
         if (isVideo) {
-            // Video播放（支持加密）
+
             var mediaPlayer by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
             var tempVideoFile by remember { mutableStateOf<java.io.File?>(null) }
             val assetPath = "media_content.mp4"
-            
+
             AndroidView(
                 factory = { ctx ->
                     android.view.SurfaceView(ctx).apply {
                         holder.addCallback(object : android.view.SurfaceHolder.Callback {
                             override fun surfaceCreated(holder: android.view.SurfaceHolder) {
                                 try {
-                                    // Check是否存在加密版本
+
                                     val encryptedPath = "$assetPath.enc"
                                     val hasEncrypted = try {
                                         ctx.assets.open(encryptedPath).use { true }
                                     } catch (e: Exception) { false }
-                                    
+
                                     if (hasEncrypted) {
-                                        // Encryption视频：解密到临时文件后播放
+
                                         AppLogger.d("MediaContent", "检测到加密媒体视频")
                                         val decryptor = com.webtoapp.core.crypto.AssetDecryptor(ctx)
                                         val decryptedData = decryptor.loadAsset(assetPath)
                                         val tempFile = java.io.File(ctx.cacheDir, "media_video_${System.currentTimeMillis()}.mp4")
                                         tempFile.writeBytes(decryptedData)
                                         tempVideoFile = tempFile
-                                        
+
                                         mediaPlayer = android.media.MediaPlayer().apply {
                                             setDataSource(tempFile.absolutePath)
                                             setSurface(holder.surface)
@@ -286,7 +286,7 @@ fun MediaContentDisplay(
                                             prepareAsync()
                                         }
                                     } else {
-                                        // 非加密视频：直接使用 openFd
+
                                         val afd = ctx.assets.openFd(assetPath)
                                         mediaPlayer = android.media.MediaPlayer().apply {
                                             setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
@@ -305,9 +305,9 @@ fun MediaContentDisplay(
                                     AppLogger.e("ShellActivity", "Operation failed", e)
                                 }
                             }
-                            
+
                             override fun surfaceChanged(holder: android.view.SurfaceHolder, format: Int, width: Int, height: Int) {}
-                            
+
                             override fun surfaceDestroyed(holder: android.view.SurfaceHolder) {
                                 mediaPlayer?.release()
                                 mediaPlayer = null
@@ -317,32 +317,32 @@ fun MediaContentDisplay(
                 },
                 modifier = Modifier.fillMaxSize()
             )
-            
+
             DisposableEffect(Unit) {
                 onDispose {
                     mediaPlayer?.release()
                     mediaPlayer = null
-                    // Cleanup temp files
+
                     tempVideoFile?.delete()
                     tempVideoFile = null
                 }
             }
         } else {
-            // Image显示
+
             val painter = rememberAsyncImagePainter(
                 ImageRequest.Builder(context)
                     .data("file:///android_asset/media_content.png")
                     .crossfade(true)
                     .build()
             )
-            
+
             Image(
                 painter = painter,
                 contentDescription = Strings.cdMediaContent,
                 modifier = Modifier.fillMaxSize(),
-                contentScale = if (mediaConfig.fillScreen) 
-                    ContentScale.Crop 
-                else 
+                contentScale = if (mediaConfig.fillScreen)
+                    ContentScale.Crop
+                else
                     ContentScale.Fit
             )
         }

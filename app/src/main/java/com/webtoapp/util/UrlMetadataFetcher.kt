@@ -7,25 +7,25 @@ import kotlinx.coroutines.withContext
 import okhttp3.Request
 import java.net.URI
 
-/**
- * URL 元数据获取器
- *
- * 从任意 URL 获取以下信息：
- * - 页面标题（<title> 或 og:title）
- * - Favicon URL
- * - 主题色（theme-color / og:color）
- */
+
+
+
+
+
+
+
+
 object UrlMetadataFetcher {
 
     private const val TAG = "UrlMetadataFetcher"
 
-    // 最多读取的 HTML 字节数（避免下载过大的页面）
-    private const val MAX_HTML_SIZE = 2 * 1024 * 1024 // 2MB
 
-    // User-Agent
+    private const val MAX_HTML_SIZE = 2 * 1024 * 1024
+
+
     private const val USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
-    // 预编译正则
+
     private val META_OG_TITLE_REGEX = Regex(
         """<meta[^>]*property\s*=\s*["']og:title["'][^>]*content\s*=\s*["']([^"']+)["'][^>]*>""",
         RegexOption.IGNORE_CASE
@@ -64,21 +64,21 @@ object UrlMetadataFetcher {
 
     private val client get() = NetworkModule.defaultClient
 
-    /**
-     * 元数据结果
-     */
+
+
+
     data class Metadata(
         val title: String = "",
         val faviconUrl: String = "",
         val themeColor: String = ""
     )
 
-    /**
-     * 获取 URL 元数据
-     *
-     * @param url 网站地址
-     * @return Metadata 对象，失败返回空 Metadata
-     */
+
+
+
+
+
+
     suspend fun fetch(url: String): Metadata = withContext(Dispatchers.IO) {
         val normalizedUrl = normalizeUrl(url)
         val baseUrl = getBaseUrl(normalizedUrl)
@@ -104,9 +104,11 @@ object UrlMetadataFetcher {
             val html = if (contentLength > 0 && contentLength <= MAX_HTML_SIZE) {
                 body.string()
             } else {
-                // 对于未知长度，截断前 2MB
+
                 val bytes = body.byteStream().use { stream ->
-                    stream.readNBytes(MAX_HTML_SIZE)
+                    val buffer = ByteArray(MAX_HTML_SIZE)
+                    val count = stream.read(buffer)
+                    if (count > 0) buffer.copyOf(count) else ByteArray(0)
                 }
                 String(bytes, Charsets.UTF_8)
             }
@@ -129,9 +131,9 @@ object UrlMetadataFetcher {
         }
     }
 
-    /**
-     * 提取页面标题（优先 og:title，其次 <title>）
-     */
+
+
+
     private fun extractTitle(html: String): String {
         META_OG_TITLE_REGEX.find(html)?.groupValues?.get(1)?.takeIf { it.isNotBlank() }?.let { return decodeHtmlEntities(it) }
         META_OG_TITLE_REGEX_2.find(html)?.groupValues?.get(1)?.takeIf { it.isNotBlank() }?.let { return decodeHtmlEntities(it) }
@@ -139,9 +141,9 @@ object UrlMetadataFetcher {
         return ""
     }
 
-    /**
-     * 提取主题色（优先 theme-color，其次 og:color）
-     */
+
+
+
     private fun extractThemeColor(html: String): String {
         META_THEME_COLOR_REGEX.find(html)?.groupValues?.get(1)?.takeIf { it.isNotBlank() }?.let { return it.trim() }
         META_THEME_COLOR_REGEX_2.find(html)?.groupValues?.get(1)?.takeIf { it.isNotBlank() }?.let { return it.trim() }
@@ -150,11 +152,11 @@ object UrlMetadataFetcher {
         return ""
     }
 
-    /**
-     * 提取 favicon URL（优先高清图标，其次 favicon.ico）
-     */
+
+
+
     private fun extractFaviconUrl(html: String, baseUrl: String): String {
-        // 收集所有 icon link，按尺寸排序
+
         val icons = mutableListOf<Pair<String, Int>>()
 
         LINK_ICON_REGEX.findAll(html).forEach { linkMatch ->
@@ -176,7 +178,7 @@ object UrlMetadataFetcher {
                 }
             }
 
-            // 如果没有 sizes 属性但链接包含 size 信息，尝试从文件名解析
+
             if (size == 0) {
                 size = guessSizeFromFilename(href)
             }
@@ -184,16 +186,16 @@ object UrlMetadataFetcher {
             icons.add(resolved to size)
         }
 
-        // 优先返回最大的图标
+
         icons.maxByOrNull { it.second }?.let { return it.first }
 
-        // 后备：favicon.ico
+
         return "$baseUrl/favicon.ico"
     }
 
-    /**
-     * 从文件名猜测图标尺寸
-     */
+
+
+
     private fun guessSizeFromFilename(href: String): Int {
         val lower = href.lowercase()
         return when {
@@ -213,9 +215,9 @@ object UrlMetadataFetcher {
         }
     }
 
-    /**
-     * 解析图标 URL（处理相对路径）
-     */
+
+
+
     private fun resolveIconUrl(baseUrl: String, href: String): String {
         return when {
             href.startsWith("http://") || href.startsWith("https://") -> upgradeHttpToHttps(href)
@@ -225,9 +227,9 @@ object UrlMetadataFetcher {
         }
     }
 
-    /**
-     * 标准化 URL
-     */
+
+
+
     private fun normalizeUrl(url: String): String {
         var normalized = url.trim()
         if (!normalized.startsWith("http://") && !normalized.startsWith("https://")) {
@@ -236,9 +238,9 @@ object UrlMetadataFetcher {
         return upgradeHttpToHttps(normalized)
     }
 
-    /**
-     * 获取基础 URL
-     */
+
+
+
     private fun getBaseUrl(url: String): String {
         return try {
             val uri = URI(url)
@@ -257,9 +259,9 @@ object UrlMetadataFetcher {
         }
     }
 
-    /**
-     * 将远程 HTTP URL 升级为 HTTPS（本地地址保持 HTTP）
-     */
+
+
+
     private fun upgradeHttpToHttps(url: String): String {
         if (!url.startsWith("http://")) return url
         return try {
@@ -277,9 +279,9 @@ object UrlMetadataFetcher {
         }
     }
 
-    /**
-     * 解码 HTML 实体
-     */
+
+
+
     private fun decodeHtmlEntities(str: String): String {
         return str
             .replace("&amp;", "&")

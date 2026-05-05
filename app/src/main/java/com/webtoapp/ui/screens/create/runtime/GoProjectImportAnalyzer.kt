@@ -2,6 +2,7 @@ package com.webtoapp.ui.screens.create.runtime
 
 import com.webtoapp.core.golang.GoDependencyManager
 import com.webtoapp.ui.screens.create.common.ProjectImportAnalysis
+import com.webtoapp.core.i18n.Strings
 import com.webtoapp.ui.screens.create.common.ProjectImportException
 import com.webtoapp.ui.screens.create.common.formatProjectName
 import com.webtoapp.ui.screens.create.common.parseEnvFile
@@ -28,7 +29,7 @@ data class GoProjectImportAnalysis(
 class GoProjectImportAnalyzer {
     fun analyze(projectDir: File): GoProjectImportAnalysis {
         if (!projectDir.exists() || !projectDir.isDirectory) {
-            throw ProjectImportException("Go 项目目录不存在")
+            throw ProjectImportException(Strings.importGoDirNotFound)
         }
 
         val goModInfo = parseGoMod(File(projectDir, "go.mod"))

@@ -58,9 +58,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-/**
- * 下载日志条目
- */
+
+
+
 data class DownloadLogEntry(
     val timestamp: Long = System.currentTimeMillis(),
     val message: String,
@@ -69,10 +69,10 @@ data class DownloadLogEntry(
     enum class LogType { INFO, SUCCESS, ERROR, WARNING }
 }
 
-/**
- * 在线音乐搜索对话框
- * 支持多渠道搜索、实时预览播放、下载进度条、下载日志
- */
+
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OnlineMusicSearchDialog(
@@ -82,20 +82,20 @@ fun OnlineMusicSearchDialog(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    // 渠道状态
+
     var channelStatuses by remember { mutableStateOf<Map<String, ChannelStatus>>(emptyMap()) }
     var selectedChannelId by remember { mutableStateOf(OnlineMusicApi.channels.first().id) }
     var testingChannels by remember { mutableStateOf(false) }
     var testingChannelId by remember { mutableStateOf<String?>(null) }
 
-    // 搜索状态
+
     var searchQuery by remember { mutableStateOf("") }
     var searchResults by remember { mutableStateOf<List<OnlineMusicTrack>>(emptyList()) }
     var isSearching by remember { mutableStateOf(false) }
     var searchError by remember { mutableStateOf<String?>(null) }
     var hasSearched by remember { mutableStateOf(false) }
 
-    // 预览播放状态
+
     var previewingTrack by remember { mutableStateOf<OnlineMusicTrack?>(null) }
     var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
     var isLoadingPreview by remember { mutableStateOf(false) }
@@ -105,7 +105,7 @@ fun OnlineMusicSearchDialog(
     var previewDuration by remember { mutableLongStateOf(0L) }
     var isPreviewPlaying by remember { mutableStateOf(false) }
 
-    // 下载状态
+
     var downloadingTrackId by remember { mutableStateOf<String?>(null) }
     var downloadProgress by remember { mutableFloatStateOf(0f) }
     var downloadedTrackIds by remember { mutableStateOf<Set<String>>(emptySet()) }
@@ -113,10 +113,10 @@ fun OnlineMusicSearchDialog(
     var showDownloadLog by remember { mutableStateOf(false) }
     var downloadSpeed by remember { mutableStateOf("") }
 
-    // Snackbar
+
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // 预览播放进度更新
+
     LaunchedEffect(isPreviewPlaying) {
         while (isPreviewPlaying) {
             mediaPlayer?.let { mp ->
@@ -128,7 +128,7 @@ fun OnlineMusicSearchDialog(
         }
     }
 
-    // 初始化时检查已缓存的渠道状态
+
     LaunchedEffect(Unit) {
         val cached = mutableMapOf<String, ChannelStatus>()
         OnlineMusicApi.channels.forEach { ch ->
@@ -137,14 +137,14 @@ fun OnlineMusicSearchDialog(
         channelStatuses = cached
     }
 
-    // Cleanup
+
     DisposableEffect(Unit) {
         onDispose {
             mediaPlayer?.release()
         }
     }
 
-    // 格式化时间
+
     fun formatDuration(ms: Long): String {
         val totalSeconds = ms / 1000
         val minutes = totalSeconds / 60
@@ -152,14 +152,14 @@ fun OnlineMusicSearchDialog(
         return "%d:%02d".format(minutes, seconds)
     }
 
-    // 搜索函数
+
     fun performSearch() {
         if (searchQuery.isBlank()) return
         scope.launch {
             isSearching = true
             searchError = null
             hasSearched = true
-            // 停止预览
+
             mediaPlayer?.release()
             mediaPlayer = null
             previewingTrack = null
@@ -172,7 +172,7 @@ fun OnlineMusicSearchDialog(
                 if (response.tracks.isEmpty()) {
                     searchError = Strings.noMusicResults
                 }
-                // 检查哪些已下载
+
                 val downloaded = mutableSetOf<String>()
                 response.tracks.forEach { track ->
                     if (track.playUrl != null && OnlineMusicDownloader.isMusicDownloaded(context, track)) {
@@ -188,15 +188,15 @@ fun OnlineMusicSearchDialog(
         }
     }
 
-    // 预览播放函数
+
     fun previewTrack(track: OnlineMusicTrack) {
         if (previewingTrack?.id == track.id && isPreviewPlaying) {
-            // 暂停播放
+
             mediaPlayer?.pause()
             isPreviewPlaying = false
             return
         } else if (previewingTrack?.id == track.id && !isPreviewPlaying && isPlayerPrepared) {
-            // 继续播放
+
             mediaPlayer?.start()
             isPreviewPlaying = true
             return
@@ -214,7 +214,7 @@ fun OnlineMusicSearchDialog(
             previewDuration = 0L
 
             try {
-                // 获取播放链接
+
                 val detailedTrack = if (track.playUrl.isNullOrBlank()) {
                     AppLogger.i("OnlineMusicSearch", "Getting track detail for: ${track.name}")
                     val detailResult = OnlineMusicApi.getTrackDetail(track)
@@ -234,7 +234,7 @@ fun OnlineMusicSearchDialog(
 
                 AppLogger.i("OnlineMusicSearch", "Playing: $playUrl")
 
-                // 更新搜索结果中的播放链接
+
                 searchResults = searchResults.map {
                     if (it.id == track.id) detailedTrack else it
                 }
@@ -242,8 +242,8 @@ fun OnlineMusicSearchDialog(
                 withContext(Dispatchers.Main) {
                     try {
                         val mp = MediaPlayer()
-                        
-                        // 必须先设置所有监听器，再调用 prepareAsync
+
+
                         mp.setOnPreparedListener { player ->
                             AppLogger.i("OnlineMusicSearch", "MediaPlayer prepared, duration: ${player.duration}ms")
                             player.start()
@@ -254,12 +254,12 @@ fun OnlineMusicSearchDialog(
                             isLoadingPreview = false
                             loadingPreviewTrackId = null
                         }
-                        
+
                         mp.setOnCompletionListener {
                             isPreviewPlaying = false
                             previewCurrentPosition = 0L
                         }
-                        
+
                         mp.setOnErrorListener { _, what, extra ->
                             AppLogger.e("OnlineMusicSearch", "MediaPlayer error: what=$what, extra=$extra")
                             isPreviewPlaying = false
@@ -272,12 +272,12 @@ fun OnlineMusicSearchDialog(
                             }
                             true
                         }
-                        
+
                         mp.setDataSource(playUrl)
                         mediaPlayer = mp
                         mp.prepareAsync()
-                        
-                        // 超时保护：15秒后如果还在加载，重置状态
+
+
                         scope.launch {
                             delay(15000)
                             if (isLoadingPreview && loadingPreviewTrackId == track.id) {
@@ -303,12 +303,12 @@ fun OnlineMusicSearchDialog(
         }
     }
 
-    // 添加日志
+
     fun addLog(message: String, type: DownloadLogEntry.LogType = DownloadLogEntry.LogType.INFO) {
         downloadLogs = downloadLogs + DownloadLogEntry(message = message, type = type)
     }
 
-    // 下载函数
+
     fun downloadTrack(track: OnlineMusicTrack) {
         scope.launch {
             downloadingTrackId = track.id
@@ -321,7 +321,7 @@ fun OnlineMusicSearchDialog(
             addLog("${Strings.musicChannelLabel}: ${OnlineMusicApi.getChannel(track.sourceChannelId)?.displayName ?: track.sourceChannelId}")
 
             try {
-                // 先获取详情
+
                 addLog(Strings.gettingMusicDetails)
                 val detailedTrack = if (track.playUrl.isNullOrBlank()) {
                     val detailResult = OnlineMusicApi.getTrackDetail(track)
@@ -340,7 +340,7 @@ fun OnlineMusicSearchDialog(
                 addLog(Strings.getPlayUrlSuccess, DownloadLogEntry.LogType.SUCCESS)
                 addLog(Strings.startDownloadMusic)
 
-                // 更新搜索结果
+
                 searchResults = searchResults.map {
                     if (it.id == track.id) detailedTrack!! else it
                 }
@@ -350,14 +350,14 @@ fun OnlineMusicSearchDialog(
                 val bgmItem = OnlineMusicDownloader.downloadMusic(context, detailedTrack!!) { progress ->
                     downloadProgress = progress
 
-                    // 计算下载速度
+
                     val now = System.currentTimeMillis()
                     val elapsed = now - lastProgressTime
                     if (elapsed > 500) {
                         lastProgressTime = now
                     }
 
-                    // 更新日志
+
                     val percent = (progress * 100).toInt()
                     if (percent > 0 && percent % 20 == 0) {
                         val logMsg = when {
@@ -366,7 +366,7 @@ fun OnlineMusicSearchDialog(
                             progress <= 0.95f -> "${Strings.coverDownloading} ${((progress - 0.8f) / 0.2f * 100).toInt()}%"
                             else -> Strings.finishing
                         }
-                        // Avoid duplicate logs
+
                         if (downloadLogs.lastOrNull()?.message != logMsg) {
                             addLog(logMsg)
                         }
@@ -424,7 +424,7 @@ fun OnlineMusicSearchDialog(
                             }
                         },
                         actions = {
-                            // 下载日志按钮
+
                             if (downloadLogs.isNotEmpty()) {
                                 IconButton(onClick = { showDownloadLog = !showDownloadLog }) {
                                     BadgedBox(
@@ -446,7 +446,7 @@ fun OnlineMusicSearchDialog(
                                 }
                             }
 
-                            // 测试全部渠道按钮
+
                             TextButton(
                                 onClick = {
                                     scope.launch {
@@ -476,7 +476,7 @@ fun OnlineMusicSearchDialog(
                         .fillMaxSize()
                         .padding(padding)
                 ) {
-                    // ===== 渠道选择器 =====
+
                     Text(
                         Strings.musicChannel,
                         style = MaterialTheme.typography.labelMedium,
@@ -510,7 +510,7 @@ fun OnlineMusicSearchDialog(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // ===== 搜索栏 =====
+
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -539,7 +539,7 @@ fun OnlineMusicSearchDialog(
                             shape = RoundedCornerShape(12.dp)
                         )
 
-                        // 独立搜索按钮
+
                         FilledIconButton(
                             onClick = { performSearch() },
                             enabled = searchQuery.isNotBlank() && !isSearching,
@@ -559,7 +559,7 @@ fun OnlineMusicSearchDialog(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // ===== 下载日志面板 =====
+
                     AnimatedVisibility(
                         visible = showDownloadLog && downloadLogs.isNotEmpty(),
                         enter = expandVertically() + fadeIn(),
@@ -574,7 +574,7 @@ fun OnlineMusicSearchDialog(
                         )
                     }
 
-                    // ===== 搜索结果 =====
+
                     if (isSearching) {
                         Box(
                             modifier = Modifier
@@ -644,7 +644,7 @@ fun OnlineMusicSearchDialog(
                             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
                             verticalArrangement = Arrangement.spacedBy(2.dp)
                         ) {
-                            // 渠道来源提示
+
                             item {
                                 val channel = OnlineMusicApi.getChannel(selectedChannelId)
                                 if (channel != null) {
@@ -687,7 +687,7 @@ fun OnlineMusicSearchDialog(
                         }
                     }
 
-                    // ===== 底部迷你播放器 =====
+
                     AnimatedVisibility(
                         visible = previewingTrack != null && isPlayerPrepared,
                         enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
@@ -732,9 +732,9 @@ fun OnlineMusicSearchDialog(
     }
 }
 
-/**
- * 渠道选择芯片
- */
+
+
+
 @Composable
 private fun ChannelChip(
     channel: MusicChannel,
@@ -810,9 +810,9 @@ private fun ChannelChip(
     )
 }
 
-/**
- * 搜索结果项（增强版）
- */
+
+
+
 @Composable
 private fun OnlineMusicTrackItem(
     track: OnlineMusicTrack,
@@ -848,7 +848,7 @@ private fun OnlineMusicTrackItem(
                     .padding(horizontal = 12.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 封面（可点击播放）
+
                 Box(
                     modifier = Modifier
                         .size(48.dp)
@@ -875,7 +875,7 @@ private fun OnlineMusicTrackItem(
                         )
                     }
 
-                    // 播放状态覆盖
+
                     if (isPlaying || isPaused || isLoadingPreview) {
                         Box(
                             modifier = Modifier
@@ -903,7 +903,7 @@ private fun OnlineMusicTrackItem(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // 歌名和歌手
+
                 Column(
                     modifier = Modifier.weight(weight = 1f, fill = true)
                 ) {
@@ -948,7 +948,7 @@ private fun OnlineMusicTrackItem(
 
                 Spacer(modifier = Modifier.width(4.dp))
 
-                // 播放按钮
+
                 IconButton(
                     onClick = onPlay,
                     enabled = !isLoadingPreview
@@ -976,7 +976,7 @@ private fun OnlineMusicTrackItem(
                     }
                 }
 
-                // 下载按钮
+
                 if (isDownloaded) {
                     Icon(
                         Icons.Filled.CheckCircle,
@@ -1016,7 +1016,7 @@ private fun OnlineMusicTrackItem(
                 }
             }
 
-            // 下载进度条（线性）
+
             if (isDownloading) {
                 LinearProgressIndicator(
                     progress = { downloadProgress },
@@ -1030,9 +1030,9 @@ private fun OnlineMusicTrackItem(
     }
 }
 
-/**
- * 格式化曲目时长
- */
+
+
+
 private fun formatTrackDuration(ms: Long): String {
     val totalSeconds = ms / 1000
     val minutes = totalSeconds / 60
@@ -1040,9 +1040,9 @@ private fun formatTrackDuration(ms: Long): String {
     return "%d:%02d".format(minutes, seconds)
 }
 
-/**
- * 增强版迷你播放器（含进度条、seek、时间显示）
- */
+
+
+
 @Composable
 private fun EnhancedMiniPlayer(
     track: OnlineMusicTrack,
@@ -1061,12 +1061,12 @@ private fun EnhancedMiniPlayer(
         shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
     ) {
         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-            // 歌曲信息行
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 封面
+
                 Box(
                     modifier = Modifier
                         .size(40.dp)
@@ -1108,7 +1108,7 @@ private fun EnhancedMiniPlayer(
                     )
                 }
 
-                // 播放/暂停按钮
+
                 IconButton(onClick = onPlayPause) {
                     Icon(
                         if (isPlaying) Icons.Filled.PauseCircleFilled
@@ -1119,7 +1119,7 @@ private fun EnhancedMiniPlayer(
                     )
                 }
 
-                // 停止按钮
+
                 IconButton(onClick = onStop) {
                     Icon(
                         Icons.Filled.StopCircle,
@@ -1130,7 +1130,7 @@ private fun EnhancedMiniPlayer(
                 }
             }
 
-            // 进度条 + 时间
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -1164,9 +1164,9 @@ private fun EnhancedMiniPlayer(
     }
 }
 
-/**
- * 下载日志面板
- */
+
+
+
 @Composable
 private fun DownloadLogPanel(
     logs: List<DownloadLogEntry>,
@@ -1178,7 +1178,7 @@ private fun DownloadLogPanel(
     val logListState = rememberLazyListState()
     val timeFormat = remember { SimpleDateFormat("HH:mm:ss", Locale.getDefault()) }
 
-    // 自动滚动到最新日志
+
     LaunchedEffect(logs.size) {
         if (logs.isNotEmpty()) {
             logListState.animateScrollToItem(logs.size - 1)
@@ -1196,7 +1196,7 @@ private fun DownloadLogPanel(
         shape = RoundedCornerShape(12.dp)
     ) {
         Column {
-            // 标题栏
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1254,7 +1254,7 @@ private fun DownloadLogPanel(
                 }
             }
 
-            // 下载进度条
+
             if (isDownloading) {
                 LinearProgressIndicator(
                     progress = { progress },
@@ -1267,7 +1267,7 @@ private fun DownloadLogPanel(
                 Spacer(modifier = Modifier.height(4.dp))
             }
 
-            // 日志列表
+
             LazyColumn(
                 state = logListState,
                 modifier = Modifier

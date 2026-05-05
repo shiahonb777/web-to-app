@@ -5,38 +5,38 @@ import com.webtoapp.util.TextFileClassifier
 import java.io.File
 import java.util.zip.ZipOutputStream
 
-/**
- * Runtime asset embedder — replaces the repetitive addNodeJsFilesToAssets,
- * addPhpAppFilesToAssets, addPythonAppFilesToAssets, addGoAppFilesToAssets,
- * addFrontendFilesToAssets methods in ApkBuilder.
- *
- * Each runtime shares the same directory-traversal + text-classification +
- * ZIP-write pattern; only the asset prefix, exclude dirs, runtime type for
- * text classification, and optional per-file hook differ.
- */
+
+
+
+
+
+
+
+
+
 object RuntimeAssetEmbedder {
 
-    /**
-     * Configuration for embedding a runtime project's files.
-     */
+
+
+
     data class EmbedConfig(
         val runtimeName: String,
         val assetPrefix: String,
         val excludeDirs: Set<String>,
         val runtimeType: String? = null,
-        /**
-         * Optional per-file hook that can override the default text/binary
-         * write strategy. Return true if the hook handled the file, false
-         * to fall back to the default behaviour.
-         */
+
+
+
+
+
         val fileHook: ((zipOut: ZipOutputStream, assetPath: String, file: File) -> Boolean)? = null
     )
 
-    /**
-     * Embed project files into the APK ZIP output.
-     *
-     * @return Pair(fileCount, totalSizeBytes)
-     */
+
+
+
+
+
     fun embedProjectFiles(
         zipOut: ZipOutputStream,
         projectDir: File,
@@ -60,10 +60,10 @@ object RuntimeAssetEmbedder {
                     try {
                         val assetPath = "${config.assetPrefix}$relativePath"
 
-                        // Let the hook handle the file first
+
                         val handled = config.fileHook?.invoke(zipOut, assetPath, file) ?: false
                         if (!handled) {
-                            // Default: text → DEFLATED, binary → STORED
+
                             if (TextFileClassifier.isTextFile(file.name, config.runtimeType)) {
                                 ZipUtils.writeEntryDeflated(zipOut, assetPath, file.readBytes())
                             } else {
@@ -87,7 +87,7 @@ object RuntimeAssetEmbedder {
         return fileCount to totalSize
     }
 
-    // ---- Pre-defined configs ----
+
 
     fun nodeJsConfig(): EmbedConfig = EmbedConfig(
         runtimeName = "nodejs",
@@ -99,7 +99,7 @@ object RuntimeAssetEmbedder {
     fun phpConfig(): EmbedConfig = EmbedConfig(
         runtimeName = "phpApp",
         assetPrefix = "assets/php_app",
-        excludeDirs = setOf("vendor", ".git", "node_modules", ".idea", "__pycache__"),
+        excludeDirs = setOf(".git", "node_modules", ".idea", "__pycache__"),
         runtimeType = "php"
     )
 
@@ -116,12 +116,12 @@ object RuntimeAssetEmbedder {
         excludeDirs = setOf(".git", "vendor", "node_modules"),
         runtimeType = "go",
         fileHook = { zipOut, assetPath, file ->
-            // Go binary is large; use streaming for executables
+
             if (file.canExecute() && file.length() > 10 * 1024 * 1024) {
                 ZipUtils.writeEntryStoredStreaming(zipOut, assetPath, file)
                 true
             } else {
-                false // fall back to default text/binary logic
+                false
             }
         }
     )
@@ -133,11 +133,11 @@ object RuntimeAssetEmbedder {
         runtimeType = "nodejs"
     )
 
-    /**
-     * Embed Python standard library into assets (required for Python to function).
-     * Separate from project files because it uses a different exclude list
-     * and always compresses all files.
-     */
+
+
+
+
+
     fun embedPythonStdlib(
         zipOut: ZipOutputStream,
         pythonLibDir: File,

@@ -33,9 +33,9 @@ import kotlin.math.cos
 import kotlin.math.sin
 import androidx.compose.ui.graphics.Color
 
-/**
- * Vue.js 自定义图标
- */
+
+
+
 @Composable
 fun VueLogo(modifier: Modifier = Modifier) {
     val infiniteTransition = rememberInfiniteTransition(label = "vue")
@@ -48,12 +48,12 @@ fun VueLogo(modifier: Modifier = Modifier) {
         ),
         label = "glow"
     )
-    
+
     Canvas(modifier = modifier.size(48.dp)) {
         val width = size.width
         val height = size.height
         val centerX = width / 2
-        
+
         val outerPath = Path().apply {
             moveTo(centerX, height * 0.85f)
             lineTo(width * 0.15f, height * 0.15f)
@@ -63,20 +63,20 @@ fun VueLogo(modifier: Modifier = Modifier) {
             lineTo(width * 0.85f, height * 0.15f)
             close()
         }
-        
+
         drawPath(
             path = outerPath,
             color = Color(0xFF42B883).copy(alpha = glowAlpha),
             style = Stroke(width = 8f, cap = StrokeCap.Round)
         )
-        
+
         drawPath(
             path = outerPath,
             brush = Brush.verticalGradient(
                 colors = listOf(Color(0xFF42B883), Color(0xFF35495E))
             )
         )
-        
+
         val innerPath = Path().apply {
             moveTo(centerX, height * 0.70f)
             lineTo(width * 0.30f, height * 0.15f)
@@ -86,14 +86,14 @@ fun VueLogo(modifier: Modifier = Modifier) {
             lineTo(width * 0.70f, height * 0.15f)
             close()
         }
-        
+
         drawPath(path = innerPath, color = Color(0xFF35495E))
     }
 }
 
-/**
- * React 自定义图标
- */
+
+
+
 @Composable
 fun ReactLogo(modifier: Modifier = Modifier) {
     val infiniteTransition = rememberInfiniteTransition(label = "react")
@@ -106,19 +106,19 @@ fun ReactLogo(modifier: Modifier = Modifier) {
         ),
         label = "rotation"
     )
-    
+
     Canvas(modifier = modifier.size(48.dp)) {
         val width = size.width
         val height = size.height
         val centerX = width / 2
         val centerY = height / 2
         val reactBlue = Color(0xFF61DAFB)
-        
+
         drawCircle(color = reactBlue, radius = width * 0.1f, center = Offset(centerX, centerY))
-        
+
         val orbitRadiusX = width * 0.38f
         val orbitRadiusY = height * 0.15f
-        
+
         for (i in 0..2) {
             rotate(degrees = rotation + i * 60f, pivot = Offset(centerX, centerY)) {
                 drawOval(
@@ -129,12 +129,12 @@ fun ReactLogo(modifier: Modifier = Modifier) {
                 )
             }
         }
-        
+
         for (i in 0..2) {
             val angle = Math.toRadians((rotation + i * 120.0))
             val electronX = centerX + (orbitRadiusX * 0.9f * cos(angle)).toFloat()
             val electronY = centerY + (orbitRadiusY * 0.9f * sin(angle)).toFloat()
-            
+
             rotate(degrees = i * 60f, pivot = Offset(centerX, centerY)) {
                 drawCircle(color = reactBlue, radius = 4f, center = Offset(electronX, electronY))
             }
@@ -142,9 +142,9 @@ fun ReactLogo(modifier: Modifier = Modifier) {
     }
 }
 
-/**
- * Vite 自定义图标
- */
+
+
+
 @Composable
 fun ViteLogo(modifier: Modifier = Modifier) {
     val infiniteTransition = rememberInfiniteTransition(label = "vite")
@@ -157,11 +157,11 @@ fun ViteLogo(modifier: Modifier = Modifier) {
         ),
         label = "shimmer"
     )
-    
+
     Canvas(modifier = modifier.size(48.dp)) {
         val width = size.width
         val height = size.height
-        
+
         val lightningPath = Path().apply {
             moveTo(width * 0.65f, height * 0.05f)
             lineTo(width * 0.25f, height * 0.50f)
@@ -171,7 +171,7 @@ fun ViteLogo(modifier: Modifier = Modifier) {
             lineTo(width * 0.55f, height * 0.45f)
             close()
         }
-        
+
         drawPath(
             path = lightningPath,
             brush = Brush.linearGradient(
@@ -184,7 +184,7 @@ fun ViteLogo(modifier: Modifier = Modifier) {
             ),
             style = Stroke(width = 6f, cap = StrokeCap.Round, join = StrokeJoin.Round)
         )
-        
+
         drawPath(
             path = lightningPath,
             brush = Brush.linearGradient(
@@ -193,45 +193,45 @@ fun ViteLogo(modifier: Modifier = Modifier) {
                 end = Offset(width, height)
             )
         )
-        
+
         val highlightPath = Path().apply {
             moveTo(width * 0.55f, height * 0.15f)
             lineTo(width * 0.35f, height * 0.45f)
             lineTo(width * 0.45f, height * 0.45f)
             close()
         }
-        
+
         drawPath(path = highlightPath, color = Color.White.copy(alpha = 0.3f + shimmer * 0.2f))
     }
 }
 
-/**
- * Sample project card - 完全重构版
- * 在强化模式下使用纯透明背景，无边框无阴影
- */
+
+
+
+
 @Composable
 fun SampleProjectsCard(
     onSelectSample: (SampleProject) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val samples = remember { SampleProjectManager.getSampleProjects() }
-    
+
     val theme = LocalAppTheme.current
-    
-    // 容器样式 - 使用主题卡片圆角
+
+
     val containerModifier = modifier
         .fillMaxWidth()
         .clip(RoundedCornerShape(theme.shapes.cardRadius))
         .background(MaterialTheme.colorScheme.surface)
-    
+
     Box(modifier = containerModifier) {
         Column(modifier = Modifier.padding(20.dp)) {
-            // 标题区域
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Icon容器 - 渐变背景
+
                 Box(
                     modifier = Modifier
                         .size(44.dp)
@@ -253,9 +253,9 @@ fun SampleProjectsCard(
                         modifier = Modifier.size(24.dp)
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.width(14.dp))
-                
+
                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                     Text(
                         Strings.sampleProjects,
@@ -269,8 +269,8 @@ fun SampleProjectsCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                
-                // 标签
+
+
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(theme.shapes.buttonRadius))
@@ -285,10 +285,10 @@ fun SampleProjectsCard(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(20.dp))
-            
-            // 示例项目列表
+
+
             samples.forEachIndexed { index, sample ->
                 SampleProjectItem(
                     sample = sample,
@@ -302,9 +302,9 @@ fun SampleProjectsCard(
     }
 }
 
-/**
- * 单个示例项目项 - 重构版
- */
+
+
+
 @Composable
 private fun SampleProjectItem(
     sample: SampleProject,
@@ -312,15 +312,15 @@ private fun SampleProjectItem(
 ) {
     val theme = LocalAppTheme.current
     val frameworkColor = getFrameworkColor(sample.framework)
-    
-    // 悬停/按压动画
+
+
     var isPressed by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.98f else 1f,
         animationSpec = spring(stiffness = Spring.StiffnessHigh),
         label = "scale"
     )
-    
+
     val itemModifier = Modifier
         .fillMaxWidth()
         .graphicsLayer { scaleX = scale; scaleY = scale }
@@ -333,12 +333,12 @@ private fun SampleProjectItem(
             }
         )
         .padding(14.dp)
-    
+
     Row(
         modifier = itemModifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 框架图标
+
         Box(
             modifier = Modifier
                 .size(52.dp)
@@ -360,9 +360,9 @@ private fun SampleProjectItem(
                 else -> Icon(com.webtoapp.util.SvgIconMapper.getIcon(sample.icon), contentDescription = null, modifier = Modifier.size(22.dp), tint = MaterialTheme.colorScheme.primary)
             }
         }
-        
+
         Spacer(modifier = Modifier.width(14.dp))
-        
+
         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
             Text(
                 sample.name,
@@ -370,9 +370,9 @@ private fun SampleProjectItem(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            
+
             Spacer(modifier = Modifier.height(3.dp))
-            
+
             Text(
                 sample.description,
                 style = MaterialTheme.typography.bodySmall,
@@ -380,10 +380,10 @@ private fun SampleProjectItem(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
-            // 标签
+
+
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 sample.tags.take(2).forEach { tag ->
                     Box(
@@ -402,10 +402,10 @@ private fun SampleProjectItem(
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.width(8.dp))
-        
-        // Play按钮
+
+
         Box(
             modifier = Modifier
                 .size(36.dp)
@@ -430,9 +430,9 @@ private fun SampleProjectItem(
     }
 }
 
-/**
- * 获取框架对应的颜色
- */
+
+
+
 private fun getFrameworkColor(framework: FrontendFramework): Color {
     return when (framework) {
         FrontendFramework.VUE -> Color(0xFF42B883)

@@ -17,9 +17,10 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
+import java.net.URLEncoder
 import java.util.concurrent.TimeUnit
 
-/** Subscription tier constants — use these instead of raw strings */
+
 object SubscriptionTier {
     const val FREE = "free"
     const val PRO = "pro"
@@ -27,58 +28,41 @@ object SubscriptionTier {
     const val LIFETIME = "lifetime"
 }
 
-/**
- * 云服务统一 API 客户端
- *
- * 对接服务器端全部非认证 API（激活码、设备、公告、更新、远程配置、项目管理、分析等）
- */
+
+
+
+
+
 class CloudApiClient(private val tokenManager: TokenManager, context: android.content.Context? = null) {
 
     companion object {
         const val BASE_URL = "https://api.shiaho.sbs"
         private const val TAG = "CloudApiClient"
-        private const val HTTP_CACHE_SIZE = 10L * 1024 * 1024 // 10 MB
+        private const val HTTP_CACHE_SIZE = 10L * 1024 * 1024
     }
 
     private val jsonMediaType = "application/json; charset=utf-8".toMediaType()
 
-    // HTTP 磁盘缓存 — 减少重复网络请求（遵循 Cache-Control）
+
     private val httpCache: okhttp3.Cache? = context?.let {
         try { okhttp3.Cache(java.io.File(it.cacheDir, "http_cache"), HTTP_CACHE_SIZE) }
         catch (_: Exception) { null }
     }
 
     private val client = OkHttpClient.Builder()
+        .retryOnConnectionFailure(true)
         .connectTimeout(8, TimeUnit.SECONDS)
         .readTimeout(15, TimeUnit.SECONDS)
         .writeTimeout(30, TimeUnit.SECONDS)
         .connectionPool(okhttp3.ConnectionPool(maxIdleConnections = 8, keepAliveDuration = 30, timeUnit = TimeUnit.SECONDS))
         .apply { httpCache?.let { cache(it) } }
-        .addInterceptor { chain ->
-            // 自动重试拦截器：仅对 GET/HEAD 幂等请求重试，最多 2 次
-            val request = chain.request()
-            val isIdempotent = request.method in listOf("GET", "HEAD")
-            var lastException: java.io.IOException? = null
-            val maxRetries = if (isIdempotent) 2 else 0
-            for (attempt in 0..maxRetries) {
-                try {
-                    return@addInterceptor chain.proceed(request)
-                } catch (e: java.io.IOException) {
-                    lastException = e
-                    if (attempt < maxRetries) {
-                        try { Thread.sleep(200L * (attempt + 1)) } catch (_: InterruptedException) {}
-                    }
-                }
-            }
-            throw lastException!!
-        }
         .build()
 
-    // ═══════════════════════════════════════════
-    // 1. ACTIVATION CODE
-    // ═══════════════════════════════════════════
 
-    /** 兑换激活码 */
+
+
+
+
     suspend fun redeemCode(code: String): AuthResult<RedeemResult> = authRequest {
         val body = JsonObject().apply {
             addProperty("code", code)
@@ -91,7 +75,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             .build()
 
         val response = client.newCall(request).execute()
-        val statusCode = response.code
         val responseBody = response.body?.string() ?: ""
 
         if (response.isSuccessful) {
@@ -108,7 +91,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 预览兑换激活码的效果（不会真正兑换） */
+
     suspend fun previewRedeemCode(code: String): AuthResult<RedeemPreview> = authRequest {
         val body = JsonObject().apply {
             addProperty("code", code)
@@ -121,7 +104,6 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             .build()
 
         val response = client.newCall(request).execute()
-        val statusCode = response.code
         val responseBody = response.body?.string() ?: ""
 
         if (response.isSuccessful) {
@@ -146,7 +128,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 获取兑换历史 */
+
     suspend fun getActivationHistory(): AuthResult<List<ActivationRecord>> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/activation/history")
@@ -178,11 +160,11 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    // ═══════════════════════════════════════════
-    // 2. DEVICE MANAGEMENT
-    // ═══════════════════════════════════════════
 
-    /** 获取设备列表 */
+
+
+
+
     suspend fun getDevices(): AuthResult<List<DeviceInfo>> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/user/devices")
@@ -216,7 +198,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 解绑设备 */
+
     suspend fun removeDevice(deviceId: Int): AuthResult<String> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/user/devices/$deviceId")
@@ -235,11 +217,11 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    // ═══════════════════════════════════════════
-    // 3. ANNOUNCEMENTS
-    // ═══════════════════════════════════════════
 
-    /** 获取全局公告（可选 Token） */
+
+
+
+
     suspend fun getAnnouncements(appVersion: String? = null): AuthResult<List<AnnouncementData>> =
         withContext(Dispatchers.IO) {
             try {
@@ -277,11 +259,11 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             }
         }
 
-    // ═══════════════════════════════════════════
-    // 4. APP VERSION CHECK
-    // ═══════════════════════════════════════════
 
-    /** 检查应用更新 */
+
+
+
+
     suspend fun checkAppUpdate(currentVersionCode: Int): AuthResult<AppUpdateInfo?> =
         withContext(Dispatchers.IO) {
             try {
@@ -299,7 +281,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
                     if (data == null || !data.has("has_update") || !data.get("has_update").asBoolean) {
                         return@withContext AuthResult.Success(null)
                     }
-                    // Server wraps version info in "latest_version" sub-object
+
                     val latest = data.getAsJsonObject("latest_version") ?: data
                     AuthResult.Success(AppUpdateInfo(
                         hasUpdate = true,
@@ -320,16 +302,16 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             }
         }
 
-    // ═══════════════════════════════════════════
-    // 5. REMOTE CONFIG
-    // ═══════════════════════════════════════════
 
-    /** 获取远程配置 */
+
+
+
+
     suspend fun getRemoteConfig(): AuthResult<List<RemoteConfigItem>> =
         withContext(Dispatchers.IO) {
             try {
                 val reqBuilder = Request.Builder()
-                    .url("$BASE_URL/api/v1/remote-config")
+                    .url("$BASE_URL/api/v1/app-version/remote-config")
                     .get()
                 tokenManager.getAccessToken()?.let { reqBuilder.header("Authorization", "Bearer $it") }
                 val response = client.newCall(reqBuilder.build()).execute()
@@ -337,16 +319,32 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
 
                 if (response.isSuccessful) {
                     val json = JsonParser.parseString(responseBody).asJsonObject
-                    val data = json.getAsJsonObject("data")
-                    // Server returns {configs: {key: value, ...}, updated_at: ...}
-                    val configsObj = data?.getAsJsonObject("configs")
-                    if (configsObj == null) return@withContext AuthResult.Success(emptyList())
-                    val list = configsObj.entrySet().map { entry ->
-                        RemoteConfigItem(
-                            key = entry.key,
-                            value = entry.value.asString,
-                            description = null
-                        )
+                    val data = json.getAsJsonObject("data") ?: json
+                    val configsObj = data.getAsJsonObject("configs")
+                        ?: data.getAsJsonObject("config")
+                    val list = when {
+                        configsObj != null -> configsObj.entrySet().map { entry ->
+                            val valueElement = entry.value
+                            val value = if (valueElement.isJsonObject && valueElement.asJsonObject.has("value")) {
+                                valueElement.asJsonObject.get("value").asString
+                            } else {
+                                valueElement.asString
+                            }
+                            RemoteConfigItem(
+                                key = entry.key,
+                                value = value,
+                                description = null
+                            )
+                        }
+                        data.has("configs") && data.get("configs").isJsonArray -> data.getAsJsonArray("configs").map { el ->
+                            val obj = el.asJsonObject
+                            RemoteConfigItem(
+                                key = obj.get("key")?.asString ?: "",
+                                value = obj.get("value")?.asString ?: "",
+                                description = obj.get("description")?.let { if (it.isJsonNull) null else it.asString }
+                            )
+                        }.filter { it.key.isNotBlank() }
+                        else -> emptyList()
                     }
                     AuthResult.Success(list)
                 } else {
@@ -358,11 +356,11 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             }
         }
 
-    // ═══════════════════════════════════════════
-    // 6. PROJECT MANAGEMENT
-    // ═══════════════════════════════════════════
 
-    /** 列出项目 */
+
+
+
+
     suspend fun listProjects(): AuthResult<List<CloudProject>> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/projects")
@@ -382,7 +380,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 创建项目 */
+
     suspend fun createProject(name: String, description: String? = null,
                               githubRepo: String? = null, giteeRepo: String? = null): AuthResult<CloudProject> = authRequest {
         val body = JsonObject().apply {
@@ -408,7 +406,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 删除项目 */
+
     suspend fun deleteProject(projectId: Int): AuthResult<String> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/projects/$projectId")
@@ -426,7 +424,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 更新项目 */
+
     suspend fun updateProject(projectId: Int, name: String? = null, description: String? = null,
                               githubRepo: String? = null, giteeRepo: String? = null): AuthResult<CloudProject> = authRequest {
         val body = JsonObject().apply {
@@ -452,7 +450,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 发布版本（上传 APK）*/
+
     suspend fun publishVersion(
         projectId: Int,
         apkFile: File,
@@ -499,7 +497,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 列出版本 */
+
     suspend fun listVersions(projectId: Int): AuthResult<List<ProjectVersion>> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/projects/$projectId/versions")
@@ -532,15 +530,15 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    // ═══════════════════════════════════════════
-    // DIRECT UPLOAD (Client → GitHub)
-    // ═══════════════════════════════════════════
 
-    /**
-     * Step 1: Request a short-lived upload token from our server.
-     * The server generates a GitHub App installation token (1h expiry)
-     * and creates the release on GitHub.
-     */
+
+
+
+
+
+
+
+
     suspend fun requestUploadToken(
         projectId: Int,
         versionCode: Int,
@@ -583,10 +581,10 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /**
-     * Step 2: Upload APK directly to GitHub using the temporary token.
-     * The file goes from user's device → GitHub, not through our server.
-     */
+
+
+
+
     suspend fun directUploadToGithub(
         uploadInfo: DirectUploadToken,
         apkFile: File,
@@ -612,7 +610,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
                 }
             }
 
-            // Use a longer-timeout client for large file uploads (share connection pool via newBuilder)
+
             val uploadClient = client.newBuilder()
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .readTimeout(5, TimeUnit.MINUTES)
@@ -645,9 +643,9 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /**
-     * Step 3: Confirm the upload to our server so it records the version.
-     */
+
+
+
     suspend fun confirmDirectUpload(
         projectId: Int,
         versionCode: Int,
@@ -693,22 +691,16 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /**
-     * Upload any media asset (image, video, icon) to GitHub via our server's asset token.
-     * Returns the download URL of the uploaded asset.
-     */
+
+
+
+
     suspend fun uploadAsset(
         file: java.io.File,
         contentType: String = "image/png",
         onProgress: (Float) -> Unit = {}
     ): AuthResult<String> = authRequest {
-        // Step 1: Get upload token from our server
-        val tokenBody = okhttp3.FormBody.Builder()
-            .add("file_name", file.name)
-            .add("content_type", contentType)
-            .build()
 
-        // Use JSON body
         val jsonBody = """{"file_name":"${file.name}","content_type":"$contentType"}"""
         val tokenRequest = Request.Builder()
             .url("$BASE_URL/api/v1/assets/upload-token")
@@ -730,7 +722,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         val fileName = tokenData.get("file_name").asString
         val ct = tokenData.get("content_type").asString
 
-        // Step 2: Upload file directly to GitHub
+
         val fileBody = object : okhttp3.RequestBody() {
             override fun contentType() = ct.toMediaType()
             override fun contentLength() = file.length()
@@ -768,7 +760,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 获取分析数据 */
+
     suspend fun getAnalytics(projectId: Int, days: Int = 7): AuthResult<AnalyticsData> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/projects/$projectId/analytics?days=$days")
@@ -820,11 +812,11 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    // ═══════════════════════════════════════════
-    // R2 CLOUD STORAGE PUBLISH
-    // ═══════════════════════════════════════════
 
-    /** 发布版本到 R2 云存储（Cloudflare CDN 加速） */
+
+
+
+
     suspend fun publishVersionR2(
         projectId: Int, apkFile: File, versionCode: Int, versionName: String,
         title: String? = null, changelog: String? = null
@@ -870,11 +862,11 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    // ═══════════════════════════════════════════
-    // FCM PUSH NOTIFICATIONS
-    // ═══════════════════════════════════════════
 
-    /** 注册 FCM 推送 Token */
+
+
+
+
     suspend fun registerPushToken(projectId: Int, fcmToken: String, deviceId: String): AuthResult<String> = authRequest {
         val body = JsonObject().apply {
             addProperty("fcm_token", fcmToken)
@@ -899,7 +891,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 发送推送通知 */
+
     suspend fun sendPushNotification(projectId: Int, title: String, body: String,
                                       targetType: String = "all",
                                       targetUserIds: List<Int>? = null): AuthResult<String> = authRequest {
@@ -931,11 +923,11 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    // ═══════════════════════════════════════════
-    // BACKUP DOWNLOAD
-    // ═══════════════════════════════════════════
 
-    /** 获取备份下载 URL */
+
+
+
+
     suspend fun downloadBackup(projectId: Int, backupId: Int): AuthResult<String> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/projects/$projectId/backups/$backupId/download")
@@ -956,11 +948,11 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    // ═══════════════════════════════════════════
-    // DETAILED ANALYTICS
-    // ═══════════════════════════════════════════
 
-    /** 分析概览 */
+
+
+
+
     suspend fun getAnalyticsOverview(projectId: Int): AuthResult<JsonObject> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/projects/$projectId/analytics/overview")
@@ -979,7 +971,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 趋势数据 */
+
     suspend fun getAnalyticsTrend(projectId: Int, days: Int = 7): AuthResult<JsonObject> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/projects/$projectId/analytics/trend?days=$days")
@@ -998,7 +990,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 地理分布 */
+
     suspend fun getAnalyticsGeo(projectId: Int): AuthResult<Map<String, Int>> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/projects/$projectId/analytics/geo")
@@ -1019,7 +1011,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 设备分布 */
+
     suspend fun getAnalyticsDevices(projectId: Int): AuthResult<Map<String, Int>> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/projects/$projectId/analytics/devices")
@@ -1040,7 +1032,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 版本分布 */
+
     suspend fun getAnalyticsVersions(projectId: Int): AuthResult<Map<String, Int>> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/projects/$projectId/analytics/versions")
@@ -1061,11 +1053,11 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    // ═══════════════════════════════════════════
-    // 7. PROJECT ACTIVATION CODES
-    // ═══════════════════════════════════════════
 
-    /** 批量生成项目激活码 */
+
+
+
+
     suspend fun generateProjectCodes(projectId: Int, count: Int = 10, maxUses: Int = 1, prefix: String = ""): AuthResult<List<ProjectActivationCode>> = authRequest {
         val body = JsonObject().apply {
             addProperty("count", count)
@@ -1099,7 +1091,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 列出项目激活码 */
+
     suspend fun listProjectCodes(projectId: Int, status: String? = null, page: Int = 1): AuthResult<List<ProjectActivationCode>> = authRequest {
         val url = buildString {
             append("$BASE_URL/api/v1/projects/$projectId/codes?page=$page")
@@ -1123,11 +1115,11 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    // ═══════════════════════════════════════════
-    // 8. PROJECT ANNOUNCEMENTS
-    // ═══════════════════════════════════════════
 
-    /** 创建项目公告 */
+
+
+
+
     suspend fun createProjectAnnouncement(projectId: Int, title: String, content: String, priority: Int = 0): AuthResult<ProjectAnnouncement> = authRequest {
         val body = JsonObject().apply {
             addProperty("title", title)
@@ -1151,7 +1143,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 列出项目公告 */
+
     suspend fun listProjectAnnouncements(projectId: Int): AuthResult<List<ProjectAnnouncement>> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/projects/$projectId/announcements")
@@ -1171,7 +1163,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 更新项目公告 */
+
     suspend fun updateProjectAnnouncement(projectId: Int, annId: Int, title: String? = null, content: String? = null, isActive: Boolean? = null): AuthResult<String> = authRequest {
         val body = JsonObject().apply {
             title?.let { addProperty("title", it) }
@@ -1191,7 +1183,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 删除项目公告 */
+
     suspend fun deleteProjectAnnouncement(projectId: Int, annId: Int): AuthResult<String> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/projects/$projectId/announcements/$annId")
@@ -1206,11 +1198,11 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    // ═══════════════════════════════════════════
-    // 9. PROJECT REMOTE CONFIG
-    // ═══════════════════════════════════════════
 
-    /** 创建项目远程配置 */
+
+
+
+
     suspend fun createProjectConfig(projectId: Int, key: String, value: String, description: String? = null): AuthResult<ProjectConfig> = authRequest {
         val body = JsonObject().apply {
             addProperty("config_key", key)
@@ -1241,7 +1233,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 列出项目远程配置 */
+
     suspend fun listProjectConfigs(projectId: Int): AuthResult<List<ProjectConfig>> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/projects/$projectId/configs")
@@ -1270,7 +1262,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 更新项目远程配置 */
+
     suspend fun updateProjectConfig(projectId: Int, cfgId: Int, value: String? = null, description: String? = null, isActive: Boolean? = null): AuthResult<String> = authRequest {
         val body = JsonObject().apply {
             value?.let { addProperty("config_value", it) }
@@ -1290,7 +1282,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 删除项目远程配置 */
+
     suspend fun deleteProjectConfig(projectId: Int, cfgId: Int): AuthResult<String> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/projects/$projectId/configs/$cfgId")
@@ -1305,11 +1297,11 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    // ═══════════════════════════════════════════
-    // 10. WEBHOOKS
-    // ═══════════════════════════════════════════
 
-    /** 创建 Webhook */
+
+
+
+
     suspend fun createWebhook(projectId: Int, webhookUrl: String, events: List<String>, secret: String? = null): AuthResult<ProjectWebhook> = authRequest {
         val body = JsonObject().apply {
             addProperty("url", webhookUrl)
@@ -1336,7 +1328,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 列出 Webhooks */
+
     suspend fun listWebhooks(projectId: Int): AuthResult<List<ProjectWebhook>> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/projects/$projectId/webhooks")
@@ -1356,7 +1348,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 删除 Webhook */
+
     suspend fun deleteWebhook(projectId: Int, webhookId: Int): AuthResult<String> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/projects/$projectId/webhooks/$webhookId")
@@ -1371,11 +1363,11 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    // ═══════════════════════════════════════════
-    // SUBSCRIPTION VERIFICATION
-    // ═══════════════════════════════════════════
 
-    /** 验证 Google Play 购买并激活订阅 */
+
+
+
+
     suspend fun verifySubscription(purchaseToken: String, productId: String): AuthResult<String> = authRequest {
         val body = JsonObject().apply {
             addProperty("purchase_token", purchaseToken)
@@ -1400,11 +1392,11 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    // ═══════════════════════════════════════════
-    // 17. MODULE INTERACTION — 统一互动 API（市场+社区共用）
-    // ═══════════════════════════════════════════
 
-    /** 点赞/取消点赞模块（切换模式，市场+社区统一入口） */
+
+
+
+
     suspend fun toggleModuleLike(moduleId: Int): AuthResult<LikeResponse> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/modules/$moduleId/like")
@@ -1423,7 +1415,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         } else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 查询模块是否已点赞 */
+
     suspend fun getModuleLikeStatus(moduleId: Int): AuthResult<Boolean> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/modules/$moduleId/like/status")
@@ -1439,7 +1431,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         } else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** @deprecated Use toggleModuleLike() instead */
+
     suspend fun voteModule(moduleId: Int, voteType: String = "up"): AuthResult<String> = authRequest {
         val body = JsonObject().apply { addProperty("vote_type", voteType) }
         val request = Request.Builder()
@@ -1453,7 +1445,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** @deprecated Use toggleModuleLike() instead */
+
     suspend fun unvoteModule(moduleId: Int): AuthResult<String> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/community/modules/$moduleId/vote")
@@ -1466,10 +1458,10 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** @deprecated Use toggleModuleLike() instead */
+
     suspend fun likeStoreModule(moduleId: Int): AuthResult<LikeResponse> = toggleModuleLike(moduleId)
 
-    /** 添加收藏 */
+
     suspend fun addFavorite(moduleId: Int): AuthResult<String> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/community/modules/$moduleId/favorite")
@@ -1482,7 +1474,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 取消收藏 */
+
     suspend fun removeFavorite(moduleId: Int): AuthResult<String> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/community/modules/$moduleId/favorite")
@@ -1495,7 +1487,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 获取收藏列表 */
+
     suspend fun listFavorites(page: Int = 1, size: Int = 20): AuthResult<Pair<List<ModuleItem>, Int>> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/community/favorites?page=$page&size=$size")
@@ -1513,7 +1505,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         } else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 发表评论 */
+
     suspend fun addComment(moduleId: Int, content: String, parentId: Int? = null): AuthResult<String> = authRequest {
         val body = JsonObject().apply {
             addProperty("content", content)
@@ -1530,7 +1522,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 获取评论列表 */
+
     suspend fun listComments(moduleId: Int, page: Int = 1, size: Int = 20): AuthResult<List<ModuleComment>> {
         return try {
             val request = Request.Builder()
@@ -1562,7 +1554,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 删除评论 */
+
     suspend fun deleteComment(commentId: Int): AuthResult<Unit> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/community/comments/$commentId")
@@ -1575,7 +1567,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 举报模块（统一入口，市场+社区共用） */
+
     suspend fun reportModule(moduleId: Int, reason: String, details: String? = null): AuthResult<String> = authRequest {
         val body = JsonObject().apply {
             addProperty("module_id", moduleId)
@@ -1593,7 +1585,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** @deprecated Use reportModule() instead */
+
     suspend fun reportStoreModule(moduleId: Int, reason: String): AuthResult<Unit> = authRequest {
         val body = JsonObject().apply { addProperty("reason", reason) }
         val request = Request.Builder()
@@ -1607,11 +1599,11 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    // ═══════════════════════════════════════════
-    // 18. SOCIAL — Follow, Profiles, Feed
-    // ═══════════════════════════════════════════
 
-    /** 关注用户 */
+
+
+
+
     suspend fun followUser(userId: Int): AuthResult<String> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/community/users/$userId/follow")
@@ -1624,7 +1616,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 取消关注 */
+
     suspend fun unfollowUser(userId: Int): AuthResult<String> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/community/users/$userId/follow")
@@ -1637,7 +1629,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 获取社区主 Feed */
+
     suspend fun getCommunityFeed(page: Int = 1, size: Int = 20): AuthResult<List<CommunityPostItem>> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/community/feed?page=$page&size=$size")
@@ -1653,7 +1645,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         } else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 关注动态 Feed */
+
     suspend fun getFollowingFeed(page: Int = 1, size: Int = 20): AuthResult<List<CommunityPostItem>> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/community/feed/following?page=$page&size=$size")
@@ -1670,7 +1662,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         } else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 趋势/热门 Feed */
+
     suspend fun getTrendingFeed(page: Int = 1, size: Int = 20): AuthResult<List<CommunityPostItem>> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/community/feed/trending?page=$page&size=$size")
@@ -1687,7 +1679,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         } else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 获取粉丝列表 */
+
     suspend fun getUserFollowers(userId: Int, page: Int = 1, size: Int = 20): AuthResult<List<CommunityUserProfile>> {
         return try {
             val request = Request.Builder()
@@ -1707,7 +1699,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 获取关注列表 */
+
     suspend fun getUserFollowing(userId: Int, page: Int = 1, size: Int = 20): AuthResult<List<CommunityUserProfile>> {
         return try {
             val request = Request.Builder()
@@ -1727,7 +1719,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 搜索用户 */
+
     suspend fun searchUsers(query: String, page: Int = 1, size: Int = 20): AuthResult<List<CommunityUserProfile>> {
         return try {
             val encodedQuery = java.net.URLEncoder.encode(query, "UTF-8")
@@ -1748,7 +1740,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 获取热门模块 */
+
     suspend fun getTrendingModules(page: Int = 1, size: Int = 20): AuthResult<List<StoreModuleInfo>> {
         return try {
             val request = Request.Builder()
@@ -1767,7 +1759,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 获取精选模块 */
+
     suspend fun getFeaturedModules(page: Int = 1, size: Int = 20): AuthResult<List<StoreModuleInfo>> {
         return try {
             val request = Request.Builder()
@@ -1786,14 +1778,14 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 获取用户主页 */
+
     suspend fun getUserProfile(userId: Int): AuthResult<CommunityUserProfile> =
         withContext(Dispatchers.IO) {
             try {
                 val requestBuilder = Request.Builder()
                     .url("$BASE_URL/api/v1/community/users/$userId")
                     .get()
-                // 可选认证：有 token 时服务端可计算 is_following 字段
+
                 tokenManager.getAccessToken()?.let { requestBuilder.header("Authorization", "Bearer $it") }
                 val response = client.newCall(requestBuilder.build()).execute()
                 val responseBody = response.body?.string() ?: ""
@@ -1820,11 +1812,11 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             }
         }
 
-    // ═══════════════════════════════════════════
-    // 19. NOTIFICATIONS
-    // ═══════════════════════════════════════════
 
-    /** 获取通知列表 */
+
+
+
+
     suspend fun listNotifications(page: Int = 1, size: Int = 20, unreadOnly: Boolean = false): AuthResult<Pair<List<NotificationItem>, Int>> = authRequest {
         val params = "?page=$page&size=$size" + if (unreadOnly) "&unread_only=true" else ""
         val request = Request.Builder()
@@ -1856,7 +1848,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         } else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 获取未读通知数量 */
+
     suspend fun getUnreadNotificationCount(): AuthResult<Int> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/notifications/unread-count")
@@ -1872,7 +1864,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         } else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 标记通知已读 */
+
     suspend fun markNotificationRead(notificationId: Int): AuthResult<Unit> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/notifications/read/$notificationId")
@@ -1885,7 +1877,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 标记所有通知已读 */
+
     suspend fun markAllNotificationsRead(): AuthResult<Unit> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/notifications/read-all")
@@ -1898,28 +1890,28 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    // ═══════════════════════════════════════════
-    // PARSE HELPERS
-    // ═══════════════════════════════════════════
 
-    /** Token 刷新互斥锁 — 防止多个请求同时 401 时并行刷新导致 refresh_token 被消费多次 */
+
+
+
+
     private val refreshMutex = Mutex()
 
-    /** 带鉴权的请求模板（自动 Token 刷新，Mutex 防止竞态） */
+
     private suspend fun <T> authRequest(block: suspend (token: String) -> AuthResult<T>): AuthResult<T> =
         withContext(Dispatchers.IO) {
             try {
                 val token = tokenManager.getAccessToken()
                     ?: return@withContext AuthResult.Error("未登录，请先登录")
                 val result = block(token)
-                // 如果 401，尝试刷新 (检查实际 HTTP 状态码而非消息文本)
+
                 if (result is AuthResult.Error && result.message.contains("HTTP 401")) {
-                    // 用 Mutex 保护刷新流程：同一时间只有一个协程执行刷新
+
                     refreshMutex.withLock {
-                        // 双重检查：其他协程可能已经刷新成功了
+
                         val currentToken = tokenManager.getAccessToken()
                         if (currentToken != null && currentToken != token) {
-                            // Token 已被其他协程刷新，直接用新 token 重试
+
                             return@withContext block(currentToken)
                         }
                         val refresh = tokenManager.getRefreshToken()
@@ -1950,6 +1942,397 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
                 AuthResult.Error("网络连接失败: ${e.message}")
             }
         }
+
+    suspend fun listEcosystemFeed(
+        type: String = "all",
+        sort: String = "latest",
+        page: Int = 1,
+        size: Int = 20,
+        search: String? = null
+    ): AuthResult<EcosystemFeedResponse> = withContext(Dispatchers.IO) {
+        try {
+            val query = mutableListOf(
+                "type=${urlEncode(type)}",
+                "sort=${urlEncode(sort)}",
+                "page=$page",
+                "size=$size"
+            )
+            if (!search.isNullOrBlank()) query += "search=${urlEncode(search)}"
+            val requestBuilder = Request.Builder()
+                .url("$BASE_URL/api/v2/ecosystem/feed?${query.joinToString("&")}")
+                .get()
+            tokenManager.getAccessToken()?.let { requestBuilder.header("Authorization", "Bearer $it") }
+            val response = client.newCall(requestBuilder.build()).execute()
+            val responseBody = response.body?.string() ?: ""
+            if (response.isSuccessful) {
+                val data = JsonParser.parseString(responseBody).asJsonObject.getAsJsonObject("data")
+                AuthResult.Success(parseEcosystemFeed(data))
+            } else {
+                AuthResult.Error(parseError(responseBody, response.code))
+            }
+        } catch (e: Exception) {
+            AuthResult.Error("网络错误: ${e.message}")
+        }
+    }
+
+    suspend fun getEcosystemItem(type: String, id: Int): AuthResult<EcosystemItem> =
+        withContext(Dispatchers.IO) {
+            try {
+                val requestBuilder = Request.Builder()
+                    .url("$BASE_URL/api/v2/ecosystem/items/${urlEncode(type)}/$id")
+                    .get()
+                tokenManager.getAccessToken()?.let { requestBuilder.header("Authorization", "Bearer $it") }
+                val response = client.newCall(requestBuilder.build()).execute()
+                val responseBody = response.body?.string() ?: ""
+                if (response.isSuccessful) {
+                    val data = JsonParser.parseString(responseBody).asJsonObject.getAsJsonObject("data")
+                    AuthResult.Success(parseEcosystemItem(data))
+                } else {
+                    AuthResult.Error(parseError(responseBody, response.code))
+                }
+            } catch (e: Exception) {
+                AuthResult.Error("网络错误: ${e.message}")
+            }
+        }
+
+    suspend fun getEcosystemUser(userId: Int): AuthResult<EcosystemUserContent> =
+        withContext(Dispatchers.IO) {
+            try {
+                val requestBuilder = Request.Builder()
+                    .url("$BASE_URL/api/v2/ecosystem/users/$userId")
+                    .get()
+                tokenManager.getAccessToken()?.let { requestBuilder.header("Authorization", "Bearer $it") }
+                val response = client.newCall(requestBuilder.build()).execute()
+                val responseBody = response.body?.string() ?: ""
+                if (response.isSuccessful) {
+                    val data = JsonParser.parseString(responseBody).asJsonObject.getAsJsonObject("data")
+                    AuthResult.Success(parseEcosystemUser(data))
+                } else {
+                    AuthResult.Error(parseError(responseBody, response.code))
+                }
+            } catch (e: Exception) {
+                AuthResult.Error("网络错误: ${e.message}")
+            }
+        }
+
+    suspend fun createEcosystemPost(
+        content: String,
+        title: String? = null,
+        tags: List<String> = emptyList(),
+        media: List<EcosystemMedia> = emptyList()
+    ): AuthResult<EcosystemItem> =
+        authRequest { token ->
+            val body = JsonObject().apply {
+                addProperty("content", content)
+                title?.let { addProperty("title", it) }
+                add("tags", com.google.gson.JsonArray().apply { tags.forEach { add(it) } })
+                add("media", com.google.gson.JsonArray().apply {
+                    media.forEach { item ->
+                        add(JsonObject().apply {
+                            addProperty("type", item.type)
+                            item.url?.let { addProperty("url", it) }
+                            item.thumbnailUrl?.let { addProperty("thumbnail_url", it) }
+                        })
+                    }
+                })
+            }
+            val request = Request.Builder()
+                .url("$BASE_URL/api/v2/ecosystem/posts")
+                .header("Authorization", "Bearer $token")
+                .post(body.toString().toRequestBody(jsonMediaType))
+                .build()
+            val response = client.newCall(request).execute()
+            val responseBody = response.body?.string() ?: ""
+            if (response.isSuccessful) {
+                val data = JsonParser.parseString(responseBody).asJsonObject.getAsJsonObject("data")
+                AuthResult.Success(parseEcosystemItem(data))
+            } else {
+                AuthResult.Error(parseError(responseBody, response.code))
+            }
+        }
+
+    suspend fun listEcosystemComments(type: String, id: Int, page: Int = 1, size: Int = 30): AuthResult<EcosystemCommentsResponse> =
+        withContext(Dispatchers.IO) {
+            try {
+                val requestBuilder = Request.Builder()
+                    .url("$BASE_URL/api/v2/ecosystem/items/${urlEncode(type)}/$id/comments?page=$page&size=$size")
+                    .get()
+                tokenManager.getAccessToken()?.let { requestBuilder.header("Authorization", "Bearer $it") }
+                val response = client.newCall(requestBuilder.build()).execute()
+                val responseBody = response.body?.string() ?: ""
+                if (response.isSuccessful) {
+                    val data = JsonParser.parseString(responseBody).asJsonObject.getAsJsonObject("data")
+                    AuthResult.Success(parseEcosystemComments(data))
+                } else {
+                    AuthResult.Error(parseError(responseBody, response.code))
+                }
+            } catch (e: Exception) {
+                AuthResult.Error("网络错误: ${e.message}")
+            }
+        }
+
+    suspend fun listEcosystemBookmarks(type: String = "all", page: Int = 1, size: Int = 20): AuthResult<EcosystemFeedResponse> =
+        authRequest { token ->
+            val request = Request.Builder()
+                .url("$BASE_URL/api/v2/ecosystem/bookmarks?type=${urlEncode(type)}&page=$page&size=$size")
+                .header("Authorization", "Bearer $token")
+                .get()
+                .build()
+            val response = client.newCall(request).execute()
+            val responseBody = response.body?.string() ?: ""
+            if (response.isSuccessful) {
+                val data = JsonParser.parseString(responseBody).asJsonObject.getAsJsonObject("data")
+                AuthResult.Success(parseEcosystemFeed(data))
+            } else {
+                AuthResult.Error(parseError(responseBody, response.code))
+            }
+        }
+
+    suspend fun listEcosystemNotifications(page: Int = 1, size: Int = 20, unreadOnly: Boolean = false): AuthResult<EcosystemNotificationsResponse> =
+        authRequest { token ->
+            val params = "?page=$page&size=$size" + if (unreadOnly) "&unread_only=true" else ""
+            val request = Request.Builder()
+                .url("$BASE_URL/api/v2/ecosystem/notifications$params")
+                .header("Authorization", "Bearer $token")
+                .get()
+                .build()
+            val response = client.newCall(request).execute()
+            val responseBody = response.body?.string() ?: ""
+            if (response.isSuccessful) {
+                val data = JsonParser.parseString(responseBody).asJsonObject.getAsJsonObject("data")
+                AuthResult.Success(parseEcosystemNotifications(data))
+            } else {
+                AuthResult.Error(parseError(responseBody, response.code))
+            }
+        }
+
+    suspend fun markEcosystemNotificationRead(notificationId: Int): AuthResult<Unit> =
+        authRequest { token ->
+            val request = Request.Builder()
+                .url("$BASE_URL/api/v2/ecosystem/notifications/$notificationId/read")
+                .header("Authorization", "Bearer $token")
+                .post("".toRequestBody(jsonMediaType))
+                .build()
+            val response = client.newCall(request).execute()
+            val responseBody = response.body?.string() ?: ""
+            if (response.isSuccessful) AuthResult.Success(Unit) else AuthResult.Error(parseError(responseBody, response.code))
+        }
+
+    suspend fun markAllEcosystemNotificationsRead(): AuthResult<Unit> =
+        authRequest { token ->
+            val request = Request.Builder()
+                .url("$BASE_URL/api/v2/ecosystem/notifications/read-all")
+                .header("Authorization", "Bearer $token")
+                .post("".toRequestBody(jsonMediaType))
+                .build()
+            val response = client.newCall(request).execute()
+            val responseBody = response.body?.string() ?: ""
+            if (response.isSuccessful) AuthResult.Success(Unit) else AuthResult.Error(parseError(responseBody, response.code))
+        }
+
+    suspend fun addEcosystemComment(type: String, id: Int, content: String, parentId: Int? = null): AuthResult<EcosystemComment> =
+        authRequest { token ->
+            val body = JsonObject().apply {
+                addProperty("content", content)
+                parentId?.let { addProperty("parent_id", it) }
+            }
+            val request = Request.Builder()
+                .url("$BASE_URL/api/v2/ecosystem/items/${urlEncode(type)}/$id/comments")
+                .header("Authorization", "Bearer $token")
+                .post(body.toString().toRequestBody(jsonMediaType))
+                .build()
+            val response = client.newCall(request).execute()
+            val responseBody = response.body?.string() ?: ""
+            if (response.isSuccessful) {
+                val data = JsonParser.parseString(responseBody).asJsonObject.getAsJsonObject("data")
+                AuthResult.Success(parseEcosystemComment(data))
+            } else {
+                AuthResult.Error(parseError(responseBody, response.code))
+            }
+        }
+
+    suspend fun toggleEcosystemLike(type: String, id: Int): AuthResult<EcosystemToggleResult> = authRequest { token ->
+        val request = Request.Builder()
+            .url("$BASE_URL/api/v2/ecosystem/items/${urlEncode(type)}/$id/like")
+            .header("Authorization", "Bearer $token")
+            .post("".toRequestBody(jsonMediaType))
+            .build()
+        val response = client.newCall(request).execute()
+        val responseBody = response.body?.string() ?: ""
+        if (response.isSuccessful) {
+            val data = JsonParser.parseString(responseBody).asJsonObject.getAsJsonObject("data")
+            AuthResult.Success(EcosystemToggleResult(
+                active = data?.get("liked")?.asBoolean ?: false,
+                count = data?.get("like_count")?.asInt ?: 0
+            ))
+        } else {
+            AuthResult.Error(parseError(responseBody, response.code))
+        }
+    }
+
+    suspend fun toggleEcosystemBookmark(type: String, id: Int): AuthResult<EcosystemToggleResult> = authRequest { token ->
+        val request = Request.Builder()
+            .url("$BASE_URL/api/v2/ecosystem/items/${urlEncode(type)}/$id/bookmark")
+            .header("Authorization", "Bearer $token")
+            .post("".toRequestBody(jsonMediaType))
+            .build()
+        val response = client.newCall(request).execute()
+        val responseBody = response.body?.string() ?: ""
+        if (response.isSuccessful) {
+            val data = JsonParser.parseString(responseBody).asJsonObject.getAsJsonObject("data")
+            AuthResult.Success(EcosystemToggleResult(active = data?.get("bookmarked")?.asBoolean ?: false))
+        } else {
+            AuthResult.Error(parseError(responseBody, response.code))
+        }
+    }
+
+    suspend fun reportEcosystemItem(type: String, id: Int, reason: String, description: String? = null): AuthResult<Unit> =
+        authRequest { token ->
+            val body = JsonObject().apply {
+                addProperty("reason", reason)
+                description?.let { addProperty("description", it) }
+            }
+            val request = Request.Builder()
+                .url("$BASE_URL/api/v2/ecosystem/items/${urlEncode(type)}/$id/report")
+                .header("Authorization", "Bearer $token")
+                .post(body.toString().toRequestBody(jsonMediaType))
+                .build()
+            val response = client.newCall(request).execute()
+            val responseBody = response.body?.string() ?: ""
+            if (response.isSuccessful) AuthResult.Success(Unit) else AuthResult.Error(parseError(responseBody, response.code))
+        }
+
+    private fun urlEncode(value: String): String = URLEncoder.encode(value, "UTF-8")
+
+    private fun parseEcosystemFeed(obj: JsonObject?): EcosystemFeedResponse {
+        val items = obj?.getAsJsonArray("items")?.map { parseEcosystemItem(it.asJsonObject) } ?: emptyList()
+        return EcosystemFeedResponse(
+            items = items,
+            total = obj?.get("total")?.asInt ?: items.size,
+            page = obj?.get("page")?.asInt ?: 1,
+            size = obj?.get("size")?.asInt ?: items.size
+        )
+    }
+
+    private fun parseEcosystemItem(obj: JsonObject): EcosystemItem {
+        val media = obj.getAsJsonArray("media")?.map { mediaEl ->
+            val mo = mediaEl.asJsonObject
+            EcosystemMedia(
+                id = mo.get("id")?.asInt ?: 0,
+                type = mo.get("type")?.let { if (it.isJsonNull) "image" else it.asString } ?: "image",
+                url = mo.get("url")?.let { if (it.isJsonNull) null else it.asString },
+                thumbnailUrl = mo.get("thumbnail_url")?.let { if (it.isJsonNull) null else it.asString }
+            )
+        } ?: emptyList()
+        val authorObj = obj.getAsJsonObject("author")
+        val statsObj = obj.getAsJsonObject("stats")
+        val viewerObj = obj.getAsJsonObject("viewer_state")
+        val metaObj = obj.getAsJsonObject("meta")
+        val meta = metaObj?.entrySet()?.associate { (key, value) ->
+            key to if (value == null || value.isJsonNull) null else value.asString
+        } ?: emptyMap()
+        return EcosystemItem(
+            type = obj.get("type")?.asString ?: "post",
+            id = obj.get("id")?.asInt ?: 0,
+            title = obj.get("title")?.let { if (it.isJsonNull) "" else it.asString } ?: "",
+            summary = obj.get("summary")?.let { if (it.isJsonNull) "" else it.asString } ?: "",
+            content = obj.get("content")?.let { if (it.isJsonNull) "" else it.asString } ?: "",
+            category = obj.get("category")?.let { if (it.isJsonNull) "other" else it.asString } ?: "other",
+            tags = obj.getAsJsonArray("tags")?.map { it.asString } ?: emptyList(),
+            icon = obj.get("icon")?.let { if (it.isJsonNull) null else it.asString },
+            media = media,
+            author = parseEcosystemAuthor(authorObj),
+            stats = EcosystemStats(
+                views = statsObj?.get("views")?.asInt ?: 0,
+                likes = statsObj?.get("likes")?.asInt ?: 0,
+                comments = statsObj?.get("comments")?.asInt ?: 0,
+                downloads = statsObj?.get("downloads")?.asInt ?: 0,
+                rating = statsObj?.get("rating")?.asFloat ?: 0f,
+                ratingCount = statsObj?.get("rating_count")?.asInt ?: 0
+            ),
+            viewerState = EcosystemViewerState(
+                liked = viewerObj?.get("liked")?.asBoolean ?: false,
+                bookmarked = viewerObj?.get("bookmarked")?.asBoolean ?: false,
+                own = viewerObj?.get("own")?.asBoolean ?: false
+            ),
+            meta = meta,
+            createdAt = obj.get("created_at")?.let { if (it.isJsonNull) null else it.asString },
+            updatedAt = obj.get("updated_at")?.let { if (it.isJsonNull) null else it.asString }
+        )
+    }
+
+    private fun parseEcosystemAuthor(obj: JsonObject?): EcosystemAuthor = EcosystemAuthor(
+        id = obj?.get("id")?.asInt ?: 0,
+        username = obj?.get("username")?.let { if (it.isJsonNull) "?" else it.asString } ?: "?",
+        displayName = obj?.get("display_name")?.let { if (it.isJsonNull) null else it.asString },
+        avatarUrl = obj?.get("avatar_url")?.let { if (it.isJsonNull) null else it.asString },
+        isDeveloper = obj?.get("is_developer")?.asBoolean ?: false
+    )
+
+    private fun parseEcosystemComments(obj: JsonObject?): EcosystemCommentsResponse {
+        val comments = obj?.getAsJsonArray("comments")?.map { parseEcosystemComment(it.asJsonObject) } ?: emptyList()
+        return EcosystemCommentsResponse(
+            comments = comments,
+            total = obj?.get("total")?.asInt ?: comments.size,
+            page = obj?.get("page")?.asInt ?: 1,
+            size = obj?.get("size")?.asInt ?: comments.size
+        )
+    }
+
+    private fun parseEcosystemNotifications(obj: JsonObject?): EcosystemNotificationsResponse {
+        val notifications = obj?.getAsJsonArray("notifications")?.map { item ->
+            val o = item.asJsonObject
+            EcosystemNotification(
+                id = o.get("id")?.asInt ?: 0,
+                type = o.get("type")?.let { if (it.isJsonNull) "" else it.asString } ?: "",
+                title = o.get("title")?.let { if (it.isJsonNull) null else it.asString },
+                content = o.get("content")?.let { if (it.isJsonNull) null else it.asString },
+                refType = o.get("ref_type")?.let { if (it.isJsonNull) null else it.asString },
+                refId = o.get("ref_id")?.let { if (it.isJsonNull) null else it.asInt },
+                actor = parseEcosystemAuthor(o.getAsJsonObject("actor")),
+                isRead = o.get("is_read")?.asBoolean ?: false,
+                createdAt = o.get("created_at")?.let { if (it.isJsonNull) null else it.asString }
+            )
+        } ?: emptyList()
+        return EcosystemNotificationsResponse(
+            notifications = notifications,
+            unreadCount = obj?.get("unread_count")?.asInt ?: 0,
+            total = obj?.get("total")?.asInt ?: notifications.size,
+            page = obj?.get("page")?.asInt ?: 1,
+            size = obj?.get("size")?.asInt ?: notifications.size
+        )
+    }
+
+    private fun parseEcosystemUser(obj: JsonObject?): EcosystemUserContent {
+        val profileObj = obj?.getAsJsonObject("profile")
+        return EcosystemUserContent(
+            profile = EcosystemProfile(
+                id = profileObj?.get("id")?.asInt ?: 0,
+                username = profileObj?.get("username")?.let { if (it.isJsonNull) "?" else it.asString } ?: "?",
+                displayName = profileObj?.get("display_name")?.let { if (it.isJsonNull) null else it.asString },
+                avatarUrl = profileObj?.get("avatar_url")?.let { if (it.isJsonNull) null else it.asString },
+                bio = profileObj?.get("bio")?.let { if (it.isJsonNull) null else it.asString },
+                followerCount = profileObj?.get("follower_count")?.asInt ?: 0,
+                followingCount = profileObj?.get("following_count")?.asInt ?: 0
+            ),
+            posts = obj?.getAsJsonArray("posts")?.map { parseEcosystemItem(it.asJsonObject) } ?: emptyList(),
+            apps = obj?.getAsJsonArray("apps")?.map { parseEcosystemItem(it.asJsonObject) } ?: emptyList(),
+            modules = obj?.getAsJsonArray("modules")?.map { parseEcosystemItem(it.asJsonObject) } ?: emptyList()
+        )
+    }
+
+    private fun parseEcosystemComment(obj: JsonObject): EcosystemComment {
+        val replies = obj.getAsJsonArray("replies")?.map { parseEcosystemComment(it.asJsonObject) } ?: emptyList()
+        return EcosystemComment(
+            id = obj.get("id")?.asInt ?: 0,
+            content = obj.get("content")?.let { if (it.isJsonNull) "" else it.asString } ?: "",
+            parentId = obj.get("parent_id")?.let { if (it.isJsonNull) null else it.asInt },
+            likeCount = obj.get("like_count")?.asInt ?: 0,
+            author = parseEcosystemAuthor(obj.getAsJsonObject("author")),
+            createdAt = obj.get("created_at")?.let { if (it.isJsonNull) null else it.asString },
+            replies = replies
+        )
+    }
 
     private fun parseProject(obj: JsonObject): CloudProject = CloudProject(
         id = obj.get("id")?.asInt ?: 0,
@@ -1995,11 +2378,11 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         lastTriggeredAt = obj?.get("last_triggered_at")?.asString
     )
 
-    // ═══════════════════════════════════════════
-    // 13. MANIFEST SYNC
-    // ═══════════════════════════════════════════
 
-    /** 上传 Manifest 到云端 */
+
+
+
+
     suspend fun uploadManifest(projectId: Int, manifestJson: String, manifestVersion: Int): AuthResult<ManifestSyncResult> = authRequest {
         val body = JsonObject().apply {
             add("manifest", JsonParser.parseString(manifestJson))
@@ -2029,7 +2412,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 从云端下载 Manifest */
+
     suspend fun downloadManifest(projectId: Int): AuthResult<ManifestDownloadResult> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/projects/$projectId/manifest")
@@ -2054,11 +2437,11 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    // ═══════════════════════════════════════════
-    // 14. MODULE STORE
-    // ═══════════════════════════════════════════
 
-    /** 浏览模块市场 */
+
+
+
+
     suspend fun listStoreModules(
         category: String? = null, search: String? = null,
         sort: String = "downloads", order: String = "desc",
@@ -2093,7 +2476,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 直接获取单个模块详情（替代 listStoreModules + 客户端过滤） */
+
     suspend fun getStoreModuleById(moduleId: Int): AuthResult<StoreModuleInfo> = withContext(Dispatchers.IO) {
         try {
             val request = Request.Builder()
@@ -2117,7 +2500,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 获取当前用户发布的模块 */
+
     suspend fun getMyPublishedModules(page: Int = 1, size: Int = 50): AuthResult<Pair<List<StoreModuleInfo>, Int>> = withContext(Dispatchers.IO) {
         try {
             val token = tokenManager.getAccessToken()
@@ -2146,11 +2529,14 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 发布模块到市场 */
+
     suspend fun publishModule(
         name: String, description: String, icon: String?,
         category: String?, tags: String?, versionName: String?,
-        versionCode: Int, shareCode: String
+        versionCode: Int, shareCode: String,
+        visibility: String = "public",
+        reviewMode: String = "public_first",
+        screenshots: List<String> = emptyList()
     ): AuthResult<StoreModuleInfo> = authRequest {
         val body = JsonObject().apply {
             addProperty("name", name)
@@ -2161,6 +2547,11 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             addProperty("version_name", versionName)
             addProperty("version_code", versionCode)
             addProperty("share_code", shareCode)
+            addProperty("visibility", visibility)
+            addProperty("review_mode", reviewMode)
+            val screenshotsArray = com.google.gson.JsonArray()
+            screenshots.forEach { screenshotsArray.add(it) }
+            add("screenshots", screenshotsArray)
         }
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/modules")
@@ -2178,13 +2569,13 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 下载模块（获取 share_code + 计数器 +1）
-     *
-     * 优先级：
-     * 1. storage_url_github (gzip 压缩, 通过 gh-proxy 代理)
-     * 2. storage_url_gitee  (gzip 压缩)
-     * 3. share_code (原始数据, 数据库 fallback)
-     */
+
+
+
+
+
+
+
     suspend fun downloadStoreModule(moduleId: Int): AuthResult<String> = withContext(Dispatchers.IO) {
         try {
             val request = Request.Builder()
@@ -2201,7 +2592,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
                 val storageUrlGitee = data?.get("storage_url_gitee")?.let { if (it.isJsonNull) null else it.asString }
                 val shareCode = data?.get("share_code")?.let { if (it.isJsonNull) null else it.asString }
 
-                // 优先从 GitHub/Gitee 下载 gzip 压缩的模块数据
+
                 val downloadedCode = downloadGzipModule(GitHubAccelerator.accelerate(storageUrlGithub))
                     ?: downloadGzipModule(storageUrlGitee)
                     ?: shareCode
@@ -2220,7 +2611,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 从 URL 下载 gzip 压缩的模块数据并解压为 share_code 字符串 */
+
     private fun downloadGzipModule(url: String?): String? {
         if (url.isNullOrBlank()) return null
         return try {
@@ -2228,13 +2619,13 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             val response = client.newCall(request).execute()
             if (response.isSuccessful) {
                 val bytes = response.body?.bytes() ?: return null
-                // 检查是否是 gzip 格式 (magic bytes: 0x1f 0x8b)
+
                 if (bytes.size >= 2 && bytes[0] == 0x1f.toByte() && bytes[1] == 0x8b.toByte()) {
                     java.util.zip.GZIPInputStream(java.io.ByteArrayInputStream(bytes)).use { gzis ->
                         gzis.bufferedReader(Charsets.UTF_8).readText()
                     }
                 } else {
-                    // 非 gzip，直接作为文本返回
+
                     String(bytes, Charsets.UTF_8)
                 }
             } else null
@@ -2266,8 +2657,17 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             ?: 0,
         shareCode = obj?.get("share_code")?.let { if (it.isJsonNull) null else it.asString },
         moduleType = obj?.get("module_type")?.let { if (it.isJsonNull) "extension" else it.asString } ?: "extension",
-        isApproved = obj?.get("is_approved")?.asBoolean ?: true,
-        // 社区互动字段
+        isApproved = obj?.boolValue("isApproved", "is_approved") ?: true,
+        visibility = obj?.stringValue("visibility"),
+        reviewMode = obj?.stringValue("review_mode", "reviewMode"),
+        reviewStatus = obj?.stringValue("review_status", "reviewStatus"),
+        verificationStatus = obj?.stringValue("verification_status", "verificationStatus"),
+        reviewSortPenalty = obj?.floatValue("review_sort_penalty", "reviewSortPenalty") ?: 0f,
+        rejectionReason = obj?.stringValue("rejection_reason", "rejectionReason"),
+        adminReplyText = obj?.stringValue("admin_reply_text", "adminReplyText"),
+        runtimeKey = obj?.stringValue("runtime_key", "runtimeKey"),
+        screenshots = try { obj?.getAsJsonArray("screenshots")?.map { it.asString } ?: emptyList() } catch (_: Exception) { emptyList() },
+
         userVote = obj?.get("user_vote")?.let { if (it.isJsonNull) null else it.asString },
         isFavorited = obj?.get("is_favorited")?.asBoolean ?: false,
         isLiked = obj?.get("is_liked")?.asBoolean ?: false,
@@ -2275,9 +2675,9 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         updatedAt = obj?.get("updated_at")?.let { if (it.isJsonNull) null else it.asString }
     )
 
-    // ── Module Store: Review（星级评分，市场特有功能） ──
 
-    /** 评价模块 — 星级评分 + 评论（市场特有，社区用 addComment） */
+
+
     suspend fun reviewStoreModule(moduleId: Int, rating: Int, comment: String? = null): AuthResult<Unit> = authRequest {
         val body = JsonObject().apply {
             addProperty("rating", rating)
@@ -2296,7 +2696,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 获取模块星级评价列表（公开） */
+
     suspend fun getModuleReviews(moduleId: Int, page: Int = 1, size: Int = 20): Result<AppReviewsResponse> = withContext(Dispatchers.IO) {
         try {
             val request = Request.Builder()
@@ -2321,14 +2721,14 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
                         createdAt = r.get("created_at")?.let { if (it.isJsonNull) null else it.asString }
                     )
                 } ?: emptyList()
-                // Parse rating distribution if available from API
+
                 val ratingDist = mutableMapOf<Int, Int>()
                 data?.getAsJsonObject("rating_distribution")?.let { distObj ->
                     for (star in 1..5) {
                         distObj.get(star.toString())?.asInt?.let { ratingDist[star] = it }
                     }
                 }
-                // Fallback: compute from reviews if distribution not provided
+
                 if (ratingDist.isEmpty() && reviews.isNotEmpty()) {
                     reviews.groupingBy { it.rating }.eachCount().also { ratingDist.putAll(it) }
                 }
@@ -2346,13 +2746,13 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    // likeStoreModule / getModuleLikeStatus / reportStoreModule 已合并到统一 API（见 Section 17）
 
-    // ═══════════════════════════════════════════
-    // 15. REMOTE SCRIPTS
-    // ═══════════════════════════════════════════
 
-    /** 列出项目远程脚本 */
+
+
+
+
+
     suspend fun listRemoteScripts(projectId: Int): AuthResult<List<RemoteScriptInfo>> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/projects/$projectId/scripts")
@@ -2371,7 +2771,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 创建远程脚本 */
+
     suspend fun createRemoteScript(projectId: Int, name: String, code: String,
                                     description: String? = null, runAt: String = "document_end",
                                     urlPattern: String? = null, priority: Int = 0
@@ -2399,7 +2799,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 更新远程脚本 */
+
     suspend fun updateRemoteScript(projectId: Int, scriptId: Int, fields: Map<String, Any?>
     ): AuthResult<RemoteScriptInfo> = authRequest {
         val body = JsonObject()
@@ -2426,7 +2826,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 删除远程脚本 */
+
     suspend fun deleteRemoteScript(projectId: Int, scriptId: Int): AuthResult<Unit> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/projects/$projectId/scripts/$scriptId")
@@ -2456,11 +2856,11 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         updatedAt = obj?.get("updated_at")?.asString
     )
 
-    // ═══════════════════════════════════════════
-    // 16. BACKUP
-    // ═══════════════════════════════════════════
 
-    /** 列出项目备份记录 */
+
+
+
+
     suspend fun listBackups(projectId: Int): AuthResult<List<BackupRecord>> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/projects/$projectId/backups")
@@ -2491,7 +2891,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 创建项目备份 */
+
     suspend fun createBackup(projectId: Int, platform: String, zipFile: File): AuthResult<BackupRecord> = authRequest {
         val requestBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
@@ -2526,15 +2926,70 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
     private fun parseError(body: String, statusCode: Int = 0): String = try {
         val json = JsonParser.parseString(body).asJsonObject
         val msg = json.get("detail")?.asString ?: json.get("message")?.asString ?: "操作失败"
-        // Keep HTTP prefix for 401 so authRequest refresh-token logic can detect it
+
         if (statusCode == 401) "HTTP 401: $msg" else msg
     } catch (_: Exception) { if (statusCode > 0) "HTTP $statusCode" else "操作失败" }
 
-    // ═══════════════════════════════════════════
-    // 10. APP STORE
-    // ═══════════════════════════════════════════
+    private fun JsonObject.stringValue(vararg keys: String): String? {
+        for (key in keys) {
+            val value = get(key) ?: continue
+            if (!value.isJsonNull) return value.asString
+        }
+        return null
+    }
 
-    /** 浏览应用商店 (公开，无需认证) */
+    private fun JsonObject.intValue(vararg keys: String): Int? {
+        for (key in keys) {
+            val value = get(key) ?: continue
+            if (!value.isJsonNull) return value.asInt
+        }
+        return null
+    }
+
+    private fun JsonObject.floatValue(vararg keys: String): Float? {
+        for (key in keys) {
+            val value = get(key) ?: continue
+            if (!value.isJsonNull) return value.asFloat
+        }
+        return null
+    }
+
+    private fun JsonObject.boolValue(vararg keys: String): Boolean? {
+        for (key in keys) {
+            val value = get(key) ?: continue
+            if (!value.isJsonNull) return value.asBoolean
+        }
+        return null
+    }
+
+    private fun parseReviewSubmission(obj: JsonObject?): ReviewSubmissionInfo = ReviewSubmissionInfo(
+        id = obj?.get("id")?.asInt ?: 0,
+        moduleId = obj?.intValue("module_id", "moduleId") ?: 0,
+        reviewMode = obj?.stringValue("review_mode", "reviewMode") ?: "public_first",
+        requestedVisibility = obj?.stringValue("requested_visibility", "requestedVisibility") ?: "public",
+        status = obj?.stringValue("status") ?: "pending",
+        submitMessage = obj?.stringValue("submit_message", "submitMessage"),
+        rejectionReason = obj?.stringValue("rejection_reason", "rejectionReason"),
+        adminReplyText = obj?.stringValue("admin_reply_text", "adminReplyText"),
+        reviewedBy = obj?.intValue("reviewed_by", "reviewedBy"),
+        decidedAt = obj?.stringValue("decided_at", "decidedAt"),
+        createdAt = obj?.stringValue("created_at", "createdAt"),
+        updatedAt = obj?.stringValue("updated_at", "updatedAt"),
+        submissionAssets = obj?.getAsJsonArray("submission_assets")?.mapNotNull { asset ->
+            val assetObj = asset.asJsonObject
+            assetObj.stringValue("asset_url", "assetUrl")
+        } ?: emptyList(),
+        decisionAssets = obj?.getAsJsonArray("decision_assets")?.mapNotNull { asset ->
+            val assetObj = asset.asJsonObject
+            assetObj.stringValue("asset_url", "assetUrl")
+        } ?: emptyList(),
+    )
+
+
+
+
+
+
     suspend fun listStoreApps(
         category: String? = null, search: String? = null,
         sort: String = "downloads", order: String = "desc",
@@ -2570,7 +3025,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 获取应用详情 (公开) */
+
     suspend fun getStoreAppDetail(appId: Int): Result<AppStoreItem> = withContext(Dispatchers.IO) {
         try {
             val request = Request.Builder().url("$BASE_URL/api/v1/app-store/apps/$appId").get().build()
@@ -2589,7 +3044,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 下载应用 (公开，计数器++) */
+
     suspend fun downloadStoreApp(appId: Int): Result<Map<String, String?>> = withContext(Dispatchers.IO) {
         try {
             val request = Request.Builder()
@@ -2614,7 +3069,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 评分应用 (需登录) */
+
     suspend fun reviewStoreApp(appId: Int, rating: Int, comment: String? = null): AuthResult<Unit> = authRequest {
         val body = JsonObject().apply {
             addProperty("rating", rating)
@@ -2633,7 +3088,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 点赞/取消点赞应用 (需登录, 切换) */
+
     suspend fun likeStoreApp(appId: Int): AuthResult<LikeResponse> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/app-store/apps/$appId/like")
@@ -2653,7 +3108,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         } else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 查询是否已点赞 (需登录) */
+
     suspend fun getLikeStatus(appId: Int): AuthResult<Boolean> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/app-store/apps/$appId/like/status")
@@ -2670,7 +3125,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         } else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 获取应用评论列表 (公开) */
+
     suspend fun getAppReviews(appId: Int, page: Int = 1, size: Int = 20): Result<AppReviewsResponse> = withContext(Dispatchers.IO) {
         try {
             val request = Request.Builder()
@@ -2713,15 +3168,14 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 举报应用 (需登录) */
+
     suspend fun reportStoreApp(appId: Int, reason: String, description: String? = null): AuthResult<Unit> = authRequest {
         val body = JsonObject().apply {
-            addProperty("module_id", appId)
             addProperty("reason", reason)
             description?.let { addProperty("description", it) }
         }
         val request = Request.Builder()
-            .url("$BASE_URL/api/v1/community/reports")
+            .url("$BASE_URL/api/v1/app-store/apps/$appId/report")
             .header("Authorization", "Bearer $it")
             .post(body.toString().toRequestBody(jsonMediaType))
             .build()
@@ -2732,7 +3186,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 获取我发布的应用 (需登录) */
+
     suspend fun listMyApps(): AuthResult<MyAppsResponse> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/app-store/my-apps")
@@ -2757,7 +3211,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 更新商店应用信息 */
+
     suspend fun updateStoreApp(appId: Int, name: String, description: String, category: String): AuthResult<String> = authRequest {
         val body = JsonObject().apply {
             addProperty("name", name)
@@ -2765,7 +3219,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             addProperty("category", category)
         }
         val request = Request.Builder()
-            .url("$BASE_URL/api/v1/modules/$appId")
+            .url("$BASE_URL/api/v1/app-store/apps/$appId")
             .header("Authorization", "Bearer $it")
             .put(body.toString().toRequestBody(jsonMediaType))
             .build()
@@ -2775,10 +3229,10 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 删除商店应用 */
+
     suspend fun deleteStoreApp(appId: Int): AuthResult<String> = authRequest {
         val request = Request.Builder()
-            .url("$BASE_URL/api/v1/modules/$appId")
+            .url("$BASE_URL/api/v1/app-store/apps/$appId")
             .header("Authorization", "Bearer $it")
             .delete()
             .build()
@@ -2788,7 +3242,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 发布应用到商店 (需登录) */
+
     suspend fun publishApp(
         name: String, description: String, category: String,
         versionName: String, versionCode: Int,
@@ -2798,7 +3252,13 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         apkUrlGithub: String? = null, apkUrlGitee: String? = null,
         contactEmail: String? = null, contactPhone: String? = null,
         groupChatUrl: String? = null, websiteUrl: String? = null,
-        privacyPolicyUrl: String? = null
+        privacyPolicyUrl: String? = null,
+        appSourceType: String = "WEB",
+        visibility: String = "public",
+        reviewMode: String = "public_first",
+        sourceBundleUrl: String? = null,
+        buildManifestJson: JsonObject? = null,
+        legacyProjectId: Int? = null
     ): AuthResult<AppStoreItem> = authRequest {
         val body = JsonObject().apply {
             addProperty("name", name)
@@ -2820,6 +3280,12 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             groupChatUrl?.let { addProperty("group_chat_url", it) }
             websiteUrl?.let { addProperty("website_url", it) }
             privacyPolicyUrl?.let { addProperty("privacy_policy_url", it) }
+            addProperty("app_source_type", appSourceType)
+            addProperty("visibility", visibility)
+            addProperty("review_mode", reviewMode)
+            sourceBundleUrl?.let { addProperty("source_bundle_url", it) }
+            buildManifestJson?.let { add("build_manifest_json", it) }
+            legacyProjectId?.let { addProperty("legacy_project_id", it) }
         }
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/app-store/apps")
@@ -2837,7 +3303,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 删除/下架我的应用 (需登录) */
+
     suspend fun deleteMyApp(appId: Int): AuthResult<Unit> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/app-store/apps/$appId")
@@ -2851,7 +3317,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 下架自己发布的模块 */
+
     suspend fun deleteMyModule(moduleId: Int): AuthResult<Unit> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/modules/$moduleId")
@@ -2865,11 +3331,11 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    // ═══════════════════════════════════════════
-    // 10.5 应用管理 — 激活码/公告/更新/用户
-    // ═══════════════════════════════════════════
 
-    /** 获取应用激活码设置 */
+
+
+
+
     suspend fun getActivationSettings(appId: Int): AuthResult<ActivationSettings> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/app-store/apps/$appId/activation")
@@ -2883,27 +3349,31 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
                 val o = c.asJsonObject
                 ActivationCode(
                     id = o.get("id")?.asInt ?: 0, code = o.get("code")?.asString ?: "",
-                    appId = appId, isUsed = o.get("is_used")?.asBoolean ?: false,
-                    usedByDeviceId = o.get("used_by_device_id")?.asString,
-                    usedByUserId = o.get("used_by_user_id")?.asString,
-                    usedAt = o.get("used_at")?.asString, createdAt = o.get("created_at")?.asString,
-                    expiresAt = o.get("expires_at")?.asString,
-                    maxUses = o.get("max_uses")?.asInt ?: 1,
-                    currentUses = o.get("current_uses")?.asInt ?: 0
+                    appId = appId,
+                    isUsed = o.boolValue("isUsed", "is_used") ?: false,
+                    usedByDeviceId = o.stringValue("usedByDeviceId", "used_by_device_id"),
+                    usedByUserId = o.stringValue("usedByUserId", "used_by_user_id"),
+                    usedAt = o.stringValue("usedAt", "used_at"),
+                    createdAt = o.stringValue("createdAt", "created_at"),
+                    expiresAt = o.stringValue("expiresAt", "expires_at"),
+                    maxUses = o.intValue("maxUses", "max_uses") ?: 1,
+                    currentUses = o.intValue("currentUses", "current_uses") ?: 0
                 )
             } ?: emptyList()
             AuthResult.Success(ActivationSettings(
                 enabled = json.get("enabled")?.asBoolean ?: false,
-                deviceBindingEnabled = json.get("device_binding_enabled")?.asBoolean ?: false,
-                maxDevicesPerCode = json.get("max_devices_per_code")?.asInt ?: 1,
-                codes = codes, totalCodes = json.get("total_codes")?.asInt ?: codes.size,
-                usedCodes = json.get("used_codes")?.asInt ?: codes.count { it.isUsed }
+                deviceBindingEnabled = json.boolValue("deviceBindingEnabled", "device_binding_enabled") ?: false,
+                maxDevicesPerCode = json.intValue("maxDevicesPerCode", "max_devices_per_code") ?: 1,
+                activationHelpUrl = json.stringValue("activationHelpUrl", "activation_help_url"),
+                codes = codes,
+                totalCodes = json.intValue("totalCodes", "total_codes") ?: codes.size,
+                usedCodes = json.intValue("usedCodes", "used_codes") ?: codes.count { it.isUsed }
             ))
         } else AuthResult.Error(parseError(body, response.code))
     }
 
-    /** 批量创建激活码 */
-    suspend fun createActivationCodes(appId: Int, codes: List<String>, maxUses: Int = 1): AuthResult<List<ActivationCode>> = authRequest {
+
+    suspend fun createActivationCodes(appId: Int, codes: List<String>, maxUses: Int = 1): AuthResult<ActivationCodeBatchResult> = authRequest {
         val jsonBody = JsonObject().apply {
             val arr = com.google.gson.JsonArray()
             codes.forEach { c -> arr.add(c) }
@@ -2917,15 +3387,19 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         val response = client.newCall(request).execute()
         val body = response.body?.string() ?: ""
         if (response.isSuccessful) {
-            val arr = JsonParser.parseString(body).asJsonObject.getAsJsonArray("data")
-            AuthResult.Success(arr?.map { c ->
-                val o = c.asJsonObject
-                ActivationCode(id = o.get("id")?.asInt ?: 0, code = o.get("code")?.asString ?: "", appId = appId)
-            } ?: emptyList())
+            val data = JsonParser.parseString(body).asJsonObject.getAsJsonObject("data")
+            AuthResult.Success(
+                ActivationCodeBatchResult(
+                    created = data?.intValue("created") ?: 0,
+                    skipped = data?.intValue("skipped") ?: 0,
+                    quotaUsed = data?.intValue("quotaUsed", "quota_used") ?: 0,
+                    quotaTotal = data?.intValue("quotaTotal", "quota_total") ?: 0
+                )
+            )
         } else AuthResult.Error(parseError(body, response.code))
     }
 
-    /** 删除激活码 */
+
     suspend fun deleteActivationCode(appId: Int, codeId: Int): AuthResult<Unit> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/app-store/apps/$appId/activation/codes/$codeId")
@@ -2935,12 +3409,13 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         if (response.isSuccessful) AuthResult.Success(Unit) else AuthResult.Error(parseError(body, response.code))
     }
 
-    /** 更新激活码设置（启用/设备绑定等） */
-    suspend fun updateActivationSettings(appId: Int, enabled: Boolean, deviceBinding: Boolean, maxDevices: Int): AuthResult<Unit> = authRequest {
+
+    suspend fun updateActivationSettings(appId: Int, enabled: Boolean, deviceBinding: Boolean, maxDevices: Int, activationHelpUrl: String? = null): AuthResult<Unit> = authRequest {
         val jsonBody = JsonObject().apply {
             addProperty("enabled", enabled)
             addProperty("device_binding_enabled", deviceBinding)
             addProperty("max_devices_per_code", maxDevices)
+            activationHelpUrl?.let { addProperty("activation_help_url", it) }
         }
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/app-store/apps/$appId/activation/settings")
@@ -2951,7 +3426,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         if (response.isSuccessful) AuthResult.Success(Unit) else AuthResult.Error(parseError(body, response.code))
     }
 
-    /** 获取应用公告列表 */
+
     suspend fun getAnnouncements(appId: Int): AuthResult<List<Announcement>> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/app-store/apps/$appId/announcements")
@@ -2966,17 +3441,17 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
                     id = o.get("id")?.asInt ?: 0, appId = appId,
                     title = o.get("title")?.asString ?: "", content = o.get("content")?.asString ?: "",
                     type = o.get("type")?.asString ?: "info",
-                    isActive = o.get("is_active")?.asBoolean ?: true,
-                    isPinned = o.get("is_pinned")?.asBoolean ?: false,
-                    createdAt = o.get("created_at")?.asString,
-                    expiresAt = o.get("expires_at")?.asString,
-                    viewCount = o.get("view_count")?.asInt ?: 0
+                    isActive = o.boolValue("isActive", "is_active") ?: true,
+                    isPinned = o.boolValue("isPinned", "is_pinned") ?: false,
+                    createdAt = o.stringValue("createdAt", "created_at"),
+                    expiresAt = o.stringValue("expiresAt", "expires_at"),
+                    viewCount = o.intValue("viewCount", "view_count") ?: 0
                 )
             } ?: emptyList())
         } else AuthResult.Error(parseError(body, response.code))
     }
 
-    /** 发布公告 */
+
     suspend fun createAnnouncement(appId: Int, title: String, content: String, type: String, isPinned: Boolean = false): AuthResult<Announcement> = authRequest {
         val jsonBody = JsonObject().apply {
             addProperty("title", title); addProperty("content", content)
@@ -2997,7 +3472,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         } else AuthResult.Error(parseError(body, response.code))
     }
 
-    /** 删除公告 */
+
     suspend fun deleteAnnouncement(appId: Int, announcementId: Int): AuthResult<Unit> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/app-store/apps/$appId/announcements/$announcementId")
@@ -3007,7 +3482,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         if (response.isSuccessful) AuthResult.Success(Unit) else AuthResult.Error(parseError(body, response.code))
     }
 
-    /** 获取更新配置 */
+
     suspend fun getUpdateConfig(appId: Int): AuthResult<UpdateConfig> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/app-store/apps/$appId/update-config")
@@ -3018,20 +3493,22 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             val o = JsonParser.parseString(body).asJsonObject.getAsJsonObject("data")
             AuthResult.Success(UpdateConfig(
                 id = o.get("id")?.asInt ?: 0, appId = appId,
-                latestVersionName = o.get("latest_version_name")?.asString ?: "",
-                latestVersionCode = o.get("latest_version_code")?.asInt ?: 0,
-                updateTitle = o.get("update_title")?.asString ?: "",
-                updateContent = o.get("update_content")?.asString ?: "",
-                apkUrl = o.get("apk_url")?.asString,
-                isForceUpdate = o.get("is_force_update")?.asBoolean ?: false,
-                minVersionCode = o.get("min_version_code")?.asInt ?: 0,
-                templateId = o.get("template_id")?.asString ?: "simple",
-                isActive = o.get("is_active")?.asBoolean ?: false
+                latestVersionName = o.stringValue("latestVersionName", "latest_version_name") ?: "",
+                latestVersionCode = o.intValue("latestVersionCode", "latest_version_code") ?: 0,
+                updateTitle = o.stringValue("updateTitle", "update_title") ?: "",
+                updateContent = o.stringValue("updateContent", "update_content") ?: "",
+                apkUrl = o.stringValue("apkUrl", "apk_url"),
+                sourceAppId = o.intValue("sourceAppId", "source_app_id"),
+                sourceAppName = o.stringValue("sourceAppName", "source_app_name"),
+                isForceUpdate = o.boolValue("isForceUpdate", "is_force_update") ?: false,
+                minVersionCode = o.intValue("minVersionCode", "min_version_code") ?: 0,
+                templateId = o.stringValue("templateId", "template_id") ?: "simple",
+                isActive = o.boolValue("isActive", "is_active") ?: false
             ))
         } else AuthResult.Error(parseError(body, response.code))
     }
 
-    /** 推送更新 */
+
     suspend fun pushUpdate(
         appId: Int, versionName: String, versionCode: Int,
         title: String, content: String, sourceAppId: Int?,
@@ -3062,7 +3539,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         } else AuthResult.Error(parseError(body, response.code))
     }
 
-    /** 获取应用用户列表 */
+
     suspend fun getAppUsers(appId: Int, page: Int = 1, limit: Int = 50): AuthResult<List<AppUser>> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/app-store/apps/$appId/users?page=$page&limit=$limit")
@@ -3075,21 +3552,24 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
                 val o = u.asJsonObject
                 AppUser(
                     id = o.get("id")?.asString ?: "",
-                    deviceModel = o.get("device_model")?.asString,
-                    osVersion = o.get("os_version")?.asString,
-                    appVersion = o.get("app_version")?.asString,
-                    country = o.get("country")?.asString, region = o.get("region")?.asString,
-                    city = o.get("city")?.asString, ipAddress = o.get("ip_address")?.asString,
-                    firstSeenAt = o.get("first_seen_at")?.asString,
-                    lastSeenAt = o.get("last_seen_at")?.asString,
-                    activationCode = o.get("activation_code")?.asString,
-                    isActive = o.get("is_active")?.asBoolean ?: true
+                    deviceModel = o.stringValue("deviceModel", "device_model"),
+                    osVersion = o.stringValue("osVersion", "os_version"),
+                    appVersion = o.stringValue("appVersion", "app_version"),
+                    country = o.stringValue("country"),
+                    region = o.stringValue("region"),
+                    city = o.stringValue("city"),
+                    ipAddress = o.stringValue("ipAddress", "ip_address"),
+                    firstSeenAt = o.stringValue("firstSeenAt", "first_seen_at"),
+                    lastSeenAt = o.stringValue("lastSeenAt", "last_seen_at"),
+                    activationCode = o.stringValue("activationCode", "activation_code"),
+                    externalUserId = o.stringValue("externalUserId", "external_user_id"),
+                    isActive = o.boolValue("isActive", "is_active") ?: true
                 )
             } ?: emptyList())
         } else AuthResult.Error(parseError(body, response.code))
     }
 
-    /** 获取用户地理分布 */
+
     suspend fun getUserGeoDistribution(appId: Int): AuthResult<List<GeoDistribution>> = authRequest {
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/app-store/apps/$appId/users/geo")
@@ -3102,7 +3582,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
                 val o = g.asJsonObject
                 GeoDistribution(
                     country = o.get("country")?.asString ?: "",
-                    countryCode = o.get("country_code")?.asString ?: "",
+                    countryCode = o.stringValue("countryCode", "country_code") ?: "",
                     count = o.get("count")?.asInt ?: 0,
                     percentage = o.get("percentage")?.asFloat ?: 0f,
                     regions = o.getAsJsonArray("regions")?.map { r ->
@@ -3114,11 +3594,177 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         } else AuthResult.Error(parseError(body, response.code))
     }
 
+    suspend fun getAppQuota(appId: Int): AuthResult<AppQuotaInfo> = authRequest {
+        val request = Request.Builder()
+            .url("$BASE_URL/api/v1/app-store/apps/$appId/quota")
+            .header("Authorization", "Bearer $it")
+            .get()
+            .build()
+        val response = client.newCall(request).execute()
+        val body = response.body?.string() ?: ""
+        if (response.isSuccessful) {
+            val o = JsonParser.parseString(body).asJsonObject.getAsJsonObject("data")
+            AuthResult.Success(
+                AppQuotaInfo(
+                    tier = o?.stringValue("tier") ?: "free",
+                    retentionDays = o?.intValue("retentionDays", "retention_days") ?: 0,
+                    appPublishLimit = o?.intValue("appPublishLimit", "app_publish_limit") ?: 0,
+                    activationCodesTotalLimit = o?.intValue("activationCodesTotalLimit", "activation_codes_total_limit") ?: 0,
+                    activationCodesDailyLimit = o?.intValue("activationCodesDailyLimit", "activation_codes_daily_limit") ?: 0,
+                    activationCodesCurrent = o?.intValue("activationCodesCurrent", "activation_codes_current") ?: 0,
+                    announcementDailyLimit = o?.intValue("announcementDailyLimit", "announcement_daily_limit") ?: 0,
+                    updateDailyLimit = o?.intValue("updateDailyLimit", "update_daily_limit") ?: 0,
+                    reviewSubmissionDailyLimit = o?.intValue("reviewSubmissionDailyLimit", "review_submission_daily_limit") ?: 0,
+                    appReviewSubmissionDailyLimit = o?.intValue("appReviewSubmissionDailyLimit", "app_review_submission_daily_limit") ?: 0,
+                    runtimeEventsDailyLimit = o?.intValue("runtimeEventsDailyLimit", "runtime_events_daily_limit") ?: 0,
+                    reviewStatus = o?.stringValue("reviewStatus", "review_status"),
+                    verificationStatus = o?.stringValue("verificationStatus", "verification_status"),
+                    visibility = o?.stringValue("visibility"),
+                )
+            )
+        } else AuthResult.Error(parseError(body, response.code))
+    }
 
-    // 11. REMOTE PUSH
-    // ═══════════════════════════════════════════
+    suspend fun listAppBans(appId: Int): AuthResult<List<AppBanItem>> = authRequest {
+        val request = Request.Builder()
+            .url("$BASE_URL/api/v1/app-store/apps/$appId/bans")
+            .header("Authorization", "Bearer $it")
+            .get()
+            .build()
+        val response = client.newCall(request).execute()
+        val body = response.body?.string() ?: ""
+        if (response.isSuccessful) {
+            val arr = JsonParser.parseString(body).asJsonObject.getAsJsonArray("data")
+            AuthResult.Success(arr?.map { item ->
+                val o = item.asJsonObject
+                AppBanItem(
+                    id = o.get("id")?.asInt ?: 0,
+                    ruleType = o.stringValue("ruleType", "rule_type") ?: "",
+                    targetValue = o.stringValue("targetValue", "target_value") ?: "",
+                    reason = o.stringValue("reason"),
+                    revokedAt = o.stringValue("revokedAt", "revoked_at"),
+                    createdAt = o.stringValue("createdAt", "created_at")
+                )
+            } ?: emptyList())
+        } else AuthResult.Error(parseError(body, response.code))
+    }
 
-    /** 发送推送通知 */
+    suspend fun createAppBan(appId: Int, ruleType: String, targetValue: String, reason: String? = null): AuthResult<Int> = authRequest {
+        val jsonBody = JsonObject().apply {
+            addProperty("rule_type", ruleType)
+            addProperty("target_value", targetValue)
+            reason?.let { addProperty("reason", it) }
+        }
+        val request = Request.Builder()
+            .url("$BASE_URL/api/v1/app-store/apps/$appId/bans")
+            .header("Authorization", "Bearer $it")
+            .post(jsonBody.toString().toRequestBody(jsonMediaType))
+            .build()
+        val response = client.newCall(request).execute()
+        val body = response.body?.string() ?: ""
+        if (response.isSuccessful) {
+            val data = JsonParser.parseString(body).asJsonObject.getAsJsonObject("data")
+            AuthResult.Success(data?.get("id")?.asInt ?: 0)
+        } else AuthResult.Error(parseError(body, response.code))
+    }
+
+    suspend fun revokeAppBan(appId: Int, banId: Int): AuthResult<Unit> = authRequest {
+        val request = Request.Builder()
+            .url("$BASE_URL/api/v1/app-store/apps/$appId/bans/$banId")
+            .header("Authorization", "Bearer $it")
+            .delete()
+            .build()
+        val response = client.newCall(request).execute()
+        val body = response.body?.string() ?: ""
+        if (response.isSuccessful) AuthResult.Success(Unit) else AuthResult.Error(parseError(body, response.code))
+    }
+
+    suspend fun submitAppReviewSubmission(
+        appId: Int,
+        reviewMode: String,
+        requestedVisibility: String,
+        submitMessage: String? = null,
+        assetUrls: List<String> = emptyList(),
+    ): AuthResult<ReviewSubmissionInfo> = authRequest {
+        val jsonBody = JsonObject().apply {
+            addProperty("review_mode", reviewMode)
+            addProperty("requested_visibility", requestedVisibility)
+            submitMessage?.let { addProperty("submit_message", it) }
+            val arr = com.google.gson.JsonArray()
+            assetUrls.forEach { arr.add(it) }
+            add("asset_urls", arr)
+        }
+        val request = Request.Builder()
+            .url("$BASE_URL/api/v1/app-store/apps/$appId/review-submissions")
+            .header("Authorization", "Bearer $it")
+            .post(jsonBody.toString().toRequestBody(jsonMediaType))
+            .build()
+        val response = client.newCall(request).execute()
+        val body = response.body?.string() ?: ""
+        if (response.isSuccessful) {
+            val data = JsonParser.parseString(body).asJsonObject.getAsJsonObject("data")
+            AuthResult.Success(parseReviewSubmission(data))
+        } else AuthResult.Error(parseError(body, response.code))
+    }
+
+    suspend fun getAppReviewSubmissions(appId: Int): AuthResult<List<ReviewSubmissionInfo>> = authRequest {
+        val request = Request.Builder()
+            .url("$BASE_URL/api/v1/app-store/apps/$appId/review-submissions")
+            .header("Authorization", "Bearer $it")
+            .get()
+            .build()
+        val response = client.newCall(request).execute()
+        val body = response.body?.string() ?: ""
+        if (response.isSuccessful) {
+            val items = JsonParser.parseString(body).asJsonObject.getAsJsonObject("data")?.getAsJsonArray("items")
+            AuthResult.Success(items?.map { parseReviewSubmission(it.asJsonObject) } ?: emptyList())
+        } else AuthResult.Error(parseError(body, response.code))
+    }
+
+    suspend fun getModuleReviewSubmissions(moduleId: Int): AuthResult<List<ReviewSubmissionInfo>> = authRequest {
+        val request = Request.Builder()
+            .url("$BASE_URL/api/v1/modules/$moduleId/review-submissions")
+            .header("Authorization", "Bearer $it")
+            .get()
+            .build()
+        val response = client.newCall(request).execute()
+        val body = response.body?.string() ?: ""
+        if (response.isSuccessful) {
+            val items = JsonParser.parseString(body).asJsonObject.getAsJsonObject("data")?.getAsJsonArray("items")
+            AuthResult.Success(items?.map { parseReviewSubmission(it.asJsonObject) } ?: emptyList())
+        } else AuthResult.Error(parseError(body, response.code))
+    }
+
+    suspend fun submitModuleReviewSubmission(
+        moduleId: Int,
+        reviewMode: String,
+        requestedVisibility: String,
+        submitMessage: String? = null,
+        assetUrls: List<String> = emptyList(),
+    ): AuthResult<Unit> = authRequest {
+        val jsonBody = JsonObject().apply {
+            addProperty("review_mode", reviewMode)
+            addProperty("requested_visibility", requestedVisibility)
+            submitMessage?.let { addProperty("submit_message", it) }
+            val arr = com.google.gson.JsonArray()
+            assetUrls.forEach { arr.add(it) }
+            add("asset_urls", arr)
+        }
+        val request = Request.Builder()
+            .url("$BASE_URL/api/v1/modules/$moduleId/review-submissions")
+            .header("Authorization", "Bearer $it")
+            .post(jsonBody.toString().toRequestBody(jsonMediaType))
+            .build()
+        val response = client.newCall(request).execute()
+        val body = response.body?.string() ?: ""
+        if (response.isSuccessful) AuthResult.Success(Unit) else AuthResult.Error(parseError(body, response.code))
+    }
+
+
+
+
+
+
     suspend fun sendPushNotification(
         projectId: Int,
         title: String,
@@ -3148,7 +3794,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 获取推送历史 */
+
     suspend fun getPushHistory(projectId: Int, page: Int = 1): Result<PushHistoryResponse> = withContext(Dispatchers.IO) {
         try {
             val token = tokenManager.getAccessToken() ?: return@withContext Result.failure(Exception("Not logged in"))
@@ -3199,6 +3845,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         category = obj.get("category")?.asString ?: "other",
         tags = obj.getAsJsonArray("tags")?.map { it.asString } ?: emptyList(),
         versionName = obj.get("version_name")?.asString ?: "1.0",
+        versionCode = obj.intValue("version_code", "versionCode") ?: 0,
         packageName = obj.get("package_name")?.let { if (it.isJsonNull) null else it.asString },
         downloads = obj.get("downloads")?.asInt ?: 0,
         rating = obj.get("rating")?.asFloat ?: 0f,
@@ -3219,13 +3866,26 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         paymentQrUrl = obj.get("payment_qr_url")?.let { if (it.isJsonNull) null else it.asString },
         websiteUrl = obj.get("website_url")?.let { if (it.isJsonNull) null else it.asString },
         privacyPolicyUrl = obj.get("privacy_policy_url")?.let { if (it.isJsonNull) null else it.asString },
+        visibility = obj.stringValue("visibility"),
+        reviewMode = obj.stringValue("review_mode", "reviewMode"),
+        reviewStatus = obj.stringValue("review_status", "reviewStatus"),
+        verificationStatus = obj.stringValue("verification_status", "verificationStatus"),
+        appSourceType = obj.stringValue("app_source_type", "appSourceType"),
+        runtimeKey = obj.stringValue("runtime_key", "runtimeKey"),
+        reviewSortPenalty = obj.floatValue("review_sort_penalty", "reviewSortPenalty") ?: 0f,
+        rejectionReason = obj.stringValue("rejection_reason", "rejectionReason"),
+        adminReplyText = obj.stringValue("admin_reply_text", "adminReplyText"),
+        sourceBundleUrl = obj.stringValue("source_bundle_url", "sourceBundleUrl"),
+        buildManifestJson = obj.getAsJsonObject("build_manifest_json")?.toString(),
+        legacyProjectId = obj.intValue("legacy_project_id", "legacyProjectId"),
+        lastReviewedAt = obj.stringValue("last_reviewed_at", "lastReviewedAt"),
     )
 
-    // ═══════════════════════════════════════════
-    // 17c. COMMUNITY POSTS
-    // ═══════════════════════════════════════════
 
-    /** 获取社区帖子 Feed（支持匿名访问，与服务端 get_optional_user 对齐） */
+
+
+
+
     suspend fun listCommunityPosts(page: Int = 1, size: Int = 10, tag: String? = null, search: String? = null, postType: String? = null): AuthResult<CommunityFeedResponse> =
         withContext(Dispatchers.IO) {
             try {
@@ -3234,7 +3894,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
                 search?.let { urlBuilder.append("&search=$it") }
                 postType?.let { urlBuilder.append("&post_type=$it") }
                 val requestBuilder = Request.Builder().url(urlBuilder.toString()).get()
-                // 可选认证：有 token 就带上（用于 is_liked 等个性化字段），没有也能正常请求
+
                 tokenManager.getAccessToken()?.let { requestBuilder.header("Authorization", "Bearer $it") }
                 val response = client.newCall(requestBuilder.build()).execute()
                 val responseBody = response.body?.string() ?: ""
@@ -3249,7 +3909,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             }
         }
 
-    /** 获取单个帖子详情（支持匿名访问） */
+
     suspend fun getCommunityPost(postId: Int): AuthResult<CommunityPostItem> =
         withContext(Dispatchers.IO) {
             try {
@@ -3266,23 +3926,23 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             }
         }
 
-    /** 发布帖子 (Phase 1 v2: 支持多种 post_type) */
+
     suspend fun createCommunityPost(
         content: String,
         tags: List<String>,
         media: List<PostMediaInput> = emptyList(),
         appLinks: List<PostAppLinkInput> = emptyList(),
         postType: String = "discussion",
-        // Showcase-specific
+
         appName: String? = null,
         appIconUrl: String? = null,
         sourceType: String? = null,
         sourceUrl: String? = null,
         projectRecipe: String? = null,
-        // Tutorial-specific
+
         title: String? = null,
         difficulty: String? = null,
-        steps: List<Pair<String, String?>>? = null,  // List of (content, imageUrl)
+        steps: List<Pair<String, String?>>? = null,
     ): AuthResult<CommunityPostItem> = authRequest { token ->
         val body = JsonObject().apply {
             addProperty("content", content)
@@ -3305,13 +3965,13 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
                     al.appDescription?.let { addProperty("app_description", it) }
                 }) }
             })
-            // Showcase fields
+
             appName?.let { addProperty("app_name", it) }
             appIconUrl?.let { addProperty("app_icon_url", it) }
             sourceType?.let { addProperty("source_type", it) }
             sourceUrl?.let { addProperty("source_url", it) }
             projectRecipe?.let { addProperty("project_recipe", it) }
-            // Tutorial fields
+
             title?.let { addProperty("title", it) }
             difficulty?.let { addProperty("difficulty", it) }
             steps?.let { stepsList ->
@@ -3335,7 +3995,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         } else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 删除帖子 */
+
     suspend fun deleteCommunityPost(postId: Int): AuthResult<Unit> = authRequest { token ->
         val request = Request.Builder().url("$BASE_URL/api/v1/community/posts/$postId").header("Authorization", "Bearer $token").delete().build()
         val response = client.newCall(request).execute()
@@ -3344,7 +4004,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 点赞/取消点赞帖子 */
+
     suspend fun togglePostLike(postId: Int): AuthResult<PostLikeResult> = authRequest { token ->
         val request = Request.Builder().url("$BASE_URL/api/v1/community/posts/$postId/like").header("Authorization", "Bearer $token")
             .post("".toRequestBody(jsonMediaType)).build()
@@ -3357,7 +4017,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         } else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 转发帖子 */
+
     suspend fun sharePost(postId: Int): AuthResult<Unit> = authRequest { token ->
         val request = Request.Builder().url("$BASE_URL/api/v1/community/posts/$postId/share").header("Authorization", "Bearer $token")
             .post("".toRequestBody(jsonMediaType)).build()
@@ -3367,7 +4027,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 评论点赞/取消点赞 */
+
     suspend fun toggleCommentLike(postId: Int, commentId: Int): AuthResult<CommentLikeResult> = authRequest { token ->
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/community/posts/$postId/comments/$commentId/like")
@@ -3385,7 +4045,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         } else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 帖子收藏/取消收藏 */
+
     suspend fun togglePostBookmark(postId: Int): AuthResult<BookmarkResult> = authRequest { token ->
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/community/posts/$postId/bookmark")
@@ -3400,7 +4060,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         } else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** CLI-06/12: 获取帖子评论列表（支持匿名访问、分页） */
+
     suspend fun listPostComments(postId: Int, page: Int = 1, size: Int = 30): AuthResult<CommentsResponse> =
         withContext(Dispatchers.IO) {
             try {
@@ -3413,13 +4073,13 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
                     val json = JsonParser.parseString(responseBody).asJsonObject
                     val dataObj = json.get("data")
                     if (dataObj != null && dataObj.isJsonObject) {
-                        // New paginated format: {"total": N, "comments": [...]}
+
                         val data = dataObj.asJsonObject
                         val total = data.get("total")?.asInt ?: 0
                         val comments = data.getAsJsonArray("comments")?.map { parsePostComment(it.asJsonObject) } ?: emptyList()
                         AuthResult.Success(CommentsResponse(total = total, page = page, comments = comments))
                     } else if (dataObj != null && dataObj.isJsonArray) {
-                        // Old non-paginated format (backwards compat)
+
                         val comments = dataObj.asJsonArray.map { parsePostComment(it.asJsonObject) }
                         AuthResult.Success(CommentsResponse(total = comments.size, page = 1, comments = comments))
                     } else {
@@ -3431,7 +4091,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             }
         }
 
-    /** 添加帖子评论（支持附带图片） */
+
     suspend fun addPostComment(postId: Int, content: String, parentId: Int? = null, media: List<PostMediaInput> = emptyList()): AuthResult<PostCommentItem> = authRequest { token ->
         val body = JsonObject().apply {
             addProperty("content", content)
@@ -3457,7 +4117,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         } else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 举报帖子 */
+
     suspend fun reportPost(postId: Int, reason: String, details: String? = null): AuthResult<Unit> = authRequest { token ->
         val body = JsonObject().apply {
             addProperty("reason", reason)
@@ -3471,7 +4131,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 获取用户的帖子列表（支持匿名访问） */
+
     suspend fun getUserPosts(userId: Int, page: Int = 1, size: Int = 20): AuthResult<CommunityFeedResponse> =
         withContext(Dispatchers.IO) {
             try {
@@ -3490,7 +4150,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             }
         }
 
-    /** P2 #11: 获取用户发布的模块列表 (使用精确端点而非 search) */
+
     suspend fun getUserModules(userId: Int, page: Int = 1, size: Int = 20): AuthResult<Pair<List<ModuleItem>, Int>> = withContext(Dispatchers.IO) {
         try {
             val request = Request.Builder()
@@ -3510,7 +4170,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** P3 #13: 编辑帖子 (30 分钟内) */
+
     suspend fun editPost(postId: Int, content: String): AuthResult<CommunityPostItem> = authRequest { token ->
         val body = JsonObject().apply { addProperty("content", content) }
         val request = Request.Builder()
@@ -3526,7 +4186,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         } else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** CLI-01: 删除社区帖子 (仅限30分钟内自己的帖子或管理员) */
+
     suspend fun deletePost(postId: Int): AuthResult<Unit> = authRequest { token ->
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/community/posts/$postId")
@@ -3539,7 +4199,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** P3 #14: 删除社区帖子评论 */
+
     suspend fun deletePostComment(postId: Int, commentId: Int): AuthResult<Unit> = authRequest { token ->
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/community/posts/$postId/comments/$commentId")
@@ -3552,7 +4212,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 获取用户在线活动统计 */
+
     suspend fun getUserActivity(userId: Int): AuthResult<UserActivityInfo> =
         withContext(Dispatchers.IO) {
             try {
@@ -3576,7 +4236,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             }
         }
 
-    /** 发送心跳 (追踪在线时间) */
+
     suspend fun sendHeartbeat(): AuthResult<Unit> = authRequest { token ->
         val request = Request.Builder().url("$BASE_URL/api/v1/community/activity/heartbeat").header("Authorization", "Bearer $token")
             .post("".toRequestBody(jsonMediaType)).build()
@@ -3586,7 +4246,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         else AuthResult.Error(parseError(responseBody, response.code))
     }
 
-    /** 获取分类标签列表 (Phase 1 v2: categorized) */
+
     suspend fun getCommunityTags(): AuthResult<CommunityTagsResponse> =
         withContext(Dispatchers.IO) {
             try {
@@ -3609,7 +4269,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             }
         }
 
-    /** Phase 1 v2: 发现页 — 获取分区内容 */
+
     suspend fun getDiscover(): AuthResult<DiscoverResponse> =
         withContext(Dispatchers.IO) {
             try {
@@ -3632,7 +4292,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             }
         }
 
-    /** Phase 1 v2: 导入配方 */
+
     suspend fun importRecipe(postId: Int): AuthResult<RecipeImportResult> = authRequest { token ->
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/community/posts/$postId/import-recipe")
@@ -3685,15 +4345,15 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
             likeCount = obj.get("like_count")?.asInt ?: 0, shareCount = obj.get("share_count")?.asInt ?: 0,
             commentCount = obj.get("comment_count")?.asInt ?: 0, viewCount = obj.get("view_count")?.asInt ?: 0,
             isLiked = obj.get("is_liked")?.asBoolean ?: false,
-            isOwnPost = obj.get("is_own_post")?.asBoolean ?: false,                // CLI-01
-            authorIsFollowing = obj.get("author_is_following")?.asBoolean ?: false,  // CLI-08
+            isOwnPost = obj.get("is_own_post")?.asBoolean ?: false,
+            authorIsFollowing = obj.get("author_is_following")?.asBoolean ?: false,
             authorId = author?.get("id")?.asInt ?: 0, authorUsername = author?.get("username")?.asString ?: "?",
             authorDisplayName = author?.get("display_name")?.let { if (it.isJsonNull) null else it.asString },
             authorAvatarUrl = author?.get("avatar_url")?.let { if (it.isJsonNull) null else it.asString },
             authorIsDeveloper = author?.get("is_developer")?.asBoolean ?: false,
             authorSubscriptionTier = author?.get("subscription_tier")?.let { if (it.isJsonNull) SubscriptionTier.FREE else it.asString } ?: SubscriptionTier.FREE,
             tags = tags, media = media, appLinks = appLinks,
-            // Phase 1 v2 fields
+
             postType = obj.get("post_type")?.asString ?: "discussion",
             appName = obj.get("app_name")?.let { if (it.isJsonNull) null else it.asString },
             appIconUrl = obj.get("app_icon_url")?.let { if (it.isJsonNull) null else it.asString },
@@ -3745,11 +4405,11 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         )
     }
 
-    // ═══════════════════════════════════════════
-    // 18. CLOUD BACKUP
-    // ═══════════════════════════════════════════
 
-    /** 列出云备份 */
+
+
+
+
     suspend fun listBackups(): AuthResult<BackupListResponse> = authRequest { token ->
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/backups")
@@ -3782,7 +4442,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 创建云备份 */
+
     suspend fun createBackup(): AuthResult<BackupCreateResult> = authRequest { token ->
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/backups")
@@ -3808,7 +4468,7 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
         }
     }
 
-    /** 删除云备份 */
+
     suspend fun deleteBackup(filename: String): AuthResult<String> = authRequest { token ->
         val request = Request.Builder()
             .url("$BASE_URL/api/v1/backups/$filename")
@@ -3826,9 +4486,9 @@ class CloudApiClient(private val tokenManager: TokenManager, context: android.co
     }
 }
 
-// ═══════════════════════════════════════════
-// Data Classes
-// ═══════════════════════════════════════════
+
+
+
 
 data class RedeemResult(val message: String, val planType: String, val daysAdded: Int)
 
@@ -3895,7 +4555,7 @@ data class ProjectVersion(
     val isForceUpdate: Boolean = false, val createdAt: String?
 )
 
-/** Token info for client-side direct upload to GitHub */
+
 data class DirectUploadToken(
     val token: String,
     val expiresAt: String,
@@ -3948,7 +4608,7 @@ data class PushHistoryItem(
     val createdAt: String?
 )
 
-// ─── 新增数据类（项目管理用） ───
+
 
 data class ProjectActivationCode(
     val id: Int, val code: String, val status: String,
@@ -3972,17 +4632,17 @@ data class ProjectWebhook(
     val failureCount: Int, val lastTriggeredAt: String?
 )
 
-// ═══════════════════════════════════════════
-// ═══════════════════════════════════════════
-// 统一模块数据模型（市场 + 社区共用）
-// ═══════════════════════════════════════════
 
-/**
- * 统一模块数据模型 — 市场与社区共用同一实体
- *
- * 合并原 StoreModuleInfo（市场）和 CommunityModuleDetail（社区），
- * 无论从市场浏览还是社区互动，模块只有一个身份。
- */
+
+
+
+
+
+
+
+
+
+
 data class ModuleItem(
     val id: Int,
     val name: String,
@@ -4002,22 +4662,31 @@ data class ModuleItem(
     val shareCode: String? = null,
     val moduleType: String = "extension",
     val isApproved: Boolean = true,
-    // 社区互动字段
-    val userVote: String? = null,       // "up" / "down" / null
+    val visibility: String? = null,
+    val reviewMode: String? = null,
+    val reviewStatus: String? = null,
+    val verificationStatus: String? = null,
+    val reviewSortPenalty: Float = 0f,
+    val rejectionReason: String? = null,
+    val adminReplyText: String? = null,
+    val runtimeKey: String? = null,
+    val screenshots: List<String> = emptyList(),
+
+    val userVote: String? = null,
     val isFavorited: Boolean = false,
     val isLiked: Boolean = false,
     val createdAt: String? = null,
     val updatedAt: String? = null
 ) {
-    // Compatibility aliases
+
     val downloadCount: Int get() = downloads
     val averageRating: Float get() = rating
 }
 
-/** @deprecated Use ModuleItem instead */
+
 typealias StoreModuleInfo = ModuleItem
 
-/** @deprecated Use ModuleItem instead */
+
 typealias CommunityModuleDetail = ModuleItem
 
 data class RemoteScriptInfo(
@@ -4027,7 +4696,7 @@ data class RemoteScriptInfo(
     val createdAt: String?, val updatedAt: String?
 )
 
-// CommunityModuleDetail 已合并到 ModuleItem（见上方统一数据模型）
+
 
 data class ModuleComment(
     val id: Int, val content: String, val userId: Int,
@@ -4061,7 +4730,7 @@ data class FeedItem(
     val targetId: Int?, val createdAt: String?
 )
 
-// ─── App Store ───
+
 
 data class AppStoreListResponse(
     val total: Int, val page: Int, val size: Int,
@@ -4076,6 +4745,7 @@ data class AppStoreItem(
     val category: String = "other",
     val tags: List<String> = emptyList(),
     val versionName: String = "1.0",
+    val versionCode: Int = 0,
     val packageName: String? = null,
     val downloads: Int = 0,
     val rating: Float = 0f,
@@ -4086,7 +4756,7 @@ data class AppStoreItem(
     val authorName: String = "Unknown",
     val authorId: Int = 0,
     val createdAt: String? = null,
-    // Full detail fields
+
     val description: String? = null,
     val videoUrl: String? = null,
     val apkUrlGithub: String? = null,
@@ -4097,9 +4767,22 @@ data class AppStoreItem(
     val paymentQrUrl: String? = null,
     val websiteUrl: String? = null,
     val privacyPolicyUrl: String? = null,
+    val visibility: String? = null,
+    val reviewMode: String? = null,
+    val reviewStatus: String? = null,
+    val verificationStatus: String? = null,
+    val appSourceType: String? = null,
+    val runtimeKey: String? = null,
+    val reviewSortPenalty: Float = 0f,
+    val rejectionReason: String? = null,
+    val adminReplyText: String? = null,
+    val sourceBundleUrl: String? = null,
+    val buildManifestJson: String? = null,
+    val legacyProjectId: Int? = null,
+    val lastReviewedAt: String? = null,
 )
 
-// ─── App Like & Reviews ───
+
 
 data class LikeResponse(
     val liked: Boolean,
@@ -4121,10 +4804,10 @@ data class AppReviewsResponse(
     val total: Int,
     val page: Int,
     val reviews: List<AppReviewItem>,
-    val ratingDistribution: Map<Int, Int> = emptyMap()  // 1-5 star -> count
+    val ratingDistribution: Map<Int, Int> = emptyMap()
 )
 
-// ─── Push History ───
+
 
 data class PushHistoryResponse(
     val total: Int,
@@ -4137,7 +4820,7 @@ data class PushHistoryResponse(
 
 
 
-// ─── Cloud Backup ───
+
 
 data class BackupListResponse(
     val backups: List<BackupItem>,
@@ -4163,7 +4846,7 @@ data class BackupCreateResult(
     val message: String = ""
 )
 
-// ═══ Community Post Data Classes ═══
+
 
 data class CommunityFeedResponse(val posts: List<CommunityPostItem>, val total: Int)
 
@@ -4176,8 +4859,8 @@ data class CommunityPostItem(
     val commentCount: Int = 0,
     val viewCount: Int = 0,
     val isLiked: Boolean = false,
-    val isOwnPost: Boolean = false,           // CLI-01: true if current user authored this post
-    val authorIsFollowing: Boolean = false,    // CLI-08: whether viewer follows this author
+    val isOwnPost: Boolean = false,
+    val authorIsFollowing: Boolean = false,
     val authorId: Int = 0,
     val authorUsername: String = "?",
     val authorDisplayName: String? = null,
@@ -4187,16 +4870,16 @@ data class CommunityPostItem(
     val tags: List<String> = emptyList(),
     val media: List<PostMediaItem> = emptyList(),
     val appLinks: List<PostAppLinkItem> = emptyList(),
-    // ── Phase 1 v2: Post type system ──
-    val postType: String = "discussion",       // showcase|tutorial|question|discussion
-    val appName: String? = null,               // Showcase: app name
-    val appIconUrl: String? = null,            // Showcase: app icon
-    val sourceType: String? = null,            // Showcase: website|html|media|frontend|server
-    val hasRecipe: Boolean = false,            // Showcase: has importable recipe?
-    val recipeImportCount: Int = 0,            // Showcase: times recipe was imported
-    val title: String? = null,                 // Tutorial/Question: title
-    val difficulty: String? = null,            // Tutorial: beginner|intermediate|advanced
-    val isResolved: Boolean? = null,           // Question: is it resolved?
+
+    val postType: String = "discussion",
+    val appName: String? = null,
+    val appIconUrl: String? = null,
+    val sourceType: String? = null,
+    val hasRecipe: Boolean = false,
+    val recipeImportCount: Int = 0,
+    val title: String? = null,
+    val difficulty: String? = null,
+    val isResolved: Boolean? = null,
 )
 
 data class PostMediaInput(
@@ -4238,7 +4921,7 @@ data class PostLikeResult(val liked: Boolean, val likeCount: Int)
 data class CommentLikeResult(val liked: Boolean, val likeCount: Int)
 data class BookmarkResult(val bookmarked: Boolean)
 
-// Phase 1 v2: Discover page response
+
 data class DiscoverResponse(
     val featuredShowcases: List<CommunityPostItem> = emptyList(),
     val trending: List<CommunityPostItem> = emptyList(),
@@ -4246,9 +4929,9 @@ data class DiscoverResponse(
     val unansweredQuestions: List<CommunityPostItem> = emptyList(),
 )
 
-// Phase 1 v2: Recipe import result
+
 data class RecipeImportResult(
-    val recipe: String,  // Raw JSON string of the recipe
+    val recipe: String,
     val appName: String? = null,
     val appIconUrl: String? = null,
     val sourceType: String? = null,
@@ -4256,7 +4939,7 @@ data class RecipeImportResult(
     val authorUsername: String? = null,
 )
 
-// Phase 1 v2: Categorized tags
+
 data class CommunityTagsResponse(
     val categories: Map<String, List<String>> = emptyMap(),
     val all: List<String> = emptyList(),
@@ -4278,7 +4961,7 @@ data class PostCommentItem(
     val replies: List<PostCommentItem> = emptyList()
 )
 
-// CLI-06/12: Paginated comments response
+
 data class CommentsResponse(
     val total: Int = 0,
     val page: Int = 1,
@@ -4293,9 +4976,9 @@ data class UserActivityInfo(
     val yearSeconds: Int = 0
 )
 
-// ══════════════════════════════════════════════
-// 应用管理 — 激活码、公告、更新、用户
-// ══════════════════════════════════════════════
+
+
+
 
 data class ActivationCode(
     val id: Int = 0,
@@ -4315,6 +4998,7 @@ data class ActivationSettings(
     val enabled: Boolean = false,
     val deviceBindingEnabled: Boolean = false,
     val maxDevicesPerCode: Int = 1,
+    val activationHelpUrl: String? = null,
     val codes: List<ActivationCode> = emptyList(),
     val totalCodes: Int = 0,
     val usedCodes: Int = 0
@@ -4325,7 +5009,7 @@ data class Announcement(
     val appId: Int = 0,
     val title: String = "",
     val content: String = "",
-    val type: String = "info",      // info, warning, update, event
+    val type: String = "info",
     val isActive: Boolean = true,
     val isPinned: Boolean = false,
     val createdAt: String? = null,
@@ -4353,7 +5037,7 @@ data class UpdateConfig(
     val sourceAppId: Int? = null,
     val sourceAppName: String? = null,
     val isForceUpdate: Boolean = false,
-    val minVersionCode: Int = 0,    // 低于此版本强制更新
+    val minVersionCode: Int = 0,
     val templateId: String = "simple",
     val isActive: Boolean = false,
     val createdAt: String? = null,
@@ -4363,12 +5047,12 @@ data class UpdateConfig(
 data class UpdateTemplate(
     val id: String,
     val name: String,
-    val preview: String,    // 预览描述
-    val style: String       // simple, dialog, fullscreen
+    val preview: String,
+    val style: String
 )
 
 data class AppUser(
-    val id: String,         // 设备指纹 ID
+    val id: String,
     val deviceModel: String? = null,
     val osVersion: String? = null,
     val appVersion: String? = null,
@@ -4379,7 +5063,58 @@ data class AppUser(
     val firstSeenAt: String? = null,
     val lastSeenAt: String? = null,
     val activationCode: String? = null,
+    val externalUserId: String? = null,
     val isActive: Boolean = true
+)
+
+data class ActivationCodeBatchResult(
+    val created: Int = 0,
+    val skipped: Int = 0,
+    val quotaUsed: Int = 0,
+    val quotaTotal: Int = 0,
+)
+
+data class AppQuotaInfo(
+    val tier: String = "free",
+    val retentionDays: Int = 0,
+    val appPublishLimit: Int = 0,
+    val activationCodesTotalLimit: Int = 0,
+    val activationCodesDailyLimit: Int = 0,
+    val activationCodesCurrent: Int = 0,
+    val announcementDailyLimit: Int = 0,
+    val updateDailyLimit: Int = 0,
+    val reviewSubmissionDailyLimit: Int = 0,
+    val appReviewSubmissionDailyLimit: Int = 0,
+    val runtimeEventsDailyLimit: Int = 0,
+    val reviewStatus: String? = null,
+    val verificationStatus: String? = null,
+    val visibility: String? = null,
+)
+
+data class AppBanItem(
+    val id: Int,
+    val ruleType: String,
+    val targetValue: String,
+    val reason: String? = null,
+    val revokedAt: String? = null,
+    val createdAt: String? = null,
+)
+
+data class ReviewSubmissionInfo(
+    val id: Int,
+    val moduleId: Int = 0,
+    val reviewMode: String = "public_first",
+    val requestedVisibility: String = "public",
+    val status: String = "pending",
+    val submitMessage: String? = null,
+    val rejectionReason: String? = null,
+    val adminReplyText: String? = null,
+    val reviewedBy: Int? = null,
+    val decidedAt: String? = null,
+    val createdAt: String? = null,
+    val updatedAt: String? = null,
+    val submissionAssets: List<String> = emptyList(),
+    val decisionAssets: List<String> = emptyList(),
 )
 
 data class GeoDistribution(

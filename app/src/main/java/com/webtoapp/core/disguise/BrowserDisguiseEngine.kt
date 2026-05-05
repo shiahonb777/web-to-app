@@ -5,44 +5,44 @@ import com.webtoapp.core.kernel.BrowserKernel
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.core.webview.OAuthCompatEngine
 
-/**
- * 浏览器伪装统一编排引擎 v2.0
- * 
- * ## 🎯 职责
- * 
- * 统一编排三大反检测子系统, 确保无冲突、可诊断、按优先级注入:
- * 
- * ```
- * ┌─────────────────────────────────────────────────────┐
- * │           BrowserDisguiseEngine (本模块)              │
- * │                 统一编排 & 冲突解决                     │
- * ├────────────┬────────────────┬───────────────────────┤
- * │ BrowserKernel │ BrowserDisguise │ OAuthCompatEngine │
- * │ (HTTP层+基础JS) │ (22向量指纹伪装) │ (16+提供商专用)   │
- * │ Level 1 基础   │ Level 2-5 高级  │ OAuth 专用        │
- * └────────────┴────────────────┴───────────────────────┘
- * ```
- * 
- * ## 🔒 注入顺序 (DOCUMENT_START)
- * 
- * 1. **BrowserKernel** — HTTP 层 (UA sanitize, X-Requested-With) + 基础 JS
- * 2. **BrowserDisguise** — 22 向量指纹伪装 (Canvas/WebGL/Audio/Screen...)
- * 3. **OAuthCompatEngine** — OAuth 提供商专用反检测 (Google/FB/MS...)
- * 4. **FingerprintDiagnostic** — 可选诊断探针 (仅 debug 模式)
- * 
- * ## 🛡️ 冲突解决策略
- * 
- * - guard flag 互斥: 每个子系统有独立的 `window.__wta_xxx__` 标志
- * - BrowserDisguise 不重复 Level 1 向量 (当 BrowserKernel 已注入时)
- * - OAuth 层叠: OAuthCompatEngine 可覆盖 BrowserDisguise 的通用设置
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 object BrowserDisguiseEngine {
-    
+
     private const val TAG = "BrowserDisguiseEngine"
-    
-    /**
-     * 引擎注入结果
-     */
+
+
+
+
     data class InjectionResult(
         val kernelInjected: Boolean,
         val disguiseInjected: Boolean,
@@ -61,17 +61,17 @@ object BrowserDisguiseEngine {
             return "Injected: [${parts.joinToString(" → ")}] ${totalJsSize}chars"
         }
     }
-    
-    /**
-     * 在 onPageStarted 中调用 — 统一注入所有反检测层
-     * 
-     * @param webView WebView 实例
-     * @param url 当前页面 URL
-     * @param disguiseConfig 浏览器伪装配置 (null = 不启用高级伪装)
-     * @param cachedDisguiseJs 预生成的伪装 JS (来自 WebViewManager 缓存)
-     * @param enableDiagnostic 是否启用指纹诊断探针
-     * @return 注入结果
-     */
+
+
+
+
+
+
+
+
+
+
+
     fun injectOnPageStarted(
         webView: WebView,
         url: String?,
@@ -86,8 +86,8 @@ object BrowserDisguiseEngine {
         var oauthProvider: String? = null
         var totalJsSize = 0
         var disguiseCoverage = 0f
-        
-        // === 1. BrowserKernel (OAuth 页面 only) ===
+
+
         if (url != null && OAuthCompatEngine.isOAuthUrl(url)) {
             try {
                 BrowserKernel.injectKernelJs(webView)
@@ -97,8 +97,8 @@ object BrowserDisguiseEngine {
                 AppLogger.w(TAG, "Layer1: BrowserKernel injection failed", e)
             }
         }
-        
-        // === 2. BrowserDisguise (所有页面, if enabled) ===
+
+
         if (disguiseConfig?.enabled == true && !cachedDisguiseJs.isNullOrEmpty()) {
             try {
                 webView.evaluateJavascript(cachedDisguiseJs, null)
@@ -110,8 +110,8 @@ object BrowserDisguiseEngine {
                 AppLogger.w(TAG, "Layer2: BrowserDisguise injection failed", e)
             }
         }
-        
-        // === 3. OAuthCompatEngine (OAuth 页面 only) ===
+
+
         if (url != null && OAuthCompatEngine.isOAuthUrl(url)) {
             try {
                 OAuthCompatEngine.getAntiDetectionJs(url)?.let { js ->
@@ -125,8 +125,8 @@ object BrowserDisguiseEngine {
                 AppLogger.w(TAG, "Layer3: OAuth injection failed", e)
             }
         }
-        
-        // === 4. Diagnostic probe (debug only) ===
+
+
         if (enableDiagnostic) {
             try {
                 val diagJs = FingerprintDiagnostic.generateProbeJs()
@@ -138,7 +138,7 @@ object BrowserDisguiseEngine {
                 AppLogger.w(TAG, "Layer4: Diagnostic probe failed", e)
             }
         }
-        
+
         val result = InjectionResult(
             kernelInjected = kernelInjected,
             disguiseInjected = disguiseInjected,
@@ -148,20 +148,20 @@ object BrowserDisguiseEngine {
             diagnosticInjected = diagnosticInjected,
             totalJsSize = totalJsSize
         )
-        
+
         AppLogger.d(TAG, result.toLogString())
         return result
     }
-    
-    /**
-     * 获取引擎状态摘要 (用于 UI 展示)
-     */
+
+
+
+
     fun getEngineStatus(config: BrowserDisguiseConfig?): EngineStatus {
         val kernelAvailable = BrowserKernel.isAvailable()
         val disguiseEnabled = config?.enabled == true
         val coverage = if (disguiseEnabled) BrowserDisguiseConfig.calculateCoverage(config!!) else 0f
         val level = BrowserDisguiseConfig.getDisguiseLevel(coverage)
-        
+
         return EngineStatus(
             kernelAvailable = kernelAvailable,
             disguiseEnabled = disguiseEnabled,
@@ -169,10 +169,10 @@ object BrowserDisguiseEngine {
             disguiseLevel = level,
             disguisePreset = config?.preset ?: BrowserDisguisePreset.OFF,
             activeVectorsCount = if (disguiseEnabled) countActiveVectors(config!!) else 0,
-            totalVectorsCount = 28 // Updated total with new vectors
+            totalVectorsCount = 28
         )
     }
-    
+
     private fun countActiveVectors(config: BrowserDisguiseConfig): Int {
         var c = 0
         if (config.removeXRequestedWith) c++
@@ -199,7 +199,7 @@ object BrowserDisguiseEngine {
         if (config.iframeDisguisePropagation) c++
         return c
     }
-    
+
     data class EngineStatus(
         val kernelAvailable: Boolean,
         val disguiseEnabled: Boolean,
@@ -211,25 +211,25 @@ object BrowserDisguiseEngine {
     )
 }
 
-/**
- * 指纹诊断工具
- * 
- * 在页面中注入一个不可见的诊断探针，收集当前的浏览器指纹信息
- * 并通过 console.log 输出详细报告。
- * 
- * ## 使用场景
- * - 开发调试：确认伪装 JS 是否生效
- * - 覆盖率验证：对比注入前后的指纹差异
- * - 兼容性测试：识别网站使用的检测手段
- */
+
+
+
+
+
+
+
+
+
+
+
 object FingerprintDiagnostic {
-    
-    /**
-     * 生成指纹诊断探针 JS
-     * 
-     * 探针会在页面加载后 500ms 执行(确保伪装 JS 已生效)，
-     * 收集 30+ 个指纹维度并输出结构化报告。
-     */
+
+
+
+
+
+
+
     fun generateProbeJs(): String = """
 (function(){
 'use strict';
@@ -238,7 +238,7 @@ window.__wta_diag__=true;
 
 setTimeout(function(){
     var report={};
-    
+
     // === Navigator ===
     try{
         report.navigator={
@@ -263,7 +263,7 @@ setTimeout(function(){
             }:null
         };
     }catch(e){report.navigator={error:e.message}}
-    
+
     // === Screen ===
     try{
         report.screen={
@@ -280,7 +280,7 @@ setTimeout(function(){
             innerHeight:window.innerHeight
         };
     }catch(e){report.screen={error:e.message}}
-    
+
     // === Chrome Object ===
     try{
         report.chrome={
@@ -291,7 +291,7 @@ setTimeout(function(){
             app:!!window.chrome?.app
         };
     }catch(e){report.chrome={error:e.message}}
-    
+
     // === WebGL ===
     try{
         var c=document.createElement('canvas');
@@ -306,7 +306,7 @@ setTimeout(function(){
             };
         }else{report.webgl={available:false}}
     }catch(e){report.webgl={error:e.message}}
-    
+
     // === Canvas Fingerprint ===
     try{
         var c2=document.createElement('canvas');
@@ -323,7 +323,7 @@ setTimeout(function(){
             length:c2.toDataURL().length
         };
     }catch(e){report.canvas={error:e.message}}
-    
+
     // === Timezone ===
     try{
         report.timezone={
@@ -332,7 +332,7 @@ setTimeout(function(){
             locale:Intl.DateTimeFormat().resolvedOptions().locale
         };
     }catch(e){report.timezone={error:e.message}}
-    
+
     // === Battery ===
     try{
         if(navigator.getBattery){
@@ -342,7 +342,7 @@ setTimeout(function(){
             });
         }else{report.battery={available:false}}
     }catch(e){report.battery={error:e.message}}
-    
+
     // === toString Protection Check ===
     try{
         report.toStringCheck={
@@ -350,7 +350,7 @@ setTimeout(function(){
             functionToString:Function.prototype.toString.toString().includes('[native code]')
         };
     }catch(e){report.toStringCheck={error:e.message}}
-    
+
     // === Automation Flags ===
     try{
         report.automationFlags={
@@ -363,7 +363,7 @@ setTimeout(function(){
             domAutomationController:!!window.domAutomationController
         };
     }catch(e){report.automationFlags={error:e.message}}
-    
+
     // === ClientRects ===
     try{
         var div=document.createElement('div');
@@ -379,7 +379,7 @@ setTimeout(function(){
         };
         document.body.removeChild(div);
     }catch(e){report.clientRects={error:e.message}}
-    
+
     // === Performance Timing ===
     try{
         var t1=performance.now();
@@ -389,7 +389,7 @@ setTimeout(function(){
             timing:!!performance.timing
         };
     }catch(e){report.performance={error:e.message}}
-    
+
     // === Storage ===
     try{
         report.storage={
@@ -404,7 +404,7 @@ setTimeout(function(){
             });
         }
     }catch(e){report.storage={error:e.message}}
-    
+
     // Output
     console.log('%c[WTA Fingerprint Diagnostic Report]','color:#e91e63;font-weight:bold;font-size:14px');
     console.log('%c─────────────────────────────────','color:#9c27b0');
@@ -412,20 +412,20 @@ setTimeout(function(){
         console.log('%c'+k+':','color:#2196f3;font-weight:bold',JSON.stringify(report[k],null,2));
     });
     console.log('%c─────────────────────────────────','color:#9c27b0');
-    
+
     // Also store for programmatic access
     window.__wta_fingerprint_report__=report;
-    
+
 },500);
 })();
 """
 
-    /**
-     * 生成完整的指纹测试 HTML 页面
-     * 
-     * 返回一个自包含的 HTML 页面，显示所有指纹向量的当前值。
-     * 用于开发者调试和伪装效果验证。
-     */
+
+
+
+
+
+
     fun generateTestPageHtml(): String = """
 <!DOCTYPE html>
 <html lang="en">

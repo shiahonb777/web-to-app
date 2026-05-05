@@ -1,7 +1,7 @@
-/**
- * 系统监控仪表盘 — 暗色主题版
- * Node.js 内置模块，零依赖，实时刷新
- */
+
+
+
+
 const http = require('http');
 const os = require('os');
 const PORT = process.env.PORT || 3000;
@@ -31,12 +31,12 @@ function fmtB(b) { if (b < 1024 * 1024) return (b / 1024).toFixed(0) + ' KB'; if
 function fmtT(s) { const m = Math.floor(s / 60), h = Math.floor(m / 60); if (h > 0) return h + '时' + m % 60 + '分'; if (m > 0) return m + '分' + Math.floor(s % 60) + '秒'; return Math.floor(s) + '秒'; }
 
 const server = http.createServer((req, res) => {
-  const p = new URL(req.url, `http://${req.headers.host}`).pathname;
+  const p = new URL(req.url, `http:
   if (p === '/api/stats') { res.writeHead(200, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify(getStats())); }
   if (p === '/') { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); return res.end(getPage()); }
   res.writeHead(404); res.end('Not Found');
 });
-server.listen(PORT, '0.0.0.0', () => console.log(`⚡ Monitor on http://0.0.0.0:${PORT}`));
+server.listen(PORT, '0.0.0.0', () => console.log(`⚡ Monitor on http:
 
 function getPage() {
   return `<!DOCTYPE html>

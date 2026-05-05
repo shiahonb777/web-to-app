@@ -20,19 +20,19 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
-/**
- * 通用 UI 组件库
- * 用于复用常见的 UI 组件，减少代码重复
- */
 
-/**
- * 设置开关项
- * @param title 标题
- * @param subtitle 副标题/说明
- * @param checked 是否选中
- * @param onCheckedChange 选中状态改变回调
- * @param modifier 修饰符
- */
+
+
+
+
+
+
+
+
+
+
+
+
 @Composable
 fun SettingsSwitch(
     title: String,
@@ -66,12 +66,12 @@ fun SettingsSwitch(
     }
 }
 
-/**
- * 设置区域分组
- * @param title 分组标题
- * @param modifier 修饰符
- * @param content 内容
- */
+
+
+
+
+
+
 @Composable
 fun SettingsSection(
     title: String,
@@ -99,15 +99,15 @@ fun SettingsSection(
     }
 }
 
-/**
- * 带图标的开关卡片
- * @param title 标题
- * @param icon 图标
- * @param checked 是否选中
- * @param onCheckedChange 选中状态改变回调
- * @param subtitle 副标题/说明（可选）
- * @param modifier 修饰符
- */
+
+
+
+
+
+
+
+
+
 @Composable
 fun IconSwitchCard(
     title: String,
@@ -171,9 +171,9 @@ fun IconSwitchCard(
     }
 }
 
-/**
- * 带图标的开关卡片（Painter 版本 - 用于 PNG 自定义图标）
- */
+
+
+
 @Composable
 fun IconSwitchCard(
     title: String,
@@ -237,12 +237,12 @@ fun IconSwitchCard(
     }
 }
 
-/**
- * 信息标签芯片
- * @param label 标签文本
- * @param icon 图标
- * @param modifier 修饰符
- */
+
+
+
+
+
+
 @Composable
 fun InfoChip(
     label: String,
@@ -274,12 +274,12 @@ fun InfoChip(
     }
 }
 
-/**
- * 统计数据项
- * @param value 数值
- * @param label 标签
- * @param modifier 修饰符
- */
+
+
+
+
+
+
 @Composable
 fun StatItem(
     value: String,
@@ -311,14 +311,14 @@ fun StatItem(
     }
 }
 
-/**
- * 空状态占位
- * @param icon 图标
- * @param title 标题
- * @param subtitle 副标题
- * @param action 操作按钮（可选）
- * @param modifier 修饰符
- */
+
+
+
+
+
+
+
+
 @Composable
 fun EmptyStatePlaceholder(
     icon: ImageVector,
@@ -379,11 +379,11 @@ fun EmptyStatePlaceholder(
     }
 }
 
-/**
- * 加载状态占位
- * @param message 加载消息
- * @param modifier 修饰符
- */
+
+
+
+
+
 @Composable
 fun LoadingPlaceholder(
     message: String,
@@ -418,13 +418,13 @@ fun LoadingPlaceholder(
     }
 }
 
-/**
- * 错误状态占位
- * @param message 错误消息
- * @param onRetry 重试回调
- * @param retryText 重试按钮文本
- * @param modifier 修饰符
- */
+
+
+
+
+
+
+
 @Composable
 fun ErrorPlaceholder(
     message: String,
@@ -486,13 +486,13 @@ fun ErrorPlaceholder(
     }
 }
 
-/**
- * 简化的设置开关行（无副标题）
- * @param title 标题
- * @param checked 是否选中
- * @param onCheckedChange 选中状态改变回调
- * @param modifier 修饰符
- */
+
+
+
+
+
+
+
 @Composable
 fun SettingsSwitchRow(
     title: String,
@@ -512,11 +512,11 @@ fun SettingsSwitchRow(
     }
 }
 
-/**
- * 卡片内容包装器（自动添加padding）
- * @param modifier 修饰符
- * @param content 内容
- */
+
+
+
+
+
 @Composable
 fun CardContent(
     modifier: Modifier = Modifier,
@@ -528,12 +528,12 @@ fun CardContent(
     )
 }
 
-/**
- * 卡片内容包装器（带间距）
- * @param modifier 修饰符
- * @param spacing 间距
- * @param content 内容
- */
+
+
+
+
+
+
 @Composable
 fun CardContentWithSpacing(
     modifier: Modifier = Modifier,
@@ -547,12 +547,12 @@ fun CardContentWithSpacing(
     )
 }
 
-/**
- * 带图标的标题行
- * @param icon 图标
- * @param title 标题
- * @param modifier 修饰符
- */
+
+
+
+
+
+
 @Composable
 fun IconTitleRow(
     icon: ImageVector,
@@ -592,9 +592,9 @@ fun IconTitleRow(
     }
 }
 
-/**
- * 带图标的标题行（Painter 版本 - 用于 PNG 自定义图标）
- */
+
+
+
 @Composable
 fun IconTitleRow(
     iconPainter: Painter,
@@ -634,14 +634,14 @@ fun IconTitleRow(
     }
 }
 
-/**
- * 可折叠卡片头部（带开关）
- * @param icon 图标
- * @param title 标题
- * @param checked 开关状态
- * @param onCheckedChange 开关状态改变回调
- * @param modifier 修饰符
- */
+
+
+
+
+
+
+
+
 @Composable
 fun CollapsibleCardHeader(
     icon: ImageVector,
@@ -660,9 +660,9 @@ fun CollapsibleCardHeader(
     }
 }
 
-/**
- * 可折叠卡片头部（Painter 版本 - 用于 PNG 自定义图标）
- */
+
+
+
 @Composable
 fun CollapsibleCardHeader(
     iconPainter: Painter,
@@ -681,11 +681,11 @@ fun CollapsibleCardHeader(
     }
 }
 
-/**
- * 警告提示卡片
- * @param message 警告消息
- * @param modifier 修饰符
- */
+
+
+
+
+
 @Composable
 fun WarningCard(
     message: String,
@@ -716,7 +716,7 @@ fun WarningCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.Top
         ) {
-            // 圆形图标背景
+
             Box(
                 modifier = Modifier
                     .size(36.dp)

@@ -30,9 +30,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
@@ -47,19 +45,23 @@ import coil.compose.AsyncImage
 import coil.decode.VideoFrameDecoder
 import coil.request.ImageRequest
 import com.webtoapp.core.apkbuilder.ApkBuilder
+import com.webtoapp.core.apkbuilder.ApkExportPreflight
+import com.webtoapp.core.apkbuilder.ApkExportPreflightReport
 import com.webtoapp.core.apkbuilder.BuildResult
-import com.webtoapp.core.i18n.InitializeLanguage
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.core.logging.AppLogger
+import com.webtoapp.data.dao.WebAppSummary
 import com.webtoapp.data.model.AppCategory
 import com.webtoapp.data.model.WebApp
 import com.webtoapp.ui.components.CategoryEditorDialog
 import com.webtoapp.ui.components.CategoryTabRow
 import com.webtoapp.ui.components.EnhancedElevatedCard
+import com.webtoapp.ui.components.ApkExportPreflightPanel
 import com.webtoapp.ui.components.PremiumTextField
 import com.webtoapp.ui.components.LanguageSelectorButton
-import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.MoveToCategoryDialog
+import com.webtoapp.ui.design.WtaScreen
+import com.webtoapp.ui.design.WtaRadius
 import com.webtoapp.ui.theme.LocalAnimationSettings
 import com.webtoapp.ui.theme.AppColors
 import com.webtoapp.ui.theme.ThemeManager
@@ -80,12 +82,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.foundation.Canvas
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.layout.boundsInRoot
@@ -95,10 +98,11 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.ui.graphics.graphicsLayer
 import com.webtoapp.ui.components.liquidGlass
+import com.webtoapp.ui.design.WtaBadge
 
-/**
- * Home screen - 应用列表
- */
+
+
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
@@ -124,25 +128,21 @@ fun HomeScreen(
     onOpenAiHtmlCoding: () -> Unit = {},
     onOpenExtensionModules: () -> Unit = {},
     onOpenLinuxEnvironment: () -> Unit = {},
-    onOpenDocs: () -> Unit = {},
 ) {
-    // Initialize多语言
-    InitializeLanguage()
-    
-    val apps by viewModel.filteredApps.collectAsStateWithLifecycle()
+    val apps by viewModel.filteredSummaries.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    
-    // 分类相关状态
+
+
     val categories by viewModel.categories.collectAsStateWithLifecycle()
     val selectedCategoryId by viewModel.selectedCategoryId.collectAsStateWithLifecycle()
     var showCategoryEditor by remember { mutableStateOf(false) }
     var editingCategory by remember { mutableStateOf<AppCategory?>(null) }
     var showMoveToCategoryDialog by remember { mutableStateOf(false) }
-    var appToMove by remember { mutableStateOf<WebApp?>(null) }
+    var appToMove by remember { mutableStateOf<WebAppSummary?>(null) }
 
     var isSearchActive by remember { mutableStateOf(false) }
-    var selectedApp by remember { mutableStateOf<WebApp?>(null) }
+    var selectedApp by remember { mutableStateOf<WebAppSummary?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showBuildDialog by remember { mutableStateOf(false) }
     var buildingApp by remember { mutableStateOf<WebApp?>(null) }
@@ -150,7 +150,7 @@ fun HomeScreen(
     var showFabMenu by remember { mutableStateOf(false) }
     var showBatchImportDialog by remember { mutableStateOf(false) }
 
-    // Scope 和 Snackbar
+
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(uiState) {
@@ -188,149 +188,52 @@ fun HomeScreen(
         CreateActionItem(Strings.createMediaApp, R.drawable.ic_type_media, onCreateMediaApp),
         CreateActionItem(Strings.appTypeGallery, R.drawable.ic_type_gallery, onCreateGalleryApp)
     )
-    
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            TopAppBar(
-                title = {
-                    if (isSearchActive) {
-                        // Search框 - 限制宽度
-                        PremiumTextField(
-                            value = searchQuery,
-                            onValueChange = { viewModel.search(it) },
-                            placeholder = { Text(Strings.search, style = MaterialTheme.typography.bodyMedium) },
-                            singleLine = true,
-                            modifier = Modifier
-                                .widthIn(max = 200.dp)
-                                .height(48.dp),
-                            textStyle = MaterialTheme.typography.bodyMedium
-                        )
-                    } else {
-                        val theme = LocalAppTheme.current
-                        val gradientColors = theme.gradients.accent.ifEmpty { 
-                            listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
-                        }
-                        
-                        val typewriterTexts = listOf(Strings.typewriterText1, Strings.typewriterText2, Strings.typewriterText3)
-                        var textIndex by remember { mutableIntStateOf(0) }
-                        var charIndex by remember { mutableIntStateOf(0) }
-                        var userPaused by remember { mutableStateOf(false) }
-                        var loopTick by remember { mutableIntStateOf(0) }
-                        
-                        val currentFullText = typewriterTexts[textIndex]
-                        val displayText = currentFullText.substring(0, charIndex.coerceAtMost(currentFullText.length))
-                        
-                        // 光标闪烁
-                        var cursorVisible by remember { mutableStateOf(true) }
-                        LaunchedEffect(Unit) {
-                            while (true) {
-                                delay(530)
-                                cursorVisible = !cursorVisible
-                            }
-                        }
-                        
-                        // 打字机主循环
-                        LaunchedEffect(loopTick) {
-                            // 逐字打出 (100ms/字)
-                            charIndex = 0
-                            val fullText = typewriterTexts[textIndex]
-                            for (i in 1..fullText.length) {
-                                delay(100)
-                                charIndex = i
-                            }
-                            
-                            // 打完停留 2 秒
-                            delay(2000)
-                            
-                            // 如果用户点击了暂停，等待 3 秒
-                            if (userPaused) {
-                                delay(3000)
-                                userPaused = false
-                            }
-                            
-                            // 逐字删除 (50ms/字)
-                            for (i in fullText.length - 1 downTo 0) {
-                                delay(50)
-                                charIndex = i
-                            }
-                            
-                            // 删除完停留 0.4 秒
-                            delay(400)
-                            
-                            // 切换到下一段
-                            textIndex = (textIndex + 1) % typewriterTexts.size
-                            loopTick++
-                        }
-                        
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.clickable {
-                                userPaused = true
-                            }
-                        ) {
-                            Text(
-                                text = displayText,
-                                style = MaterialTheme.typography.titleMedium.merge(
-                                    TextStyle(
-                                        brush = Brush.linearGradient(gradientColors)
-                                    )
-                                )
-                            )
-                            // 橙色闪烁光标
-                            if (cursorVisible) {
-                                Spacer(modifier = Modifier.width(1.dp))
-                                Box(
-                                    modifier = Modifier
-                                        .width(2.dp)
-                                        .height(18.dp)
-                                        .background(AppColors.Warning)
-                                )
-                            }
-                        }
-                    }
-                },
-                actions = {
-                    // 文档中心按钮
-                    IconButton(
-                        onClick = onOpenDocs,
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.MenuBook,
-                            contentDescription = Strings.docTitle,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                    
-                    // 深/浅色模式切换按钮（带圆形揭示动画）
+
+    WtaScreen(
+        title = Strings.myApps,
+        snackbarHostState = snackbarHostState,
+        actions = {
+            if (isSearchActive) {
+                PremiumTextField(
+                    value = searchQuery,
+                    onValueChange = { viewModel.search(it) },
+                    placeholder = { Text(Strings.search, style = MaterialTheme.typography.bodyMedium) },
+                    singleLine = true,
+                    modifier = Modifier
+                        .widthIn(max = 180.dp)
+                        .height(48.dp),
+                    textStyle = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+            }
+
                     val context = LocalContext.current
                     val themeManager = remember { ThemeManager.getInstance(context) }
                     val darkModeState by themeManager.darkModeFlow.collectAsStateWithLifecycle()
                     val isDarkNow = darkModeState == ThemeManager.DarkModeSettings.DARK
-                    
-                    // 获取圆形揭示动画状态
+
+
                     val revealState = LocalThemeRevealState.current
                     val view = LocalView.current
                     val activity = context as? android.app.Activity
-                    
-                    // 记录按钮在屏幕上的中心坐标
+
+
                     var buttonCenter by remember { mutableStateOf(androidx.compose.ui.geometry.Offset.Zero) }
-                    
+
                     IconButton(
                         onClick = {
                             val switchToDark = !isDarkNow
-                            
+
                             if (revealState != null) {
-                                // ★ 可打断：不再检查 isAnimating
-                                // 如果动画进行中，triggerReveal 会自动取消旧动画、重新截图、重新开始
+
+
                                 revealState.triggerReveal(
                                     center = buttonCenter,
                                     switchToDark = switchToDark,
                                     view = view,
                                     window = activity?.window
                                 ) {
-                                    // 截图完成后切换主题
+
                                     scope.launch {
                                         val newMode = if (switchToDark) {
                                             ThemeManager.DarkModeSettings.DARK
@@ -341,7 +244,7 @@ fun HomeScreen(
                                     }
                                 }
                             } else {
-                                // Fallback: 无动画直接切换
+
                                 scope.launch {
                                     val newMode = if (switchToDark) {
                                         ThemeManager.DarkModeSettings.DARK
@@ -372,18 +275,18 @@ fun HomeScreen(
                             modifier = Modifier.size(20.dp)
                         )
                     }
-                    
-                    // 语言选择按钮
+
+
                     LanguageSelectorButton(
                         onLanguageChanged = {
-                            // 语言更改后会自动触发重组
+
                             scope.launch {
                                 snackbarHostState.showSnackbar(Strings.msgLanguageChanged)
                             }
                         }
                     )
-                    
-                    // Search按钮
+
+
                     IconButton(
                         onClick = {
                             isSearchActive = !isSearchActive
@@ -397,56 +300,15 @@ fun HomeScreen(
                             modifier = Modifier.size(20.dp)
                         )
                     }
-                    
 
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
-                )
-            )
-        },
 
-        snackbarHost = {
-            SnackbarHost(snackbarHostState) { data ->
-                // 弹簧滑入动画
-                var isVisible by remember { mutableStateOf(false) }
-                LaunchedEffect(Unit) { isVisible = true }
-                
-                val offsetY by animateFloatAsState(
-                    targetValue = if (isVisible) 0f else 100f,
-                    animationSpec = spring(
-                        dampingRatio = 0.65f,
-                        stiffness = Spring.StiffnessMediumLow
-                    ),
-                    label = "snackbarSlide"
-                )
-                val alpha by animateFloatAsState(
-                    targetValue = if (isVisible) 1f else 0f,
-                    animationSpec = spring(
-                        dampingRatio = 0.85f,
-                        stiffness = Spring.StiffnessMedium
-                    ),
-                    label = "snackbarAlpha"
-                )
-                
-                Snackbar(
-                    snackbarData = data,
-                    modifier = Modifier.graphicsLayer {
-                        translationY = offsetY * density
-                        this.alpha = alpha
-                    },
-                    shape = RoundedCornerShape(12.dp)
-                )
-            }
         }
-    ) { padding ->
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
         ) {
-            // 分类标签栏
+
             CategoryTabRow(
                 categories = categories,
                 selectedCategoryId = selectedCategoryId,
@@ -461,35 +323,36 @@ fun HomeScreen(
                 },
                 onDeleteCategory = { viewModel.deleteCategory(it) }
             )
-            
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(weight = 1f, fill = true)
             ) {
                 if (apps.isEmpty()) {
-                    // Empty状态
+
                     EmptyState(
                         modifier = Modifier.align(Alignment.Center),
+                        showCreateButton = !showFabMenu,
                         onCreateApp = onCreateApp
                     )
                 } else {
-                    // App列表
+
                     val listContext = LocalContext.current
                     val sharedExporter = remember { com.webtoapp.core.export.AppExporter(listContext) }
                     val sharedApkBuilder = remember { ApkBuilder(listContext) }
                     val sharedScope = rememberCoroutineScope()
-                    
-                    // 健康状态数据
-                    val healthMonitor: com.webtoapp.core.stats.AppHealthMonitor? = remember { 
-                        try { org.koin.java.KoinJavaComponent.get(com.webtoapp.core.stats.AppHealthMonitor::class.java) } 
+
+
+                    val healthMonitor: com.webtoapp.core.stats.AppHealthMonitor? = remember {
+                        try { org.koin.java.KoinJavaComponent.get(com.webtoapp.core.stats.AppHealthMonitor::class.java) }
                         catch (e: Exception) { null }
                     }
                     val healthRecordsState = healthMonitor?.allHealthRecords?.collectAsState(initial = emptyList<com.webtoapp.core.stats.AppHealthRecord>())
                     val healthRecords: List<com.webtoapp.core.stats.AppHealthRecord> = healthRecordsState?.value ?: emptyList()
                     val healthMap = remember(healthRecords) { healthRecords.associateBy { it.appId } }
-                    
-                    // 截图服务
+
+
                     fun resolveScreenshotService(): com.webtoapp.core.stats.WebsiteScreenshotService? {
                         return try {
                             org.koin.java.KoinJavaComponent.get(com.webtoapp.core.stats.WebsiteScreenshotService::class.java)
@@ -501,115 +364,126 @@ fun HomeScreen(
                         }
                     }
                     val screenshotService: com.webtoapp.core.stats.WebsiteScreenshotService? = resolveScreenshotService()
+
+
+
                     val previewImageLoader = remember(listContext) {
-                        ImageLoader.Builder(listContext.applicationContext)
-                            .components {
-                                add(VideoFrameDecoder.Factory())
-                            }
-                            .build()
+                        coil.Coil.imageLoader(listContext)
                     }
-                    
-                    // 截图版本跟踪（用于强制 Coil 重新加载图片）
+
+
                     val screenshotVersions = remember { mutableStateMapOf<Long, Int>() }
                     val screenshotLoadingStates = remember { mutableStateMapOf<Long, Boolean>() }
-                    val previewSpecs by produceState(
-                        initialValue = emptyMap<Long, AppPreviewSpec>(),
-                        apps,
-                        listContext
-                    ) {
-                        value = withContext(Dispatchers.IO) {
-                            apps.associate { it.id to resolveAppPreviewSpec(listContext.applicationContext, it) }
+
+                    val previewSpecs = remember { mutableStateMapOf<Long, AppPreviewSpec>() }
+                    LaunchedEffect(apps, listContext) {
+                        val currentIds = apps.map { it.id }.toHashSet()
+                        val stale = previewSpecs.keys - currentIds
+                        if (stale.isNotEmpty()) {
+                            stale.forEach { previewSpecs.remove(it) }
                         }
-                    }
-                    
-                    // 仅首次加载：串行为没有缓存截图的应用截一次，之后由用户手动点击刷新
-                    LaunchedEffect(apps, screenshotService, previewSpecs) {
-                        val initMessage = "init effect: service=${screenshotService != null}, apps=${apps.size}"
-                        com.webtoapp.core.logging.AppLogger.i(
-                            "ScreenshotFlow",
-                            initMessage
-                        )
-                        android.util.Log.i("ScreenshotFlow", initMessage)
-                        com.webtoapp.core.logging.AppLogger.d(
-                            "HomeScreen",
-                            "screenshot init start: service=${screenshotService != null}, apps=${apps.size}"
-                        )
-                        val svc = screenshotService ?: run {
-                            com.webtoapp.core.logging.AppLogger.w("HomeScreen", "screenshot init skipped: service unavailable")
-                            com.webtoapp.core.logging.AppLogger.i("ScreenshotFlow", "init skipped: service unavailable")
-                            android.util.Log.i("ScreenshotFlow", "init skipped: service unavailable")
+                        val missingIds = apps.mapNotNull { summary ->
+                            summary.id.takeIf { it !in previewSpecs }
+                        }
+                        if (missingIds.isEmpty()) {
                             return@LaunchedEffect
                         }
-                        val captureTargets = apps.mapNotNull { app ->
-                            previewSpecs[app.id]?.captureUrl?.let { captureUrl ->
-                                app to captureUrl
-                            }
-                        }
-                        com.webtoapp.core.logging.AppLogger.d("HomeScreen", "screenshot init captureTargets=${captureTargets.size}")
-                        for ((app, captureUrl) in captureTargets) {
-                            if (!svc.hasScreenshot(app.id)) {
-                                screenshotLoadingStates[app.id] = true
-                                val initialMessage = "initial capture start: appId=${app.id}, name=${app.name}, target=$captureUrl"
-                                com.webtoapp.core.logging.AppLogger.i("ScreenshotFlow", initialMessage)
-                                android.util.Log.i("ScreenshotFlow", initialMessage)
-                                try {
-                                    com.webtoapp.core.logging.AppLogger.d(
-                                        "HomeScreen",
-                                        "capturing initial screenshot: appId=${app.id}, name=${app.name}, target=$captureUrl"
-                                    )
-                                    val result = svc.captureScreenshot(app.id, captureUrl)
-                                    val resultMessage = "initial capture finished: appId=${app.id}, path=$result, exists=${svc.hasScreenshot(app.id)}"
-                                    com.webtoapp.core.logging.AppLogger.i("ScreenshotFlow", resultMessage)
-                                    android.util.Log.i("ScreenshotFlow", resultMessage)
-                                    com.webtoapp.core.logging.AppLogger.d(
-                                        "HomeScreen",
-                                        "initial screenshot finished: appId=${app.id}, path=$result, exists=${svc.hasScreenshot(app.id)}"
-                                    )
-                                } catch (e: Exception) {
-                                    val errorMessage = "initial capture exception: appId=${app.id}, error=${e.message}"
-                                    com.webtoapp.core.logging.AppLogger.e("ScreenshotFlow", errorMessage, e)
-                                    android.util.Log.e("ScreenshotFlow", errorMessage, e)
-                                } finally {
-                                    screenshotLoadingStates[app.id] = false
+                        withContext(Dispatchers.IO) {
+                            for (id in missingIds) {
+                                val webApp = viewModel.getWebApp(id) ?: continue
+                                val spec = resolveAppPreviewSpec(listContext.applicationContext, webApp)
+                                withContext(Dispatchers.Main) {
+                                    previewSpecs[id] = spec
                                 }
-                            } else {
-                                com.webtoapp.core.logging.AppLogger.d(
-                                    "HomeScreen",
-                                    "initial screenshot skipped (cached): appId=${app.id}, path=${svc.getScreenshotPath(app.id)}"
-                                )
                             }
-                            screenshotVersions[app.id] = (screenshotVersions[app.id] ?: 0) + 1
                         }
                     }
-                    
+
+                    val latestApps = rememberUpdatedState(apps)
+                    val latestPreviewSpecs = rememberUpdatedState(previewSpecs.toMap())
+                    val captureSignature = remember(previewSpecs.toMap()) {
+                        previewSpecs.entries
+                            .mapNotNull { (id, spec) -> spec.captureUrl?.let { "$id:$it" } }
+                            .sorted()
+                            .joinToString("|")
+                    }
+
+                    LaunchedEffect(screenshotService, captureSignature) {
+                        val svc = screenshotService ?: run {
+                            com.webtoapp.core.logging.AppLogger.i(
+                                "ScreenshotFlow",
+                                "init skipped: service unavailable"
+                            )
+                            return@LaunchedEffect
+                        }
+                        if (captureSignature.isEmpty()) {
+                            return@LaunchedEffect
+                        }
+
+                        delay(500)
+
+                        val appsNow = latestApps.value
+                        val specsNow = latestPreviewSpecs.value
+                        val captureTargets = appsNow.mapNotNull { app ->
+                            specsNow[app.id]?.captureUrl?.let { captureUrl -> app to captureUrl }
+                        }
+                        com.webtoapp.core.logging.AppLogger.i(
+                            "ScreenshotFlow",
+                            "init effect: apps=${appsNow.size}, captureTargets=${captureTargets.size}"
+                        )
+                        for ((app, captureUrl) in captureTargets) {
+                            if (svc.hasScreenshot(app.id)) continue
+                            screenshotLoadingStates[app.id] = true
+                            try {
+                                svc.captureScreenshot(app.id, captureUrl)
+                                com.webtoapp.core.logging.AppLogger.i(
+                                    "ScreenshotFlow",
+                                    "initial capture finished: appId=${app.id}, name=${app.name}"
+                                )
+                            } catch (e: Exception) {
+                                com.webtoapp.core.logging.AppLogger.e(
+                                    "ScreenshotFlow",
+                                    "initial capture exception: appId=${app.id}, error=${e.message}",
+                                    e
+                                )
+                            } finally {
+                                screenshotLoadingStates[app.id] = false
+                                screenshotVersions[app.id] = (screenshotVersions[app.id] ?: 0) + 1
+                            }
+                        }
+                    }
+
                     LazyColumn(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    itemsIndexed(apps, key = { _, app -> app.id }) { index, app ->
+                    itemsIndexed(
+                        apps,
+                        key = { _, app -> app.id },
+                        contentType = { _, _ -> "AppCard" }
+                    ) { index, app ->
                         val exporter = sharedExporter
                         val scope = sharedScope
                         val previewSpec = previewSpecs[app.id] ?: AppPreviewSpec()
 
-                        // 交错入场动画
+
                         StaggeredAnimatedItem(index = index) {
-                        
-                        // 滑动删除
+
+
                         val dismissState = rememberSwipeToDismissBoxState(
                             confirmValueChange = { value ->
                                 if (value == SwipeToDismissBoxValue.EndToStart) {
                                     selectedApp = app
                                     showDeleteDialog = true
-                                    false  // 不真正移除，让对话框确认
+                                    false
                                 } else false
                             }
                         )
-                        
+
                         SwipeToDismissBox(
                             state = dismissState,
                             backgroundContent = {
-                                // 删除背景
-                                val dismissProgress = dismissState.progress
+
                                 val bgAlpha by animateFloatAsState(
                                     targetValue = if (dismissState.targetValue == SwipeToDismissBoxValue.EndToStart) 1f else 0f,
                                     label = "dismissBgAlpha"
@@ -617,7 +491,7 @@ fun HomeScreen(
                                 Box(
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .clip(RoundedCornerShape(16.dp))
+                                        .clip(RoundedCornerShape(WtaRadius.Card))
                                         .background(
                                             MaterialTheme.colorScheme.error.copy(alpha = 0.15f * bgAlpha)
                                         )
@@ -643,17 +517,30 @@ fun HomeScreen(
 
                         AppCard(
                             app = app,
-                            onClick = { onPreviewApp(app) },
+                            onClick = {
+                                scope.launch {
+                                    viewModel.getWebApp(app.id)?.let(onPreviewApp)
+                                }
+                            },
                             onLongClick = { selectedApp = app },
-                            onEdit = { onEditApp(app) },
-                            onEditCore = { onEditAppCore(app) },
+                            onEdit = {
+                                scope.launch {
+                                    viewModel.getWebApp(app.id)?.let(onEditApp)
+                                }
+                            },
+                            onEditCore = {
+                                scope.launch {
+                                    viewModel.getWebApp(app.id)?.let(onEditAppCore)
+                                }
+                            },
                             onDelete = {
                                 selectedApp = app
                                 showDeleteDialog = true
                             },
                             onCreateShortcut = {
                                 scope.launch {
-                                    when (val result = exporter.createShortcut(app)) {
+                                    val fullApp = viewModel.getWebApp(app.id) ?: return@launch
+                                    when (val result = exporter.createShortcut(fullApp)) {
                                         is com.webtoapp.core.export.ShortcutResult.Success -> {
                                             snackbarHostState.showSnackbar(Strings.shortcutCreatedSuccess)
                                         }
@@ -674,7 +561,8 @@ fun HomeScreen(
                             },
                             onExport = {
                                 scope.launch {
-                                    when (val result = exporter.exportAsTemplate(app)) {
+                                    val fullApp = viewModel.getWebApp(app.id) ?: return@launch
+                                    when (val result = exporter.exportAsTemplate(fullApp)) {
                                         is com.webtoapp.core.export.ExportResult.Success -> {
                                             snackbarHostState.showSnackbar(Strings.projectExportedTo.replace("%s", result.path))
                                         }
@@ -685,18 +573,22 @@ fun HomeScreen(
                                 }
                             },
                             onBuildApk = {
-                                buildingApp = app
-                                showBuildDialog = true
+                                scope.launch {
+                                    val fullApp = viewModel.getWebApp(app.id) ?: return@launch
+                                    buildingApp = fullApp
+                                    showBuildDialog = true
+                                }
                             },
                             onShareApk = {
                                 scope.launch {
+                                    val fullApp = viewModel.getWebApp(app.id) ?: return@launch
                                     shareApkFailureReport = null
                                     snackbarHostState.showSnackbar(Strings.shareApkBuilding)
                                     val apkBuilder = sharedApkBuilder
-                                    val result = apkBuilder.buildApk(app) { _, _ -> }
+                                    val result = apkBuilder.buildApk(fullApp) { _, _ -> }
                                     when (result) {
                                         is BuildResult.Success -> {
-                                            // 使用 FileProvider 分享 APK
+
                                             try {
                                                 val apkUri = androidx.core.content.FileProvider.getUriForFile(
                                                     listContext,
@@ -706,15 +598,15 @@ fun HomeScreen(
                                                 val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
                                                     type = "application/vnd.android.package-archive"
                                                     putExtra(android.content.Intent.EXTRA_STREAM, apkUri)
-                                                    putExtra(android.content.Intent.EXTRA_SUBJECT, Strings.shareApkTitle.replace("%s", app.name))
+                                                    putExtra(android.content.Intent.EXTRA_SUBJECT, Strings.shareApkTitle.replace("%s", fullApp.name))
                                                     addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
                                                 }
-                                                listContext.startActivity(android.content.Intent.createChooser(shareIntent, Strings.shareApkTitle.replace("%s", app.name)))
+                                                listContext.startActivity(android.content.Intent.createChooser(shareIntent, Strings.shareApkTitle.replace("%s", fullApp.name)))
                                             } catch (e: Exception) {
                                                 shareApkFailureReport = buildActionFailureReport(
                                                     title = Strings.apkShareFailed,
                                                     stage = "share_apk_intent",
-                                                    webApp = app,
+                                                    webApp = fullApp,
                                                     summary = Strings.shareApkFailed.replace("%s", e.message ?: "Unknown error"),
                                                     logPath = result.logPath,
                                                     throwable = e,
@@ -728,10 +620,11 @@ fun HomeScreen(
                                         is BuildResult.Error -> {
                                             shareApkFailureReport = buildActionFailureReport(
                                                 title = Strings.apkShareFailed,
-                                                stage = "build_apk_for_share",
-                                                webApp = app,
+                                                stage = result.diagnostic?.stage?.label ?: "build_apk_for_share",
+                                                webApp = fullApp,
                                                 summary = Strings.shareApkFailed.replace("%s", result.message),
-                                                logPath = result.logPath
+                                                logPath = result.logPath,
+                                                extraLines = buildDiagnosticLines(result)
                                             )
                                         }
                                     }
@@ -795,11 +688,11 @@ fun HomeScreen(
                             } else null,
                             modifier = Modifier.animateItemPlacement()
                         )
-                        } // SwipeToDismissBox
-                        } // StaggeredAnimatedItem
+                        }
+                        }
                     }
 
-                    // 底部间距
+
                     item {
                         Spacer(modifier = Modifier.height(16.dp))
                     }
@@ -807,13 +700,13 @@ fun HomeScreen(
                 }
             }
 
-                    // ========== Create App Bottom Bar ==========
+
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 12.dp, vertical = 8.dp)
                     ) {
-                        // Expanded create menu
+
                         AnimatedVisibility(
                             visible = showFabMenu,
                             enter = expandVertically(
@@ -841,12 +734,11 @@ fun HomeScreen(
                                 )
                             )
                         ) {
-                            Surface(
+                            EnhancedElevatedCard(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(bottom = 8.dp),
-                                shape = RoundedCornerShape(16.dp),
-                                color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.85f)
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.85f)
                             ) {
                                 Column(
                                     modifier = Modifier
@@ -894,7 +786,7 @@ fun HomeScreen(
                             }
                         }
 
-                        // Main create button
+
                         val fabRotation by animateFloatAsState(
                             targetValue = if (showFabMenu) 135f else 0f,
                             animationSpec = spring(
@@ -903,13 +795,13 @@ fun HomeScreen(
                             ),
                             label = "fabRotation"
                         )
-                        
+
                         FilledTonalButton(
                             onClick = { showFabMenu = !showFabMenu },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(48.dp),
-                            shape = RoundedCornerShape(14.dp),
+                            shape = RoundedCornerShape(WtaRadius.Button),
                             colors = ButtonDefaults.filledTonalButtonColors(
                                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -929,10 +821,10 @@ fun HomeScreen(
                             )
                         }
                     }
-            } // Column
+            }
     }
 
-    // Build APK 对话框
+
     if (showBuildDialog && buildingApp != null) {
         BuildApkDialog(
             webApp = buildingApp!!,
@@ -957,7 +849,7 @@ fun HomeScreen(
         )
     }
 
-    // Delete确认对话框
+
     if (showDeleteDialog && selectedApp != null) {
         AnimatedAlertDialog(
             onDismissRequest = {
@@ -969,7 +861,7 @@ fun HomeScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        selectedApp?.let { viewModel.deleteApp(it) }
+                        selectedApp?.let { viewModel.deleteAppById(it.id) }
                         showDeleteDialog = false
                         selectedApp = null
                     },
@@ -990,8 +882,8 @@ fun HomeScreen(
             }
         )
     }
-    
-    // 分类编辑对话框
+
+
     if (showCategoryEditor) {
         CategoryEditorDialog(
             category = editingCategory,
@@ -999,38 +891,40 @@ fun HomeScreen(
                 showCategoryEditor = false
                 editingCategory = null
             },
-            onSave = { name, icon, color ->
+            onSave = { name, icon ->
                 if (editingCategory != null) {
                     viewModel.updateCategory(
-                        editingCategory!!.copy(name = name, icon = icon, color = color)
+                        editingCategory!!.copy(name = name, icon = icon)
                     )
                 } else {
-                    viewModel.createCategory(name, icon, color)
+                    viewModel.createCategory(name, icon)
                 }
                 showCategoryEditor = false
                 editingCategory = null
             }
         )
     }
-    
-    // 移动到分类对话框
+
+
     if (showMoveToCategoryDialog && appToMove != null) {
+        val summary = appToMove!!
         MoveToCategoryDialog(
-            app = appToMove!!,
+            appName = summary.name,
+            currentCategoryId = summary.categoryId,
             categories = categories,
             onDismiss = {
                 showMoveToCategoryDialog = false
                 appToMove = null
             },
             onMoveToCategory = { categoryId ->
-                viewModel.moveAppToCategory(appToMove!!, categoryId)
+                viewModel.moveAppToCategoryById(summary.id, categoryId)
                 showMoveToCategoryDialog = false
                 appToMove = null
             }
         )
     }
-    
-    // 批量导入对话框
+
+
     if (showBatchImportDialog) {
         val importService = remember { org.koin.java.KoinJavaComponent.get<com.webtoapp.core.stats.BatchImportService>(com.webtoapp.core.stats.BatchImportService::class.java) }
         BatchImportDialog(
@@ -1041,11 +935,11 @@ fun HomeScreen(
             }
         )
     }
-    
+
 }
-/**
- * 侧边栏菜单项
- */
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SidebarMenuItem(
@@ -1066,23 +960,24 @@ private fun SidebarMenuItem(
         tooltip = { PlainTooltip { Text(label) } },
         state = rememberTooltipState()
     ) {
-        Surface(
+        Box(
             modifier = Modifier
                 .size(40.dp)
-                .graphicsLayer { scaleX = scale; scaleY = scale },
-            onClick = onClick,
-            interactionSource = interactionSource,
-            shape = RoundedCornerShape(10.dp),
-            color = Color.Transparent
+                .clip(RoundedCornerShape(WtaRadius.Control))
+                .graphicsLayer { scaleX = scale; scaleY = scale }
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = onClick
+                ),
+            contentAlignment = Alignment.Center
         ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = label,
-                    modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -1107,38 +1002,39 @@ private fun SidebarMenuItem(
         tooltip = { PlainTooltip { Text(label) } },
         state = rememberTooltipState()
     ) {
-        Surface(
+        Box(
             modifier = Modifier
                 .size(40.dp)
-                .graphicsLayer { scaleX = scale; scaleY = scale },
-            onClick = onClick,
-            interactionSource = interactionSource,
-            shape = RoundedCornerShape(10.dp),
-            color = Color.Transparent
+                .clip(RoundedCornerShape(WtaRadius.Control))
+                .graphicsLayer { scaleX = scale; scaleY = scale }
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = onClick
+                ),
+            contentAlignment = Alignment.Center
         ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    painter = iconPainter,
-                    contentDescription = label,
-                    modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            Icon(
+                painter = iconPainter,
+                contentDescription = label,
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
 
-/**
- * 应用卡片
- */
+
+
+
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun AppCard(
-    app: WebApp,
+    app: WebAppSummary,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     onEdit: () -> Unit,
-    onEditCore: () -> Unit = {},  // Class型专用编辑（核心配置）
+    onEditCore: () -> Unit = {},
     onDelete: () -> Unit,
     onCreateShortcut: () -> Unit = {},
     onExport: () -> Unit = {},
@@ -1154,9 +1050,9 @@ fun AppCard(
     modifier: Modifier = Modifier
 ) {
     val theme = LocalAppTheme.current
-    
+
     var expanded by remember { mutableStateOf(false) }
-    
+
     EnhancedElevatedCard(
         onClick = onClick,
         modifier = modifier.fillMaxWidth()
@@ -1167,12 +1063,13 @@ fun AppCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Icon + 健康状态指示灯
+
             Box {
-            Surface(
-                modifier = Modifier.size(56.dp),
-                shape = MaterialTheme.shapes.medium,
-                color = MaterialTheme.colorScheme.primaryContainer
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(MaterialTheme.colorScheme.primaryContainer)
             ) {
                 if (app.iconPath != null) {
                     AsyncImage(
@@ -1211,13 +1108,13 @@ fun AppCard(
                     )
                 }
             }
-            // 健康状态指示灯（仅 WEB 类型且有状态时显示）
+
             if (healthStatus != null && healthStatus != com.webtoapp.core.stats.HealthStatus.UNKNOWN) {
                 val dotColor = when (healthStatus) {
                     com.webtoapp.core.stats.HealthStatus.ONLINE -> AppColors.Success
-                    com.webtoapp.core.stats.HealthStatus.SLOW -> androidx.compose.ui.graphics.Color(0xFFFFC107)
-                    com.webtoapp.core.stats.HealthStatus.OFFLINE -> androidx.compose.ui.graphics.Color(0xFFF44336)
-                    else -> androidx.compose.ui.graphics.Color(0xFF9E9E9E)
+                    com.webtoapp.core.stats.HealthStatus.SLOW -> AppColors.Warning
+                    com.webtoapp.core.stats.HealthStatus.OFFLINE -> AppColors.Error
+                    else -> AppColors.Gray
                 }
                 Box(
                     modifier = Modifier
@@ -1231,11 +1128,11 @@ fun AppCard(
                         .background(dotColor)
                 )
             }
-            } // Box
+            }
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            // Info
+
             Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                 Text(
                     text = app.name,
@@ -1246,36 +1143,11 @@ fun AppCard(
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = when (app.appType) {
-                        com.webtoapp.data.model.AppType.IMAGE -> {
-                            app.mediaConfig?.mediaPath?.let { java.io.File(it).name } ?: app.url
-                        }
-                        com.webtoapp.data.model.AppType.VIDEO -> {
-                            app.mediaConfig?.mediaPath?.let { java.io.File(it).name } ?: app.url
-                        }
-                        com.webtoapp.data.model.AppType.HTML -> {
-                            app.htmlConfig?.entryFile?.takeIf { it.isNotBlank() } ?: "index.html"
-                        }
-                        com.webtoapp.data.model.AppType.FRONTEND -> {
-                            // 显示入口文件或项目目录
-                            app.htmlConfig?.entryFile?.takeIf { it.isNotBlank() }
-                                ?: app.htmlConfig?.projectDir?.let { java.io.File(it).name }
-                                ?: "index.html"
-                        }
-                        com.webtoapp.data.model.AppType.GALLERY -> {
-                            // 显示媒体数量统计
-                            val config = app.galleryConfig
-                            if (config != null && config.items.isNotEmpty()) {
-                                val imageCount = config.items.count { it.type == com.webtoapp.data.model.GalleryItemType.IMAGE }
-                                val videoCount = config.items.count { it.type == com.webtoapp.data.model.GalleryItemType.VIDEO }
-                                buildString {
-                                    if (imageCount > 0) append("$imageCount ${Strings.galleryImages}")
-                                    if (imageCount > 0 && videoCount > 0) append(", ")
-                                    if (videoCount > 0) append("$videoCount ${Strings.galleryVideos}")
-                                }
-                            } else {
-                                Strings.galleryEmpty
-                            }
-                        }
+                        com.webtoapp.data.model.AppType.IMAGE -> app.url.ifBlank { Strings.appTypeImage }
+                        com.webtoapp.data.model.AppType.VIDEO -> app.url.ifBlank { Strings.appTypeVideo }
+                        com.webtoapp.data.model.AppType.HTML,
+                        com.webtoapp.data.model.AppType.FRONTEND -> app.url.ifBlank { Strings.appTypeHtml }
+                        com.webtoapp.data.model.AppType.GALLERY -> app.url.ifBlank { Strings.appTypeGallery }
                         else -> app.url
                     },
                     style = MaterialTheme.typography.bodySmall,
@@ -1285,9 +1157,9 @@ fun AppCard(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
 
-                // 功能标签
+
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    // App类型标签
+
                     AppTypeChip(appType = app.appType)
                     if (app.activationEnabled) {
                         FeatureChip(icon = Icons.Outlined.Key, label = Strings.activationCodeVerify)
@@ -1301,39 +1173,38 @@ fun AppCard(
                 }
             }
 
-            // 网页快照缩略图（仅 WEB 类型显示，无截图时显示占位符）
+
             Spacer(modifier = Modifier.width(8.dp))
-            Surface(
+            Box(
                 modifier = Modifier
                     .width(30.dp)
                     .height(54.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(WtaRadius.Card))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
                     .clickable(enabled = onCaptureScreenshot != null) {
                         val clickMessage = "thumbnail tapped: appId=${app.id}, hasHandler=${onCaptureScreenshot != null}, hasPath=${screenshotPath != null}, version=$screenshotVersion, loading=$isScreenshotLoading"
                         com.webtoapp.core.logging.AppLogger.i("ScreenshotFlow", clickMessage)
                         android.util.Log.i("ScreenshotFlow", clickMessage)
                         onCaptureScreenshot?.invoke()
-                    },
-                shape = RoundedCornerShape(8.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                tonalElevation = 1.dp,
-                shadowElevation = 1.dp
+                    }
             ) {
                 if (screenshotPath != null) {
                     Box(modifier = Modifier.fillMaxSize()) {
+
+
+                        val screenshotCacheKey = "wta_shot_${app.id}_v$screenshotVersion"
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
                                 .data(java.io.File(screenshotPath))
-                                .setParameter("v", screenshotVersion)
-                                .memoryCachePolicy(coil.request.CachePolicy.DISABLED)
-                                .diskCachePolicy(coil.request.CachePolicy.DISABLED)
+                                .memoryCacheKey(screenshotCacheKey)
+                                .diskCacheKey(screenshotCacheKey)
                                 .crossfade(true)
                                 .build(),
                             imageLoader = previewImageLoader,
                             contentDescription = Strings.btnPreview,
                             modifier = Modifier
                                 .fillMaxSize()
-                                .clip(RoundedCornerShape(8.dp)),
+                                .clip(RoundedCornerShape(WtaRadius.Card)),
                             contentScale = ContentScale.Crop
                         )
                         if (isScreenshotLoading) {
@@ -1392,7 +1263,7 @@ fun AppCard(
                 }
             }
 
-            // 菜单
+
             Box {
                 IconButton(onClick = { expanded = true }) {
                     Icon(Icons.Default.MoreVert, contentDescription = Strings.more)
@@ -1402,9 +1273,9 @@ fun AppCard(
                     expanded = expanded,
                     onDismissRequest = { expanded = false }
                 ) {
-                    // Web page应用的"Edit"已包含所有配置，不需要单独的"编辑核心配置"
+
                     if (app.appType == com.webtoapp.data.model.AppType.WEB) {
-                        // Web page应用：只显示一个"Edit"按钮
+
                         DropdownMenuItem(
                             text = { Text(Strings.btnEdit) },
                             onClick = {
@@ -1414,7 +1285,7 @@ fun AppCard(
                             leadingIcon = { Icon(Icons.Outlined.Edit, null) }
                         )
                     } else {
-                        // 其他类型：显示"编辑核心配置"和"编辑通用配置"
+
                         DropdownMenuItem(
                             text = { Text(Strings.editCoreConfig) },
                             onClick = {
@@ -1494,151 +1365,93 @@ fun AppCard(
     }
 }
 
-/**
- * 功能标签
- */
+
+
+
 @Composable
 fun FeatureChip(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String
 ) {
-    Surface(
-        shape = MaterialTheme.shapes.small,
-        color = MaterialTheme.colorScheme.secondaryContainer
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(12.dp),
-                tint = MaterialTheme.colorScheme.onSecondaryContainer
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSecondaryContainer
-            )
-        }
-    }
+    WtaBadge(
+        text = label,
+        icon = icon,
+        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+    )
 }
 
-/**
- * 应用类型标签
- */
+
+
+
 @Composable
 fun AppTypeChip(appType: com.webtoapp.data.model.AppType) {
-    val (icon, label, containerColor) = when (appType) {
-        com.webtoapp.data.model.AppType.WEB -> Triple(
+    val (icon, label) = when (appType) {
+        com.webtoapp.data.model.AppType.WEB -> Pair(
             Icons.Outlined.Public,
-            Strings.appTypeWeb,
-            MaterialTheme.colorScheme.primaryContainer
+            Strings.appTypeWeb
         )
-        com.webtoapp.data.model.AppType.IMAGE -> Triple(
+        com.webtoapp.data.model.AppType.IMAGE -> Pair(
             Icons.Outlined.Image,
-            Strings.appTypeImage,
-            MaterialTheme.colorScheme.tertiaryContainer
+            Strings.appTypeImage
         )
-        com.webtoapp.data.model.AppType.VIDEO -> Triple(
+        com.webtoapp.data.model.AppType.VIDEO -> Pair(
             Icons.Outlined.VideoLibrary,
-            Strings.appTypeVideo,
-            MaterialTheme.colorScheme.tertiaryContainer
+            Strings.appTypeVideo
         )
-        com.webtoapp.data.model.AppType.HTML -> Triple(
+        com.webtoapp.data.model.AppType.HTML -> Pair(
             Icons.Outlined.Html,
-            Strings.appTypeHtml,
-            MaterialTheme.colorScheme.secondaryContainer
+            Strings.appTypeHtml
         )
-        com.webtoapp.data.model.AppType.GALLERY -> Triple(
+        com.webtoapp.data.model.AppType.GALLERY -> Pair(
             Icons.Outlined.PhotoLibrary,
-            Strings.appTypeGallery,
-            MaterialTheme.colorScheme.tertiaryContainer
+            Strings.appTypeGallery
         )
-        com.webtoapp.data.model.AppType.FRONTEND -> Triple(
+        com.webtoapp.data.model.AppType.FRONTEND -> Pair(
             Icons.Outlined.Rocket,
-            Strings.appTypeFrontend,
-            MaterialTheme.colorScheme.primaryContainer
+            Strings.appTypeFrontend
         )
-        com.webtoapp.data.model.AppType.WORDPRESS -> Triple(
+        com.webtoapp.data.model.AppType.WORDPRESS -> Pair(
             Icons.Outlined.Newspaper,
-            Strings.appTypeWordPress,
-            MaterialTheme.colorScheme.primaryContainer
+            Strings.appTypeWordPress
         )
-        com.webtoapp.data.model.AppType.NODEJS_APP -> Triple(
+        com.webtoapp.data.model.AppType.NODEJS_APP -> Pair(
             Icons.Outlined.Terminal,
-            Strings.appTypeNodeJs,
-            MaterialTheme.colorScheme.secondaryContainer
+            Strings.appTypeNodeJs
         )
-        com.webtoapp.data.model.AppType.PHP_APP -> Triple(
+        com.webtoapp.data.model.AppType.PHP_APP -> Pair(
             Icons.Outlined.DataObject,
-            Strings.appTypePhp,
-            MaterialTheme.colorScheme.secondaryContainer
+            Strings.appTypePhp
         )
-        com.webtoapp.data.model.AppType.PYTHON_APP -> Triple(
+        com.webtoapp.data.model.AppType.PYTHON_APP -> Pair(
             Icons.Outlined.Psychology,
-            Strings.appTypePython,
-            MaterialTheme.colorScheme.secondaryContainer
+            Strings.appTypePython
         )
-        com.webtoapp.data.model.AppType.GO_APP -> Triple(
+        com.webtoapp.data.model.AppType.GO_APP -> Pair(
             Icons.Outlined.Speed,
-            Strings.appTypeGo,
-            MaterialTheme.colorScheme.primaryContainer
+            Strings.appTypeGo
         )
-        com.webtoapp.data.model.AppType.MULTI_WEB -> Triple(
+        com.webtoapp.data.model.AppType.MULTI_WEB -> Pair(
             Icons.Outlined.Language,
-            Strings.appTypeMultiWeb,
-            MaterialTheme.colorScheme.primaryContainer
+            Strings.appTypeMultiWeb
         )
     }
-    
-    val contentColor = when (appType) {
-        com.webtoapp.data.model.AppType.WEB,
-        com.webtoapp.data.model.AppType.FRONTEND,
-        com.webtoapp.data.model.AppType.WORDPRESS -> MaterialTheme.colorScheme.onPrimaryContainer
-        com.webtoapp.data.model.AppType.IMAGE,
-        com.webtoapp.data.model.AppType.VIDEO,
-        com.webtoapp.data.model.AppType.GALLERY -> MaterialTheme.colorScheme.onTertiaryContainer
-        com.webtoapp.data.model.AppType.HTML,
-        com.webtoapp.data.model.AppType.NODEJS_APP,
-        com.webtoapp.data.model.AppType.PHP_APP,
-        com.webtoapp.data.model.AppType.PYTHON_APP -> MaterialTheme.colorScheme.onSecondaryContainer
-        com.webtoapp.data.model.AppType.GO_APP,
-        com.webtoapp.data.model.AppType.MULTI_WEB -> MaterialTheme.colorScheme.onPrimaryContainer
-    }
-    
-    Surface(
-        shape = MaterialTheme.shapes.small,
-        color = containerColor
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(12.dp),
-                tint = contentColor
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall,
-                color = contentColor
-            )
-        }
-    }
+
+    WtaBadge(
+        text = label,
+        icon = icon,
+        containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+        contentColor = MaterialTheme.colorScheme.onSurface
+    )
 }
 
-/**
- * 空状态
- */
+
+
+
 @Composable
 fun EmptyState(
     modifier: Modifier = Modifier,
+    showCreateButton: Boolean = true,
     onCreateApp: () -> Unit
 ) {
     Column(
@@ -1665,11 +1478,15 @@ fun EmptyState(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.outline
         )
-        Spacer(modifier = Modifier.height(24.dp))
-        PremiumButton(onClick = onCreateApp) {
-            Icon(Icons.Default.Add, null)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(Strings.createApp)
+        AnimatedVisibility(visible = showCreateButton) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Spacer(modifier = Modifier.height(24.dp))
+                PremiumButton(onClick = onCreateApp) {
+                    Icon(Icons.Default.Add, null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(Strings.createApp)
+                }
+            }
         }
     }
 }
@@ -1751,11 +1568,23 @@ private fun buildBuildFailureReport(
 ): BuildFailureReport {
     return buildActionFailureReport(
         title = Strings.apkBuildFailed,
-        stage = "apk_build",
+        stage = error.diagnostic?.stage?.label ?: "apk_build",
         webApp = webApp,
         summary = error.message,
-        logPath = error.logPath
+        logPath = error.logPath,
+        extraLines = buildDiagnosticLines(error)
     )
+}
+
+private fun buildDiagnosticLines(error: BuildResult.Error): List<String> {
+    val diagnostic = error.diagnostic ?: return emptyList()
+    return buildList {
+        add("failureStage=${diagnostic.stage.name}")
+        add("failureCause=${diagnostic.cause.name}")
+        diagnostic.details.forEach { (key, value) ->
+            add("$key=$value")
+        }
+    }
 }
 
 @Composable
@@ -1778,12 +1607,11 @@ private fun BuildFailureReportDialog(
             }
         },
         text = {
-            Surface(
+            EnhancedElevatedCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(max = 420.dp),
-                shape = RoundedCornerShape(14.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.55f)
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.55f)
             ) {
                 Box(modifier = Modifier.fillMaxWidth()) {
                     Text(
@@ -1817,9 +1645,9 @@ private fun BuildFailureReportDialog(
     )
 }
 
-/**
- * 构建 APK 对话框
- */
+
+
+
 @Composable
 fun BuildApkDialog(
     webApp: WebApp,
@@ -1829,59 +1657,95 @@ fun BuildApkDialog(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val apkBuilder = remember { ApkBuilder(context) }
-    
+
     var isBuilding by remember { mutableStateOf(false) }
     var progress by remember { mutableIntStateOf(0) }
     var progressText by remember { mutableStateOf(Strings.preparing) }
     var analysisReport by remember { mutableStateOf<com.webtoapp.core.apkbuilder.ApkAnalyzer.AnalysisReport?>(null) }
     var buildFailureReport by remember { mutableStateOf<BuildFailureReport?>(null) }
-    
-    // Encryption配置状态
-    var encryptionConfig by remember { 
-        mutableStateOf(webApp.apkExportConfig?.encryptionConfig ?: com.webtoapp.data.model.ApkEncryptionConfig()) 
+    var preflightReport by remember { mutableStateOf<ApkExportPreflightReport?>(null) }
+
+
+    var encryptionConfig by remember {
+        mutableStateOf(webApp.apkExportConfig?.encryptionConfig ?: com.webtoapp.data.model.ApkEncryptionConfig())
     }
-    
-    // 软件加固配置状态
+
+
     var hardeningConfig by remember {
         mutableStateOf(webApp.apkExportConfig?.hardeningConfig ?: com.webtoapp.data.model.AppHardeningConfig())
     }
-    
-    // 独立环境/多开配置状态
+
+
     var isolationConfig by remember {
         mutableStateOf(webApp.apkExportConfig?.isolationConfig ?: com.webtoapp.core.isolation.IsolationConfig())
     }
-    
-    // 后台运行配置状态
+
+
     var backgroundRunEnabled by remember {
         mutableStateOf(webApp.apkExportConfig?.backgroundRunEnabled ?: false)
     }
     var backgroundRunConfig by remember {
         mutableStateOf(webApp.apkExportConfig?.backgroundRunConfig ?: com.webtoapp.data.model.BackgroundRunExportConfig())
     }
-    
-    // 通知配置状态
+
+
     var notificationEnabled by remember {
         mutableStateOf(webApp.apkExportConfig?.notificationEnabled ?: false)
     }
     var notificationConfig by remember {
         mutableStateOf(webApp.apkExportConfig?.notificationConfig ?: com.webtoapp.data.model.NotificationExportConfig())
     }
-    
-    // DNS 配置状态
+
+
     var dnsMode by remember {
         mutableStateOf(webApp.webViewConfig.dnsMode)
     }
     var dnsConfig by remember {
         mutableStateOf(webApp.webViewConfig.dnsConfig)
     }
-    
-    // 浏览器引擎配置状态
+
+
     var selectedEngineType by remember {
         mutableStateOf(webApp.apkExportConfig?.engineType ?: "SYSTEM_WEBVIEW")
     }
     val engineFileManager = remember { com.webtoapp.core.engine.download.EngineFileManager(context) }
     val isGeckoDownloaded = remember(selectedEngineType) {
         engineFileManager.isEngineDownloaded(com.webtoapp.core.engine.EngineType.GECKOVIEW)
+    }
+
+    fun currentBuildConfig(): WebApp {
+        return webApp.copy(
+            webViewConfig = webApp.webViewConfig.copy(
+                dnsMode = dnsMode,
+                dnsConfig = dnsConfig
+            ),
+            apkExportConfig = (webApp.apkExportConfig ?: com.webtoapp.data.model.ApkExportConfig()).copy(
+                encryptionConfig = encryptionConfig,
+                hardeningConfig = hardeningConfig,
+                isolationConfig = isolationConfig,
+                backgroundRunEnabled = backgroundRunEnabled,
+                backgroundRunConfig = backgroundRunConfig,
+                notificationEnabled = notificationEnabled,
+                notificationConfig = notificationConfig,
+                engineType = selectedEngineType
+            )
+        )
+    }
+
+    LaunchedEffect(
+        webApp,
+        encryptionConfig,
+        hardeningConfig,
+        isolationConfig,
+        backgroundRunEnabled,
+        backgroundRunConfig,
+        notificationEnabled,
+        notificationConfig,
+        dnsMode,
+        dnsConfig,
+        selectedEngineType
+    ) {
+        preflightReport = ApkExportPreflight.check(context, currentBuildConfig())
     }
 
     AnimatedAlertDialog(
@@ -1892,12 +1756,12 @@ fun BuildApkDialog(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.verticalScroll(rememberScrollState())
             ) {
-                // App信息
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
                             .size(40.dp)
-                            .clip(RoundedCornerShape(12.dp))
+                            .clip(RoundedCornerShape(WtaRadius.Control))
                             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
                         contentAlignment = Alignment.Center
                     ) {
@@ -1931,52 +1795,52 @@ fun BuildApkDialog(
                         )
                     }
                 }
-                
+
                 HorizontalDivider()
-                
-                // Encryption配置
+
+
                 com.webtoapp.ui.components.EncryptionConfigCard(
                     config = encryptionConfig,
                     onConfigChange = { encryptionConfig = it }
                 )
-                
-                // 软件加固配置
+
+
                 com.webtoapp.ui.components.HardeningConfigCard(
                     config = hardeningConfig,
                     onConfigChange = { hardeningConfig = it }
                 )
-                
-                // 独立环境/多开配置
+
+
                 com.webtoapp.ui.components.IsolationConfigCard(
                     config = isolationConfig,
                     onConfigChange = { isolationConfig = it }
                 )
-                
-                // 后台运行配置
+
+
                 com.webtoapp.ui.components.BackgroundRunConfigCard(
                     enabled = backgroundRunEnabled,
                     config = backgroundRunConfig,
                     onEnabledChange = { backgroundRunEnabled = it },
                     onConfigChange = { backgroundRunConfig = it }
                 )
-                
-                // 通知配置
+
+
                 com.webtoapp.ui.components.NotificationConfigCard(
                     enabled = notificationEnabled,
                     config = notificationConfig,
                     onEnabledChange = { notificationEnabled = it },
                     onConfigChange = { notificationConfig = it }
                 )
-                
-                // DNS 配置
+
+
                 com.webtoapp.ui.components.DnsConfigCard(
                     dnsMode = dnsMode,
                     dnsConfig = dnsConfig,
                     onDnsModeChange = { dnsMode = it },
                     onDnsConfigChange = { dnsConfig = it }
                 )
-                
-                // 浏览器引擎选择
+
+
                 if (webApp.appType == com.webtoapp.data.model.AppType.WEB) {
                     EngineSelectionCard(
                         selectedEngine = selectedEngineType,
@@ -1984,25 +1848,29 @@ fun BuildApkDialog(
                         onEngineSelected = { selectedEngineType = it }
                     )
                 }
-                
+
                 HorizontalDivider()
-                
+
                 Text(
                     Strings.buildApkForApp.replace("%s", webApp.name),
                     style = MaterialTheme.typography.bodyMedium
                 )
-                
+
                 Text(
                     Strings.buildCompleteInstallHint,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                // 进度
+                preflightReport?.let { report ->
+                    ApkExportPreflightPanel(report = report)
+                }
+
+
                 if (isBuilding) {
                     Spacer(Modifier.height(12.dp))
-                    
-                    // 动画进度环
+
+
                     val animatedProgress by animateFloatAsState(
                         targetValue = progress / 100f,
                         animationSpec = spring(
@@ -2011,26 +1879,28 @@ fun BuildApkDialog(
                         ),
                         label = "buildProgress"
                     )
-                    
-                    // 脉冲发光
-                    var pulseAlpha by remember { mutableFloatStateOf(0.6f) }
-                    LaunchedEffect(Unit) {
-                        while (true) {
-                            delay(1000)
-                            pulseAlpha = if (pulseAlpha > 0.8f) 0.6f else 1f
-                        }
-                    }
+
+
+                    val pulseAlpha by rememberInfiniteTransition(label = "buildPulse").animateFloat(
+                        initialValue = 0.6f,
+                        targetValue = 1f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(1000),
+                            repeatMode = RepeatMode.Reverse
+                        ),
+                        label = "buildPulseAlpha"
+                    )
                     val animPulse by animateFloatAsState(
                         targetValue = pulseAlpha,
                         animationSpec = tween(800),
                         label = "pulseAlpha"
                     )
-                    
+
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        // 圆形进度
+
                         Box(contentAlignment = Alignment.Center) {
                             CircularProgressIndicator(
                                 progress = { animatedProgress },
@@ -2045,7 +1915,7 @@ fun BuildApkDialog(
                                 color = MaterialTheme.colorScheme.primary
                             )
                         }
-                        
+
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 progressText,
@@ -2061,12 +1931,12 @@ fun BuildApkDialog(
                         }
                     }
                 }
-                
-                // APK 分析报告
+
+
                 analysisReport?.let { report ->
                     HorizontalDivider()
-                    
-                    // 标题 + 总大小
+
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -2083,27 +1953,27 @@ fun BuildApkDialog(
                             fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
                         )
                     }
-                    
+
                     Spacer(Modifier.height(4.dp))
-                    
-                    // 分类体积条
+
+
                     report.categories.forEach { cat ->
                         val catColor = try {
                             androidx.compose.ui.graphics.Color(android.graphics.Color.parseColor(cat.category.color))
                         } catch (_: Exception) {
                             MaterialTheme.colorScheme.primary
                         }
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(8.dp)
-                                    .background(catColor, RoundedCornerShape(2.dp))
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            Text(
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .background(catColor, RoundedCornerShape(WtaRadius.Button))
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Text(
                                 cat.category.displayName,
                                 style = MaterialTheme.typography.labelSmall,
                                 modifier = Modifier.weight(weight = 1f, fill = true)
@@ -2114,21 +1984,21 @@ fun BuildApkDialog(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        // Progress bar
+
                         LinearProgressIndicator(
                             progress = { (cat.percentage / 100f).coerceIn(0f, 1f) },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(4.dp)
                                 .padding(start = 14.dp)
-                                .clip(RoundedCornerShape(2.dp)),
+                                .clip(RoundedCornerShape(WtaRadius.Button)),
                             color = catColor,
                             trackColor = MaterialTheme.colorScheme.surfaceVariant
                         )
                         Spacer(Modifier.height(2.dp))
                     }
-                    
-                    // 优化建议
+
+
                     if (report.optimizationHints.isNotEmpty()) {
                         Spacer(Modifier.height(8.dp))
                         Text(
@@ -2168,25 +2038,15 @@ fun BuildApkDialog(
             if (!isBuilding) {
                 PremiumButton(
                     onClick = {
+                        val webAppWithConfig = currentBuildConfig()
+                        val nextPreflight = ApkExportPreflight.check(context, webAppWithConfig)
+                        preflightReport = nextPreflight
+                        if (nextPreflight.hasErrors) {
+                            return@PremiumButton
+                        }
+
                         isBuilding = true
                         scope.launch {
-                            // 将加密配置、隔离配置和后台运行配置应用到 WebApp
-                            val webAppWithConfig = webApp.copy(
-                                webViewConfig = webApp.webViewConfig.copy(
-                                    dnsMode = dnsMode,
-                                    dnsConfig = dnsConfig
-                                ),
-                                apkExportConfig = (webApp.apkExportConfig ?: com.webtoapp.data.model.ApkExportConfig()).copy(
-                                    encryptionConfig = encryptionConfig,
-                                    hardeningConfig = hardeningConfig,
-                                    isolationConfig = isolationConfig,
-                                    backgroundRunEnabled = backgroundRunEnabled,
-                                    backgroundRunConfig = backgroundRunConfig,
-                                    notificationEnabled = notificationEnabled,
-                                    notificationConfig = notificationConfig,
-                                    engineType = selectedEngineType
-                                )
-                            )
                             val result = apkBuilder.buildApk(webAppWithConfig) { p, t ->
                                 progress = p
                                 progressText = t
@@ -2196,7 +2056,7 @@ fun BuildApkDialog(
                                     analysisReport = result.analysisReport
                                     buildFailureReport = null
                                     isBuilding = false
-                                    // 直接安装
+
                                     apkBuilder.installApk(result.apkFile)
                                     if (result.analysisReport == null) {
                                         onResult("APK 构建成功，正在启动安装...")
@@ -2235,9 +2095,9 @@ fun BuildApkDialog(
     }
 }
 
-/**
- * 浏览器引擎选择卡片（用于构建对话框）
- */
+
+
+
 @Composable
 fun EngineSelectionCard(
     selectedEngine: String,
@@ -2254,12 +2114,12 @@ fun EngineSelectionCard(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        
-        // System WebView
+
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(MaterialTheme.shapes.small)
+                .clip(RoundedCornerShape(WtaRadius.Control))
                 .clickable { onEngineSelected("SYSTEM_WEBVIEW") }
                 .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -2278,12 +2138,12 @@ fun EngineSelectionCard(
                 )
             }
         }
-        
-        // GeckoView
+
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(MaterialTheme.shapes.small)
+                .clip(RoundedCornerShape(WtaRadius.Control))
                 .clickable {
                     if (isGeckoDownloaded) onEngineSelected("GECKOVIEW")
                 }
@@ -2306,17 +2166,11 @@ fun EngineSelectionCard(
                     )
                     if (isGeckoDownloaded) {
                         Spacer(Modifier.width(6.dp))
-                        Surface(
-                            shape = MaterialTheme.shapes.extraSmall,
-                            color = MaterialTheme.colorScheme.primaryContainer
-                        ) {
-                            Text(
-                                Strings.engineReady,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
+                        WtaBadge(
+                            text = Strings.engineReady,
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
                     }
                 }
                 if (!isGeckoDownloaded) {

@@ -16,12 +16,12 @@ import org.robolectric.annotation.Config
 
 class TestApplication : Application()
 
-/**
- * AiConfigManager 保存/读取 测试
- * 
- * 注意：Robolectric 中 DataStore 使用单例模式，跨测试共享状态。
- * 因此 DataStore 相关测试合并到单个方法中按顺序执行。
- */
+
+
+
+
+
+
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33], application = TestApplication::class)
 class AiConfigManagerTest {
@@ -33,7 +33,7 @@ class AiConfigManagerTest {
         return AiConfigManager(context)
     }
 
-    // ==================== 1. Gson 序列化测试（纯内存，无 DataStore）====================
+
 
     @Test
     fun `test parseApiKeyConfigs roundtrip`() {
@@ -115,7 +115,7 @@ class AiConfigManagerTest {
 
     @Test
     fun `test Gson all providers serialize and deserialize`() {
-        // 测试所有 AiProvider 枚举都能正确序列化/反序列化
+
         AiProvider.entries.forEach { provider ->
             val config = ApiKeyConfig(id = "test-${provider.name}", provider = provider, apiKey = "key")
             val json = gson.toJson(config)
@@ -136,11 +136,11 @@ class AiConfigManagerTest {
         println("✅ All ${ApiFormat.entries.size} API formats serialize/deserialize OK")
     }
 
-    // ==================== 2. Base64 一致性测试 ====================
+
 
     @Test
     fun `test Base64 NO_WRAP vs DEFAULT with binary data`() {
-        // 模拟 AES-GCM 加密后的二进制数据
+
         val iv = ByteArray(12) { (it * 17).toByte() }
         val ciphertext = ByteArray(100) { (it * 31 + 7).toByte() }
         val combined = ByteArray(iv.size + ciphertext.size)
@@ -149,20 +149,20 @@ class AiConfigManagerTest {
 
         val encodedNoWrap = Base64.encodeToString(combined, Base64.NO_WRAP)
 
-        // 正确路径 NO_WRAP→NO_WRAP
+
         val decodedCorrect = Base64.decode(encodedNoWrap, Base64.NO_WRAP)
         assertArrayEquals("NO_WRAP→NO_WRAP should match", combined, decodedCorrect)
         println("✅ Base64 NO_WRAP roundtrip OK")
 
-        // 旧 bug 路径: NO_WRAP→DEFAULT
+
         val decodedOld = Base64.decode(encodedNoWrap, Base64.DEFAULT)
         val matches = combined.contentEquals(decodedOld)
         println("NO_WRAP encode → DEFAULT decode matches? $matches")
         println("  (Robolectric 中可能兼容, 真机行为可能不同)")
     }
 
-    // ==================== 3. DataStore 完整端到端测试 ====================
-    // 合并为单个测试避免 DataStore 单例跨测试泄漏
+
+
 
     @Test
     fun `test DataStore full save and retrieve end-to-end`() = runTest {
@@ -171,7 +171,7 @@ class AiConfigManagerTest {
 
         println("=== DataStore E2E Test ===")
 
-        // ---- Step 1: 添加 API Keys ----
+
         val key1 = ApiKeyConfig(id = "k1", provider = AiProvider.GOOGLE, apiKey = "google-key")
         val key2 = ApiKeyConfig(
             id = "k2", provider = AiProvider.DEEPSEEK, apiKey = "ds-key",
@@ -200,7 +200,7 @@ class AiConfigManagerTest {
         assertEquals("/api/models", keys[2].customModelsEndpoint)
         println("✅ Step 1: API Keys save/read OK")
 
-        // ---- Step 2: 保存模型（带 featureMappings）----
+
         val model1 = SavedModel(
             id = "m1",
             model = AiModel(id = "gemini-2.0-flash", name = "Gemini 2.0 Flash", provider = AiProvider.GOOGLE),
@@ -236,7 +236,7 @@ class AiConfigManagerTest {
         assertEquals(1, models[1].featureMappings.size)
         println("✅ Step 2: Models with featureMappings save/read OK")
 
-        // ---- Step 3: 按 ID 查找 ----
+
         val foundKey = manager.getApiKeyById("k1")
         val foundModel = manager.getSavedModelById("m1")
         assertNotNull("Should find key k1", foundKey)
@@ -245,7 +245,7 @@ class AiConfigManagerTest {
         assertEquals("Gemini 2.0 Flash", foundModel!!.model.name)
         println("✅ Step 3: Find by ID OK")
 
-        // ---- Step 4: 更新模型 ----
+
         val updatedModel = model1.copy(alias = "My Gemini", isDefault = false)
         manager.updateSavedModel(updatedModel)
         val modelsAfterUpdate = manager.savedModelsFlow.first()
@@ -253,21 +253,21 @@ class AiConfigManagerTest {
         assertFalse(modelsAfterUpdate[0].isDefault)
         println("✅ Step 4: Update model OK")
 
-        // ---- Step 5: 删除模型 ----
+
         manager.deleteSavedModel("m2")
         val modelsAfterDelete = manager.savedModelsFlow.first()
         assertEquals(1, modelsAfterDelete.size)
         assertEquals("m1", modelsAfterDelete[0].id)
         println("✅ Step 5: Delete model OK")
 
-        // ---- Step 6: 删除 API Key ----
+
         manager.deleteApiKey("k3")
         val keysAfterDelete = manager.apiKeysFlow.first()
         assertEquals(2, keysAfterDelete.size)
         assertTrue(keysAfterDelete.none { it.id == "k3" })
         println("✅ Step 6: Delete API key OK")
 
-        // ---- Step 7: 新 Manager 实例持久化验证 ----
+
         val manager2 = AiConfigManager(context)
         val keys2 = manager2.apiKeysFlow.first()
         val models2 = manager2.savedModelsFlow.first()

@@ -22,18 +22,18 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
-/**
- * 可折叠配置卡片 — 带弹簧展开动画
- * 
- * 默认折叠状态只显示标题栏 + 图标 + 可选的开关/摘要
- * 点击后弹簧展开内容区域
- *
- * @param title 卡片标题
- * @param icon 标题图标
- * @param startExpanded 是否默认展开
- * @param trailing 标题栏右侧内容（如 Switch）
- * @param content 可折叠的内容区域
- */
+
+
+
+
+
+
+
+
+
+
+
+
 @Composable
 fun CollapsibleConfigCard(
     title: String,
@@ -45,7 +45,7 @@ fun CollapsibleConfigCard(
 ) {
     var expanded by remember { mutableStateOf(startExpanded) }
 
-    // 箭头旋转动画
+
     val arrowRotation by animateFloatAsState(
         targetValue = if (expanded) 180f else 0f,
         animationSpec = spring(
@@ -59,7 +59,7 @@ fun CollapsibleConfigCard(
         modifier = modifier.fillMaxWidth()
     ) {
         Column {
-            // 标题栏（始终可见，点击切换折叠状态）
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -70,7 +70,7 @@ fun CollapsibleConfigCard(
                     .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 图标
+
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
@@ -80,20 +80,20 @@ fun CollapsibleConfigCard(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // 标题
+
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.weight(1f)
                 )
 
-                // 右侧内容（Switch等）
+
                 if (trailing != null) {
                     trailing()
                     Spacer(modifier = Modifier.width(8.dp))
                 }
 
-                // 折叠箭头
+
                 Icon(
                     imageVector = Icons.Default.KeyboardArrowDown,
                     contentDescription = if (expanded) "收起" else "展开",
@@ -104,7 +104,7 @@ fun CollapsibleConfigCard(
                 )
             }
 
-            // 可折叠内容区域
+
             AnimatedVisibility(
                 visible = expanded,
                 enter = CardExpandTransition,

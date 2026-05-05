@@ -1,30 +1,34 @@
 package com.webtoapp.core.startup
 
-import android.webkit.WebView
 import com.webtoapp.core.billing.BillingManager
+import com.webtoapp.core.cloud.GitHubHostsDns
 import com.webtoapp.core.logging.AppLogger
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 class RuntimeWarmupStartup(
     private val billingManager: BillingManager,
     private val appContext: android.content.Context,
 ) {
 
-    fun initialize() {
-        runCatching {
-            WebView.enableSlowWholeDocumentDraw()
-        }.onFailure {
-            android.util.Log.w("WebToAppApplication", "enableSlowWholeDocumentDraw failed", it)
+    fun initialize(appScope: CoroutineScope) {
+
+
+
+        appScope.launch {
+            com.webtoapp.core.perf.SystemPerfOptimizer.initSystem(appContext)
+            com.webtoapp.core.perf.SystemPerfOptimizer.readaheadCriticalFiles(appContext)
         }
-
-        com.webtoapp.core.webview.WebViewPool.prewarm(appContext)
-        com.webtoapp.core.perf.SystemPerfOptimizer.initSystem(appContext)
-        com.webtoapp.core.perf.SystemPerfOptimizer.readaheadCriticalFiles(appContext)
-
-        try {
-            billingManager.connect()
-            AppLogger.i("WebToAppApplication", "BillingManager connect initiated")
-        } catch (e: Exception) {
-            AppLogger.w("WebToAppApplication", "BillingManager connect failed: ${e.message}")
+        appScope.launch {
+            GitHubHostsDns.refreshAsync(appContext)
+        }
+        appScope.launch {
+            try {
+                billingManager.connect()
+                AppLogger.i("WebToAppApplication", "BillingManager connect initiated")
+            } catch (e: Exception) {
+                AppLogger.w("WebToAppApplication", "BillingManager connect failed: ${e.message}")
+            }
         }
     }
 

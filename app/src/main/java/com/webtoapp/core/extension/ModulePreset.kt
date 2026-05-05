@@ -6,11 +6,11 @@ import com.google.gson.JsonParser
 import com.webtoapp.core.i18n.Strings
 import java.io.File
 
-/**
- * 模块方案 - 预设的模块组合
- * 
- * 用户可以保存常用的模块组合为方案，方便快速应用
- */
+
+
+
+
+
 data class ModulePreset(
     val id: String = java.util.UUID.randomUUID().toString(),
     val name: String,
@@ -21,18 +21,18 @@ data class ModulePreset(
     val createdAt: Long = System.currentTimeMillis()
 )
 
-/**
- * 模块方案管理器
- */
+
+
+
 @SuppressLint("StaticFieldLeak")
 class ModulePresetManager private constructor(private val context: Context) {
-    
+
     companion object {
         private const val PRESETS_FILE = "module_presets.json"
-        
+
         @Volatile
         private var INSTANCE: ModulePresetManager? = null
-        
+
         fun getInstance(context: Context): ModulePresetManager {
             return INSTANCE ?: synchronized(this) {
                 INSTANCE ?: ModulePresetManager(context.applicationContext).also { INSTANCE = it }
@@ -45,24 +45,24 @@ class ModulePresetManager private constructor(private val context: Context) {
             }
         }
     }
-    
+
     private val gson = com.webtoapp.util.GsonProvider.gson
     private val presetsFile: File by lazy {
         File(context.filesDir, "extension_modules/$PRESETS_FILE").apply {
             parentFile?.mkdirs()
         }
     }
-    
-    /**
-     * 获取所有方案（内置 + 用户）
-     */
+
+
+
+
     fun getAllPresets(): List<ModulePreset> {
         return getBuiltInPresets() + getUserPresets()
     }
-    
-    /**
-     * 获取内置方案
-     */
+
+
+
+
     fun getBuiltInPresets(): List<ModulePreset> = listOf(
         ModulePreset(
             id = "preset-reading",
@@ -123,10 +123,10 @@ class ModulePresetManager private constructor(private val context: Context) {
             builtIn = true
         )
     )
-    
-    /**
-     * 获取用户自定义方案
-     */
+
+
+
+
     fun getUserPresets(): List<ModulePreset> {
         return try {
             if (presetsFile.exists()) {
@@ -139,7 +139,7 @@ class ModulePresetManager private constructor(private val context: Context) {
             emptyList()
         }
     }
-    
+
     internal fun parsePresetList(json: String): List<ModulePreset>? {
         return try {
             val parsed = JsonParser.parseString(json)
@@ -161,9 +161,9 @@ class ModulePresetManager private constructor(private val context: Context) {
         }
     }
 
-    /**
-     * 保存用户方案
-     */
+
+
+
     fun savePreset(preset: ModulePreset): Result<ModulePreset> {
         return try {
             val presets = getUserPresets().toMutableList()
@@ -179,10 +179,10 @@ class ModulePresetManager private constructor(private val context: Context) {
             Result.failure(e)
         }
     }
-    
-    /**
-     * 删除用户方案
-     */
+
+
+
+
     fun deletePreset(presetId: String): Result<Unit> {
         return try {
             val presets = getUserPresets().filter { it.id != presetId }
@@ -192,10 +192,10 @@ class ModulePresetManager private constructor(private val context: Context) {
             Result.failure(e)
         }
     }
-    
-    /**
-     * 从当前选择创建方案
-     */
+
+
+
+
     fun createPresetFromSelection(
         name: String,
         description: String,

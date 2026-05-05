@@ -5,54 +5,34 @@ import org.junit.Test
 
 class EncryptionConfigExtendedTest {
 
-    // ═══════════════════════════════════════════
-    // EncryptionLevel 枚举完整性
-    // ═══════════════════════════════════════════
-
     @Test
-    fun `EncryptionLevel has all expected values`() {
-        assertThat(EncryptionLevel.values()).asList().containsExactly(
-            EncryptionLevel.FAST,
-            EncryptionLevel.STANDARD,
-            EncryptionLevel.HIGH,
-            EncryptionLevel.PARANOID
-        )
+    fun `DISABLED preset turns off encryption`() {
+        assertThat(EncryptionConfig.DISABLED.enabled).isFalse()
+        assertThat(EncryptionConfig.DISABLED.customPassword).isNull()
     }
 
     @Test
-    fun `EncryptionLevel iterations are monotonically increasing`() {
-        val levels = EncryptionLevel.values()
-        for (i in 1 until levels.size) {
-            assertThat(levels[i].iterations).isGreaterThan(levels[i - 1].iterations)
-        }
+    fun `MAXIMUM preset turns on encryption`() {
+        assertThat(EncryptionConfig.MAXIMUM.enabled).isTrue()
+        assertThat(EncryptionConfig.MAXIMUM.customPassword).isNull()
     }
 
     @Test
-    fun `STANDARD level has correct iterations`() {
-        assertThat(EncryptionLevel.STANDARD.iterations).isGreaterThan(EncryptionLevel.FAST.iterations)
-        assertThat(EncryptionLevel.STANDARD.iterations).isLessThan(EncryptionLevel.HIGH.iterations)
+    fun `custom password is preserved on copy`() {
+        val config = EncryptionConfig.MAXIMUM.copy(customPassword = "vault-key")
+
+        assertThat(config.enabled).isTrue()
+        assertThat(config.customPassword).isEqualTo("vault-key")
     }
 
     @Test
-    fun `HIGH level has correct iterations`() {
-        assertThat(EncryptionLevel.HIGH.iterations).isGreaterThan(EncryptionLevel.STANDARD.iterations)
-        assertThat(EncryptionLevel.HIGH.iterations).isLessThan(EncryptionLevel.PARANOID.iterations)
+    fun `maximum protection uses fixed high iteration count`() {
+        assertThat(EncryptionConfig.MAXIMUM.getKeyDerivationIterations()).isEqualTo(100000)
     }
 
-    // ═══════════════════════════════════════════
-    // shouldEncrypt — 更多边界情况
-    // ═══════════════════════════════════════════
-
     @Test
-    fun `shouldEncrypt returns false for all categories when all disabled`() {
-        val config = EncryptionConfig(
-            enabled = true,
-            encryptConfig = false,
-            encryptHtml = false,
-            encryptMedia = false,
-            encryptSplash = false,
-            encryptBgm = false
-        )
+    fun `shouldEncrypt returns false for all categories when disabled`() {
+        val config = EncryptionConfig.DISABLED
 
         assertThat(config.shouldEncrypt("app_config.json")).isFalse()
         assertThat(config.shouldEncrypt("html/index.html")).isFalse()
@@ -62,48 +42,15 @@ class EncryptionConfigExtendedTest {
     }
 
     @Test
-    fun `shouldEncrypt handles encryptBgm correctly`() {
-        val config = EncryptionConfig(
-            enabled = true,
-            encryptBgm = true,
-            encryptMedia = false
-        )
+    fun `shouldEncrypt returns true for bgm and media when enabled`() {
+        val config = EncryptionConfig.MAXIMUM
 
         assertThat(config.shouldEncrypt("bgm/theme.mp3")).isTrue()
-        assertThat(config.shouldEncrypt("media/video.mp4")).isFalse()
-    }
-
-    // ═══════════════════════════════════════════
-    // hasSecurityProtection — 逐项测试
-    // ═══════════════════════════════════════════
-
-    @Test
-    fun `hasSecurityProtection returns true for enableIntegrityCheck`() {
-        val config = EncryptionConfig(enabled = true, enableIntegrityCheck = true)
-        assertThat(config.hasSecurityProtection()).isTrue()
+        assertThat(config.shouldEncrypt("media/video.mp4")).isTrue()
     }
 
     @Test
-    fun `hasSecurityProtection returns true for enableAntiTamper`() {
-        val config = EncryptionConfig(enabled = true, enableAntiTamper = true)
-        assertThat(config.hasSecurityProtection()).isTrue()
-    }
-
-    @Test
-    fun `hasSecurityProtection returns true for enableRootDetection`() {
-        val config = EncryptionConfig(enabled = true, enableRootDetection = true)
-        assertThat(config.hasSecurityProtection()).isTrue()
-    }
-
-    @Test
-    fun `hasSecurityProtection returns true for enableEmulatorDetection`() {
-        val config = EncryptionConfig(enabled = true, enableEmulatorDetection = true)
-        assertThat(config.hasSecurityProtection()).isTrue()
-    }
-
-    @Test
-    fun `hasSecurityProtection returns true for enableRuntimeProtection`() {
-        val config = EncryptionConfig(enabled = true, enableRuntimeProtection = true)
-        assertThat(config.hasSecurityProtection()).isTrue()
+    fun `hasSecurityProtection returns true for maximum preset`() {
+        assertThat(EncryptionConfig.MAXIMUM.hasSecurityProtection()).isTrue()
     }
 }

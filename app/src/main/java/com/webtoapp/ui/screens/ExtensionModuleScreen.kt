@@ -50,6 +50,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.webtoapp.core.extension.*
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.ui.components.QrCodeShareDialog
+import com.webtoapp.ui.design.WtaRadius
 import kotlinx.coroutines.launch
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import androidx.compose.ui.graphics.Color
@@ -60,39 +61,41 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.Spring
 import com.webtoapp.R
 
-/**
- * 扩展模块管理页面
- */
+
+
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ExtensionModuleScreen(
     onNavigateBack: () -> Unit,
-    onNavigateToEditor: (String?) -> Unit,  // null 表示新建
-    onNavigateToAiDeveloper: () -> Unit = {},  // AI 开发器入口
+    onNavigateToEditor: (String?) -> Unit,
+    onNavigateToAiDeveloper: () -> Unit = {},
 
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val extensionManager = remember { ExtensionManager.getInstance(context) }
-    
+
     val modules by extensionManager.modules.collectAsStateWithLifecycle()
     val builtInModules by extensionManager.builtInModules.collectAsStateWithLifecycle()
     val isModulesLoading by extensionManager.isLoading.collectAsStateWithLifecycle()
-    
+    val loadError by extensionManager.loadError.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+
     var selectedCategory by remember { mutableStateOf<ModuleCategory?>(null) }
     var searchQuery by remember { mutableStateOf("") }
     var showImportDialog by remember { mutableStateOf(false) }
-    
-    // 油猴脚本/Chrome 扩展导入相关状态
+
+
     val extensionFileManager = remember { ExtensionFileManager(context) }
     var showUserScriptPreview by remember { mutableStateOf<UserScriptParser.ParseResult?>(null) }
     var showChromeExtPreview by remember { mutableStateOf<ChromeExtensionParser.ParseResult?>(null) }
     var pendingChromeExtDir by remember { mutableStateOf<java.io.File?>(null) }
-    
-    // Import loading state
+
+
     var isImporting by remember { mutableStateOf(false) }
-    
-    // File选择器 (.wtamod)
+
+
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
@@ -116,8 +119,8 @@ fun ExtensionModuleScreen(
             }
         }
     }
-    
-    // 油猴脚本文件选择器 (.user.js / .js)
+
+
     val userScriptPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
@@ -136,11 +139,11 @@ fun ExtensionModuleScreen(
             }
         }
     }
-    
-    // Chrome 扩展文件选择器 (.crx / .zip)
-    // 现在也支持自动 fallback 到 JS 包导入
+
+
+
     var showJsPackagePreview by remember { mutableStateOf<ExtensionFileManager.ImportResult.JsPackage?>(null) }
-    
+
     val chromeExtPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
@@ -165,8 +168,8 @@ fun ExtensionModuleScreen(
             }
         }
     }
-    
-    // JS ZIP 扩展包选择器
+
+
     val jsZipPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
@@ -187,8 +190,8 @@ fun ExtensionModuleScreen(
             }
         }
     }
-    
-    // 二维码图片选择器
+
+
     val qrCodeImagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
@@ -218,13 +221,13 @@ fun ExtensionModuleScreen(
             }
         }
     }
-    
-    // Separate modules by source type
+
+
     val allModules = builtInModules + modules
     val extensionModules = allModules.filter { it.sourceType == ModuleSourceType.CUSTOM }
     val userScriptModules = allModules.filter { it.sourceType != ModuleSourceType.CUSTOM }
-    
-    // Filter模块 - 直接计算而非使用 remember，确保 StateFlow 更新时 UI 正确响应
+
+
     val filteredModules = extensionModules.filter { module ->
         val matchesCategory = selectedCategory == null || module.category == selectedCategory
         val matchesSearch = searchQuery.isBlank() ||
@@ -233,15 +236,35 @@ fun ExtensionModuleScreen(
             module.tags.any { it.contains(searchQuery, ignoreCase = true) }
         matchesCategory && matchesSearch
     }
-    
+
     val filteredUserScripts = userScriptModules.filter { module ->
         searchQuery.isBlank() ||
             module.name.contains(searchQuery, ignoreCase = true) ||
             module.description.contains(searchQuery, ignoreCase = true)
     }
-    
+
+    LaunchedEffect(loadError) {
+        val error = loadError ?: return@LaunchedEffect
+        val message = when (error) {
+            is ExtensionLoadError.ParsingFailed -> {
+                val backup = error.backupFileName
+                if (backup != null) {
+                    "${Strings.storeLoadFailed}: modules.json corrupted, backup: $backup"
+                } else {
+                    "${Strings.storeLoadFailed}: modules.json corrupted"
+                }
+            }
+            is ExtensionLoadError.IoFailure -> {
+                "${Strings.storeLoadFailed}: ${error.message}"
+            }
+        }
+        snackbarHostState.showSnackbar(message)
+        extensionManager.clearLoadError()
+    }
+
     Scaffold(
         containerColor = Color.Transparent,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(Strings.extensionModule) },
@@ -262,23 +285,23 @@ fun ExtensionModuleScreen(
         },
         floatingActionButton = {
             var fabExpanded by remember { mutableStateOf(false) }
-            
+
             Column(horizontalAlignment = Alignment.End) {
-                // AI 开发按钮
+
                 AnimatedVisibility(
                     visible = fabExpanded,
                     enter = fadeIn(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) + slideInVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow)) { it },
                     exit = fadeOut(animationSpec = spring(stiffness = Spring.StiffnessHigh)) + slideOutVertically(animationSpec = spring(stiffness = Spring.StiffnessHigh)) { it }
                 ) {
-                    Surface(
-                        onClick = {
-                            fabExpanded = false
-                            onNavigateToAiDeveloper()
-                        },
-                        shape = RoundedCornerShape(16.dp),
-                        color = MaterialTheme.colorScheme.surface,
-                        shadowElevation = 2.dp,
-                        modifier = Modifier.padding(bottom = 10.dp)
+                    Box(
+                        modifier = Modifier
+                            .padding(bottom = 10.dp)
+                            .clip(RoundedCornerShape(WtaRadius.Card))
+                            .background(MaterialTheme.colorScheme.surface)
+                            .clickable {
+                                fabExpanded = false
+                                onNavigateToAiDeveloper()
+                            }
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -288,7 +311,7 @@ fun ExtensionModuleScreen(
                             Box(
                                 modifier = Modifier
                                     .size(32.dp)
-                                    .clip(RoundedCornerShape(9.dp))
+                                    .clip(RoundedCornerShape(WtaRadius.Button))
                                     .background(
                                         Brush.linearGradient(
                                             listOf(
@@ -314,22 +337,22 @@ fun ExtensionModuleScreen(
                         }
                     }
                 }
-                
-                // 手动创建按钮
+
+
                 AnimatedVisibility(
                     visible = fabExpanded,
                     enter = fadeIn(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) + slideInVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow)) { it },
                     exit = fadeOut(animationSpec = spring(stiffness = Spring.StiffnessHigh)) + slideOutVertically(animationSpec = spring(stiffness = Spring.StiffnessHigh)) { it }
                 ) {
-                    Surface(
-                        onClick = {
-                            fabExpanded = false
-                            onNavigateToEditor(null)
-                        },
-                        shape = RoundedCornerShape(16.dp),
-                        color = MaterialTheme.colorScheme.surface,
-                        shadowElevation = 2.dp,
-                        modifier = Modifier.padding(bottom = 10.dp)
+                    Box(
+                        modifier = Modifier
+                            .padding(bottom = 10.dp)
+                            .clip(RoundedCornerShape(WtaRadius.Card))
+                            .background(MaterialTheme.colorScheme.surface)
+                            .clickable {
+                                fabExpanded = false
+                                onNavigateToEditor(null)
+                            }
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -339,7 +362,7 @@ fun ExtensionModuleScreen(
                             Box(
                                 modifier = Modifier
                                     .size(32.dp)
-                                    .clip(RoundedCornerShape(9.dp))
+                                    .clip(RoundedCornerShape(WtaRadius.Button))
                                     .background(
                                         Brush.linearGradient(
                                             listOf(
@@ -365,8 +388,8 @@ fun ExtensionModuleScreen(
                         }
                     }
                 }
-                
-                // 主 FAB — Apple-style spring rotation
+
+
                 val fabRotation by animateFloatAsState(
                     targetValue = if (fabExpanded) 135f else 0f,
                     animationSpec = spring(
@@ -405,7 +428,7 @@ fun ExtensionModuleScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Search栏 - MD3 SearchBar 风格
+
             PremiumTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
@@ -424,23 +447,23 @@ fun ExtensionModuleScreen(
                     }
                 },
                 singleLine = true,
-                shape = RoundedCornerShape(28.dp)
+                shape = RoundedCornerShape(WtaRadius.Button)
             )
-            
-            // Tab 分页: 扩展模块 / 油猴脚本
+
+
             val pagerState = rememberPagerState(pageCount = { 2 })
             val tabTitles = listOf(
                 Strings.extensionModulesTab,
                 Strings.userScriptsTab
             )
-            
-            // Apple-style Segmented Control
-            Surface(
+
+
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                shape = RoundedCornerShape(10.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f)
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .clip(RoundedCornerShape(WtaRadius.Control))
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f))
             ) {
                 Row(
                     modifier = Modifier
@@ -451,16 +474,17 @@ fun ExtensionModuleScreen(
                     tabTitles.forEachIndexed { index, title ->
                         val isSelected = pagerState.currentPage == index
                         val count = if (index == 0) extensionModules.size else userScriptModules.size
-                        
-                        Surface(
-                            onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
+
+                        Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .height(34.dp),
-                            shape = RoundedCornerShape(8.dp),
-                            color = if (isSelected) MaterialTheme.colorScheme.surface
-                                else Color.Transparent,
-                            shadowElevation = if (isSelected) 1.dp else 0.dp
+                                .height(34.dp)
+                                .clip(RoundedCornerShape(WtaRadius.Button))
+                                .background(
+                                    if (isSelected) MaterialTheme.colorScheme.surface
+                                    else Color.Transparent
+                                )
+                                .clickable { scope.launch { pagerState.animateScrollToPage(index) } }
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxSize(),
@@ -476,10 +500,13 @@ fun ExtensionModuleScreen(
                                 )
                                 if (count > 0) {
                                     Spacer(modifier = Modifier.width(5.dp))
-                                    Surface(
-                                        shape = RoundedCornerShape(5.dp),
-                                        color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                                            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.08f)
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(5.dp))
+                                            .background(
+                                                if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                                                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.08f)
+                                            )
                                     ) {
                                         Text(
                                             "$count",
@@ -496,15 +523,16 @@ fun ExtensionModuleScreen(
                     }
                 }
             }
-            
+
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier.fillMaxSize()
             ) { page ->
                 when (page) {
-                    // Tab 0: 扩展模块
+
                     0 -> ExtensionModulesTabContent(
                         filteredModules = filteredModules,
+                        isLoading = isModulesLoading,
                         extensionManager = extensionManager,
                         selectedCategory = selectedCategory,
                         searchQuery = searchQuery,
@@ -513,7 +541,7 @@ fun ExtensionModuleScreen(
                         onNavigateToAiDeveloper = onNavigateToAiDeveloper,
                         onClearSearch = { searchQuery = "" }
                     )
-                    // Tab 1: 油猴脚本
+
                     1 -> UserScriptsTabContent(
                         filteredUserScripts = filteredUserScripts,
                         extensionManager = extensionManager,
@@ -527,14 +555,14 @@ fun ExtensionModuleScreen(
             }
         }
     }
-    
-    // Import进度对话框 — 防止大文件导入时用户以为卡死
+
+
     if (isImporting) {
-        Dialog(onDismissRequest = { /* 不允许关闭 */ }) {
-            Surface(
-                shape = RoundedCornerShape(20.dp),
-                color = MaterialTheme.colorScheme.surface,
-                shadowElevation = 6.dp
+        Dialog(onDismissRequest = {  }) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(WtaRadius.Card))
+                    .background(MaterialTheme.colorScheme.surfaceContainerLow)
             ) {
                 Column(
                     modifier = Modifier.padding(32.dp),
@@ -554,23 +582,24 @@ fun ExtensionModuleScreen(
             }
         }
     }
-    
-    // Import对话框
+
+
     if (showImportDialog) {
         AlertDialog(
             onDismissRequest = { showImportDialog = false },
             title = { Text(Strings.importModule) },
             text = {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    // 油猴脚本导入
-                    Surface(
-                        onClick = {
-                            showImportDialog = false
-                            userScriptPickerLauncher.launch("*/*")
-                        },
-                        shape = RoundedCornerShape(14.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerLow,
-                        modifier = Modifier.fillMaxWidth()
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(WtaRadius.Card))
+                            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                            .clickable {
+                                showImportDialog = false
+                                userScriptPickerLauncher.launch("*/*")
+                            }
                     ) {
                         Row(
                             modifier = Modifier.padding(14.dp),
@@ -584,8 +613,8 @@ fun ExtensionModuleScreen(
                                     .background(
                                         Brush.linearGradient(
                                             listOf(
-                                                Color(0xFFF7DF1E).copy(alpha = 0.15f),
-                                                Color(0xFFF7DF1E).copy(alpha = 0.05f)
+                                                MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f),
+                                                MaterialTheme.colorScheme.tertiary.copy(alpha = 0.05f)
                                             )
                                         )
                                     ),
@@ -595,7 +624,7 @@ fun ExtensionModuleScreen(
                                     Icons.Outlined.Code,
                                     contentDescription = null,
                                     modifier = Modifier.size(20.dp),
-                                    tint = Color(0xFFD4A017)
+                                    tint = MaterialTheme.colorScheme.tertiary
                                 )
                             }
                             Column(modifier = Modifier.weight(1f)) {
@@ -609,16 +638,17 @@ fun ExtensionModuleScreen(
                             Icon(Icons.Default.ChevronRight, null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
                         }
                     }
-                    
-                    // Chrome 扩展导入
-                    Surface(
-                        onClick = {
-                            showImportDialog = false
-                            chromeExtPickerLauncher.launch("*/*")
-                        },
-                        shape = RoundedCornerShape(14.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerLow,
-                        modifier = Modifier.fillMaxWidth()
+
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(WtaRadius.Card))
+                            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                            .clickable {
+                                showImportDialog = false
+                                chromeExtPickerLauncher.launch("*/*")
+                            }
                     ) {
                         Row(
                             modifier = Modifier.padding(14.dp),
@@ -632,8 +662,8 @@ fun ExtensionModuleScreen(
                                     .background(
                                         Brush.linearGradient(
                                             listOf(
-                                                Color(0xFF4285F4).copy(alpha = 0.15f),
-                                                Color(0xFF4285F4).copy(alpha = 0.05f)
+                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
                                             )
                                         )
                                     ),
@@ -643,7 +673,7 @@ fun ExtensionModuleScreen(
                                     Icons.Outlined.Extension,
                                     contentDescription = null,
                                     modifier = Modifier.size(20.dp),
-                                    tint = Color(0xFF4285F4)
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             }
                             Column(modifier = Modifier.weight(1f)) {
@@ -657,16 +687,17 @@ fun ExtensionModuleScreen(
                             Icon(Icons.Default.ChevronRight, null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
                         }
                     }
-                    
-                    // JS 扩展包导入 (.zip with JS files)
-                    Surface(
-                        onClick = {
-                            showImportDialog = false
-                            jsZipPickerLauncher.launch("*/*")
-                        },
-                        shape = RoundedCornerShape(14.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerLow,
-                        modifier = Modifier.fillMaxWidth()
+
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(WtaRadius.Card))
+                            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                            .clickable {
+                                showImportDialog = false
+                                jsZipPickerLauncher.launch("*/*")
+                            }
                     ) {
                         Row(
                             modifier = Modifier.padding(14.dp),
@@ -680,8 +711,8 @@ fun ExtensionModuleScreen(
                                     .background(
                                         Brush.linearGradient(
                                             listOf(
-                                                Color(0xFF34A853).copy(alpha = 0.15f),
-                                                Color(0xFF34A853).copy(alpha = 0.05f)
+                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
                                             )
                                         )
                                     ),
@@ -691,7 +722,7 @@ fun ExtensionModuleScreen(
                                     Icons.Outlined.FolderZip,
                                     contentDescription = null,
                                     modifier = Modifier.size(20.dp),
-                                    tint = Color(0xFF34A853)
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             }
                             Column(modifier = Modifier.weight(1f)) {
@@ -705,8 +736,8 @@ fun ExtensionModuleScreen(
                             Icon(Icons.Default.ChevronRight, null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
                         }
                     }
-                    
-                    // Hairline separator
+
+
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -714,16 +745,17 @@ fun ExtensionModuleScreen(
                             .height(0.5.dp)
                             .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                     )
-                    
-                    // .wtamod 文件导入
-                    Surface(
-                        onClick = {
-                            showImportDialog = false
-                            filePickerLauncher.launch("*/*")
-                        },
-                        shape = RoundedCornerShape(14.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerLow,
-                        modifier = Modifier.fillMaxWidth()
+
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(WtaRadius.Card))
+                            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                            .clickable {
+                                showImportDialog = false
+                                filePickerLauncher.launch("*/*")
+                            }
                     ) {
                         Row(
                             modifier = Modifier.padding(14.dp),
@@ -757,16 +789,17 @@ fun ExtensionModuleScreen(
                             Icon(Icons.Default.ChevronRight, null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
                         }
                     }
-                    
-                    // 二维码导入
-                    Surface(
-                        onClick = {
-                            showImportDialog = false
-                            qrCodeImagePickerLauncher.launch("image/*")
-                        },
-                        shape = RoundedCornerShape(14.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerLow,
-                        modifier = Modifier.fillMaxWidth()
+
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(WtaRadius.Card))
+                            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                            .clickable {
+                                showImportDialog = false
+                                qrCodeImagePickerLauncher.launch("image/*")
+                            }
                     ) {
                         Row(
                             modifier = Modifier.padding(14.dp),
@@ -800,7 +833,7 @@ fun ExtensionModuleScreen(
                             Icon(Icons.Default.ChevronRight, null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
                         }
                     }
-                    
+
                 }
             },
             confirmButton = {
@@ -810,25 +843,25 @@ fun ExtensionModuleScreen(
             }
         )
     }
-    
-    // 油猴脚本预览安装对话框
+
+
     showUserScriptPreview?.let { parseResult ->
         AlertDialog(
             onDismissRequest = { showUserScriptPreview = null },
             title = { Text(Strings.installUserScript) },
             text = {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    // 脚本信息
+
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier
                                 .size(44.dp)
-                                .clip(RoundedCornerShape(12.dp))
+                                .clip(RoundedCornerShape(WtaRadius.Control))
                                 .background(
                                     Brush.linearGradient(
                                         listOf(
-                                            Color(0xFFF7DF1E).copy(alpha = 0.15f),
-                                            Color(0xFFF7DF1E).copy(alpha = 0.05f)
+                                            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f),
+                                            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.05f)
                                         )
                                     )
                                 ),
@@ -838,7 +871,7 @@ fun ExtensionModuleScreen(
                                 Icons.Outlined.Code,
                                 contentDescription = null,
                                 modifier = Modifier.size(22.dp),
-                                tint = Color(0xFFD4A017)
+                                tint = MaterialTheme.colorScheme.tertiary
                             )
                         }
                         Spacer(modifier = Modifier.width(12.dp))
@@ -855,7 +888,7 @@ fun ExtensionModuleScreen(
                             )
                         }
                     }
-                    
+
                     if (parseResult.module.description.isNotBlank()) {
                         Text(
                             parseResult.module.description,
@@ -864,7 +897,7 @@ fun ExtensionModuleScreen(
                             overflow = TextOverflow.Ellipsis
                         )
                     }
-                    
+
                     parseResult.module.author?.let { author ->
                         Text(
                         "${Strings.scriptAuthor}: ${author.name}",
@@ -872,8 +905,8 @@ fun ExtensionModuleScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    
-                    // URL 匹配规则
+
+
                     if (parseResult.module.urlMatches.isNotEmpty()) {
                         Text(
                         "${Strings.matchingSites}: ${parseResult.module.urlMatches.size} ${Strings.matchRules}",
@@ -881,8 +914,8 @@ fun ExtensionModuleScreen(
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
-                    
-                    // GM API 权限
+
+
                     if (parseResult.module.gmGrants.isNotEmpty()) {
                         Text(
                             "${Strings.requiredApis}: ${parseResult.module.gmGrants.joinToString(", ")}",
@@ -890,8 +923,8 @@ fun ExtensionModuleScreen(
                             color = MaterialTheme.colorScheme.tertiary
                         )
                     }
-                    
-                    // 警告
+
+
                     parseResult.warnings.forEach { warning ->
                         Text(
                             "⚠️ $warning",
@@ -906,7 +939,7 @@ fun ExtensionModuleScreen(
                     scope.launch {
                         extensionManager.addModule(parseResult.module).onSuccess { module ->
                             Toast.makeText(context, "${Strings.msgImportSuccess}: ${module.name}", Toast.LENGTH_SHORT).show()
-                            // Pre-load @require and @resource in background
+
                             val fileManager = com.webtoapp.core.extension.ExtensionFileManager(context)
                             if (module.requireUrls.isNotEmpty()) {
                                 scope.launch(kotlinx.coroutines.Dispatchers.IO) {
@@ -934,11 +967,11 @@ fun ExtensionModuleScreen(
             }
         )
     }
-    
-    // JS 扩展包预览安装对话框
+
+
     showJsPackagePreview?.let { jsPackage ->
         var editableName by remember(jsPackage) { mutableStateOf(jsPackage.module.name) }
-        
+
         AlertDialog(
             onDismissRequest = { showJsPackagePreview = null },
             title = { Text(Strings.installJsPackage) },
@@ -947,17 +980,17 @@ fun ExtensionModuleScreen(
                     modifier = Modifier.verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // 包信息
+
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier
                                 .size(44.dp)
-                                .clip(RoundedCornerShape(12.dp))
+                                .clip(RoundedCornerShape(WtaRadius.Control))
                                 .background(
                                     Brush.linearGradient(
                                         listOf(
-                                            Color(0xFF34A853).copy(alpha = 0.15f),
-                                            Color(0xFF34A853).copy(alpha = 0.05f)
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
                                         )
                                     )
                                 ),
@@ -967,7 +1000,7 @@ fun ExtensionModuleScreen(
                                 Icons.Outlined.FolderZip,
                                 contentDescription = null,
                                 modifier = Modifier.size(22.dp),
-                                tint = Color(0xFF34A853)
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
                         Spacer(modifier = Modifier.width(12.dp))
@@ -984,12 +1017,13 @@ fun ExtensionModuleScreen(
                             )
                         }
                     }
-                    
-                    // 多文件独立存储提示
+
+
                     if (jsPackage.module.codeFiles.isNotEmpty()) {
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = Color(0xFF34A853).copy(alpha = 0.08f)
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(WtaRadius.Button))
+                                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.08f))
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
@@ -1000,18 +1034,18 @@ fun ExtensionModuleScreen(
                                     Icons.Outlined.Inventory2,
                                     contentDescription = null,
                                     modifier = Modifier.size(14.dp),
-                                    tint = Color(0xFF34A853)
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                                 Text(
                                     Strings.multiFileStorageHint,
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = Color(0xFF34A853)
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                             }
                         }
                     }
-                    
-                    // 名称编辑
+
+
                     PremiumTextField(
                         value = editableName,
                         onValueChange = { editableName = it },
@@ -1019,8 +1053,8 @@ fun ExtensionModuleScreen(
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
-                    
-                    // 文件列表（最多显示 15 个）
+
+
                     if (jsPackage.module.codeFiles.isNotEmpty()) {
                         Text(
                             Strings.includedFiles,
@@ -1028,9 +1062,10 @@ fun ExtensionModuleScreen(
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        Surface(
-                            shape = RoundedCornerShape(10.dp),
-                            color = MaterialTheme.colorScheme.surfaceContainerLow
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(WtaRadius.Control))
+                                .background(MaterialTheme.colorScheme.surfaceContainerLow)
                         ) {
                             Column(modifier = Modifier.padding(8.dp)) {
                                 val filePaths = jsPackage.module.codeFiles.keys.toList()
@@ -1048,8 +1083,8 @@ fun ExtensionModuleScreen(
                                             else Icons.Outlined.Javascript,
                                             contentDescription = null,
                                             modifier = Modifier.size(14.dp),
-                                            tint = if (path.endsWith(".css", true)) Color(0xFF2196F3)
-                                                else Color(0xFFF7DF1E)
+                                            tint = if (path.endsWith(".css", true)) MaterialTheme.colorScheme.primary
+                                                else MaterialTheme.colorScheme.tertiary
                                         )
                                         Text(
                                             path,
@@ -1071,8 +1106,8 @@ fun ExtensionModuleScreen(
                             }
                         }
                     }
-                    
-                    // 描述
+
+
                     Text(
                         jsPackage.module.description,
                         style = MaterialTheme.typography.bodySmall,
@@ -1104,8 +1139,8 @@ fun ExtensionModuleScreen(
             }
         )
     }
-    
-    // Chrome 扩展预览安装对话框
+
+
     showChromeExtPreview?.let { parseResult ->
         AlertDialog(
             onDismissRequest = {
@@ -1119,12 +1154,12 @@ fun ExtensionModuleScreen(
                         Box(
                             modifier = Modifier
                                 .size(44.dp)
-                                .clip(RoundedCornerShape(12.dp))
+                                .clip(RoundedCornerShape(WtaRadius.Control))
                                 .background(
                                     Brush.linearGradient(
                                         listOf(
-                                            Color(0xFF4285F4).copy(alpha = 0.15f),
-                                            Color(0xFF4285F4).copy(alpha = 0.05f)
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
                                         )
                                     )
                                 ),
@@ -1134,7 +1169,7 @@ fun ExtensionModuleScreen(
                                 Icons.Outlined.Extension,
                                 contentDescription = null,
                                 modifier = Modifier.size(22.dp),
-                                tint = Color(0xFF4285F4)
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
                         Spacer(modifier = Modifier.width(12.dp))
@@ -1151,7 +1186,7 @@ fun ExtensionModuleScreen(
                             )
                         }
                     }
-                    
+
                     if (parseResult.extensionDescription.isNotBlank()) {
                         Text(
                             parseResult.extensionDescription,
@@ -1160,14 +1195,14 @@ fun ExtensionModuleScreen(
                             overflow = TextOverflow.Ellipsis
                         )
                     }
-                    
+
                     Text(
                         "${Strings.contentScripts}: ${parseResult.modules.size}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary
                     )
-                    
-                    // Supported permissions
+
+
                     if (parseResult.supportedPermissions.isNotEmpty()) {
                         Text(
                             "${Strings.requiredApis}: ${parseResult.supportedPermissions.joinToString(", ")}",
@@ -1175,8 +1210,8 @@ fun ExtensionModuleScreen(
                             color = MaterialTheme.colorScheme.tertiary
                         )
                     }
-                    
-                    // Unsupported permissions
+
+
                     if (parseResult.unsupportedPermissions.isNotEmpty()) {
                         Text(
                             "⚠️ ${Strings.unsupportedApis}: ${parseResult.unsupportedPermissions.joinToString(", ")}",
@@ -1184,8 +1219,8 @@ fun ExtensionModuleScreen(
                             color = MaterialTheme.colorScheme.error
                         )
                     }
-                    
-                    // 警告
+
+
                     parseResult.warnings.filter { !it.startsWith("Unsupported permissions") }.forEach { warning ->
                         Text(
                             "⚠️ $warning",
@@ -1228,14 +1263,14 @@ fun ExtensionModuleScreen(
             }
         )
     }
-    
+
         }
 }
 
 
-/**
- * 模块卡片组件 - MD3 原生风格
- */
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ModuleCard(
@@ -1247,12 +1282,12 @@ fun ModuleCard(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    
+
     var showMenu by remember { mutableStateOf(false) }
     var showQrCodeDialog by remember { mutableStateOf(false) }
     var showExportDialog by remember { mutableStateOf(false) }
-    
-    // SAF 文件创建器
+
+
     val createFileLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/octet-stream")
     ) { uri: Uri? ->
@@ -1266,13 +1301,13 @@ fun ModuleCard(
             }
         }
     }
-    
-    // Storage权限请求器
+
+
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            // Permission已授予，执行导出
+
             scope.launch {
                 extensionManager.exportModuleToDownloads(module.id).onSuccess { path ->
                     Toast.makeText(context, "${Strings.exportSuccess}: $path", Toast.LENGTH_LONG).show()
@@ -1284,21 +1319,20 @@ fun ModuleCard(
             Toast.makeText(context, Strings.storagePermissionRequiredForExport, Toast.LENGTH_SHORT).show()
         }
     }
-    
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(WtaRadius.Card))
+                .background(MaterialTheme.colorScheme.surfaceContainerLow)
         ) {
-            // 头部：图标、名称、徽章、菜单
+            Column(modifier = Modifier.padding(16.dp)) {
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Top
             ) {
-                // Icon — Apple-style gradient tinted
+
                 Box(
                     modifier = Modifier
                         .size(48.dp)
@@ -1320,11 +1354,11 @@ fun ModuleCard(
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.width(12.dp))
-                
+
                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                    // Name行
+
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1337,12 +1371,12 @@ fun ModuleCard(
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(weight = 1f, fill = false)
                         )
-                        
-                        // Built-in标签 — Apple-style pill
+
+
                         if (module.builtIn) {
                             Box(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(6.dp))
+                            .clip(RoundedCornerShape(WtaRadius.Button))
                                     .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f))
                                     .padding(horizontal = 8.dp, vertical = 2.dp)
                             ) {
@@ -1355,10 +1389,10 @@ fun ModuleCard(
                             }
                         }
                     }
-                    
+
                     Spacer(modifier = Modifier.height(4.dp))
-                    
-                    // 分类和版本 — with dot separator
+
+
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -1380,13 +1414,13 @@ fun ModuleCard(
                         )
                     }
                 }
-                
-                // 菜单按钮
+
+
                 Box {
                     IconButton(onClick = { showMenu = true }) {
                         Icon(Icons.Default.MoreVert, contentDescription = Strings.more)
                     }
-                    
+
                     DropdownMenu(
                         expanded = showMenu,
                         onDismissRequest = { showMenu = false }
@@ -1406,7 +1440,7 @@ fun ModuleCard(
                             onClick = { showMenu = false; showQrCodeDialog = true },
                             leadingIcon = { Icon(Icons.Outlined.Share, null) }
                         )
-                        // 发布到模块市场
+
                         onPublish?.let { publish ->
                             DropdownMenuItem(
                                 text = { Text(Strings.publishToMarket) },
@@ -1425,8 +1459,8 @@ fun ModuleCard(
                     }
                 }
             }
-            
-            // Description
+
+
             if (module.description.isNotBlank()) {
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
@@ -1438,8 +1472,8 @@ fun ModuleCard(
                     lineHeight = 18.sp
                 )
             }
-            
-            // 标签 — Apple-style inline pills
+
+
             if (module.tags.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 LazyRow(
@@ -1448,7 +1482,7 @@ fun ModuleCard(
                     items(module.tags.take(5)) { tag ->
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
+                                .clip(RoundedCornerShape(WtaRadius.Button))
                                 .background(
                                     MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.7f)
                                 )
@@ -1464,11 +1498,11 @@ fun ModuleCard(
                     }
                 }
             }
-            
-            // 底部信息
+
+
             val hasUrlMatches = module.urlMatches.isNotEmpty()
             val dangerousPermissions = module.permissions.filter { it.dangerous }
-            
+
             if (hasUrlMatches || dangerousPermissions.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(14.dp))
                 Box(
@@ -1478,7 +1512,7 @@ fun ModuleCard(
                         .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                 )
                 Spacer(modifier = Modifier.height(10.dp))
-                
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -1501,7 +1535,7 @@ fun ModuleCard(
                             )
                         }
                     }
-                    
+
                     if (dangerousPermissions.isNotEmpty()) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -1528,7 +1562,7 @@ fun ModuleCard(
             }
         }
     }
-    
+
     if (showQrCodeDialog) {
         val fullModule = remember(module) { extensionManager.ensureCodeLoaded(module) }
         QrCodeShareDialog(
@@ -1537,21 +1571,36 @@ fun ModuleCard(
             onDismiss = { showQrCodeDialog = false }
         )
     }
-    
-    // Export选项对话框
+
+
     if (showExportDialog) {
         AlertDialog(
             onDismissRequest = { showExportDialog = false },
             title = { Text(Strings.exportModule) },
             text = {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    // Save到 Downloads
-                    Surface(
-                        onClick = {
-                            showExportDialog = false
-                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-                                val permission = Manifest.permission.WRITE_EXTERNAL_STORAGE
-                                if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) {
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(WtaRadius.Card))
+                            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                            .clickable {
+                                showExportDialog = false
+                                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                                    val permission = Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                    if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) {
+                                        scope.launch {
+                                            extensionManager.exportModuleToDownloads(module.id).onSuccess { path ->
+                                                Toast.makeText(context, "${Strings.exportSuccess}\n$path", Toast.LENGTH_LONG).show()
+                                            }.onFailure { e ->
+                                                Toast.makeText(context, "${Strings.exportFailed}: ${e.message}", Toast.LENGTH_SHORT).show()
+                                            }
+                                        }
+                                    } else {
+                                        permissionLauncher.launch(permission)
+                                    }
+                                } else {
                                     scope.launch {
                                         extensionManager.exportModuleToDownloads(module.id).onSuccess { path ->
                                             Toast.makeText(context, "${Strings.exportSuccess}\n$path", Toast.LENGTH_LONG).show()
@@ -1559,22 +1608,8 @@ fun ModuleCard(
                                             Toast.makeText(context, "${Strings.exportFailed}: ${e.message}", Toast.LENGTH_SHORT).show()
                                         }
                                     }
-                                } else {
-                                    permissionLauncher.launch(permission)
-                                }
-                            } else {
-                                scope.launch {
-                                    extensionManager.exportModuleToDownloads(module.id).onSuccess { path ->
-                                        Toast.makeText(context, "${Strings.exportSuccess}\n$path", Toast.LENGTH_LONG).show()
-                                    }.onFailure { e ->
-                                        Toast.makeText(context, "${Strings.exportFailed}: ${e.message}", Toast.LENGTH_SHORT).show()
-                                    }
                                 }
                             }
-                        },
-                        shape = RoundedCornerShape(14.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerLow,
-                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Row(
                             modifier = Modifier.padding(14.dp),
@@ -1608,17 +1643,18 @@ fun ModuleCard(
                             Icon(Icons.Default.ChevronRight, null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
                         }
                     }
-                    
-                    // Custom存储路径
-                    Surface(
-                        onClick = {
-                            showExportDialog = false
-                            val fileName = extensionManager.getModuleExportFileName(module.id) ?: "module.wtamod"
-                            createFileLauncher.launch(fileName)
-                        },
-                        shape = RoundedCornerShape(14.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerLow,
-                        modifier = Modifier.fillMaxWidth()
+
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(WtaRadius.Card))
+                            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                            .clickable {
+                                showExportDialog = false
+                                val fileName = extensionManager.getModuleExportFileName(module.id) ?: "module.wtamod"
+                                createFileLauncher.launch(fileName)
+                            }
                     ) {
                         Row(
                             modifier = Modifier.padding(14.dp),
@@ -1628,7 +1664,7 @@ fun ModuleCard(
                             Box(
                                 modifier = Modifier
                                     .size(40.dp)
-                                    .clip(RoundedCornerShape(11.dp))
+                                .clip(RoundedCornerShape(WtaRadius.Control))
                                     .background(
                                         Brush.linearGradient(
                                             listOf(
@@ -1663,9 +1699,9 @@ fun ModuleCard(
     }
 }
 
-/**
- * Statistics项 - MD3 简洁风格
- */
+
+
+
 @Composable
 private fun StatItem(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
@@ -1675,7 +1711,7 @@ private fun StatItem(
     val primary = MaterialTheme.colorScheme.primary
     Column(
         modifier = Modifier
-            .clip(RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(WtaRadius.Card))
             .background(
                 Brush.verticalGradient(
                     listOf(
@@ -1713,13 +1749,14 @@ private fun StatItem(
     }
 }
 
-/**
- * Tab 0: 扩展模块列表（CUSTOM + CHROME_EXTENSION）
- */
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ExtensionModulesTabContent(
     filteredModules: List<ExtensionModule>,
+    isLoading: Boolean,
     extensionManager: ExtensionManager,
     selectedCategory: ModuleCategory?,
     searchQuery: String,
@@ -1729,7 +1766,7 @@ private fun ExtensionModulesTabContent(
     onClearSearch: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
-        // 分类筛选器
+
         LazyRow(
             modifier = Modifier.padding(vertical = 8.dp),
             contentPadding = PaddingValues(horizontal = 16.dp),
@@ -1756,8 +1793,8 @@ private fun ExtensionModulesTabContent(
                 )
             }
         }
-        
-        // 统计信息
+
+
         val stats = extensionManager.getStatistics()
         Row(
             modifier = Modifier
@@ -1781,8 +1818,8 @@ private fun ExtensionModulesTabContent(
                 label = Strings.customLabel
             )
         }
-        
-        // Refined separator
+
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1790,10 +1827,10 @@ private fun ExtensionModulesTabContent(
                 .height(0.5.dp)
                 .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
-        // Module列表
+
+
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
@@ -1821,8 +1858,8 @@ private fun ExtensionModulesTabContent(
                 )
             }
 
-            
-            if (filteredModules.isEmpty()) {
+
+            if (filteredModules.isEmpty() && isLoading && searchQuery.isBlank()) {
                 item {
                     Box(
                         modifier = Modifier
@@ -1834,7 +1871,31 @@ private fun ExtensionModulesTabContent(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            // Apple-style gradient circle icon
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(36.dp),
+                                strokeWidth = 3.dp
+                            )
+                            Text(
+                                Strings.loading,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            } else if (filteredModules.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 56.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+
                             Box(
                                 modifier = Modifier
                                     .size(88.dp)
@@ -1856,7 +1917,7 @@ private fun ExtensionModulesTabContent(
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                                 )
                             }
-                            
+
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.spacedBy(6.dp)
@@ -1868,25 +1929,25 @@ private fun ExtensionModulesTabContent(
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
-                                    if (searchQuery.isNotBlank()) 
-                                        Strings.tryDifferentSearch 
-                                    else 
+                                    if (searchQuery.isNotBlank())
+                                        Strings.tryDifferentSearch
+                                    else
                                         Strings.createModuleHint,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                                     textAlign = TextAlign.Center
                                 )
                             }
-                            
+
                             Spacer(modifier = Modifier.height(4.dp))
-                            
+
                             if (searchQuery.isBlank()) {
                                 Row(
                                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                                 ) {
                                     FilledTonalButton(
                                         onClick = { onNavigateToAiDeveloper() },
-                                        shape = RoundedCornerShape(12.dp),
+                                        shape = RoundedCornerShape(WtaRadius.Button),
                                         colors = ButtonDefaults.filledTonalButtonColors(
                                             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                                         )
@@ -1895,10 +1956,10 @@ private fun ExtensionModulesTabContent(
                                         Spacer(modifier = Modifier.width(6.dp))
                                         Text(Strings.aiDevelop, style = MaterialTheme.typography.labelMedium)
                                     }
-                                    
+
                                     PremiumButton(
                                         onClick = { onNavigateToEditor(null) },
-                                        shape = RoundedCornerShape(12.dp)
+                                        shape = RoundedCornerShape(WtaRadius.Button)
                                     ) {
                                         Icon(Icons.Default.Add, null, Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(6.dp))
@@ -1916,15 +1977,15 @@ private fun ExtensionModulesTabContent(
                     }
                 }
             }
-            
+
             item { Spacer(modifier = Modifier.height(80.dp)) }
         }
     }
 }
 
-/**
- * Tab 1: 油猴脚本列表 (USERSCRIPT)
- */
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun UserScriptsTabContent(
@@ -1936,13 +1997,13 @@ private fun UserScriptsTabContent(
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // 脚本卡片列表
+
         items(filteredUserScripts, key = { it.id }) { module ->
             UserScriptCard(
                 module = module,
@@ -1954,8 +2015,8 @@ private fun UserScriptsTabContent(
                 }
             )
         }
-        
-        // 空状态
+
+
         if (filteredUserScripts.isEmpty()) {
             item {
                 Box(
@@ -1975,8 +2036,8 @@ private fun UserScriptsTabContent(
                                 .background(
                                     Brush.radialGradient(
                                         listOf(
-                                            Color(0xFFF7DF1E).copy(alpha = 0.10f),
-                                            Color(0xFFF7DF1E).copy(alpha = 0.02f)
+                                            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.10f),
+                                            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.02f)
                                         )
                                     )
                                 ),
@@ -1989,7 +2050,7 @@ private fun UserScriptsTabContent(
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                             )
                         }
-                        
+
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(6.dp)
@@ -2007,13 +2068,13 @@ private fun UserScriptsTabContent(
                                 textAlign = TextAlign.Center
                             )
                         }
-                        
+
                         Spacer(modifier = Modifier.height(4.dp))
-                        
+
                         if (searchQuery.isBlank()) {
                             PremiumButton(
                                 onClick = onImportUserScript,
-                                shape = RoundedCornerShape(12.dp)
+                                shape = RoundedCornerShape(WtaRadius.Button)
                             ) {
                                 Icon(Icons.Default.Download, null, Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
@@ -2030,14 +2091,14 @@ private fun UserScriptsTabContent(
                 }
             }
         }
-        
+
         item { Spacer(modifier = Modifier.height(80.dp)) }
     }
 }
 
-/**
- * 油猴脚本/Chrome扩展卡片 — 与 ModuleCard 统一设计风格
- */
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun UserScriptCard(
@@ -2046,23 +2107,24 @@ private fun UserScriptCard(
 ) {
     var showMenu by remember { mutableStateOf(false) }
     var showSourceDialog by remember { mutableStateOf(false) }
-    
+
     val isChromeExt = module.sourceType == ModuleSourceType.CHROME_EXTENSION
     val typeIcon = if (isChromeExt) "🧩" else "🐵"
     val typeLabel = if (isChromeExt) "Chrome" else "UserScript"
-    
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(WtaRadius.Card))
+            .background(MaterialTheme.colorScheme.surfaceContainerLow)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // 头部：图标、名称、徽章、菜单
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Top
             ) {
-                // 图标 — Apple-style gradient tinted
+
                 Box(
                     modifier = Modifier
                         .size(48.dp)
@@ -2084,11 +2146,11 @@ private fun UserScriptCard(
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.width(12.dp))
-                
+
                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                    // 名称行
+
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -2101,29 +2163,29 @@ private fun UserScriptCard(
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(weight = 1f, fill = false)
                         )
-                        
-                        // 类型标签 — Apple-style pill
+
+
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(6.dp))
                                 .background(
-                                    if (isChromeExt) Color(0xFF4285F4).copy(alpha = 0.08f)
-                                    else Color(0xFFF7DF1E).copy(alpha = 0.10f)
+                                    if (isChromeExt) MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
+                                    else MaterialTheme.colorScheme.tertiary.copy(alpha = 0.10f)
                                 )
                                 .padding(horizontal = 8.dp, vertical = 2.dp)
                         ) {
                             Text(
                                 typeLabel,
                                 style = MaterialTheme.typography.labelSmall,
-                                color = if (isChromeExt) Color(0xFF4285F4) else Color(0xFFD4A017),
+                                color = if (isChromeExt) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary,
                                 fontWeight = FontWeight.Medium
                             )
                         }
                     }
-                    
+
                     Spacer(modifier = Modifier.height(4.dp))
-                    
-                    // 版本和作者 — with dot separator
+
+
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -2147,13 +2209,13 @@ private fun UserScriptCard(
                         }
                     }
                 }
-                
-                // 菜单按钮
+
+
                 Box {
                     IconButton(onClick = { showMenu = true }) {
                         Icon(Icons.Default.MoreVert, contentDescription = Strings.more)
                     }
-                    
+
                     DropdownMenu(
                         expanded = showMenu,
                         onDismissRequest = { showMenu = false }
@@ -2172,8 +2234,8 @@ private fun UserScriptCard(
                     }
                 }
             }
-            
-            // 描述
+
+
             if (module.description.isNotBlank()) {
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
@@ -2185,11 +2247,11 @@ private fun UserScriptCard(
                     lineHeight = 18.sp
                 )
             }
-            
-            // 底部信息：URL匹配 + GM权限
+
+
             val hasUrlMatches = module.urlMatches.isNotEmpty()
             val hasGmGrants = module.gmGrants.isNotEmpty()
-            
+
             if (hasUrlMatches || hasGmGrants) {
                 Spacer(modifier = Modifier.height(14.dp))
                 Box(
@@ -2199,7 +2261,7 @@ private fun UserScriptCard(
                         .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                 )
                 Spacer(modifier = Modifier.height(10.dp))
-                
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -2222,7 +2284,7 @@ private fun UserScriptCard(
                             )
                         }
                     }
-                    
+
                     if (hasGmGrants) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -2245,8 +2307,8 @@ private fun UserScriptCard(
             }
         }
     }
-    
-    // 源码/项目浏览器对话框
+
+
     if (showSourceDialog) {
         ExtensionSourceBrowserDialog(
             module = module,
@@ -2255,9 +2317,9 @@ private fun UserScriptCard(
     }
 }
 
-/**
- * 文件树节点
- */
+
+
+
 private data class FileNode(
     val name: String,
     val relativePath: String,
@@ -2266,12 +2328,12 @@ private data class FileNode(
     val children: MutableList<FileNode> = mutableListOf()
 )
 
-/**
- * 扩展源码/项目浏览器对话框
- * 
- * - Chrome 扩展：显示完整项目目录树，点击文件查看内容
- * - 油猴脚本：显示脚本代码
- */
+
+
+
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ExtensionSourceBrowserDialog(
@@ -2280,13 +2342,13 @@ private fun ExtensionSourceBrowserDialog(
 ) {
     val context = LocalContext.current
     val isChromeExt = module.sourceType == ModuleSourceType.CHROME_EXTENSION && module.chromeExtId.isNotEmpty()
-    
-    // 当前查看的文件路径（null = 目录树视图）
+
+
     var selectedFilePath by remember { mutableStateOf<String?>(null) }
     var selectedFileContent by remember { mutableStateOf("") }
     var selectedFileName by remember { mutableStateOf("") }
-    
-    // 构建文件树
+
+
     val fileTree = remember(module.id) {
         if (isChromeExt) {
             buildExtensionFileTree(context, module)
@@ -2294,23 +2356,23 @@ private fun ExtensionSourceBrowserDialog(
             null
         }
     }
-    
-    // 展开状态
+
+
     val expandedDirs = remember { mutableStateMapOf<String, Boolean>() }
-    
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        Surface(
+        Box(
             modifier = Modifier
                 .fillMaxWidth(0.95f)
-                .fillMaxHeight(0.85f),
-            shape = RoundedCornerShape(16.dp),
-            color = MaterialTheme.colorScheme.surface
+                .fillMaxHeight(0.85f)
+                .clip(RoundedCornerShape(WtaRadius.Card))
+                .background(MaterialTheme.colorScheme.surface)
         ) {
             Column {
-                // 顶部栏
+
                 TopAppBar(
                     title = {
                         Column {
@@ -2346,16 +2408,16 @@ private fun ExtensionSourceBrowserDialog(
                         }
                     }
                 )
-                
+
                 if (selectedFilePath != null) {
-                    // 文件内容视图
+
                     FileContentView(
                         content = selectedFileContent,
                         fileName = selectedFileName,
                         modifier = Modifier.fillMaxSize()
                     )
                 } else if (isChromeExt && fileTree != null) {
-                    // 项目目录树视图
+
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(vertical = 4.dp)
@@ -2375,7 +2437,7 @@ private fun ExtensionSourceBrowserDialog(
                         }
                     }
                 } else {
-                    // 纯脚本代码视图
+
                     FileContentView(
                         content = module.code,
                         fileName = if (module.sourceType == ModuleSourceType.CHROME_EXTENSION) "content.js" else "${module.name}.user.js",
@@ -2387,9 +2449,9 @@ private fun ExtensionSourceBrowserDialog(
     }
 }
 
-/**
- * 递归添加文件树节点到 LazyColumn
- */
+
+
+
 private fun LazyListScope.fileTreeItems(
     node: FileNode,
     depth: Int,
@@ -2397,7 +2459,7 @@ private fun LazyListScope.fileTreeItems(
     onFileClick: (path: String, name: String) -> Unit
 ) {
     val isExpanded = expandedDirs[node.relativePath] ?: (depth == 0)
-    
+
     item(key = node.relativePath) {
         FileTreeRow(
             node = node,
@@ -2412,7 +2474,7 @@ private fun LazyListScope.fileTreeItems(
             }
         )
     }
-    
+
     if (node.isDirectory && isExpanded) {
         node.children.sortedWith(compareBy({ !it.isDirectory }, { it.name })).forEach { child ->
             fileTreeItems(child, depth + 1, expandedDirs, onFileClick)
@@ -2420,9 +2482,9 @@ private fun LazyListScope.fileTreeItems(
     }
 }
 
-/**
- * 文件树行
- */
+
+
+
 @Composable
 private fun FileTreeRow(
     node: FileNode,
@@ -2437,7 +2499,7 @@ private fun FileTreeRow(
             .padding(start = (16 + depth * 20).dp, end = 16.dp, top = 6.dp, bottom = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 图标
+
         if (node.isDirectory) {
             Icon(
                 if (isExpanded) Icons.Default.FolderOpen else Icons.Default.Folder,
@@ -2453,10 +2515,10 @@ private fun FileTreeRow(
                 tint = getFileIconColor(node.name)
             )
         }
-        
+
         Spacer(modifier = Modifier.width(10.dp))
-        
-        // 文件名
+
+
         Text(
             node.name,
             style = MaterialTheme.typography.bodyMedium,
@@ -2466,8 +2528,8 @@ private fun FileTreeRow(
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(weight = 1f, fill = true)
         )
-        
-        // 文件大小
+
+
         if (!node.isDirectory && node.size > 0) {
             Text(
                 formatFileSize(node.size),
@@ -2475,8 +2537,8 @@ private fun FileTreeRow(
                 color = MaterialTheme.colorScheme.outline
             )
         }
-        
-        // 目录展开指示器
+
+
         if (node.isDirectory) {
             Icon(
                 if (isExpanded) Icons.Default.ExpandMore else Icons.Default.ChevronRight,
@@ -2488,9 +2550,9 @@ private fun FileTreeRow(
     }
 }
 
-/**
- * 文件内容查看视图
- */
+
+
+
 @Composable
 private fun FileContentView(
     content: String,
@@ -2503,14 +2565,17 @@ private fun FileContentView(
         it.endsWith(".png") || it.endsWith(".jpg") || it.endsWith(".jpeg") ||
         it.endsWith(".gif") || it.endsWith(".svg") || it.endsWith(".webp") || it.endsWith(".ico")
     }
-    
+
     Column(modifier = modifier.padding(horizontal = 12.dp)) {
-        // 文件信息栏
-        Surface(
-            shape = RoundedCornerShape(8.dp),
-            color = if (com.webtoapp.ui.theme.LocalIsDarkTheme.current) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.72f),
+
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .clip(RoundedCornerShape(WtaRadius.Button))
+                .background(
+                    if (com.webtoapp.ui.theme.LocalIsDarkTheme.current) Color.White.copy(alpha = 0.10f)
+                    else Color.White.copy(alpha = 0.72f)
+                )
                 .padding(bottom = 8.dp)
         ) {
             Row(
@@ -2537,8 +2602,8 @@ private fun FileContentView(
                 )
             }
         }
-        
-        // 文件内容
+
+
         if (isImage) {
             Box(
                 modifier = Modifier
@@ -2566,10 +2631,10 @@ private fun FileContentView(
                 )
             }
         } else {
-            // 代码/文本内容 - 等宽字体 + 行号
+
             val lines = content.lines()
             val lineNumWidth = lines.size.toString().length
-            
+
             Text(
                 buildAnnotatedString(lines, lineNumWidth),
                 style = MaterialTheme.typography.bodySmall.copy(
@@ -2585,9 +2650,9 @@ private fun FileContentView(
     }
 }
 
-/**
- * 构建带行号的文本
- */
+
+
+
 private fun buildAnnotatedString(lines: List<String>, lineNumWidth: Int): androidx.compose.ui.text.AnnotatedString {
     return androidx.compose.ui.text.buildAnnotatedString {
         val maxLines = 10000
@@ -2607,9 +2672,9 @@ private fun buildAnnotatedString(lines: List<String>, lineNumWidth: Int): androi
     }
 }
 
-/**
- * 根据文件扩展名返回图标
- */
+
+
+
 @Composable
 private fun getFileIcon(fileName: String): androidx.compose.ui.graphics.vector.ImageVector {
     return when {
@@ -2627,26 +2692,26 @@ private fun getFileIcon(fileName: String): androidx.compose.ui.graphics.vector.I
     }
 }
 
-/**
- * 根据文件扩展名返回图标颜色
- */
+
+
+
 @Composable
 private fun getFileIconColor(fileName: String): androidx.compose.ui.graphics.Color {
     return when {
-        fileName.endsWith(".js") || fileName.endsWith(".mjs") -> androidx.compose.ui.graphics.Color(0xFFF7DF1E)
-        fileName.endsWith(".ts") || fileName.endsWith(".tsx") -> androidx.compose.ui.graphics.Color(0xFF3178C6)
-        fileName.endsWith(".css") || fileName.endsWith(".scss") -> androidx.compose.ui.graphics.Color(0xFF1572B6)
-        fileName.endsWith(".html") || fileName.endsWith(".htm") -> androidx.compose.ui.graphics.Color(0xFFE44D26)
-        fileName.endsWith(".json") -> androidx.compose.ui.graphics.Color(0xFF5B9BD5)
+        fileName.endsWith(".js") || fileName.endsWith(".mjs") -> MaterialTheme.colorScheme.tertiary
+        fileName.endsWith(".ts") || fileName.endsWith(".tsx") -> MaterialTheme.colorScheme.primary
+        fileName.endsWith(".css") || fileName.endsWith(".scss") -> MaterialTheme.colorScheme.secondary
+        fileName.endsWith(".html") || fileName.endsWith(".htm") -> MaterialTheme.colorScheme.error
+        fileName.endsWith(".json") -> MaterialTheme.colorScheme.primary
         fileName.endsWith(".png") || fileName.endsWith(".jpg") || fileName.endsWith(".svg") || fileName.endsWith(".gif") -> MaterialTheme.colorScheme.tertiary
         fileName == "manifest.json" -> MaterialTheme.colorScheme.primary
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
 }
 
-/**
- * 格式化文件大小
- */
+
+
+
 private fun formatFileSize(bytes: Long): String {
     return when {
         bytes < 1024 -> "${bytes}B"
@@ -2655,18 +2720,18 @@ private fun formatFileSize(bytes: Long): String {
     }
 }
 
-/**
- * 构建扩展项目文件树
- */
+
+
+
 private fun buildExtensionFileTree(context: android.content.Context, module: ExtensionModule): FileNode? {
     val extId = module.chromeExtId
     if (extId.isEmpty()) return null
-    
+
     return if (module.builtIn) {
-        // 内置扩展：从 assets 读取
+
         buildAssetFileTree(context, "extensions/$extId", extId)
     } else {
-        // 用户导入扩展：从 filesDir 读取
+
         val extDir = java.io.File(context.filesDir, "extensions/$extId")
         if (extDir.exists() && extDir.isDirectory) {
             buildFileSystemTree(extDir, "")
@@ -2676,12 +2741,12 @@ private fun buildExtensionFileTree(context: android.content.Context, module: Ext
     }
 }
 
-/**
- * 从 assets 构建文件树
- */
+
+
+
 private fun buildAssetFileTree(context: android.content.Context, assetPath: String, name: String): FileNode {
     val root = FileNode(name = name, relativePath = "", isDirectory = true)
-    
+
     fun walkAssets(currentPath: String, parent: FileNode) {
         try {
             val children = context.assets.list(currentPath) ?: return
@@ -2689,14 +2754,14 @@ private fun buildAssetFileTree(context: android.content.Context, assetPath: Stri
                 val childPath = "$currentPath/$child"
                 val relativePath = childPath.removePrefix("extensions/$name/")
                 val subChildren = context.assets.list(childPath)
-                
+
                 if (subChildren != null && subChildren.isNotEmpty()) {
-                    // 目录
+
                     val dirNode = FileNode(name = child, relativePath = relativePath, isDirectory = true)
                     walkAssets(childPath, dirNode)
                     parent.children.add(dirNode)
                 } else {
-                    // 文件
+
                     val size = try {
                         context.assets.open(childPath).use { it.available().toLong() }
                     } catch (e: Exception) { 0L }
@@ -2704,20 +2769,20 @@ private fun buildAssetFileTree(context: android.content.Context, assetPath: Stri
                 }
             }
         } catch (e: Exception) {
-            // ignore
+
         }
     }
-    
+
     walkAssets(assetPath, root)
     return root
 }
 
-/**
- * 从文件系统构建文件树
- */
+
+
+
 private fun buildFileSystemTree(dir: java.io.File, relativePath: String): FileNode {
     val root = FileNode(name = dir.name, relativePath = relativePath, isDirectory = true)
-    
+
     dir.listFiles()?.forEach { file ->
         val childRelative = if (relativePath.isEmpty()) file.name else "$relativePath/${file.name}"
         if (file.isDirectory) {
@@ -2726,16 +2791,16 @@ private fun buildFileSystemTree(dir: java.io.File, relativePath: String): FileNo
             root.children.add(FileNode(name = file.name, relativePath = childRelative, isDirectory = false, size = file.length()))
         }
     }
-    
+
     return root
 }
 
-/**
- * 读取扩展文件内容
- */
+
+
+
 private fun readExtensionFile(context: android.content.Context, module: ExtensionModule, relativePath: String): String? {
     val extId = module.chromeExtId
-    
+
     return try {
         if (module.builtIn) {
             context.assets.open("extensions/$extId/$relativePath").bufferedReader().use { it.readText() }

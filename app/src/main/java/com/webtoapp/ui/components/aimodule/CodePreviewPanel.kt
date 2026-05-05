@@ -30,23 +30,23 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-/**
- * 代码预览面板组件
- * 
- * 用于显示和编辑生成的代码，支持语法高亮、行号显示、Tab 切换
- * 
- * @param jsCode JavaScript 代码
- * @param cssCode CSS 代码
- * @param onJsCodeChange JavaScript 代码变更回调
- * @param onCssCodeChange CSS 代码变更回调
- * @param onCopy 复制代码回调
- * @param onValidate 验证代码回调
- * @param onSave 保存代码回调
- * @param isEditable 是否可编辑
- * @param modifier Modifier
- * 
- * Requirements: 4.3, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @Composable
 fun CodePreviewPanel(
     jsCode: String,
@@ -62,7 +62,7 @@ fun CodePreviewPanel(
     var selectedTab by remember { mutableStateOf(CodeTab.JAVASCRIPT) }
     val colors = rememberCodeBlockColors()
     val clipboardManager = LocalClipboardManager.current
-    
+
     val currentCode = when (selectedTab) {
         CodeTab.JAVASCRIPT -> jsCode
         CodeTab.CSS -> cssCode
@@ -75,7 +75,7 @@ fun CodePreviewPanel(
         shadowElevation = 4.dp
     ) {
         Column {
-            // 头部：Tab 切换和操作按钮
+
             CodePreviewHeader(
                 selectedTab = selectedTab,
                 onTabSelected = { selectedTab = it },
@@ -88,8 +88,8 @@ fun CodePreviewPanel(
                 isEditable = isEditable,
                 colors = colors
             )
-            
-            // 代码内容区域
+
+
             CodeContentArea(
                 code = currentCode,
                 language = when (selectedTab) {
@@ -105,8 +105,8 @@ fun CodePreviewPanel(
                 isEditable = isEditable,
                 colors = colors
             )
-            
-            // 底部状态栏
+
+
             CodePreviewFooter(
                 lineCount = currentCode.lines().size,
                 language = when (selectedTab) {
@@ -119,17 +119,17 @@ fun CodePreviewPanel(
     }
 }
 
-/**
- * 代码 Tab 类型
- */
+
+
+
 enum class CodeTab(val displayName: String, val icon: String) {
     JAVASCRIPT("JavaScript", "JS"),
     CSS("CSS", "CSS")
 }
 
-/**
- * 代码块颜色配置
- */
+
+
+
 data class CodeBlockColors(
     val background: Color,
     val headerBackground: Color,
@@ -146,9 +146,9 @@ data class CodeBlockColors(
     val selection: Color
 )
 
-/**
- * 获取主题自适应的代码块颜色
- */
+
+
+
 @Composable
 fun rememberCodeBlockColors(): CodeBlockColors {
     val isDark = !MaterialTheme.colorScheme.background.luminance().let { it > 0.5f }
@@ -189,9 +189,9 @@ fun rememberCodeBlockColors(): CodeBlockColors {
     }
 }
 
-/**
- * 代码预览头部
- */
+
+
+
 @Composable
 private fun CodePreviewHeader(
     selectedTab: CodeTab,
@@ -213,7 +213,7 @@ private fun CodePreviewHeader(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Tab 切换
+
             Row(
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
@@ -226,12 +226,12 @@ private fun CodePreviewHeader(
                     )
                 }
             }
-            
-            // 操作按钮
+
+
             Row(
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                // Copy按钮
+
                 IconButton(
                     onClick = onCopy,
                     modifier = Modifier.size(36.dp)
@@ -243,8 +243,8 @@ private fun CodePreviewHeader(
                         modifier = Modifier.size(18.dp)
                     )
                 }
-                
-                // Verify按钮（仅在可编辑时显示）
+
+
                 if (isEditable) {
                     IconButton(
                         onClick = onValidate,
@@ -258,8 +258,8 @@ private fun CodePreviewHeader(
                         )
                     }
                 }
-                
-                // Save按钮
+
+
                 FilledTonalButton(
                     onClick = onSave,
                     modifier = Modifier.height(32.dp),
@@ -282,9 +282,9 @@ private fun CodePreviewHeader(
 }
 
 
-/**
- * 代码 Tab 按钮
- */
+
+
+
 @Composable
 private fun CodeTabButton(
     tab: CodeTab,
@@ -297,13 +297,13 @@ private fun CodeTabButton(
     } else {
         Color.Transparent
     }
-    
+
     val textColor = if (isSelected) {
         MaterialTheme.colorScheme.primary
     } else {
         colors.text.copy(alpha = 0.7f)
     }
-    
+
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(8.dp),
@@ -314,7 +314,7 @@ private fun CodeTabButton(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            // 语言标签
+
             Surface(
                 shape = RoundedCornerShape(4.dp),
                 color = getLanguageColor(tab)
@@ -328,7 +328,7 @@ private fun CodeTabButton(
                     fontWeight = FontWeight.Bold
                 )
             }
-            
+
             Text(
                 text = tab.displayName,
                 style = MaterialTheme.typography.labelMedium,
@@ -339,19 +339,19 @@ private fun CodeTabButton(
     }
 }
 
-/**
- * 获取语言对应的颜色
- */
+
+
+
 private fun getLanguageColor(tab: CodeTab): Color {
     return when (tab) {
-        CodeTab.JAVASCRIPT -> Color(0xFFF7DF1E) // JavaScript 黄色
-        CodeTab.CSS -> Color(0xFF264DE4) // CSS 蓝色
+        CodeTab.JAVASCRIPT -> Color(0xFFF7DF1E)
+        CodeTab.CSS -> Color(0xFF264DE4)
     }
 }
 
-/**
- * 代码内容区域
- */
+
+
+
 @Composable
 private fun CodeContentArea(
     code: String,
@@ -362,37 +362,37 @@ private fun CodeContentArea(
 ) {
     val horizontalScrollState = rememberScrollState()
     val verticalScrollState = rememberScrollState()
-    
-    var textFieldValue by remember(code) { 
-        mutableStateOf(TextFieldValue(code)) 
+
+    var textFieldValue by remember(code) {
+        mutableStateOf(TextFieldValue(code))
     }
-    
-    // 同步外部代码变化
+
+
     LaunchedEffect(code) {
         if (textFieldValue.text != code) {
             textFieldValue = TextFieldValue(code)
         }
     }
-    
-    // 根据模式选择显示的内容源
-    // 可编辑模式：使用 textFieldValue.text（实时编辑内容）
-    // Read-only模式：使用 code 参数
+
+
+
+
     val displayText = if (isEditable) textFieldValue.text else code
     val displayLines = displayText.lines()
-    
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 200.dp, max = 400.dp)
             .verticalScroll(verticalScrollState)
     ) {
-        // 行号列 - 使用 displayLines 确保行号与内容同步
+
         LineNumberColumn(
             lineCount = displayLines.size,
             colors = colors
         )
-        
-        // 代码内容
+
+
         Box(
             modifier = Modifier
                 .weight(weight = 1f, fill = true)
@@ -400,7 +400,7 @@ private fun CodeContentArea(
                 .padding(12.dp)
         ) {
             if (isEditable) {
-                // 可编辑模式 - 使用透明文本 + 语法高亮装饰层
+
                 BasicTextField(
                     value = textFieldValue,
                     onValueChange = { newValue ->
@@ -411,14 +411,14 @@ private fun CodeContentArea(
                         fontFamily = FontFamily.Monospace,
                         fontSize = 12.sp,
                         lineHeight = 20.sp,
-                        color = Color.Transparent // 输入层文本透明，只显示光标
+                        color = Color.Transparent
                     ),
                     cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                     modifier = Modifier.fillMaxWidth()
                 ) { innerTextField ->
-                    // Show语法高亮的装饰器
+
                     Box {
-                        // 语法高亮层 - 使用 displayLines 确保与输入同步
+
                         Column {
                             displayLines.forEach { line ->
                                 Text(
@@ -431,14 +431,14 @@ private fun CodeContentArea(
                                 )
                             }
                         }
-                        // 实际输入层（透明文本，只显示光标和处理输入）
+
                         Box(modifier = Modifier.matchParentSize()) {
                             innerTextField()
                         }
                     }
                 }
             } else {
-                // Read-only模式 - 使用 displayLines（已从 code 计算）
+
                 SelectionContainer {
                     Column {
                         displayLines.forEach { line ->
@@ -458,9 +458,9 @@ private fun CodeContentArea(
     }
 }
 
-/**
- * 行号列
- */
+
+
+
 @Composable
 private fun LineNumberColumn(
     lineCount: Int,
@@ -485,9 +485,9 @@ private fun LineNumberColumn(
     }
 }
 
-/**
- * 代码预览底部状态栏
- */
+
+
+
 @Composable
 private fun CodePreviewFooter(
     lineCount: Int,
@@ -510,7 +510,7 @@ private fun CodePreviewFooter(
                 style = MaterialTheme.typography.labelSmall,
                 color = colors.text.copy(alpha = 0.5f)
             )
-            
+
             Text(
                 text = Strings.lineCount.format(lineCount),
                 style = MaterialTheme.typography.labelSmall,
@@ -521,9 +521,9 @@ private fun CodePreviewFooter(
 }
 
 
-/**
- * 语法高亮
- */
+
+
+
 @Composable
 private fun highlightSyntax(line: String, language: String, colors: CodeBlockColors): AnnotatedString {
     return buildAnnotatedString {
@@ -535,9 +535,9 @@ private fun highlightSyntax(line: String, language: String, colors: CodeBlockCol
     }
 }
 
-/**
- * JavaScript 语法高亮
- */
+
+
+
 private fun AnnotatedString.Builder.highlightJavaScript(line: String, colors: CodeBlockColors) {
     val jsKeywords = setOf(
         "const", "let", "var", "function", "return", "if", "else", "for", "while",
@@ -546,18 +546,18 @@ private fun AnnotatedString.Builder.highlightJavaScript(line: String, colors: Co
         "continue", "default", "true", "false", "null", "undefined", "typeof",
         "instanceof", "in", "of", "delete", "void", "yield", "static", "get", "set"
     )
-    
+
     var i = 0
     while (i < line.length) {
         when {
-            // 单行注释
+
             line.startsWith("//", i) -> {
                 withStyle(SpanStyle(color = colors.comment)) {
                     append(line.substring(i))
                 }
                 return
             }
-            // 多行注释
+
             line.startsWith("/*", i) -> {
                 val end = line.indexOf("*/", i).let { if (it != -1) it + 2 else line.length }
                 withStyle(SpanStyle(color = colors.comment)) {
@@ -565,7 +565,7 @@ private fun AnnotatedString.Builder.highlightJavaScript(line: String, colors: Co
                 }
                 i = end
             }
-            // 字符串（双引号、单引号、模板字符串）
+
             line[i] == '"' || line[i] == '\'' || line[i] == '`' -> {
                 val quote = line[i]
                 var end = i + 1
@@ -579,7 +579,7 @@ private fun AnnotatedString.Builder.highlightJavaScript(line: String, colors: Co
                 }
                 i = end
             }
-            // 数字
+
             line[i].isDigit() -> {
                 val start = i
                 while (i < line.length && (line[i].isDigit() || line[i] == '.' || line[i] == 'x' || line[i] == 'X')) i++
@@ -587,7 +587,7 @@ private fun AnnotatedString.Builder.highlightJavaScript(line: String, colors: Co
                     append(line.substring(start, i))
                 }
             }
-            // 标识符和关键字
+
             line[i].isLetter() || line[i] == '_' || line[i] == '$' -> {
                 val start = i
                 while (i < line.length && (line[i].isLetterOrDigit() || line[i] == '_' || line[i] == '$')) i++
@@ -601,14 +601,14 @@ private fun AnnotatedString.Builder.highlightJavaScript(line: String, colors: Co
                     append(word)
                 }
             }
-            // 运算符
+
             line[i] in "+-*/%=<>!&|^~?:" -> {
                 withStyle(SpanStyle(color = colors.operator)) {
                     append(line[i])
                 }
                 i++
             }
-            // 其他字符
+
             else -> {
                 withStyle(SpanStyle(color = colors.text)) {
                     append(line[i])
@@ -619,14 +619,14 @@ private fun AnnotatedString.Builder.highlightJavaScript(line: String, colors: Co
     }
 }
 
-/**
- * CSS 语法高亮
- */
+
+
+
 private fun AnnotatedString.Builder.highlightCss(line: String, colors: CodeBlockColors) {
     var i = 0
     while (i < line.length) {
         when {
-            // 注释
+
             line.startsWith("/*", i) -> {
                 val end = line.indexOf("*/", i).let { if (it != -1) it + 2 else line.length }
                 withStyle(SpanStyle(color = colors.comment)) {
@@ -634,7 +634,7 @@ private fun AnnotatedString.Builder.highlightCss(line: String, colors: CodeBlock
                 }
                 i = end
             }
-            // 字符串
+
             line[i] == '"' || line[i] == '\'' -> {
                 val quote = line[i]
                 val end = line.indexOf(quote, i + 1)
@@ -650,7 +650,7 @@ private fun AnnotatedString.Builder.highlightCss(line: String, colors: CodeBlock
                     i++
                 }
             }
-            // 数字和单位
+
             line[i].isDigit() || (line[i] == '.' && i + 1 < line.length && line[i + 1].isDigit()) -> {
                 val start = i
                 while (i < line.length && (line[i].isDigit() || line[i] == '.' || line[i].isLetter() || line[i] == '%')) i++
@@ -658,7 +658,7 @@ private fun AnnotatedString.Builder.highlightCss(line: String, colors: CodeBlock
                     append(line.substring(start, i))
                 }
             }
-            // Color值 #xxx
+
             line[i] == '#' && i + 1 < line.length && line[i + 1].isLetterOrDigit() -> {
                 val start = i
                 i++
@@ -667,12 +667,12 @@ private fun AnnotatedString.Builder.highlightCss(line: String, colors: CodeBlock
                     append(line.substring(start, i))
                 }
             }
-            // Properties名（在冒号前）
+
             line[i].isLetter() || line[i] == '-' -> {
                 val start = i
                 while (i < line.length && (line[i].isLetterOrDigit() || line[i] == '-' || line[i] == '_')) i++
                 val word = line.substring(start, i)
-                // Check是否是属性名（后面跟着冒号）
+
                 val isProperty = line.indexOf(':', i).let { colonIndex ->
                     colonIndex != -1 && line.substring(i, colonIndex).all { it.isWhitespace() }
                 }
@@ -681,14 +681,14 @@ private fun AnnotatedString.Builder.highlightCss(line: String, colors: CodeBlock
                     append(word)
                 }
             }
-            // Select器符号
+
             line[i] in ".#@:[]{}()," -> {
                 withStyle(SpanStyle(color = colors.operator)) {
                     append(line[i])
                 }
                 i++
             }
-            // 其他字符
+
             else -> {
                 withStyle(SpanStyle(color = colors.text)) {
                     append(line[i])
@@ -699,10 +699,10 @@ private fun AnnotatedString.Builder.highlightCss(line: String, colors: CodeBlock
     }
 }
 
-/**
- * 简化版代码预览组件
- * 用于只读显示代码，不支持编辑
- */
+
+
+
+
 @Composable
 fun SimpleCodePreview(
     code: String,
@@ -713,7 +713,7 @@ fun SimpleCodePreview(
     val colors = rememberCodeBlockColors()
     val clipboardManager = LocalClipboardManager.current
     val lines = code.lines()
-    
+
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -721,7 +721,7 @@ fun SimpleCodePreview(
         shadowElevation = 2.dp
     ) {
         Column {
-            // 头部
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -750,14 +750,14 @@ fun SimpleCodePreview(
                             fontWeight = FontWeight.Bold
                         )
                     }
-                    
+
                     Text(
                         text = Strings.lineCount.format(lines.size),
                         style = MaterialTheme.typography.labelSmall,
                         color = colors.text.copy(alpha = 0.6f)
                     )
                 }
-                
+
                 IconButton(
                     onClick = {
                         clipboardManager.setText(AnnotatedString(code))
@@ -773,18 +773,18 @@ fun SimpleCodePreview(
                     )
                 }
             }
-            
-            // 代码内容
+
+
             val horizontalScrollState = rememberScrollState()
             val verticalScrollState = rememberScrollState()
-            
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(max = 300.dp)
                     .verticalScroll(verticalScrollState)
             ) {
-                // 行号
+
                 Column(
                     modifier = Modifier
                         .background(colors.headerBackground.copy(alpha = 0.3f))
@@ -802,8 +802,8 @@ fun SimpleCodePreview(
                         )
                     }
                 }
-                
-                // 代码
+
+
                 Box(
                     modifier = Modifier
                         .weight(weight = 1f, fill = true)
@@ -830,9 +830,9 @@ fun SimpleCodePreview(
     }
 }
 
-/**
- * Color luminance extension
- */
+
+
+
 private fun Color.luminance(): Float {
     val r = red
     val g = green

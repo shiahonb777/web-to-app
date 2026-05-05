@@ -5,9 +5,9 @@ import org.junit.Test
 
 class WebViewConfigDarkModeTest {
 
-    // ═══════════════════════════════════════════
-    // Dark mode status bar default values
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `WebViewConfig dark mode status bar fields have correct defaults`() {
@@ -33,9 +33,9 @@ class WebViewConfigDarkModeTest {
         assertThat(config.statusBarBackgroundAlpha).isWithin(0.01f).of(1.0f)
     }
 
-    // ═══════════════════════════════════════════
-    // Dark mode config can be set independently
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `WebViewConfig dark mode fields are independent from light mode`() {
@@ -78,9 +78,9 @@ class WebViewConfigDarkModeTest {
         assertThat(copied.statusBarBackgroundAlphaDark).isWithin(0.01f).of(0.8f)
     }
 
-    // ═══════════════════════════════════════════
-    // StatusBarColorMode enum
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `StatusBarColorMode enum has all expected values`() {
@@ -94,9 +94,9 @@ class WebViewConfigDarkModeTest {
         assertThat(StatusBarColorMode.THEME.name).isEqualTo("THEME")
     }
 
-    // ═══════════════════════════════════════════
-    // StatusBarBackgroundType enum
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `StatusBarBackgroundType enum has all expected values`() {
@@ -110,9 +110,9 @@ class WebViewConfigDarkModeTest {
         assertThat(StatusBarBackgroundType.COLOR.name).isEqualTo("COLOR")
     }
 
-    // ═══════════════════════════════════════════
-    // OrientationMode enum (SCREEN_ORIENTATION_USER)
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `OrientationMode enum has AUTO value`() {
@@ -127,9 +127,9 @@ class WebViewConfigDarkModeTest {
         )
     }
 
-    // ═══════════════════════════════════════════
-    // Dark mode background type variants
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `WebViewConfig supports IMAGE background type for dark mode`() {
@@ -155,9 +155,9 @@ class WebViewConfigDarkModeTest {
         assertThat(config.statusBarBackgroundImageDark).isNull()
     }
 
-    // ═══════════════════════════════════════════
-    // Full config round-trip
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `WebViewConfig with all dark mode fields set preserves values through copy`() {

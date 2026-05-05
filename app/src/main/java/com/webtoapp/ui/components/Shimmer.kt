@@ -29,7 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.HorizontalDivider
 
-/** Lightweight shimmer effect using Compose animation — no extra dependencies. */
+
 @Composable
 fun ShimmerBrush(target: @Composable (brush: Brush) -> Unit) {
     val transition = rememberInfiniteTransition(label = "shimmer")
@@ -54,7 +54,7 @@ fun ShimmerBrush(target: @Composable (brush: Brush) -> Unit) {
     target(brush)
 }
 
-/** Skeleton placeholder for a post card during loading. */
+
 @Composable
 fun PostCardSkeleton(modifier: Modifier = Modifier) {
     ShimmerBrush { brush ->
@@ -62,37 +62,37 @@ fun PostCardSkeleton(modifier: Modifier = Modifier) {
             modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.Top
         ) {
-            // Avatar
+
             Box(
                 modifier = Modifier.size(40.dp).clip(CircleShape).background(brush)
             )
             Spacer(Modifier.width(10.dp))
             Column(modifier = Modifier.weight(1f)) {
-                // Username line
+
                 Box(
                     modifier = Modifier.width(100.dp).height(14.dp)
                         .clip(RoundedCornerShape(4.dp)).background(brush)
                 )
                 Spacer(Modifier.height(6.dp))
-                // Subtitle line
+
                 Box(
                     modifier = Modifier.width(160.dp).height(10.dp)
                         .clip(RoundedCornerShape(4.dp)).background(brush)
                 )
                 Spacer(Modifier.height(10.dp))
-                // Content line 1
+
                 Box(
                     modifier = Modifier.fillMaxWidth().height(12.dp)
                         .clip(RoundedCornerShape(4.dp)).background(brush)
                 )
                 Spacer(Modifier.height(6.dp))
-                // Content line 2
+
                 Box(
                     modifier = Modifier.fillMaxWidth(0.7f).height(12.dp)
                         .clip(RoundedCornerShape(4.dp)).background(brush)
                 )
                 Spacer(Modifier.height(10.dp))
-                // Action row
+
                 Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
                     Box(Modifier.width(32.dp).height(10.dp).clip(RoundedCornerShape(4.dp)).background(brush))
                     Box(Modifier.width(32.dp).height(10.dp).clip(RoundedCornerShape(4.dp)).background(brush))
@@ -103,7 +103,7 @@ fun PostCardSkeleton(modifier: Modifier = Modifier) {
     }
 }
 
-/** Show N skeleton post cards. */
+
 @Composable
 fun PostCardSkeletonList(count: Int = 4, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {

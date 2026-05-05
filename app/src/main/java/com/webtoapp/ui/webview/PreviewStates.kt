@@ -1,8 +1,8 @@
 package com.webtoapp.ui.webview
 
-/**
- * WordPress 预览状态
- */
+
+
+
 sealed class WordPressPreviewState {
     object Idle : WordPressPreviewState()
     object CheckingDeps : WordPressPreviewState()
@@ -13,9 +13,9 @@ sealed class WordPressPreviewState {
     data class Error(val message: String) : WordPressPreviewState()
 }
 
-/**
- * PHP 应用预览状态
- */
+
+
+
 sealed class PhpAppPreviewState {
     object Idle : PhpAppPreviewState()
     object CheckingDeps : PhpAppPreviewState()
@@ -25,9 +25,9 @@ sealed class PhpAppPreviewState {
     data class Error(val message: String) : PhpAppPreviewState()
 }
 
-/**
- * Python 应用预览状态
- */
+
+
+
 sealed class PythonAppPreviewState {
     object Idle : PythonAppPreviewState()
     object Starting : PythonAppPreviewState()
@@ -37,9 +37,9 @@ sealed class PythonAppPreviewState {
     data class Error(val message: String) : PythonAppPreviewState()
 }
 
-/**
- * Node.js 应用预览状态
- */
+
+
+
 sealed class NodeJsAppPreviewState {
     object Idle : NodeJsAppPreviewState()
     object Starting : NodeJsAppPreviewState()
@@ -47,9 +47,9 @@ sealed class NodeJsAppPreviewState {
     data class Error(val message: String) : NodeJsAppPreviewState()
 }
 
-/**
- * Go 应用预览状态
- */
+
+
+
 sealed class GoAppPreviewState {
     object Idle : GoAppPreviewState()
     object Starting : GoAppPreviewState()
@@ -58,9 +58,9 @@ sealed class GoAppPreviewState {
     data class Error(val message: String) : GoAppPreviewState()
 }
 
-/**
- * 格式化字节数为人类可读的文件大小
- */
+
+
+
 fun formatWpBytes(bytes: Long): String {
     if (bytes <= 0) return "0 B"
     val units = arrayOf("B", "KB", "MB", "GB")

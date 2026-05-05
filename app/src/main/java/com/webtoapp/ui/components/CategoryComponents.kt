@@ -21,9 +21,9 @@ import com.webtoapp.core.i18n.Strings
 import com.webtoapp.data.model.AppCategory
 import com.webtoapp.data.model.WebApp
 
-/**
- * 分类标签栏
- */
+
+
+
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryTabRow(
@@ -37,14 +37,14 @@ fun CategoryTabRow(
 ) {
     var showCategoryMenu by remember { mutableStateOf<AppCategory?>(null) }
     var showDeleteConfirm by remember { mutableStateOf<AppCategory?>(null) }
-    
+
     LazyRow(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // "全部" 标签
+
         item {
             PremiumFilterChip(
                 selected = selectedCategoryId == null,
@@ -61,8 +61,8 @@ fun CategoryTabRow(
                 }
             )
         }
-        
-        // "未分类" 标签
+
+
         item {
             PremiumFilterChip(
                 selected = selectedCategoryId == -1L,
@@ -79,14 +79,14 @@ fun CategoryTabRow(
                 }
             )
         }
-        
-        // User分类（支持长按弹出重命名/删除菜单）
+
+
         items(categories, key = { it.id }) { category ->
             Box {
                 PremiumFilterChip(
                     selected = selectedCategoryId == category.id,
                     onClick = { },
-                    label = { 
+                    label = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(com.webtoapp.util.SvgIconMapper.getIcon(category.icon), contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
                             Spacer(Modifier.width(4.dp))
@@ -103,7 +103,7 @@ fun CategoryTabRow(
                         }
                     }
                 )
-                // 透明覆盖层 - 处理点击和长按（FilterChip 内部会拦截事件，导致 combinedClickable 长按失效）
+
                 Box(
                     modifier = Modifier
                         .matchParentSize()
@@ -113,8 +113,8 @@ fun CategoryTabRow(
                             onLongClick = { showCategoryMenu = category }
                         )
                 )
-                
-                // 长按菜单：重命名 / 删除
+
+
                 DropdownMenu(
                     expanded = showCategoryMenu == category,
                     onDismissRequest = { showCategoryMenu = null }
@@ -133,19 +133,19 @@ fun CategoryTabRow(
                             showCategoryMenu = null
                             showDeleteConfirm = category
                         },
-                        leadingIcon = { 
+                        leadingIcon = {
                             Icon(
-                                Icons.Outlined.Delete, 
+                                Icons.Outlined.Delete,
                                 null,
                                 tint = MaterialTheme.colorScheme.error
-                            ) 
+                            )
                         }
                     )
                 }
             }
         }
-        
-        // 添加分类按钮
+
+
         item {
             AssistChip(
                 onClick = onAddCategory,
@@ -160,8 +160,8 @@ fun CategoryTabRow(
             )
         }
     }
-    
-    // Delete确认对话框
+
+
     showDeleteConfirm?.let { category ->
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = null },
@@ -189,53 +189,39 @@ fun CategoryTabRow(
     }
 }
 
-/**
- * 分类编辑对话框
- */
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryEditorDialog(
     category: AppCategory?,
     onDismiss: () -> Unit,
-    onSave: (name: String, icon: String, color: String) -> Unit
+    onSave: (name: String, icon: String) -> Unit
 ) {
     var name by remember(category) { mutableStateOf(category?.name ?: "") }
     var icon by remember(category) { mutableStateOf(category?.icon ?: "folder") }
-    var selectedColor by remember(category) { 
-        val hexColor = category?.color ?: "#6200EE"
-        // 将解析的颜色转换为无符号 Long，确保与预设颜色一致
-        val parsedColor = android.graphics.Color.parseColor(hexColor)
-        mutableLongStateOf((parsedColor.toLong() and 0xFFFFFFFFL) or 0xFF000000L)
-    }
-    
-    // 预设颜色
-    val presetColors = listOf(
-        0xFF6200EE, 0xFF3700B3, 0xFF03DAC6, 0xFF018786,
-        0xFFBB86FC, 0xFF6200EA, 0xFFFF6D00, 0xFFFFAB00,
-        0xFF00C853, 0xFF64DD17, 0xFFFF1744, 0xFFD50000,
-        0xFF2979FF, 0xFF304FFE, 0xFFFF4081, 0xFFC51162
-    )
-    
-    // 预设图标
+
+
     val presetIcons = listOf(
         "folder", "folder_open", "phone_android", "computer", "gaming", "music_note", "movie", "menu_book",
         "newspaper", "work", "shopping_bag", "heart", "star", "fire", "lightbulb", "auto_awesome",
         "home", "directions_car", "flight", "directions_boat", "public", "palette", "dark_mode", "light_mode"
     )
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { 
+        title = {
             Text(
                 if (category == null) Strings.addCategory else Strings.editCategory
-            ) 
+            )
         },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Name输入
+
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -244,8 +230,8 @@ fun CategoryEditorDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
-                
-                // Icon选择
+
+
                 Text(Strings.categoryIcon, style = MaterialTheme.typography.labelMedium)
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     presetIcons.chunked(8).forEach { rowIcons ->
@@ -253,9 +239,9 @@ fun CategoryEditorDialog(
                             rowIcons.forEach { presetIcon ->
                                 Surface(
                                     shape = MaterialTheme.shapes.small,
-                                    color = if (icon == presetIcon) 
-                                        MaterialTheme.colorScheme.primaryContainer 
-                                    else 
+                                    color = if (icon == presetIcon)
+                                        MaterialTheme.colorScheme.primaryContainer
+                                    else
                                         MaterialTheme.colorScheme.surfaceVariant,
                                     modifier = Modifier
                                         .size(32.dp)
@@ -278,44 +264,13 @@ fun CategoryEditorDialog(
                         }
                     }
                 }
-                
-                // Color选择
-                Text(Strings.categoryColor, style = MaterialTheme.typography.labelMedium)
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    presetColors.chunked(8).forEach { rowColors ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            rowColors.forEach { presetColor ->
-                                Surface(
-                                    shape = MaterialTheme.shapes.small,
-                                    color = androidx.compose.ui.graphics.Color(presetColor),
-                                    modifier = Modifier
-                                        .size(24.dp)
-                                        .clip(MaterialTheme.shapes.small)
-                                        .clickable { selectedColor = presetColor }
-                                ) {
-                                    if (selectedColor == presetColor) {
-                                        Box(contentAlignment = Alignment.Center) {
-                                            Icon(
-                                                Icons.Default.Check,
-                                                contentDescription = null,
-                                                tint = androidx.compose.ui.graphics.Color.White,
-                                                modifier = Modifier.size(16.dp)
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
             }
         },
         confirmButton = {
             PremiumButton(
                 onClick = {
                     if (name.isNotBlank()) {
-                        val colorHex = String.format(java.util.Locale.getDefault(), "#%06X", (0xFFFFFF and selectedColor.toInt()))
-                        onSave(name, icon, colorHex)
+                        onSave(name, icon)
                     }
                 },
                 enabled = name.isNotBlank()
@@ -331,12 +286,13 @@ fun CategoryEditorDialog(
     )
 }
 
-/**
- * Move to category对话框
- */
+
+
+
 @Composable
 fun MoveToCategoryDialog(
-    app: WebApp,
+    appName: String,
+    currentCategoryId: Long?,
     categories: List<AppCategory>,
     onDismiss: () -> Unit,
     onMoveToCategory: (Long?) -> Unit
@@ -350,19 +306,19 @@ fun MoveToCategoryDialog(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    app.name,
+                    appName,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                
+
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                
-                // "未分类" 选项
+
+
                 Surface(
                     shape = MaterialTheme.shapes.small,
-                    color = if (app.categoryId == null) 
-                        MaterialTheme.colorScheme.primaryContainer 
-                    else 
+                    color = if (currentCategoryId == null)
+                        MaterialTheme.colorScheme.primaryContainer
+                    else
                         MaterialTheme.colorScheme.surfaceVariant,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -381,7 +337,7 @@ fun MoveToCategoryDialog(
                         Spacer(Modifier.width(12.dp))
                         Text(Strings.uncategorized)
                         Spacer(Modifier.weight(weight = 1f, fill = true))
-                        if (app.categoryId == null) {
+                        if (currentCategoryId == null) {
                             Icon(
                                 Icons.Default.Check,
                                 contentDescription = null,
@@ -391,14 +347,14 @@ fun MoveToCategoryDialog(
                         }
                     }
                 }
-                
-                // User分类列表
+
+
                 categories.forEach { category ->
                     Surface(
                         shape = MaterialTheme.shapes.small,
-                        color = if (app.categoryId == category.id) 
-                            MaterialTheme.colorScheme.primaryContainer 
-                        else 
+                        color = if (currentCategoryId == category.id)
+                            MaterialTheme.colorScheme.primaryContainer
+                        else
                             MaterialTheme.colorScheme.surfaceVariant,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -412,7 +368,7 @@ fun MoveToCategoryDialog(
                             Spacer(Modifier.width(12.dp))
                             Text(category.name)
                             Spacer(Modifier.weight(weight = 1f, fill = true))
-                            if (app.categoryId == category.id) {
+                            if (currentCategoryId == category.id) {
                                 Icon(
                                     Icons.Default.Check,
                                     contentDescription = null,

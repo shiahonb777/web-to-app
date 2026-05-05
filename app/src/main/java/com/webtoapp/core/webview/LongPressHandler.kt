@@ -26,24 +26,24 @@ import java.io.File
 import java.io.FileOutputStream
 import java.net.URL
 
-/**
- * WebView 长按处理器
- * 处理长按图片、视频、链接等元素的交互
- */
+
+
+
+
 class LongPressHandler(
     private val context: Context,
     private val scope: CoroutineScope
 ) {
-    
+
     companion object {
         private const val TAG = "LongPressHandler"
         private val DATA_URI_MIME_REGEX = Regex("data:([^;]+)")
         private val VIDEO_EXTENSIONS = setOf(".mp4", ".webm", ".ogg", ".mov", ".avi", ".mkv", ".m3u8")
     }
-    
-    /**
-     * 长按结果类型
-     */
+
+
+
+
     sealed class LongPressResult {
         data class Image(val url: String) : LongPressResult()
         data class Video(val url: String) : LongPressResult()
@@ -52,19 +52,19 @@ class LongPressHandler(
         object Text : LongPressResult()
         object None : LongPressResult()
     }
-    
-    /**
-     * 注入JS代码绕过网站的长按事件阻止
-     * 适用于小红书等阻止长按保存图片的网站
-     */
+
+
+
+
+
     fun injectLongPressEnhancer(webView: WebView) {
         val js = """
             (function() {
                 if (window.__wtaLongPressEnhanced) return;
                 window.__wtaLongPressEnhanced = true;
-                
+
                 console.log('[WebToApp] 注入长按增强脚本');
-                
+
                 // 只阻止 contextmenu 事件，不干扰 touch 事件（以免影响网页的点击事件处理）
                 // 这样可以允许长按保存图片，同时不影响点击功能（如小说阅读器的中央点击设置）
                 document.addEventListener('contextmenu', function(e) {
@@ -73,7 +73,7 @@ class LongPressHandler(
                     var isImageRelated = false;
                     var current = target;
                     var depth = 0;
-                    
+
                     while (current && depth < 10) {
                         var tagName = current.tagName ? current.tagName.toUpperCase() : '';
                         if (tagName === 'IMG' || tagName === 'CANVAS') {
@@ -82,7 +82,7 @@ class LongPressHandler(
                         }
                         // Check背景图片
                         var style = window.getComputedStyle(current);
-                        if (style.backgroundImage && style.backgroundImage !== 'none' && 
+                        if (style.backgroundImage && style.backgroundImage !== 'none' &&
                             style.backgroundImage.includes('url(')) {
                             isImageRelated = true;
                             break;
@@ -100,13 +100,13 @@ class LongPressHandler(
                         current = current.parentElement;
                         depth++;
                     }
-                    
+
                     if (isImageRelated) {
                         e.stopPropagation();
                         e.preventDefault();
                     }
                 }, true);
-                
+
                 // 移除元素上的长按阻止属性（仅针对图片元素）
                 // 注意：不移除 touch 事件处理器，以免影响网页的点击功能
                 function removeEventBlockers() {
@@ -118,40 +118,43 @@ class LongPressHandler(
                         // 不移除 touch 事件，以免影响网页的点击事件处理
                     });
                 }
-                
+
                 removeEventBlockers();
-                
+
                 // ListenDOM变化持续移除
                 var observer = new MutationObserver(function() {
                     removeEventBlockers();
                 });
-                observer.observe(document.body, { childList: true, subtree: true });
-                
+                var observerTarget = document.body || document.documentElement;
+                if (observerTarget instanceof Node) {
+                    observer.observe(observerTarget, { childList: true, subtree: true });
+                }
+
                 console.log('[WebToApp] 长按增强脚本注入完成');
             })();
         """.trimIndent()
-        
+
         webView.evaluateJavascript(js, null)
     }
-    
-    /**
-     * 解析 WebView 长按结果
-     */
+
+
+
+
     fun parseLongPressResult(webView: WebView): LongPressResult {
         val hitResult = webView.hitTestResult
         val type = hitResult.type
         val extra = hitResult.extra ?: return LongPressResult.None
-        
+
         return when (type) {
             WebView.HitTestResult.IMAGE_TYPE -> {
                 LongPressResult.Image(extra)
             }
             WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE -> {
-                // Image链接：需要通过 JS 获取链接地址
+
                 LongPressResult.ImageLink(imageUrl = extra, linkUrl = "")
             }
             WebView.HitTestResult.SRC_ANCHOR_TYPE -> {
-                // 可能是视频或普通链接
+
                 if (isVideoUrl(extra)) {
                     LongPressResult.Video(extra)
                 } else {
@@ -167,45 +170,45 @@ class LongPressHandler(
             else -> LongPressResult.None
         }
     }
-    
-    /**
-     * 通过 JS 获取更详细的长按信息
-     * 
-     * 注意：x, y 是相对于 WebView 视图的坐标（来自 MotionEvent）
-     * 需要转换为页面视口坐标才能正确使用 document.elementFromPoint()
-     * 
-     * 增强功能：
-     * - 支持检测 background-image 渲染的图片
-     * - 支持检测 canvas 渲染的图片（转为 dataURL）
-     * - 支持小红书等网站的特殊图片容器
-     */
+
+
+
+
+
+
+
+
+
+
+
+
     fun getLongPressDetails(webView: WebView, x: Float, y: Float, callback: (LongPressResult) -> Unit) {
-        // Get WebView 的缩放比例
+
         val scale = webView.scale
-        
-        // 将视图坐标转换为页面坐标
-        // MotionEvent 的坐标是相对于 WebView 视图的像素坐标
-        // document.elementFromPoint() 需要的是 CSS 像素坐标（考虑缩放）
+
+
+
+
         val pageX = x / scale
         val pageY = y / scale
-        
+
         val js = """
             (function() {
                 try {
                     // 使用传入的坐标（已经是 CSS 像素）
                     var x = $pageX;
                     var y = $pageY;
-                    
+
                     var elem = document.elementFromPoint(x, y);
                     if (!elem) {
                         console.log('WebToApp: No element at (' + x + ', ' + y + ')');
                         return JSON.stringify({type: 'none'});
                     }
-                    
+
                     console.log('WebToApp: Element at (' + x + ', ' + y + '): ' + elem.tagName + ', class=' + elem.className);
-                    
+
                     var result = {type: 'none'};
-                    
+
                     // 辅助函数：提取背景图片URL
                     function extractBgImageUrl(element) {
                         var style = window.getComputedStyle(element);
@@ -222,7 +225,7 @@ class LongPressHandler(
                         }
                         return null;
                     }
-                    
+
                     // 辅助函数：检测小红书等网站的特殊图片容器
                     function findXhsImage(element) {
                         // 小红书图片通常在特定的容器中
@@ -236,13 +239,13 @@ class LongPressHandler(
                             '[class*="media"] img',
                             '[data-v-] img'  // Vue 组件中的图片
                         ];
-                        
+
                         // 先检查当前元素及其子元素
                         for (var i = 0; i < selectors.length; i++) {
                             var img = element.querySelector(selectors[i]);
                             if (img && img.src) return img.src;
                         }
-                        
+
                         // 向上查找父容器中的图片
                         var parent = element;
                         var depth = 0;
@@ -254,10 +257,10 @@ class LongPressHandler(
                             parent = parent.parentElement;
                             depth++;
                         }
-                        
+
                         return null;
                     }
-                    
+
                     // 辅助函数：从 canvas 提取图片
                     function extractCanvasImage(canvas) {
                         try {
@@ -269,15 +272,15 @@ class LongPressHandler(
                         }
                         return null;
                     }
-                    
+
                     // 向上遍历查找可交互元素（最多 15 层，增加深度以适应复杂DOM）
                     var current = elem;
                     var depth = 0;
                     var foundBgImage = null;
-                    
+
                     while (current && depth < 15) {
                         var tagName = current.tagName ? current.tagName.toUpperCase() : '';
-                        
+
                         // Check是否是图片
                         if (tagName === 'IMG' && current.src) {
                             result = {
@@ -297,7 +300,7 @@ class LongPressHandler(
                             }
                             break;
                         }
-                        
+
                         // Check canvas 元素
                         if (tagName === 'CANVAS') {
                             var canvasUrl = extractCanvasImage(current);
@@ -306,7 +309,7 @@ class LongPressHandler(
                                 break;
                             }
                         }
-                        
+
                         // Check是否是视频
                         if (tagName === 'VIDEO') {
                             var videoUrl = current.src || current.currentSrc || '';
@@ -319,7 +322,7 @@ class LongPressHandler(
                                 break;
                             }
                         }
-                        
+
                         // Check是否是链接
                         if (tagName === 'A' && current.href) {
                             var href = current.href;
@@ -327,14 +330,14 @@ class LongPressHandler(
                                 result = {type: 'video', url: href};
                             } else {
                                 result = {
-                                    type: 'link', 
-                                    url: href, 
+                                    type: 'link',
+                                    url: href,
                                     title: (current.textContent || '').trim().substring(0, 100)
                                 };
                             }
                             break;
                         }
-                        
+
                         // Check背景图片（保存第一个找到的，但继续向上查找更好的结果）
                         if (!foundBgImage) {
                             var bgUrl = extractBgImageUrl(current);
@@ -342,7 +345,7 @@ class LongPressHandler(
                                 foundBgImage = bgUrl;
                             }
                         }
-                        
+
                         // Check小红书等特殊图片容器
                         if (result.type === 'none') {
                             var xhsImg = findXhsImage(current);
@@ -351,16 +354,16 @@ class LongPressHandler(
                                 break;
                             }
                         }
-                        
+
                         current = current.parentElement;
                         depth++;
                     }
-                    
+
                     // 如果没找到标准图片，使用背景图片
                     if (result.type === 'none' && foundBgImage) {
                         result = {type: 'image', url: foundBgImage, alt: 'background'};
                     }
-                    
+
                     console.log('WebToApp: Result type=' + result.type);
                     return JSON.stringify(result);
                 } catch (e) {
@@ -369,7 +372,7 @@ class LongPressHandler(
                 }
             })();
         """.trimIndent()
-        
+
         webView.evaluateJavascript(js) { jsonResult ->
             try {
                 val json = jsonResult?.trim()?.removeSurrounding("\"")
@@ -379,10 +382,10 @@ class LongPressHandler(
                     callback(LongPressResult.None)
                     return@evaluateJavascript
                 }
-                
+
                 val result = org.json.JSONObject(json)
                 val type = result.optString("type", "none")
-                
+
                 when (type) {
                     "image" -> callback(LongPressResult.Image(result.getString("url")))
                     "video" -> callback(LongPressResult.Video(result.getString("url")))
@@ -402,20 +405,20 @@ class LongPressHandler(
             }
         }
     }
-    
-    /**
-     * 复制文本到剪贴板
-     */
+
+
+
+
     fun copyToClipboard(text: String, label: String = "链接") {
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = ClipData.newPlainText(label, text)
         clipboard.setPrimaryClip(clip)
         Toast.makeText(context, Strings.copiedToClipboard, Toast.LENGTH_SHORT).show()
     }
-    
-    /**
-     * 保存图片
-     */
+
+
+
+
     fun saveImage(imageUrl: String, onResult: (Boolean, String) -> Unit) {
         scope.launch(Dispatchers.IO) {
             try {
@@ -429,7 +432,7 @@ class LongPressHandler(
                     }
                     else -> saveUrlImage(imageUrl)
                 }
-                
+
                 withContext(Dispatchers.Main) {
                     if (result != null) {
                         onResult(true, "Image saved")
@@ -445,90 +448,90 @@ class LongPressHandler(
             }
         }
     }
-    
-    /**
-     * 保存 Base64 图片
-     */
+
+
+
+
     private fun saveBase64Image(dataUrl: String): Uri? {
         val parts = dataUrl.split(",")
         if (parts.size != 2) return null
-        
+
         val meta = parts[0]
         val base64Data = parts[1]
-        
-        // Parse MIME 类型
+
+
         val mimeType = DATA_URI_MIME_REGEX.find(meta)?.groupValues?.get(1) ?: "image/png"
         val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType) ?: "png"
-        
+
         val imageBytes = Base64.decode(base64Data, Base64.DEFAULT)
         val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
             ?: return null
-        
+
         return saveBitmapToGallery(bitmap, "IMG_${System.currentTimeMillis()}.$extension", mimeType)
     }
-    
-    /**
-     * 保存 URL 图片
-     */
+
+
+
+
     private fun saveUrlImage(imageUrl: String): Uri? {
         val url = URL(imageUrl)
         val connection = url.openConnection()
         connection.connectTimeout = 15000
         connection.readTimeout = 15000
-        
+
         val imageBytes = connection.getInputStream().use { it.readBytes() }
-        
+
         val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
             ?: return null
-        
+
         val fileName = DownloadHelper.parseFileName(imageUrl, null, connection.contentType)
             .ifBlank { "IMG_${System.currentTimeMillis()}.jpg" }
         val mimeType = connection.contentType ?: "image/jpeg"
-        
+
         return saveBitmapToGallery(bitmap, fileName, mimeType)
     }
-    
-    /**
-     * 保存 Bitmap 到相册
-     */
+
+
+
+
     private fun saveBitmapToGallery(bitmap: Bitmap, fileName: String, mimeType: String): Uri? {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            // Android 10+ 使用 MediaStore
+
             val contentValues = ContentValues().apply {
                 put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
                 put(MediaStore.Images.Media.MIME_TYPE, mimeType)
                 put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/WebToApp")
                 put(MediaStore.Images.Media.IS_PENDING, 1)
             }
-            
+
             val uri = context.contentResolver.insert(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                 contentValues
             ) ?: return null
-            
+
             context.contentResolver.openOutputStream(uri)?.use { outputStream ->
                 val format = if (mimeType.contains("png")) Bitmap.CompressFormat.PNG else Bitmap.CompressFormat.JPEG
                 bitmap.compress(format, 95, outputStream)
             }
-            
+
             contentValues.clear()
             contentValues.put(MediaStore.Images.Media.IS_PENDING, 0)
             context.contentResolver.update(uri, contentValues, null, null)
-            
+
             uri
         } else {
-            // Android 9 及以下
+
             val picturesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
             val appDir = File(picturesDir, "WebToApp")
             if (!appDir.exists()) appDir.mkdirs()
-            
+
             val file = File(appDir, fileName)
             FileOutputStream(file).use { outputStream ->
                 val format = if (mimeType.contains("png")) Bitmap.CompressFormat.PNG else Bitmap.CompressFormat.JPEG
                 bitmap.compress(format, 95, outputStream)
             }
-            
-            // 通知媒体库
+
+
             val values = ContentValues().apply {
                 put(MediaStore.Images.Media.DATA, file.absolutePath)
                 put(MediaStore.Images.Media.MIME_TYPE, mimeType)
@@ -536,30 +539,30 @@ class LongPressHandler(
             context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
         }
     }
-    
-    /**
-     * 下载视频并保存到相册
-     */
+
+
+
+
     fun downloadVideo(videoUrl: String, onResult: (Boolean, String) -> Unit) {
         if (videoUrl.startsWith("blob:")) {
             onResult(false, "Blob 视频需要通过页面下载")
             return
         }
-        
+
         scope.launch(Dispatchers.Main) {
-            // 先显示提示
+
             Toast.makeText(context, Strings.downloadingVideo, Toast.LENGTH_SHORT).show()
-            
+
             val fileName = DownloadHelper.parseFileName(videoUrl, null, "video/mp4")
                 .ifBlank { "VIDEO_${System.currentTimeMillis()}.mp4" }
-            
+
             val result = MediaSaver.saveFromUrl(
                 context = context,
                 url = videoUrl,
                 fileName = fileName,
                 mimeType = "video/mp4"
             )
-            
+
             when (result) {
                 is MediaSaver.SaveResult.Success -> {
                     onResult(true, "视频已保存到相册")
@@ -571,10 +574,10 @@ class LongPressHandler(
             }
         }
     }
-    
-    /**
-     * 判断是否为视频 URL
-     */
+
+
+
+
     private fun isVideoUrl(url: String): Boolean {
         val lowerUrl = url.lowercase()
         return VIDEO_EXTENSIONS.any { lowerUrl.contains(it) }

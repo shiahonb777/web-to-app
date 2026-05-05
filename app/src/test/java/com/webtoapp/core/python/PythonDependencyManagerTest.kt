@@ -78,12 +78,29 @@ class PythonDependencyManagerTest {
     fun `python readiness becomes true when binary exists in downloaded dir`() {
         val binary = File(PythonDependencyManager.getPythonDir(context), "bin/python3").apply {
             parentFile?.mkdirs()
-            // isPythonReady requires file size > 1MB
+
             writeBytes(ByteArray(1024 * 1024 + 1) { 0 })
+            setExecutable(true)
+        }
+        File(PythonDependencyManager.getPythonDir(context), "lib/${PythonDependencyManager.getMuslLinkerName(PythonDependencyManager.getDeviceAbi())}").apply {
+            parentFile?.mkdirs()
+            writeBytes(ByteArray(2048) { 1 })
             setExecutable(true)
         }
 
         assertThat(PythonDependencyManager.isPythonReady(context)).isTrue()
         assertThat(PythonDependencyManager.getPythonExecutablePath(context)).isEqualTo(binary.absolutePath)
+    }
+
+    @Test
+    fun `python readiness stays false when musl linker is missing`() {
+        File(PythonDependencyManager.getPythonDir(context), "bin/python3").apply {
+            parentFile?.mkdirs()
+            writeBytes(ByteArray(1024 * 1024 + 1) { 0 })
+            setExecutable(true)
+        }
+
+        assertThat(PythonDependencyManager.isPythonReady(context)).isFalse()
+        assertThat(PythonDependencyManager.getMuslLinkerPath(context)).isNull()
     }
 }

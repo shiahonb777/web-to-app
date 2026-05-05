@@ -8,6 +8,7 @@ import com.webtoapp.ui.animation.CardCollapseTransition
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -25,18 +26,19 @@ import coil.request.ImageRequest
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.data.model.*
 import com.webtoapp.ui.components.*
+import com.webtoapp.ui.design.*
 import com.webtoapp.ui.viewmodel.EditState
 
 
-/**
- * 检查媒体文件是否存在
- */
+
+
+
 fun checkMediaExists(context: android.content.Context, uri: android.net.Uri?, savedPath: String?): Boolean {
-    // 优先检查保存的路径
+
     if (!savedPath.isNullOrEmpty()) {
         return java.io.File(savedPath).exists()
     }
-    // Check URI
+
     if (uri != null) {
         return try {
             context.contentResolver.openInputStream(uri)?.close()
@@ -48,9 +50,9 @@ fun checkMediaExists(context: android.content.Context, uri: android.net.Uri?, sa
     return false
 }
 
-/**
- * 启动画面设置卡片
- */
+
+
+
 @Composable
 fun SplashScreenCard(
     editState: EditState,
@@ -66,28 +68,26 @@ fun SplashScreenCard(
     onClearMedia: () -> Unit
 ) {
     val context = LocalContext.current
-    
-    // Check媒体文件是否存在
+
+
     val mediaExists = remember(editState.splashMediaUri, editState.savedSplashPath) {
         checkMediaExists(context, editState.splashMediaUri, editState.savedSplashPath)
     }
-    
-    // 如果媒体不存在但 URI 非空，自动清除
+
+
     LaunchedEffect(mediaExists, editState.splashMediaUri) {
         if (!mediaExists && editState.splashMediaUri != null) {
             onClearMedia()
         }
     }
-    
-    EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // 标题和开关
-            CollapsibleCardHeader(
+
+    WtaSettingCard {
+        Column(verticalArrangement = Arrangement.spacedBy(WtaSpacing.ContentGap)) {
+
+            WtaToggleRow(
                 icon = Icons.Outlined.Wallpaper,
                 title = Strings.splashScreen,
+                subtitle = Strings.splashHint,
                 checked = editState.splashEnabled,
                 onCheckedChange = onEnabledChange
             )
@@ -97,17 +97,13 @@ fun SplashScreenCard(
                 enter = CardExpandTransition,
                 exit = CardCollapseTransition
             ) {
-              Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    text = Strings.splashHint,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                // Media预览区域
+              Column(
+                  modifier = Modifier.padding(horizontal = WtaSpacing.RowHorizontal),
+                  verticalArrangement = Arrangement.spacedBy(12.dp)
+              ) {
                 if (editState.splashMediaUri != null && mediaExists) {
                     if (editState.splashConfig.type == SplashType.VIDEO) {
-                        // Video裁剪器
+
                         Column {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -124,7 +120,7 @@ fun SplashScreenCard(
                                     Text(Strings.remove, style = MaterialTheme.typography.labelSmall)
                                 }
                             }
-                            
+
                             VideoTrimmer(
                                 videoPath = editState.savedSplashPath ?: editState.splashMediaUri.toString(),
                                 startMs = editState.splashConfig.videoStartMs,
@@ -134,7 +130,7 @@ fun SplashScreenCard(
                             )
                         }
                     } else {
-                        // Image预览
+
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -157,7 +153,7 @@ fun SplashScreenCard(
                                     modifier = Modifier.fillMaxSize(),
                                     contentScale = ContentScale.Crop
                                 )
-                                // Delete按钮
+
                                 IconButton(
                                     onClick = onClearMedia,
                                     modifier = Modifier
@@ -174,7 +170,7 @@ fun SplashScreenCard(
                         }
                     }
                 } else {
-                    // Empty状态 - 选择媒体
+
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -208,7 +204,7 @@ fun SplashScreenCard(
                     }
                 }
 
-                // Select按钮
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -231,110 +227,61 @@ fun SplashScreenCard(
                     }
                 }
 
-                // 以下设置仅在上传媒体后显示
+
                 if (editState.splashMediaUri != null && mediaExists) {
-                    // Show时长设置（仅图片显示，视频使用裁剪范围）
+
                     if (editState.splashConfig.type == SplashType.IMAGE) {
-                        Column {
-                            Text(
-                                text = Strings.displayDurationSeconds.replace("%d", editState.splashConfig.duration.toString()),
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                            Slider(
-                                value = editState.splashConfig.duration.toFloat(),
-                                onValueChange = { onDurationChange(it.toInt()) },
-                                valueRange = 1f..5f,
-                                steps = 3,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
+                        WtaSliderRow(
+                            title = Strings.displayDuration,
+                            subtitle = Strings.displayDurationSeconds.replace("%d", editState.splashConfig.duration.toString()),
+                            value = editState.splashConfig.duration.toFloat(),
+                            onValueChange = { onDurationChange(it.toInt()) },
+                            valueLabel = "${editState.splashConfig.duration}s",
+                            valueRange = 1f..5f
+                        )
                     }
 
-                    // 点击跳过设置
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(Strings.allowSkip, style = MaterialTheme.typography.bodyMedium)
-                            Text(
-                                Strings.allowSkipHint,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+
+                    WtaToggleRow(
+                        title = Strings.allowSkip,
+                        subtitle = Strings.allowSkipHint,
+                        icon = Icons.Outlined.TouchApp,
+                        checked = editState.splashConfig.clickToSkip,
+                        onCheckedChange = onClickToSkipChange
+                    )
+
+
+                    WtaToggleRow(
+                        title = Strings.landscapeDisplay,
+                        subtitle = Strings.landscapeDisplayHint,
+                        icon = Icons.Outlined.ScreenRotation,
+                        checked = editState.splashConfig.orientation == SplashOrientation.LANDSCAPE,
+                        onCheckedChange = { isLandscape ->
+                            onOrientationChange(
+                                if (isLandscape) SplashOrientation.LANDSCAPE
+                                else SplashOrientation.PORTRAIT
                             )
                         }
-                        PremiumSwitch(
-                            checked = editState.splashConfig.clickToSkip,
-                            onCheckedChange = onClickToSkipChange
-                        )
-                    }
-                    
-                    // Show方向设置
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(Strings.landscapeDisplay, style = MaterialTheme.typography.bodyMedium)
-                            Text(
-                                Strings.landscapeDisplayHint,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        PremiumSwitch(
-                            checked = editState.splashConfig.orientation == SplashOrientation.LANDSCAPE,
-                            onCheckedChange = { isLandscape ->
-                                onOrientationChange(
-                                    if (isLandscape) SplashOrientation.LANDSCAPE 
-                                    else SplashOrientation.PORTRAIT
-                                )
-                            }
-                        )
-                    }
-                    
-                    // 铺满屏幕设置
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(Strings.fillScreen, style = MaterialTheme.typography.bodyMedium)
-                            Text(
-                                Strings.fillScreenHint,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        PremiumSwitch(
-                            checked = editState.splashConfig.fillScreen,
-                            onCheckedChange = onFillScreenChange
-                        )
-                    }
-                    
-                    // Enable音频设置（仅视频类型显示）
+                    )
+
+
+                    WtaToggleRow(
+                        title = Strings.fillScreen,
+                        subtitle = Strings.fillScreenHint,
+                        icon = Icons.Outlined.AspectRatio,
+                        checked = editState.splashConfig.fillScreen,
+                        onCheckedChange = onFillScreenChange
+                    )
+
+
                     if (editState.splashConfig.type == SplashType.VIDEO) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column {
-                                Text(Strings.enableAudio, style = MaterialTheme.typography.bodyMedium)
-                                Text(
-                                    Strings.enableAudioHint,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            PremiumSwitch(
-                                checked = editState.splashConfig.enableAudio,
-                                onCheckedChange = onEnableAudioChange
-                            )
-                        }
+                        WtaToggleRow(
+                            title = Strings.enableAudio,
+                            subtitle = Strings.enableAudioHint,
+                            icon = Icons.AutoMirrored.Outlined.VolumeUp,
+                            checked = editState.splashConfig.enableAudio,
+                            onCheckedChange = onEnableAudioChange
+                        )
                     }
                 }
               }

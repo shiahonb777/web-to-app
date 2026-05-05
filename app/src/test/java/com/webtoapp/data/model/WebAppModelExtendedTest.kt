@@ -5,19 +5,11 @@ import org.junit.Test
 
 class WebAppModelExtendedTest {
 
-    // ═══════════════════════════════════════════
-    // WebApp 默认值
-    // ═══════════════════════════════════════════
-
     @Test
     fun `WebApp default has WEB app type`() {
         val app = WebApp(name = "", url = "")
         assertThat(app.appType).isEqualTo(AppType.WEB)
     }
-
-    // ═══════════════════════════════════════════
-    // AppType 枚举
-    // ═══════════════════════════════════════════
 
     @Test
     fun `AppType has all expected values`() {
@@ -36,10 +28,6 @@ class WebAppModelExtendedTest {
             AppType.MULTI_WEB
         )
     }
-
-    // ═══════════════════════════════════════════
-    // ApkArchitecture
-    // ═══════════════════════════════════════════
 
     @Test
     fun `ApkArchitecture has UNIVERSAL ARM64 ARM32`() {
@@ -76,10 +64,6 @@ class WebAppModelExtendedTest {
         assertThat(ApkArchitecture.fromName("ARM32")).isEqualTo(ApkArchitecture.ARM32)
     }
 
-    // ═══════════════════════════════════════════
-    // HtmlConfig
-    // ═══════════════════════════════════════════
-
     @Test
     fun `HtmlConfig getValidEntryFile returns custom entry when valid`() {
         val config = HtmlConfig(entryFile = "main.html")
@@ -91,10 +75,6 @@ class WebAppModelExtendedTest {
         val config = HtmlConfig(entryFile = "")
         assertThat(config.getValidEntryFile()).isEqualTo("index.html")
     }
-
-    // ═══════════════════════════════════════════
-    // GalleryConfig — 空项目列表
-    // ═══════════════════════════════════════════
 
     @Test
     fun `GalleryConfig with empty items has zero counts`() {
@@ -110,10 +90,6 @@ class WebAppModelExtendedTest {
         assertThat(config.getItemsByCategory("nonexistent")).isEmpty()
     }
 
-    // ═══════════════════════════════════════════
-    // ActivationCode 边界
-    // ═══════════════════════════════════════════
-
     @Test
     fun `getAllActivationCodes with empty lists returns empty`() {
         val app = WebApp(name = "Test", url = "https://test.com",
@@ -128,29 +104,26 @@ class WebAppModelExtendedTest {
         assertThat(app.getActivationCodeStrings()).isEmpty()
     }
 
-    // ═══════════════════════════════════════════
-    // ApkEncryptionConfig — EncryptionLevel iterations
-    // ═══════════════════════════════════════════
-
-    @Test
-    fun `ApkEncryptionConfig EncryptionLevel iterations are correct`() {
-        assertThat(ApkEncryptionConfig.EncryptionLevel.FAST.iterations).isEqualTo(5000)
-        assertThat(ApkEncryptionConfig.EncryptionLevel.STANDARD.iterations).isEqualTo(10000)
-        assertThat(ApkEncryptionConfig.EncryptionLevel.HIGH.iterations).isEqualTo(50000)
-        assertThat(ApkEncryptionConfig.EncryptionLevel.PARANOID.iterations).isEqualTo(100000)
-    }
-
     @Test
     fun `ApkEncryptionConfig DISABLED preset is not enabled`() {
         assertThat(ApkEncryptionConfig.DISABLED.enabled).isFalse()
     }
 
     @Test
-    fun `ApkEncryptionConfig BASIC preset encrypts config and html`() {
-        assertThat(ApkEncryptionConfig.BASIC.enabled).isTrue()
-        assertThat(ApkEncryptionConfig.BASIC.encryptConfig).isTrue()
-        assertThat(ApkEncryptionConfig.BASIC.encryptHtml).isTrue()
-        assertThat(ApkEncryptionConfig.BASIC.encryptMedia).isFalse()
-        assertThat(ApkEncryptionConfig.BASIC.enableIntegrityCheck).isTrue()
+    fun `ApkEncryptionConfig enabled maps to maximum crypto protection`() {
+        val mapped = ApkEncryptionConfig(enabled = true).toEncryptionConfig()
+
+        assertThat(mapped.enabled).isTrue()
+        assertThat(mapped.shouldEncrypt("app_config.json")).isTrue()
+        assertThat(mapped.shouldEncrypt("html/index.html")).isTrue()
+        assertThat(mapped.getKeyDerivationIterations()).isEqualTo(100000)
+    }
+
+    @Test
+    fun `ApkEncryptionConfig disabled maps to disabled crypto config`() {
+        val mapped = ApkEncryptionConfig.DISABLED.toEncryptionConfig()
+
+        assertThat(mapped.enabled).isFalse()
+        assertThat(mapped.shouldEncrypt("app_config.json")).isFalse()
     }
 }

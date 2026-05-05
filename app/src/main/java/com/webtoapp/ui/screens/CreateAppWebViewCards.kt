@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ListAlt
+import androidx.compose.material.icons.automirrored.outlined.ViewList
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -32,6 +34,7 @@ import com.webtoapp.R
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.data.model.*
 import com.webtoapp.ui.components.*
+import com.webtoapp.ui.design.*
 import com.webtoapp.ui.viewmodel.EditState
 import com.webtoapp.ui.animation.CardExpandTransition
 import com.webtoapp.ui.animation.CardCollapseTransition
@@ -44,15 +47,6 @@ fun LongPressMenuCard(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    // iOS 风格弹簧动画
-    val arrowRotation by animateFloatAsState(
-        targetValue = if (expanded) 180f else 0f,
-        animationSpec = spring(
-            dampingRatio = 0.75f,
-            stiffness = Spring.StiffnessMediumLow
-        ),
-        label = "arrowRotation"
-    )
 
     val contentAlpha by animateFloatAsState(
         targetValue = if (expanded) 1f else 0f,
@@ -72,7 +66,7 @@ fun LongPressMenuCard(
     )
 
     val styleOptions = listOf(
-        StyleOption(LongPressMenuStyle.FULL, Strings.longPressMenuStyleFull, Strings.longPressMenuStyleFullDesc, Icons.Outlined.ViewList, Color(0xFF6366F1)),
+        StyleOption(LongPressMenuStyle.FULL, Strings.longPressMenuStyleFull, Strings.longPressMenuStyleFullDesc, Icons.AutoMirrored.Outlined.ViewList, Color(0xFF6366F1)),
         StyleOption(LongPressMenuStyle.SIMPLE, Strings.longPressMenuStyleSimple, Strings.longPressMenuStyleSimpleDesc, Icons.Outlined.ViewAgenda, Color(0xFF22C55E)),
         StyleOption(LongPressMenuStyle.IOS, Strings.longPressMenuStyleIos, Strings.longPressMenuStyleIosDesc, Icons.Outlined.PhoneIphone, Color(0xFF3B82F6)),
         StyleOption(LongPressMenuStyle.FLOATING, Strings.longPressMenuStyleFloating, Strings.longPressMenuStyleFloatingDesc, Icons.Outlined.BubbleChart, Color(0xFFF97316)),
@@ -81,70 +75,15 @@ fun LongPressMenuCard(
     )
 
     val selectedOption = styleOptions.find { it.style == style } ?: styleOptions[0]
-    val isEnabled = style != LongPressMenuStyle.DISABLED
 
-    EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            // 标题
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { expanded = !expanded },
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(weight = 1f, fill = true)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(
-                                if (isEnabled) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                                else MaterialTheme.colorScheme.surfaceVariant
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            Icons.Outlined.ListAlt,
-                            null,
-                            tint = if (isEnabled) MaterialTheme.colorScheme.primary
-                                   else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text(
-                            text = Strings.longPressMenuSettings,
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        AnimatedContent(
-                            targetState = selectedOption,
-                            transitionSpec = {
-                                fadeIn(tween(200)) togetherWith fadeOut(tween(200))
-                            },
-                            label = "styleLabelCrossfade"
-                        ) { option ->
-                            Text(
-                                text = option.name,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = option.accentColor
-                            )
-                        }
-                    }
-                }
-                Icon(
-                    Icons.Outlined.ExpandMore,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.graphicsLayer {
-                        rotationZ = arrowRotation
-                    }
-                )
-            }
+    WtaSettingCard {
+            WtaChoiceRow(
+                title = Strings.longPressMenuSettings,
+                subtitle = selectedOption.name,
+                icon = Icons.AutoMirrored.Outlined.ListAlt,
+                value = if (expanded) Strings.collapse else Strings.expand,
+                onClick = { expanded = !expanded }
+            )
 
             AnimatedVisibility(
                 visible = expanded,
@@ -153,13 +92,15 @@ fun LongPressMenuCard(
             ) {
                 Column(
                     modifier = Modifier
-                        .padding(top = 16.dp)
                         .graphicsLayer { alpha = contentAlpha },
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // FlowRow 紧凑布局
+                    WtaSectionDivider()
+
                     FlowRow(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = WtaSpacing.RowHorizontal),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
@@ -182,7 +123,7 @@ fun LongPressMenuCard(
                         }
                     }
 
-                    // crossfade 切换
+
                     Crossfade(
                         targetState = selectedOption,
                         animationSpec = tween(
@@ -247,7 +188,6 @@ fun LongPressMenuCard(
                     }
                 }
             }
-        }
     }
 }
 
@@ -494,88 +434,53 @@ fun AdBlockCard(
 ) {
     var newRule by remember { mutableStateOf("") }
 
-    EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(
-                                if (editState.adBlockEnabled) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                                else MaterialTheme.colorScheme.surfaceVariant
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            Icons.Outlined.Shield,
-                            null,
-                            tint = if (editState.adBlockEnabled) MaterialTheme.colorScheme.primary
-                                   else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = Strings.adBlocking,
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
-                PremiumSwitch(
-                    checked = editState.adBlockEnabled,
-                    onCheckedChange = onEnabledChange
-                )
-            }
+    WtaSettingCard {
+            WtaToggleRow(
+                title = Strings.adBlocking,
+                icon = Icons.Outlined.Shield,
+                checked = editState.adBlockEnabled,
+                onCheckedChange = onEnabledChange
+            )
 
             AnimatedVisibility(
                 visible = editState.adBlockEnabled,
                 enter = CardExpandTransition,
                 exit = CardCollapseTransition
             ) {
-              Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    text = Strings.adBlockDescription,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+              Column {
+                WtaSectionDivider()
+                WtaStatusBanner(
+                    message = Strings.adBlockDescription,
+                    tone = WtaStatusTone.Info,
+                    modifier = Modifier.padding(
+                        horizontal = WtaSpacing.RowHorizontal,
+                        vertical = WtaSpacing.ContentGap
+                    )
                 )
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                        Text(
-                            text = Strings.adBlockToggleEnabled,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        Text(
-                            text = Strings.adBlockToggleDescription,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    PremiumSwitch(
-                        checked = editState.webViewConfig.adBlockToggleEnabled,
-                        onCheckedChange = onToggleEnabledChange
-                    )
-                }
+                WtaSectionDivider()
+                WtaToggleRow(
+                    title = Strings.adBlockToggleEnabled,
+                    subtitle = Strings.adBlockToggleDescription,
+                    checked = editState.webViewConfig.adBlockToggleEnabled,
+                    onCheckedChange = onToggleEnabledChange
+                )
 
                 Text(
                     text = Strings.customBlockRules,
-                    style = MaterialTheme.typography.labelLarge
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(
+                        start = WtaSpacing.RowHorizontal,
+                        top = WtaSpacing.ContentGap,
+                        bottom = WtaSpacing.ContentGap
+                    )
                 )
 
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = WtaSpacing.RowHorizontal),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     PremiumTextField(
@@ -599,16 +504,10 @@ fun AdBlockCard(
                 }
 
                 editState.adBlockRules.forEachIndexed { index, rule ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    WtaSectionDivider()
+                    WtaSettingRow(
+                        title = rule
                     ) {
-                        Text(
-                            text = rule,
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.weight(weight = 1f, fill = true)
-                        )
                         IconButton(
                             onClick = {
                                 onRulesChange(editState.adBlockRules.filterIndexed { i, _ -> i != index })
@@ -624,70 +523,37 @@ fun AdBlockCard(
                 }
               }
             }
-        }
     }
 }
 
 @Composable
 @OptIn(ExperimentalLayoutApi::class)
-fun WebViewConfigCard(
+fun BrowserAdvancedConfigCard(
     config: WebViewConfig,
-    onConfigChange: (WebViewConfig) -> Unit,
-    apkExportConfig: ApkExportConfig = ApkExportConfig(),
-    onApkExportConfigChange: (ApkExportConfig) -> Unit = {},
-    onOpenPermissionConfig: () -> Unit = {}
+    onConfigChange: (WebViewConfig) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { expanded = !expanded },
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            Icons.Outlined.SettingsApplications,
-                            null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text(
-                            text = Strings.advancedSettings,
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Text(
-                            text = Strings.webViewAdvancedConfig,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                Icon(
-                    if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
-                    contentDescription = null
-                )
-            }
+    WtaSettingCard {
+        Column {
+            WtaChoiceRow(
+                title = Strings.advancedSettings,
+                subtitle = Strings.webViewAdvancedConfig,
+                icon = Icons.Outlined.SettingsApplications,
+                value = if (expanded) Strings.collapse else Strings.expand,
+                onClick = { expanded = !expanded }
+            )
 
-            AnimatedVisibility(visible = expanded) {
+            AnimatedVisibility(
+                visible = expanded,
+                enter = CardExpandTransition,
+                exit = CardCollapseTransition
+            ) {
                 Column(
                     modifier = Modifier.padding(top = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
-                    // § 1 — Engine
+
                     AdvancedSettingsSection(
                         title = Strings.sectionWebEngine,
                         icon = Icons.Outlined.Memory
@@ -714,7 +580,7 @@ fun WebViewConfigCard(
                         )
                     }
 
-                    // § 2 — Content & Display
+
                     AdvancedSettingsSection(
                         title = Strings.sectionContentDisplay,
                         icon = Icons.Outlined.Visibility
@@ -733,11 +599,11 @@ fun WebViewConfigCard(
                             onCheckedChange = { onConfigChange(config.copy(fullscreenEnabled = it)) }
                         )
 
-                        // 视口适配模式
+
                         ViewportModeSelector(config = config, onConfigChange = onConfigChange)
                     }
 
-                    // § 3 — Navigation & Interaction
+
                     AdvancedSettingsSection(
                         title = Strings.sectionNavigation,
                         icon = Icons.Outlined.Navigation
@@ -757,57 +623,11 @@ fun WebViewConfigCard(
                         )
 
                         SettingsSwitch(
-                            title = Strings.deepLinkSetting,
-                            subtitle = Strings.deepLinkSettingHint,
-                            checked = apkExportConfig.deepLinkEnabled,
-                            onCheckedChange = { onApkExportConfigChange(apkExportConfig.copy(deepLinkEnabled = it)) }
-                        )
-
-                        SettingsSwitch(
                             title = Strings.popupBlockerSetting,
                             subtitle = Strings.popupBlockerSettingHint,
                             checked = config.popupBlockerEnabled,
                             onCheckedChange = { onConfigChange(config.copy(popupBlockerEnabled = it)) }
                         )
-
-                        AnimatedVisibility(
-                            visible = apkExportConfig.deepLinkEnabled,
-                            enter = CardExpandTransition,
-                            exit = CardCollapseTransition
-                        ) {
-                            var customHostsText by remember(apkExportConfig.customDeepLinkHosts) {
-                                mutableStateOf(apkExportConfig.customDeepLinkHosts.joinToString("\n"))
-                            }
-                            Column(modifier = Modifier.padding(start = 8.dp, top = 4.dp, bottom = 4.dp)) {
-                                Text(
-                                    text = Strings.deepLinkCustomHostsLabel,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.padding(bottom = 4.dp)
-                                )
-                                Text(
-                                    text = Strings.deepLinkCustomHostsHint,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(bottom = 4.dp)
-                                )
-                                PremiumTextField(
-                                    value = customHostsText,
-                                    onValueChange = { newText ->
-                                        customHostsText = newText
-                                        val hosts = newText.split("\n", ",", " ")
-                                            .map { it.trim() }
-                                            .filter { it.isNotBlank() }
-                                        onApkExportConfigChange(apkExportConfig.copy(customDeepLinkHosts = hosts))
-                                    },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    placeholder = { Text("api.example.com\ncdn.example.com") },
-                                    minLines = 2,
-                                    maxLines = 4,
-                                    textStyle = MaterialTheme.typography.bodySmall
-                                )
-                            }
-                        }
 
                         SettingsSwitch(
                             title = Strings.showFloatingBackButtonLabel,
@@ -817,7 +637,7 @@ fun WebViewConfigCard(
                         )
                     }
 
-                    // § 4 — Offline & Performance
+
                     AdvancedSettingsSection(
                         title = Strings.sectionOfflinePerformance,
                         icon = Icons.Outlined.CloudOff
@@ -877,7 +697,7 @@ fun WebViewConfigCard(
                         )
                     }
 
-                    // § 5 — Developer Tools
+
                     AdvancedSettingsSection(
                         title = Strings.sectionDeveloper,
                         icon = Icons.Outlined.Code
@@ -893,17 +713,9 @@ fun WebViewConfigCard(
                             scripts = config.injectScripts,
                             onScriptsChange = { onConfigChange(config.copy(injectScripts = it)) }
                         )
-
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        ApkExportSection(
-                            config = apkExportConfig,
-                            onConfigChange = onApkExportConfigChange,
-                            onOpenPermissionConfig = onOpenPermissionConfig
-                        )
                     }
 
-                    // § 6 — Network / Proxy
+
                     AdvancedSettingsSection(
                         title = Strings.proxySectionTitle,
                         icon = Icons.Outlined.VpnKey
@@ -948,7 +760,7 @@ fun WebViewConfigCard(
                             }
                         }
 
-                        // STATIC 代理配置
+
                         AnimatedVisibility(
                             visible = config.proxyMode == "STATIC",
                             enter = CardExpandTransition,
@@ -1004,6 +816,44 @@ fun WebViewConfigCard(
 
                                 Spacer(modifier = Modifier.height(8.dp))
 
+
+                                AnimatedVisibility(
+                                    visible = config.proxyType == "SOCKS5" || config.proxyType == "HTTPS",
+                                    enter = CardExpandTransition,
+                                    exit = CardCollapseTransition
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = Strings.proxyAuthLabel,
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.padding(bottom = 4.dp, top = 4.dp)
+                                        )
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            PremiumTextField(
+                                                value = config.proxyUsername,
+                                                onValueChange = { onConfigChange(config.copy(proxyUsername = it.trim())) },
+                                                modifier = Modifier.weight(1f),
+                                                label = { Text(Strings.proxyUsernameLabel) },
+                                                singleLine = true,
+                                                textStyle = MaterialTheme.typography.bodySmall
+                                            )
+                                            PremiumTextField(
+                                                value = config.proxyPassword,
+                                                onValueChange = { onConfigChange(config.copy(proxyPassword = it)) },
+                                                modifier = Modifier.weight(1f),
+                                                label = { Text(Strings.proxyPasswordLabel) },
+                                                singleLine = true,
+                                                textStyle = MaterialTheme.typography.bodySmall
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                    }
+                                }
+
                                 var bypassText by remember(config.proxyBypassRules) {
                                     mutableStateOf(config.proxyBypassRules.joinToString("\n"))
                                 }
@@ -1037,7 +887,7 @@ fun WebViewConfigCard(
                             }
                         }
 
-                        // PAC 脚本 URL
+
                         AnimatedVisibility(
                             visible = config.proxyMode == "PAC",
                             enter = CardExpandTransition,
@@ -1095,9 +945,84 @@ fun WebViewConfigCard(
     }
 }
 
-/**
- * iOS Settings 风格的分组容器
- */
+
+@Composable
+fun ApkExportSettingsCard(
+    config: ApkExportConfig,
+    onConfigChange: (ApkExportConfig) -> Unit,
+    onOpenPermissionConfig: (() -> Unit)? = null
+) {
+    WtaSettingCard(contentPadding = PaddingValues(16.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+            AdvancedSettingsSection(
+                title = Strings.sectionNavigation,
+                icon = Icons.Outlined.Link
+            ) {
+                WtaToggleRow(
+                    title = Strings.deepLinkSetting,
+                    subtitle = Strings.deepLinkSettingHint,
+                    icon = Icons.Outlined.Link,
+                    checked = config.deepLinkEnabled,
+                    onCheckedChange = { onConfigChange(config.copy(deepLinkEnabled = it)) }
+                )
+
+                AnimatedVisibility(
+                    visible = config.deepLinkEnabled,
+                    enter = CardExpandTransition,
+                    exit = CardCollapseTransition
+                ) {
+                    var customHostsText by remember(config.customDeepLinkHosts) {
+                        mutableStateOf(config.customDeepLinkHosts.joinToString("\n"))
+                    }
+                    Column(
+                        modifier = Modifier.padding(
+                            horizontal = WtaSpacing.RowHorizontal,
+                            vertical = WtaSpacing.ContentGap
+                        )
+                    ) {
+                        Text(
+                            text = Strings.deepLinkCustomHostsLabel,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+                        Text(
+                            text = Strings.deepLinkCustomHostsHint,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+                        PremiumTextField(
+                            value = customHostsText,
+                            onValueChange = { newText ->
+                                customHostsText = newText
+                                val hosts = newText.split("\n", ",", " ")
+                                    .map { it.trim() }
+                                    .filter { it.isNotBlank() }
+                                onConfigChange(config.copy(customDeepLinkHosts = hosts))
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = { Text("api.example.com\ncdn.example.com") },
+                            minLines = 2,
+                            maxLines = 4,
+                            textStyle = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            }
+
+            ApkExportSection(
+                config = config,
+                onConfigChange = onConfigChange,
+                onOpenPermissionConfig = onOpenPermissionConfig
+            )
+        }
+    }
+}
+
+
+
+
 @Composable
 private fun AdvancedSettingsSection(
     title: String,
@@ -1330,7 +1255,7 @@ fun UserAgentCard(
 ) {
     var expanded by remember { mutableStateOf(false) }
     val isEnabled = config.userAgentMode != UserAgentMode.DEFAULT
-    
+
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -1377,7 +1302,7 @@ fun UserAgentCard(
                     contentDescription = null
                 )
             }
-            
+
             AnimatedVisibility(visible = expanded) {
                 Column(modifier = Modifier.padding(top = 12.dp)) {
                 Surface(
@@ -1402,16 +1327,16 @@ fun UserAgentCard(
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(12.dp))
-                
+
                 Text(
                     text = Strings.mobileVersion,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -1431,16 +1356,16 @@ fun UserAgentCard(
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(12.dp))
-                
+
                 Text(
                     text = Strings.desktopVersion,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.tertiary
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -1459,9 +1384,9 @@ fun UserAgentCard(
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(12.dp))
-                
+
                 PremiumFilterChip(
                     selected = config.userAgentMode == UserAgentMode.CUSTOM,
                     onClick = { onConfigChange(config.copy(userAgentMode = UserAgentMode.CUSTOM)) },
@@ -1474,7 +1399,7 @@ fun UserAgentCard(
                         )
                     },
                 )
-                
+
                 if (config.userAgentMode == UserAgentMode.CUSTOM) {
                     Spacer(modifier = Modifier.height(8.dp))
                     PremiumTextField(
@@ -1518,81 +1443,29 @@ fun UserAgentCard(
     }
 }
 
-/** 仅隐藏 TopAppBar，不触发系统沉浸式模式 */
-@Composable
-fun HideBrowserToolbarCard(
-    enabled: Boolean,
-    onEnabledChange: (Boolean) -> Unit
-) {
-    EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            CollapsibleCardHeader(
-                icon = Icons.Outlined.WebAsset,
-                title = Strings.hideBrowserToolbar,
-                checked = enabled,
-                onCheckedChange = onEnabledChange
-            )
-            
-            AnimatedVisibility(
-                visible = enabled,
-                enter = CardExpandTransition,
-                exit = CardCollapseTransition
-            ) {
-                Column {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    HorizontalDivider()
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Surface(
-                        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                Icons.Outlined.Info,
-                                null,
-                                tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = Strings.hideBrowserToolbarHint,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
 
 @Composable
 fun FullscreenModeCard(
     enabled: Boolean,
     showStatusBar: Boolean = false,
     showNavigationBar: Boolean = false,
-    showToolbar: Boolean = false,
+    hideBrowserToolbarInFullscreen: Boolean = true,
     webViewConfig: WebViewConfig = WebViewConfig(),
     onEnabledChange: (Boolean) -> Unit,
     onShowStatusBarChange: (Boolean) -> Unit = {},
     onShowNavigationBarChange: (Boolean) -> Unit = {},
-    onShowToolbarChange: (Boolean) -> Unit = {},
+    onHideBrowserToolbarInFullscreenChange: (Boolean) -> Unit = {},
     onWebViewConfigChange: (WebViewConfig) -> Unit = {}
 ) {
     var statusBarConfigExpanded by remember { mutableStateOf(false) }
-    
-    EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            CollapsibleCardHeader(
+
+    WtaSettingCard {
+        WtaToggleRow(
                 icon = Icons.Outlined.Fullscreen,
                 title = Strings.fullscreenMode,
                 checked = enabled,
                 onCheckedChange = onEnabledChange
-            )
+        )
 
             AnimatedVisibility(
                 visible = enabled,
@@ -1600,126 +1473,37 @@ fun FullscreenModeCard(
                 exit = CardCollapseTransition
             ) {
               Column {
-                Spacer(modifier = Modifier.height(8.dp))
-                HorizontalDivider()
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                        Text(
-                            text = Strings.showStatusBar,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        Text(
-                            text = Strings.showStatusBarHint,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    PremiumSwitch(
-                        checked = showStatusBar,
-                        onCheckedChange = onShowStatusBarChange
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                        Text(
-                            text = Strings.showNavigationBar,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        Text(
-                            text = Strings.showNavigationBarHint,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    PremiumSwitch(
-                        checked = showNavigationBar,
-                        onCheckedChange = onShowNavigationBarChange
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                        Text(
-                            text = Strings.showToolbar,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        Text(
-                            text = Strings.showToolbarHint,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    PremiumSwitch(
-                        checked = showToolbar,
-                        onCheckedChange = onShowToolbarChange
-                    )
-                }
-                
-                if (showStatusBar) {
-                    Spacer(modifier = Modifier.height(12.dp))
+                WtaSectionDivider()
+                WtaToggleRow(
+                    title = Strings.showStatusBar,
+                    subtitle = Strings.showStatusBarHint,
+                    checked = showStatusBar,
+                    onCheckedChange = onShowStatusBarChange
+                )
+                WtaSectionDivider()
+                WtaToggleRow(
+                    title = Strings.showNavigationBar,
+                    subtitle = Strings.showNavigationBarHint,
+                    checked = showNavigationBar,
+                    onCheckedChange = onShowNavigationBarChange
+                )
+                WtaSectionDivider()
+                WtaToggleRow(
+                    title = Strings.hideBrowserToolbarLabel,
+                    subtitle = Strings.hideBrowserToolbarHint,
+                    checked = hideBrowserToolbarInFullscreen,
+                    onCheckedChange = onHideBrowserToolbarInFullscreenChange
+                )
 
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable { statusBarConfigExpanded = !statusBarConfigExpanded },
-                        color = MaterialTheme.colorScheme.secondaryContainer
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Icon(
-                                    Icons.Outlined.Tune,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(20.dp),
-                                    tint = MaterialTheme.colorScheme.onSecondaryContainer
-                                )
-                                Text(
-                                    text = Strings.statusBarStyleConfigLabel,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                                )
-                            }
-                            val statusBarArrowRotation by animateFloatAsState(
-                                targetValue = if (statusBarConfigExpanded) 180f else 0f,
-                                animationSpec = spring(dampingRatio = 0.75f, stiffness = Spring.StiffnessMediumLow),
-                                label = "statusBarArrow"
-                            )
-                            Icon(
-                                Icons.Default.ExpandMore,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                                modifier = Modifier.graphicsLayer { rotationZ = statusBarArrowRotation }
-                            )
-                        }
-                    }
+                if (showStatusBar) {
+                    WtaSectionDivider()
+
+                    WtaChoiceRow(
+                        title = Strings.statusBarStyleConfigLabel,
+                        icon = Icons.Outlined.Tune,
+                        value = if (statusBarConfigExpanded) Strings.collapse else Strings.expand,
+                        onClick = { statusBarConfigExpanded = !statusBarConfigExpanded }
+                    )
 
                     AnimatedVisibility(
                         visible = statusBarConfigExpanded,
@@ -1728,8 +1512,8 @@ fun FullscreenModeCard(
                     ) {
                         Column {
                             Spacer(modifier = Modifier.height(12.dp))
-                            // Light/Dark mode tab selector for status bar config
-                            var statusBarModeTab by remember { mutableStateOf(0) } // 0 = Light, 1 = Dark
+
+                            var statusBarModeTab by remember { mutableStateOf(0) }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.Center
@@ -1753,7 +1537,7 @@ fun FullscreenModeCard(
                                     onConfigChange = onWebViewConfigChange
                                 )
                             } else {
-                                // Dark mode status bar config
+
                                 StatusBarConfigCard(
                                     config = webViewConfig.copy(
                                         statusBarColorMode = webViewConfig.statusBarColorModeDark,
@@ -1782,13 +1566,12 @@ fun FullscreenModeCard(
                 }
               }
             }
-        }
     }
 }
 
-/**
- * 基础模式直接展示，高级模式（反向/感应）折叠展示
- */
+
+
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun LandscapeModeCard(
@@ -1801,7 +1584,7 @@ fun LandscapeModeCard(
 ) {
     val isCustomOrientation = orientationMode != com.webtoapp.data.model.OrientationMode.PORTRAIT
     var advancedExpanded by remember { mutableStateOf(
-        // 当前已选中高级模式时默认展开
+
         orientationMode in listOf(
             com.webtoapp.data.model.OrientationMode.REVERSE_PORTRAIT,
             com.webtoapp.data.model.OrientationMode.REVERSE_LANDSCAPE,
@@ -1810,9 +1593,8 @@ fun LandscapeModeCard(
         )
     ) }
 
-    EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            CollapsibleCardHeader(
+    WtaSettingCard {
+        WtaToggleRow(
                 icon = Icons.Outlined.ScreenRotation,
                 title = Strings.orientationModeLabel,
                 checked = isCustomOrientation,
@@ -1823,7 +1605,7 @@ fun LandscapeModeCard(
                         onOrientationModeChange(com.webtoapp.data.model.OrientationMode.PORTRAIT)
                     }
                 }
-            )
+        )
 
             AnimatedVisibility(
                 visible = isCustomOrientation,
@@ -1831,24 +1613,26 @@ fun LandscapeModeCard(
                 exit = CardCollapseTransition
             ) {
                 Column {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    HorizontalDivider()
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Text(
-                        text = Strings.orientationModeHint,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    WtaSectionDivider()
+                    WtaStatusBanner(
+                        message = Strings.orientationModeHint,
+                        tone = WtaStatusTone.Info,
+                        modifier = Modifier.padding(
+                            horizontal = WtaSpacing.RowHorizontal,
+                            vertical = WtaSpacing.ContentGap
+                        )
                     )
-
-                    Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
                         text = Strings.orientationBasicLabel,
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(
+                            start = WtaSpacing.RowHorizontal,
+                            top = WtaSpacing.ContentGap,
+                            bottom = WtaSpacing.ContentGap
+                        )
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
 
                     val basicModes = listOf(
                         Triple(com.webtoapp.data.model.OrientationMode.LANDSCAPE, Icons.Outlined.StayCurrentLandscape, Strings.orientationLandscape),
@@ -1868,55 +1652,17 @@ fun LandscapeModeCard(
                             onClick = { onOrientationModeChange(mode) }
                         )
                         if (mode != basicModes.last().first) {
-                            Spacer(modifier = Modifier.height(6.dp))
+                            WtaSectionDivider()
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable { advancedExpanded = !advancedExpanded },
-                        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 12.dp, vertical = 10.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Icon(
-                                    Icons.Outlined.Tune,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp),
-                                    tint = MaterialTheme.colorScheme.onSecondaryContainer
-                                )
-                                Text(
-                                    text = Strings.orientationAdvancedLabel,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                                )
-                            }
-                            val advancedArrowRotation by animateFloatAsState(
-                                targetValue = if (advancedExpanded) 180f else 0f,
-                                animationSpec = spring(dampingRatio = 0.75f, stiffness = Spring.StiffnessMediumLow),
-                                label = "advancedOrientationArrow"
-                            )
-                            Icon(
-                                Icons.Default.ExpandMore,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                                modifier = Modifier.graphicsLayer { rotationZ = advancedArrowRotation }
-                            )
-                        }
-                    }
+                    WtaSectionDivider()
+                    WtaChoiceRow(
+                        title = Strings.orientationAdvancedLabel,
+                        icon = Icons.Outlined.Tune,
+                        value = if (advancedExpanded) Strings.collapse else Strings.expand,
+                        onClick = { advancedExpanded = !advancedExpanded }
+                    )
 
                     AnimatedVisibility(
                         visible = advancedExpanded,
@@ -1924,41 +1670,44 @@ fun LandscapeModeCard(
                         exit = CardCollapseTransition
                     ) {
                         Column {
-                            Spacer(modifier = Modifier.height(10.dp))
-
                             Text(
                                 text = Strings.orientationReversedLabel,
                                 style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.tertiary
+                                color = MaterialTheme.colorScheme.tertiary,
+                                modifier = Modifier.padding(
+                                    start = WtaSpacing.RowHorizontal,
+                                    top = WtaSpacing.ContentGap,
+                                    bottom = WtaSpacing.ContentGap
+                                )
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
 
                             OrientationModeItem(
                                 icon = Icons.Outlined.StayCurrentPortrait,
                                 title = Strings.orientationReversePortrait,
                                 subtitle = Strings.orientationReversePortraitDesc,
                                 selected = orientationMode == com.webtoapp.data.model.OrientationMode.REVERSE_PORTRAIT,
-                                onClick = { onOrientationModeChange(com.webtoapp.data.model.OrientationMode.REVERSE_PORTRAIT) },
-                                iconRotation = 180f
+                                onClick = { onOrientationModeChange(com.webtoapp.data.model.OrientationMode.REVERSE_PORTRAIT) }
                             )
-                            Spacer(modifier = Modifier.height(6.dp))
+                            WtaSectionDivider()
                             OrientationModeItem(
                                 icon = Icons.Outlined.StayCurrentLandscape,
                                 title = Strings.orientationReverseLandscape,
                                 subtitle = Strings.orientationReverseLandscapeDesc,
                                 selected = orientationMode == com.webtoapp.data.model.OrientationMode.REVERSE_LANDSCAPE,
-                                onClick = { onOrientationModeChange(com.webtoapp.data.model.OrientationMode.REVERSE_LANDSCAPE) },
-                                iconRotation = 180f
+                                onClick = { onOrientationModeChange(com.webtoapp.data.model.OrientationMode.REVERSE_LANDSCAPE) }
                             )
 
-                            Spacer(modifier = Modifier.height(12.dp))
-
+                            WtaSectionDivider()
                             Text(
                                 text = Strings.orientationSensorLabel,
                                 style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.tertiary
+                                color = MaterialTheme.colorScheme.tertiary,
+                                modifier = Modifier.padding(
+                                    start = WtaSpacing.RowHorizontal,
+                                    top = WtaSpacing.ContentGap,
+                                    bottom = WtaSpacing.ContentGap
+                                )
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
 
                             OrientationModeItem(
                                 icon = Icons.Outlined.StayCurrentPortrait,
@@ -1967,7 +1716,7 @@ fun LandscapeModeCard(
                                 selected = orientationMode == com.webtoapp.data.model.OrientationMode.SENSOR_PORTRAIT,
                                 onClick = { onOrientationModeChange(com.webtoapp.data.model.OrientationMode.SENSOR_PORTRAIT) }
                             )
-                            Spacer(modifier = Modifier.height(6.dp))
+                            WtaSectionDivider()
                             OrientationModeItem(
                                 icon = Icons.Outlined.StayCurrentLandscape,
                                 title = Strings.orientationSensorLandscape,
@@ -1992,116 +1741,39 @@ fun LandscapeModeCard(
                     ) {
                         if (currentModeHint != null) {
                             Column {
-                                Spacer(modifier = Modifier.height(10.dp))
-                                Surface(
-                                    color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
-                                    shape = RoundedCornerShape(8.dp)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(12.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Icon(
-                                            Icons.Outlined.Info,
-                                            null,
-                                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
-                                            text = currentModeHint,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSecondaryContainer
-                                        )
-                                    }
-                                }
+                                WtaSectionDivider()
+                                WtaStatusBanner(
+                                    message = currentModeHint,
+                                    tone = WtaStatusTone.Info,
+                                    modifier = Modifier.padding(
+                                        horizontal = WtaSpacing.RowHorizontal,
+                                        vertical = WtaSpacing.ContentGap
+                                    )
+                                )
                             }
                         }
                     }
                 }
             }
-        }
     }
 }
 
-/** 图标旋转可直观表达方向含义 */
+
 @Composable
 private fun OrientationModeItem(
     icon: ImageVector,
     title: String,
     subtitle: String,
     selected: Boolean,
-    onClick: () -> Unit,
-    iconRotation: Float = 0f
+    onClick: () -> Unit
 ) {
-    val borderColor by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.primary 
-                      else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-        animationSpec = tween(200),
-        label = "orientationBorder"
-    )
-    val bgColor by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f) 
-                      else MaterialTheme.colorScheme.surface,
-        animationSpec = tween(200),
-        label = "orientationBg"
-    )
-
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .clickable(onClick = onClick),
-        color = bgColor,
-        shape = RoundedCornerShape(10.dp),
-        border = BorderStroke(
-            width = if (selected) 1.5.dp else 0.75.dp,
-            color = borderColor
-        )
+    WtaSettingRow(
+        title = title,
+        subtitle = subtitle.takeIf { it.isNotEmpty() },
+        icon = icon,
+        onClick = onClick
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Surface(
-                modifier = Modifier.size(36.dp),
-                shape = RoundedCornerShape(8.dp),
-                color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
-            ) {
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                    Icon(
-                        icon,
-                        contentDescription = null,
-                        tint = if (selected) MaterialTheme.colorScheme.primary 
-                               else MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier
-                            .size(20.dp)
-                            .graphicsLayer { rotationZ = iconRotation }
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-                    color = if (selected) MaterialTheme.colorScheme.primary 
-                            else MaterialTheme.colorScheme.onSurface
-                )
-                if (subtitle.isNotEmpty()) {
-                    Text(
-                        text = subtitle,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
             if (selected) {
-                Spacer(modifier = Modifier.width(8.dp))
                 Icon(
                     Icons.Outlined.CheckCircle,
                     contentDescription = null,
@@ -2109,7 +1781,6 @@ private fun OrientationModeItem(
                     modifier = Modifier.size(20.dp)
                 )
             }
-        }
     }
 }
 
@@ -2125,14 +1796,14 @@ fun KeepScreenOnCard(
 ) {
     val isEnabled = screenAwakeMode != com.webtoapp.data.model.ScreenAwakeMode.OFF
     val primary = MaterialTheme.colorScheme.primary
-    
+
     data class AwakeModeOption(
         val mode: com.webtoapp.data.model.ScreenAwakeMode,
         val icon: ImageVector,
         val title: String,
         val subtitle: String
     )
-    
+
     val modeOptions = listOf(
         AwakeModeOption(
             mode = com.webtoapp.data.model.ScreenAwakeMode.OFF,
@@ -2153,132 +1824,48 @@ fun KeepScreenOnCard(
             subtitle = Strings.screenAwakeTimedDesc
         )
     )
-    
-    EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(
-                                if (isEnabled) primary.copy(alpha = 0.1f)
-                                else MaterialTheme.colorScheme.surfaceVariant
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Lightbulb,
-                            contentDescription = null,
-                            tint = if (isEnabled) primary
-                                   else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text(
-                            text = Strings.keepScreenOnLabel,
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-                }
-                Spacer(Modifier.width(8.dp))
-                PremiumSwitch(
-                    checked = isEnabled,
-                    onCheckedChange = { checked ->
+
+    WtaSettingCard {
+        WtaToggleRow(
+            title = Strings.keepScreenOnLabel,
+            icon = Icons.Outlined.Lightbulb,
+            checked = isEnabled,
+            onCheckedChange = { checked ->
                         if (checked) {
                             onScreenAwakeModeChange(com.webtoapp.data.model.ScreenAwakeMode.ALWAYS)
                         } else {
                             onScreenAwakeModeChange(com.webtoapp.data.model.ScreenAwakeMode.OFF)
                         }
-                    }
-                )
             }
+        )
 
             AnimatedVisibility(
                 visible = isEnabled,
                 enter = CardExpandTransition,
                 exit = CardCollapseTransition
             ) {
-                Column(modifier = Modifier.padding(top = 16.dp)) {
+                Column {
+                    WtaSectionDivider()
                     Text(
                         text = Strings.screenAwakeModeLabel,
                         style = MaterialTheme.typography.labelMedium,
                         color = primary,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        modifier = Modifier.padding(
+                            start = WtaSpacing.RowHorizontal,
+                            top = WtaSpacing.ContentGap,
+                            bottom = WtaSpacing.ContentGap
+                        )
                     )
-                    
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+
+                    Column {
                         modeOptions.filter { it.mode != com.webtoapp.data.model.ScreenAwakeMode.OFF }.forEach { option ->
                             val isSelected = screenAwakeMode == option.mode
-                            
-                            Surface(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .clickable { onScreenAwakeModeChange(option.mode) },
-                                shape = RoundedCornerShape(12.dp),
-                                color = if (isSelected)
-                                    primary.copy(alpha = 0.08f)
-                                else
-                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                border = if (isSelected)
-                                    BorderStroke(1.5.dp, primary.copy(alpha = 0.3f))
-                                else null
+                            WtaSettingRow(
+                                title = option.title,
+                                subtitle = option.subtitle,
+                                icon = option.icon,
+                                onClick = { onScreenAwakeModeChange(option.mode) }
                             ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(12.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    // 图标
-                                    Box(
-                                        modifier = Modifier
-                                            .size(36.dp)
-                                            .clip(RoundedCornerShape(10.dp))
-                                            .background(
-                                                if (isSelected) primary.copy(alpha = 0.15f)
-                                                else MaterialTheme.colorScheme.surfaceVariant
-                                            ),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = option.icon,
-                                            contentDescription = null,
-                                            tint = if (isSelected) primary
-                                                   else MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                    }
-                                    
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = option.title,
-                                            style = MaterialTheme.typography.bodyMedium.copy(
-                                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
-                                            ),
-                                            color = if (isSelected) primary
-                                                    else MaterialTheme.colorScheme.onSurface
-                                        )
-                                        Text(
-                                            text = option.subtitle,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                    
                                     if (isSelected) {
                                         Icon(
                                             imageVector = Icons.Filled.CheckCircle,
@@ -2287,7 +1874,9 @@ fun KeepScreenOnCard(
                                             modifier = Modifier.size(20.dp)
                                         )
                                     }
-                                }
+                            }
+                            if (option.mode != com.webtoapp.data.model.ScreenAwakeMode.TIMED) {
+                                WtaSectionDivider()
                             }
                         }
                     }
@@ -2297,41 +1886,16 @@ fun KeepScreenOnCard(
                         enter = fadeIn(animationSpec = tween(200)) + expandVertically(animationSpec = tween(300)),
                         exit = fadeOut(animationSpec = tween(200)) + shrinkVertically(animationSpec = tween(300))
                     ) {
-                        Column(modifier = Modifier.padding(top = 16.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = Strings.screenAwakeTimeoutLabel,
-                                    style = MaterialTheme.typography.bodyMedium.copy(
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                )
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = primary.copy(alpha = 0.1f)
-                                ) {
-                                    Text(
-                                        text = Strings.screenAwakeTimeoutValue(screenAwakeTimeoutMinutes),
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = primary,
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                                    )
-                                }
-                            }
-                            
-                            Spacer(modifier = Modifier.height(8.dp))
-                            
-                            Slider(
+                        Column {
+                            WtaSectionDivider()
+                            WtaSliderRow(
+                                title = Strings.screenAwakeTimeoutLabel,
                                 value = screenAwakeTimeoutMinutes.toFloat(),
                                 onValueChange = { onScreenAwakeTimeoutChange(it.toInt()) },
+                                valueLabel = Strings.screenAwakeTimeoutValue(screenAwakeTimeoutMinutes),
                                 valueRange = 5f..120f,
-                                steps = 22, // 5, 10, 15, 20, 25, 30 ... 120
-                                modifier = Modifier.fillMaxWidth()
                             )
-                            
+
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -2353,40 +1917,22 @@ fun KeepScreenOnCard(
                             }
                         }
                     }
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    WtaSectionDivider()
+                    WtaSettingRow(
+                        title = Strings.screenBrightnessLabel,
+                        icon = Icons.Outlined.BrightnessLow
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Outlined.BrightnessLow,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = Strings.screenBrightnessLabel,
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontWeight = FontWeight.Medium
-                                )
-                            )
-                        }
                         Text(
-                            text = if (screenBrightness < 0) Strings.screenBrightnessAuto
-                                   else "${screenBrightness}%",
+                            text = if (screenBrightness < 0) Strings.screenBrightnessAuto else "${screenBrightness}%",
                             style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
-                    
-                    Spacer(modifier = Modifier.height(4.dp))
-                    
-                    // 自动 / 手动切换
+
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -2423,17 +1969,15 @@ fun KeepScreenOnCard(
                             modifier = Modifier.weight(1f)
                         )
                     }
-                    
-                    // 手动亮度滑块
+
+
                     AnimatedVisibility(
                         visible = screenBrightness >= 0,
                         enter = fadeIn(animationSpec = tween(200)) + expandVertically(animationSpec = tween(300)),
                         exit = fadeOut(animationSpec = tween(200)) + shrinkVertically(animationSpec = tween(300))
                     ) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 6.dp),
+                            modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
@@ -2458,57 +2002,31 @@ fun KeepScreenOnCard(
                             )
                         }
                     }
-                    
-                    // ── 电量影响提示 ──
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp),
-                        color = if (screenAwakeMode == com.webtoapp.data.model.ScreenAwakeMode.ALWAYS)
-                            Color(0xFFFFF3E0)
+
+
+                    WtaStatusBanner(
+                        message = when (screenAwakeMode) {
+                            com.webtoapp.data.model.ScreenAwakeMode.ALWAYS -> Strings.screenAwakeBatteryWarning
+                            com.webtoapp.data.model.ScreenAwakeMode.TIMED -> Strings.screenAwakeTimedHint
+                            else -> ""
+                        },
+                        tone = if (screenAwakeMode == com.webtoapp.data.model.ScreenAwakeMode.ALWAYS)
+                            WtaStatusTone.Warning
                         else
-                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(12.dp),
-                            verticalAlignment = Alignment.Top
-                        ) {
-                            Icon(
-                                imageVector = if (screenAwakeMode == com.webtoapp.data.model.ScreenAwakeMode.ALWAYS)
-                                    Icons.Outlined.BatteryAlert
-                                else
-                                    Icons.Outlined.Info,
-                                contentDescription = null,
-                                tint = if (screenAwakeMode == com.webtoapp.data.model.ScreenAwakeMode.ALWAYS)
-                                    Color(0xFFE65100)
-                                else
-                                    MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Text(
-                                text = when (screenAwakeMode) {
-                                    com.webtoapp.data.model.ScreenAwakeMode.ALWAYS -> Strings.screenAwakeBatteryWarning
-                                    com.webtoapp.data.model.ScreenAwakeMode.TIMED -> Strings.screenAwakeTimedHint
-                                    else -> ""
-                                },
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (screenAwakeMode == com.webtoapp.data.model.ScreenAwakeMode.ALWAYS)
-                                    Color(0xFFE65100)
-                                else
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
+                            WtaStatusTone.Info,
+                        modifier = Modifier.padding(
+                            horizontal = WtaSpacing.RowHorizontal,
+                            vertical = WtaSpacing.ContentGap
+                        )
+                    )
                 }
             }
-        }
     }
 }
 
-/**
- * 键盘调整模式 — 内嵌在高级设置中
- */
+
+
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun KeyboardAdjustModeCard(
@@ -2555,7 +2073,7 @@ fun KeyboardAdjustModeCard(
                     }
                 }
 
-                // 当前选中模式的提示
+
                 val hintText = when (mode) {
                     com.webtoapp.data.model.KeyboardAdjustMode.RESIZE -> Strings.keyboardAdjustResizeHint
                     com.webtoapp.data.model.KeyboardAdjustMode.NOTHING -> Strings.keyboardAdjustNothingHint
@@ -2589,11 +2107,11 @@ fun KeyboardAdjustModeCard(
     }
 }
 
-// ==================== Error Page Configuration Card ====================
 
-/**
- * 自定义无网络页面配置卡片
- */
+
+
+
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ErrorPageConfigCard(
@@ -2632,7 +2150,7 @@ fun ErrorPageConfigCard(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // ── 页面模式选择 ──
+
                     FlowRow(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -2652,7 +2170,7 @@ fun ErrorPageConfigCard(
                         }
                     }
 
-                    // ── 内置风格选择 (仅 BUILTIN_STYLE 模式) ──
+
                     AnimatedVisibility(
                         visible = config.mode == com.webtoapp.core.errorpage.ErrorPageMode.BUILTIN_STYLE,
                         enter = CardExpandTransition,
@@ -2691,7 +2209,7 @@ fun ErrorPageConfigCard(
                                 }
                             }
 
-                            // ── 小游戏开关 ──
+
                             Spacer(modifier = Modifier.height(12.dp))
 
                             SettingsSwitch(
@@ -2701,7 +2219,7 @@ fun ErrorPageConfigCard(
                                 onCheckedChange = { onConfigChange(config.copy(showMiniGame = it)) }
                             )
 
-                            // ── 小游戏类型选择 ──
+
                             AnimatedVisibility(
                                 visible = config.showMiniGame,
                                 enter = CardExpandTransition,
@@ -2735,7 +2253,7 @@ fun ErrorPageConfigCard(
                         }
                     }
 
-                    // ── 自定义 HTML 输入 (仅 CUSTOM_HTML 模式) ──
+
                     AnimatedVisibility(
                         visible = config.mode == com.webtoapp.core.errorpage.ErrorPageMode.CUSTOM_HTML,
                         enter = CardExpandTransition,
@@ -2757,7 +2275,7 @@ fun ErrorPageConfigCard(
                         }
                     }
 
-                    // ── 自定义媒体输入 (仅 CUSTOM_MEDIA 模式) ──
+
                     AnimatedVisibility(
                         visible = config.mode == com.webtoapp.core.errorpage.ErrorPageMode.CUSTOM_MEDIA,
                         enter = CardExpandTransition,
@@ -2777,7 +2295,7 @@ fun ErrorPageConfigCard(
                         }
                     }
 
-                    // ── 自动重试 ──
+
                     Spacer(modifier = Modifier.height(12.dp))
 
                     SettingsSwitch(
@@ -2823,4 +2341,3 @@ fun ErrorPageConfigCard(
         }
     }
 }
-

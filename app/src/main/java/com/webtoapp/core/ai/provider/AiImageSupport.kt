@@ -1,6 +1,7 @@
 package com.webtoapp.core.ai.provider
 
 import android.util.Base64
+import com.webtoapp.core.i18n.Strings
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import okhttp3.OkHttpClient
@@ -115,10 +116,10 @@ internal class AiImageSupport(
                 if (bytes != null) {
                     Result.success(Base64.encodeToString(bytes, Base64.NO_WRAP))
                 } else {
-                    Result.failure(Exception("下载图像失败"))
+                    Result.failure(Exception(Strings.aiImageDownloadFailed.format("empty")))
                 }
             } else {
-                Result.failure(Exception("下载图像失败: ${response.code}"))
+                Result.failure(Exception(Strings.aiImageDownloadFailed.format(response.code)))
             }
         } catch (e: Exception) {
             Result.failure(e)

@@ -2,31 +2,31 @@ package com.webtoapp.core.extension
 
 import com.webtoapp.core.i18n.Strings
 
-/**
- * 模块代码模板
- * 
- * 提供丰富的代码模板，帮助用户快速创建扩展模块
- */
+
+
+
+
+
 object ModuleTemplates {
-    
-    /**
-     * 获取所有模板（按分类组织）
-     */
+
+
+
+
     fun getAll(): List<ModuleTemplate> = listOf(
-        // 内容过滤类
+
         elementHider(),
         adBlockerPro(),
         popupBlocker(),
         cookieBannerRemover(),
-        
-        // 样式修改类
+
+
         cssInjector(),
         darkModeForce(),
         fontChanger(),
         colorTheme(),
         layoutFixer(),
-        
-        // 功能增强类
+
+
         autoClicker(),
         formFiller(),
         pageModifier(),
@@ -34,37 +34,37 @@ object ModuleTemplates {
         keyboardShortcuts(),
         autoRefresh(),
         scrollToTop(),
-        
-        // 数据提取类
+
+
         dataExtractor(),
         linkCollector(),
         imageGrabber(),
-        
-        // Media处理类
+
+
         videoEnhancer(),
         imageZoomer(),
         audioController(),
-        
-        // Security隐私类
+
+
         notificationBlocker(),
         trackingBlocker(),
         fingerprintProtector(),
-        
-        // 开发调试类
+
+
         consoleLogger(),
         networkMonitor(),
         domInspector()
     )
-    
-    /**
-     * 按分类获取模板
-     */
+
+
+
+
     fun getByCategory(category: ModuleCategory): List<ModuleTemplate> {
         return getAll().filter { it.category == category }
     }
 
-    // ==================== 内容过滤类模板 ====================
-    
+
+
     private fun elementHider() = ModuleTemplate(
         id = "template-element-hider",
         name = Strings.tplElementHider,
@@ -109,11 +109,14 @@ function hideElements() {
 
 hideElements();
 const observer = new MutationObserver(hideElements);
-observer.observe(document.body, { childList: true, subtree: true });
+var observerTarget = document.body || document.documentElement;
+if (observerTarget instanceof Node) {
+    observer.observe(observerTarget, { childList: true, subtree: true });
+}
         """.trimIndent(),
         cssCode = ""
     )
-    
+
     private fun adBlockerPro() = ModuleTemplate(
         id = "template-adblocker-pro",
         name = Strings.tplAdBlocker,
@@ -154,7 +157,7 @@ function removeAds() {
     adSelectors.forEach(sel => {
         document.querySelectorAll(sel).forEach(el => el.style.display = 'none');
     });
-    
+
     if (blockOverlays) {
         document.querySelectorAll('[class*="overlay"], [class*="modal"]').forEach(el => {
             if (el.style.position === 'fixed' || getComputedStyle(el).position === 'fixed') {
@@ -165,7 +168,10 @@ function removeAds() {
 }
 
 removeAds();
-new MutationObserver(removeAds).observe(document.documentElement, { childList: true, subtree: true });
+var observerTarget = document.documentElement || document.body;
+if (observerTarget instanceof Node) {
+    new MutationObserver(removeAds).observe(observerTarget, { childList: true, subtree: true });
+}
         """.trimIndent(),
         cssCode = """
 [class*="ad-"], [class*="ads-"], [class*="advert"],
@@ -212,12 +218,15 @@ function closePopups() {
 }
 
 setTimeout(closePopups, autoCloseDelay);
-new MutationObserver(() => setTimeout(closePopups, 100))
-    .observe(document.body, { childList: true, subtree: true });
+var observerTarget = document.body || document.documentElement;
+if (observerTarget instanceof Node) {
+    new MutationObserver(() => setTimeout(closePopups, 100))
+        .observe(observerTarget, { childList: true, subtree: true });
+}
         """.trimIndent(),
         cssCode = ""
     )
-    
+
     private fun cookieBannerRemover() = ModuleTemplate(
         id = "template-cookie-banner",
         name = Strings.tplCookieBanner,
@@ -247,13 +256,16 @@ function removeCookieBanners() {
 
 removeCookieBanners();
 setTimeout(removeCookieBanners, 1000);
-new MutationObserver(removeCookieBanners).observe(document.body, { childList: true, subtree: true });
+var observerTarget = document.body || document.documentElement;
+if (observerTarget instanceof Node) {
+    new MutationObserver(removeCookieBanners).observe(observerTarget, { childList: true, subtree: true });
+}
         """.trimIndent(),
         cssCode = ""
     )
-    
-    // ==================== 样式修改类模板 ====================
-    
+
+
+
     private fun cssInjector() = ModuleTemplate(
         id = "template-css-injector",
         name = Strings.tplCssInjector,
@@ -278,7 +290,7 @@ if (customCss) {
         """.trimIndent(),
         cssCode = ""
     )
-    
+
     private fun darkModeForce() = ModuleTemplate(
         id = "template-dark-mode",
         name = Strings.tplDarkMode,
@@ -340,7 +352,7 @@ document.head.appendChild(style);
         """.trimIndent(),
         cssCode = ""
     )
-    
+
     private fun colorTheme() = ModuleTemplate(
         id = "template-color-theme",
         name = Strings.templateColorTheme,
@@ -380,7 +392,7 @@ document.head.appendChild(style);
         """.trimIndent(),
         cssCode = ""
     )
-    
+
     private fun layoutFixer() = ModuleTemplate(
         id = "template-layout-fixer",
         name = Strings.templateLayoutFixer,
@@ -406,9 +418,9 @@ document.head.appendChild(style);
 body > * { max-width: var(--max-width, 1200px) !important; margin-left: auto !important; margin-right: auto !important; }
         """.trimIndent()
     )
-    
-    // ==================== 功能增强类模板 ====================
-    
+
+
+
     private fun autoClicker() = ModuleTemplate(
         id = "template-auto-clicker",
         name = Strings.templateAutoClicker,
@@ -452,7 +464,10 @@ function autoClick() {
 
 setTimeout(autoClick, delay);
 if (repeat) setInterval(autoClick, delay);
-new MutationObserver(autoClick).observe(document.body, { childList: true, subtree: true });
+var observerTarget = document.body || document.documentElement;
+if (observerTarget instanceof Node) {
+    new MutationObserver(autoClick).observe(observerTarget, { childList: true, subtree: true });
+}
         """.trimIndent(),
         cssCode = ""
     )
@@ -491,11 +506,14 @@ function fillForm() {
 }
 
 fillForm();
-new MutationObserver(fillForm).observe(document.body, { childList: true, subtree: true });
+var observerTarget = document.body || document.documentElement;
+if (observerTarget instanceof Node) {
+    new MutationObserver(fillForm).observe(observerTarget, { childList: true, subtree: true });
+}
         """.trimIndent(),
         cssCode = ""
     )
-    
+
     private fun pageModifier() = ModuleTemplate(
         id = "template-page-modifier",
         name = Strings.templatePageModifier,
@@ -535,11 +553,14 @@ function modifyPage() {
 }
 
 modifyPage();
-new MutationObserver(modifyPage).observe(document.body, { childList: true, subtree: true });
+var observerTarget = document.body || document.documentElement;
+if (observerTarget instanceof Node) {
+    new MutationObserver(modifyPage).observe(observerTarget, { childList: true, subtree: true });
+}
         """.trimIndent(),
         cssCode = ""
     )
-    
+
     private fun customButton() = ModuleTemplate(
         id = "template-custom-button",
         name = Strings.templateCustomButton,
@@ -586,7 +607,7 @@ document.body.appendChild(btn);
         """.trimIndent(),
         cssCode = ""
     )
-    
+
     private fun keyboardShortcuts() = ModuleTemplate(
         id = "template-keyboard-shortcuts",
         name = Strings.templateKeyboardShortcuts,
@@ -648,7 +669,7 @@ if (showCountdown) {
     const display = document.createElement('div');
     display.style.cssText = 'position:fixed;top:10px;right:10px;z-index:99999;background:rgba(0,0,0,0.7);color:white;padding:5px 10px;border-radius:5px;font-size:12px;';
     document.body.appendChild(display);
-    
+
     setInterval(() => {
         countdown--;
         display.textContent = `刷新: ${'$'}{countdown}s`;
@@ -660,7 +681,7 @@ if (showCountdown) {
         """.trimIndent(),
         cssCode = ""
     )
-    
+
     private fun scrollToTop() = ModuleTemplate(
         id = "template-scroll-to-top",
         name = Strings.templateScrollToTop,
@@ -689,9 +710,9 @@ window.addEventListener('scroll', () => {
         """.trimIndent(),
         cssCode = ""
     )
-    
-    // ==================== 数据提取类模板 ====================
-    
+
+
+
     private fun dataExtractor() = ModuleTemplate(
         id = "template-data-extractor",
         name = Strings.templateDataExtractor,
@@ -733,7 +754,7 @@ window.__extractedData = extractData();
         """.trimIndent(),
         cssCode = ""
     )
-    
+
     private fun linkCollector() = ModuleTemplate(
         id = "template-link-collector",
         name = Strings.templateLinkCollector,
@@ -761,7 +782,7 @@ window.__collectedLinks = links;
         """.trimIndent(),
         cssCode = ""
     )
-    
+
     private fun imageGrabber() = ModuleTemplate(
         id = "template-image-grabber",
         name = Strings.templateImageGrabber,
@@ -789,8 +810,8 @@ window.__grabbedImages = images;
         cssCode = ""
     )
 
-    // ==================== 媒体处理类模板 ====================
-    
+
+
     private fun videoEnhancer() = ModuleTemplate(
         id = "template-video-enhancer",
         name = Strings.templateVideoEnhancer,
@@ -822,7 +843,7 @@ function enhanceVideo(video) {
     if (video.dataset.enhanced) return;
     video.dataset.enhanced = 'true';
     video.playbackRate = defaultSpeed;
-    
+
     if (showControls) {
         const panel = document.createElement('div');
         panel.style.cssText = 'position:absolute;top:10px;right:10px;z-index:9999;background:rgba(0,0,0,0.7);color:white;padding:5px 10px;border-radius:5px;font-size:14px;cursor:pointer;';
@@ -838,16 +859,19 @@ function enhanceVideo(video) {
 }
 
 document.querySelectorAll('video').forEach(enhanceVideo);
-new MutationObserver(muts => {
+var observerTarget = document.body || document.documentElement;
+if (observerTarget instanceof Node) {
+    new MutationObserver(muts => {
     muts.forEach(m => m.addedNodes.forEach(n => {
         if (n.nodeName === 'VIDEO') enhanceVideo(n);
         else if (n.querySelectorAll) n.querySelectorAll('video').forEach(enhanceVideo);
     }));
-}).observe(document.body, { childList: true, subtree: true });
+    }).observe(observerTarget, { childList: true, subtree: true });
+}
         """.trimIndent(),
         cssCode = ""
     )
-    
+
     private fun imageZoomer() = ModuleTemplate(
         id = "template-image-zoomer",
         name = Strings.templateImageZoomer,
@@ -859,14 +883,14 @@ new MutationObserver(muts => {
 document.addEventListener('click', e => {
     const img = e.target.closest('img');
     if (!img) return;
-    
+
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:999999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
-    
+
     const bigImg = document.createElement('img');
     bigImg.src = img.src;
     bigImg.style.cssText = 'max-width:95%;max-height:95%;object-fit:contain;';
-    
+
     overlay.appendChild(bigImg);
     overlay.onclick = () => overlay.remove();
     document.body.appendChild(overlay);
@@ -874,7 +898,7 @@ document.addEventListener('click', e => {
         """.trimIndent(),
         cssCode = ""
     )
-    
+
     private fun audioController() = ModuleTemplate(
         id = "template-audio-controller",
         name = Strings.templateAudioController,
@@ -899,18 +923,21 @@ function controlAudio(audio) {
 }
 
 document.querySelectorAll('audio, video').forEach(controlAudio);
-new MutationObserver(muts => {
+var observerTarget = document.body || document.documentElement;
+if (observerTarget instanceof Node) {
+    new MutationObserver(muts => {
     muts.forEach(m => m.addedNodes.forEach(n => {
         if (n.nodeName === 'AUDIO' || n.nodeName === 'VIDEO') controlAudio(n);
         else if (n.querySelectorAll) n.querySelectorAll('audio, video').forEach(controlAudio);
     }));
-}).observe(document.body, { childList: true, subtree: true });
+    }).observe(observerTarget, { childList: true, subtree: true });
+}
         """.trimIndent(),
         cssCode = ""
     )
-    
-    // ==================== 安全隐私类模板 ====================
-    
+
+
+
     private fun notificationBlocker() = ModuleTemplate(
         id = "template-notification-blocker",
         name = Strings.templateNotificationBlocker,
@@ -927,7 +954,7 @@ console.log('[NotificationBlocker] Notifications blocked');
         """.trimIndent(),
         cssCode = ""
     )
-    
+
     private fun trackingBlocker() = ModuleTemplate(
         id = "template-tracking-blocker",
         name = Strings.templateTrackingBlocker,
@@ -952,7 +979,7 @@ navigator.sendBeacon = () => { console.log('[TrackingBlocker] Beacon blocked'); 
         """.trimIndent(),
         cssCode = ""
     )
-    
+
     private fun fingerprintProtector() = ModuleTemplate(
         id = "template-fingerprint-protector",
         name = Strings.templateFingerprintProtector,
@@ -982,8 +1009,8 @@ Object.defineProperty(screen, 'height', { get: () => 1080 + Math.floor(Math.rand
         cssCode = ""
     )
 
-    // ==================== 开发调试类模板 ====================
-    
+
+
     private fun consoleLogger() = ModuleTemplate(
         id = "template-console-logger",
         name = Strings.templateConsoleLogger,
@@ -1027,7 +1054,7 @@ function addLog(type, args) {
         """.trimIndent(),
         cssCode = ""
     )
-    
+
     private fun networkMonitor() = ModuleTemplate(
         id = "template-network-monitor",
         name = Strings.templateNetworkMonitor,
@@ -1068,7 +1095,7 @@ function addRequest(url, status, time) {
         """.trimIndent(),
         cssCode = ""
     )
-    
+
     private fun domInspector() = ModuleTemplate(
         id = "template-dom-inspector",
         name = Strings.templateDomInspector,
@@ -1086,17 +1113,17 @@ document.addEventListener('mousemove', e => {
     const el = document.elementFromPoint(e.clientX, e.clientY);
     if (!el || el === tooltip || el === lastEl) return;
     lastEl = el;
-    
+
     const tag = el.tagName.toLowerCase();
     const id = el.id ? `#${'$'}{el.id}` : '';
     const classes = el.className ? `.${'$'}{el.className.split(' ').join('.')}` : '';
     const size = `${'$'}{el.offsetWidth}x${'$'}{el.offsetHeight}`;
-    
+
     tooltip.innerHTML = `<div style="color:#5af">${'$'}{tag}${'$'}{id}${'$'}{classes}</div><div style="color:#888">Size: ${'$'}{size}</div>`;
     tooltip.style.display = 'block';
     tooltip.style.left = Math.min(e.clientX + 10, window.innerWidth - 320) + 'px';
     tooltip.style.top = Math.min(e.clientY + 10, window.innerHeight - 100) + 'px';
-    
+
     el.style.outline = '2px solid #5af';
 });
 
@@ -1109,9 +1136,9 @@ document.addEventListener('mouseout', e => {
     )
 }
 
-/**
- * 模块模板数据类
- */
+
+
+
 data class ModuleTemplate(
     val id: String,
     val name: String,
@@ -1121,11 +1148,11 @@ data class ModuleTemplate(
     val configItems: List<ModuleConfigItem>,
     val code: String,
     val cssCode: String,
-    val uiConfig: ModuleUiConfig = ModuleUiConfig()  // 新增 UI 配置
+    val uiConfig: ModuleUiConfig = ModuleUiConfig()
 ) {
-    /**
-     * 转换为 ExtensionModule
-     */
+
+
+
     fun toModule(
         moduleName: String = name,
         moduleDescription: String = description
@@ -1141,7 +1168,7 @@ data class ModuleTemplate(
             configValues = configItems.associate { it.key to it.defaultValue },
             runAt = ModuleRunTime.DOCUMENT_END,
             permissions = listOf(ModulePermission.DOM_ACCESS),
-            uiConfig = uiConfig  // 传递 UI 配置
+            uiConfig = uiConfig
         )
     }
 }

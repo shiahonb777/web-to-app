@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 应用名称（ArscRebuilder 重建 string pool，无需预填充空格） -->
+    
     <string name="app_name" translatable="false">WebToApp</string>
-    <string name="app_description">将任意网站转换为独立App</string>
+    <string name="app_description">网站转 App</string>
 
-    <!-- 主界面 -->
+    
     <string name="title_my_apps">我的应用</string>
     <string name="title_create_app">创建应用</string>
     <string name="title_settings">设置</string>
 
     <string name="search_placeholder">搜索...</string>
 
-    <!-- 创建App表单 -->
+    
     <string name="label_app_name">应用名称</string>
     <string name="label_url">网站地址</string>
     <string name="label_icon">应用图标</string>
@@ -20,7 +20,7 @@
     <string name="label_announcement">公告设置</string>
     <string name="label_ad_block">广告拦截</string>
 
-    <!-- 激活码 -->
+    
     <string name="enable_activation">启用激活码</string>
     <string name="activation_codes">激活码列表</string>
     <string name="add_activation_code">添加激活码</string>
@@ -29,7 +29,7 @@
     <string name="invalid_activation_code">激活码无效</string>
     <string name="activation_success">激活成功</string>
 
-    <!-- 广告 -->
+    
     <string name="enable_ads">启用广告</string>
     <string name="ad_type">广告类型</string>
     <string name="ad_banner">横幅广告</string>
@@ -37,19 +37,19 @@
     <string name="ad_splash">开屏广告</string>
     <string name="ad_unit_id">广告单元ID</string>
 
-    <!-- 公告 -->
+    
     <string name="enable_announcement">启用公告</string>
     <string name="announcement_title">公告标题</string>
     <string name="announcement_content">公告内容</string>
     <string name="announcement_url">公告链接</string>
     <string name="show_once">仅显示一次</string>
 
-    <!-- 广告拦截 -->
+    
     <string name="enable_ad_block">启用广告拦截</string>
     <string name="ad_block_rules">拦截规则</string>
     <string name="custom_rules">自定义规则</string>
 
-    <!-- 操作按钮 -->
+    
     <string name="btn_create">创建应用</string>
     <string name="btn_preview">预览</string>
     <string name="btn_export">导出APK</string>
@@ -61,7 +61,7 @@
     <string name="btn_shortcut">创建快捷方式</string>
     <string name="btn_select_icon">选择图标</string>
 
-    <!-- 提示消息 -->
+    
     <string name="msg_app_created">应用创建成功</string>
     <string name="msg_app_deleted">应用已删除</string>
     <string name="msg_shortcut_created">快捷方式已创建</string>
@@ -69,11 +69,11 @@
     <string name="msg_name_required">请输入应用名称</string>
     <string name="msg_export_success">APK导出成功</string>
     <string name="msg_export_failed">APK导出失败</string>
-    <string name="msg_loading">加载中…</string>
-    <string name="msg_no_apps">暂无应用，点击+创建</string>
+    <string name="msg_loading">加载中</string>
+    <string name="msg_no_apps">暂无应用</string>
 
-    <!-- WebView -->
-    <string name="webview_error">页面加载失败</string>
+    
+    <string name="webview_error">加载失败</string>
     <string name="webview_ssl_error">SSL 安全错误</string>
     <string name="webview_retry">重试</string>
     <string name="webview_back">返回</string>
@@ -83,14 +83,14 @@
     <string name="webview_open_browser">在浏览器中打开</string>
     <string name="webview_cannot_open_link">无法打开链接</string>
 
-    <!-- 语言 -->
+    
     <string name="language_settings">语言</string>
     <string name="language_chinese">中文</string>
     <string name="language_english">英文</string>
     <string name="language_arabic">阿拉伯语</string>
-    <string name="language_changed">语言已更改，请重启应用</string>
+    <string name="language_changed">语言已变更，请重启</string>
 
-    <!-- 菜单项 -->
+    
     <string name="menu_ai_coding">AI 编程</string>
     <string name="menu_ai_html_coding">AI HTML编程</string>
     <string name="menu_theme_settings">主题设置</string>
@@ -102,7 +102,7 @@
     <string name="menu_more">更多</string>
     <string name="menu_linux_environment">Linux 环境</string>
 
-    <!-- 扩展模块 -->
+    
     <string name="extension_module">扩展模块</string>
     <string name="create_module">创建模块</string>
     <string name="edit_module">编辑模块</string>
@@ -117,10 +117,10 @@
     <string name="store_network_error">网络错误: %1$s</string>
     <string name="store_report_failed">举报失败: %1$s</string>
 
-    <string name="njs_package_json_not_found">未找到 package.json，请选择有效的 Node.js 项目目录</string>
+    <string name="njs_package_json_not_found">未找到 package.json，请选有效项目目录</string>
 
 
-    <string name="community_recipe_json_supporting">粘贴项目的配置 JSON，其他用户可以一键导入</string>
+    <string name="community_recipe_json_supporting">贴配置 JSON，供他人导入</string>
     <string name="community_tutorial_title_placeholder">教程标题 *</string>
     <string name="community_difficulty_label">难度</string>
     <string name="community_question_title_placeholder">问题标题 *</string>
@@ -144,7 +144,7 @@
     <string name="community_source_server">服务端</string>
     <string name="community_source_format">来源: %1$s</string>
     <string name="community_recipe_imported">配方已导入</string>
-    <string name="community_import_recipe_one_tap">一键导入配方</string>
+    <string name="community_import_recipe_one_tap">导入配方</string>
     <string name="community_import_count">%1$d 次导入</string>
     <string name="community_import">导入</string>
 
@@ -155,7 +155,7 @@
 
 
 
-    <!-- AI 功能 -->
+    
     <string name="ai_generating">AI 生成中…</string>
     <string name="ai_analyzing">正在分析需求…</string>
     <string name="ai_planning">制定开发计划…</string>
@@ -166,17 +166,17 @@
     <string name="ai_completed">生成完成</string>
     <string name="ai_error">AI 错误</string>
 
-    <!-- 创建应用类型 -->
+    
     <string name="create_web_app">网页应用</string>
     <string name="create_media_app">媒体应用</string>
     <string name="create_html_app">HTML应用</string>
 
-    <!-- 翻译 -->
+    
     <string name="auto_translate">自动翻译</string>
     <string name="translate_to">翻译为</string>
     <string name="translate_enabled">翻译已启用</string>
 
-    <!-- 通用 -->
+    
     <string name="confirm">确认</string>
     <string name="cancel">取消</string>
     <string name="ok">确定</string>
@@ -196,44 +196,44 @@
     <string name="import_text">导入</string>
     <string name="export_text">导出</string>
     
-    <!-- 帮助 -->
+    
     <string name="help">帮助</string>
     <string name="usage_help">使用帮助</string>
     <string name="i_understand">我知道了</string>
     <string name="select_module_category">选择模块分类</string>
     <string name="auto_detect">自动识别</string>
-    <string name="auto_detect_category_hint">让 AI 根据需求自动选择分类</string>
+    <string name="auto_detect_category_hint">让 AI 自动选分类</string>
     
-    <!-- AI 模块开发帮助 -->
+    
     <string name="help_how_to_use">如何使用</string>
-    <string name="help_how_to_use_content">在输入框中用自然语言描述你想要的功能，AI 会自动分析需求并生成对应的扩展模块代码。</string>
+    <string name="help_how_to_use_content">描述需求，AI 生成模块。</string>
     <string name="help_requirement_tips">需求描述技巧</string>
-    <string name="help_requirement_tips_content">• 描述具体的功能效果\n• 说明目标网站或页面类型\n• 可以参考示例需求的写法</string>
+    <string name="help_requirement_tips_content">• 说清功能\n• 说明页面类型\n• 可参考示例</string>
     <string name="help_model_selection">模型选择</string>
-    <string name="help_model_selection_content">可以选择不同的 AI 模型来生成代码。不同模型可能有不同的效果和速度。</string>
+    <string name="help_model_selection_content">不同模型，速度和效果不同。</string>
     <string name="help_category_selection">分类选择</string>
-    <string name="help_category_selection_content">可以手动选择模块分类，也可以让 AI 自动识别。手动选择可以让生成的代码更精准。</string>
+    <string name="help_category_selection_content">可手选，也可让 AI 识别。</string>
     <string name="help_auto_check">自动检查</string>
-    <string name="help_auto_check_content">AI 会自动进行语法检查和安全扫描，确保生成的代码可以正常运行且没有安全隐患。</string>
+    <string name="help_auto_check_content">AI 会查语法和安全问题。</string>
     <string name="help_code_edit">代码编辑</string>
-    <string name="help_code_edit_content">生成的代码可以直接编辑修改，保存时会使用修改后的版本。</string>
+    <string name="help_code_edit_content">可直接编辑，保存用修改版。</string>
     <string name="help_save_module">保存模块</string>
-    <string name="help_save_module_content">生成完成后，点击「保存」将其添加到你的模块库中，之后可以在创建应用时使用。</string>
+    <string name="help_save_module_content">生成后点「保存」，加入模块库。</string>
     
-    <!-- 补充 UI 字符串 -->
-    <string name="project_template_export">项目模板导出</string>
+    
+    <string name="project_template_export">模板导出</string>
     <string name="encoding_and_size">编码: %1$s | 大小: %2$s</string>
     <string name="file_label">文件: %s</string>
     <string name="click_to_select_file">点击选择文件</string>
     <string name="clear_file">清除</string>
     <string name="share_module">分享模块</string>
     <string name="selected_image">选中的图片</string>
-    <string name="select_ui_style_hint">选择界面视觉风格</string>
+    <string name="select_ui_style_hint">选择风格</string>
     <string name="auto_switch_by_system">根据系统设置自动切换</string>
     <string name="always_use_light_theme">始终使用浅色主题</string>
     <string name="always_use_dark_theme">始终使用深色主题</string>
     <string name="interaction_style_label">交互风格: %s</string>
-    <string name="click_button_to_experience">点击下方按钮体验效果</string>
+    <string name="click_button_to_experience">点击按钮体验</string>
     <string name="animation_disabled">动画已禁用</string>
     <string name="hold_to_experience">按住体验</string>
     <string name="primary_color">主色</string>
@@ -250,11 +250,11 @@
     <string name="static_website">静态网站</string>
     <string name="video_file_not_exist">视频文件不存在</string>
     <string name="video_preview">视频预览</string>
-    <string name="selected_duration">已选择: %.1f 秒</string>
-    <string name="total_duration_label">总时长: %.1f 秒</string>
-    <string name="trim_range_hint">裁剪范围（拖动选择播放片段）</string>
+    <string name="selected_duration">已选：%.1f 秒</string>
+    <string name="total_duration_label">总时长：%.1f 秒</string>
+    <string name="trim_range_hint">拖动选择裁剪范围</string>
     <string name="bgm_title">背景音乐</string>
-    <string name="bgm_description">为应用添加背景音乐，支持循环或顺序播放</string>
+    <string name="bgm_description">添加背景音乐，支持循环或顺序</string>
     <string name="selected_music_count">已选 %d 首音乐</string>
     <string name="loop_playback">循环播放</string>
     <string name="sequential_playback">顺序播放</string>
@@ -288,10 +288,10 @@
     <string name="url_to_shortcut_basic">URL转快捷方式基本功能</string>
     <string name="activation_code_announcement_ad_block">激活码、公告、广告拦截</string>
 
-    <!-- 图标库 -->
+    
     <string name="icon_library">图标库</string>
 
-    <!-- 扩展模块卡片 -->
+    
     <string name="save_as_scheme">保存为方案</string>
     <string name="clear_all">清空</string>
     <string name="select_modules">选择模块</string>
@@ -309,10 +309,10 @@
     <string name="brief_description_hint">简要描述方案用途</string>
     <string name="select_icon">选择图标</string>
 
-    <!-- 公告模板 -->
+    
     <string name="preview_announcement_effect">预览公告效果</string>
 
-    <!-- 歌词对齐 -->
+    
     <string name="next_step_time_align">下一步：时间对齐</string>
     <string name="tap_to_mark">打点</string>
     <string name="previous_step">上一步</string>
@@ -320,15 +320,15 @@
     <string name="go_back_to_modify">返回修改</string>
     <string name="save_lrc">保存 LRC</string>
 
-    <!-- 数据备份 -->
+    
     <string name="export_data">导出数据</string>
     <string name="import_data">导入数据</string>
 
-    <!-- 自动启动 -->
+    
     <string name="launch_time">启动时间</string>
     <string name="select_launch_time">选择启动时间</string>
 
-    <!-- HTML编程 -->
+    
     <string name="download_file">下载</string>
     <string name="export_all">导出全部</string>
     <string name="thinking">思考中</string>
@@ -336,14 +336,14 @@
     <string name="describe_html_page">描述你想要的HTML页面…</string>
     <string name="add_new_rule">添加新规则…</string>
 
-    <!-- 隔离配置 -->
+    
     <string name="country_region">国家/地区</string>
     <string name="country_region_hint">例如：日本、韩国、英国…</string>
 
-    <!-- 代码片段 -->
+    
     <string name="search_code_snippets">搜索代码片段…</string>
 
-    <!-- 模块编辑器 -->
+    
     <string name="module_name_required">模块名称 *</string>
     <string name="input_module_name">输入模块名称</string>
     <string name="description">描述</string>
@@ -361,14 +361,14 @@
     <string name="config_type">类型</string>
     <string name="default_value">默认值</string>
 
-    <!-- AI 设置 -->
+    
     <string name="provider">供应商</string>
     <string name="model_id">模型ID</string>
     <string name="model_id_hint">例如：gpt-4o-mini</string>
     <string name="alias_optional">别名（可选）</string>
     <string name="alias">别名</string>
 
-    <!-- 创建应用 -->
+    
     <string name="activation_code">激活码</string>
     <string name="input_activation_code_hint">输入激活码</string>
     <string name="show_once_only">仅显示一次</string>
@@ -379,7 +379,7 @@
     <string name="translate_target_language">翻译目标语言</string>
     <string name="ad_block_rule_hint">例如：ads.example.com</string>
 
-    <!-- 通用 -->
+    
     <string name="done">完成</string>
     <string name="save">保存</string>
     <string name="add">添加</string>
@@ -391,7 +391,7 @@
     <string name="latest_version">已是最新版本</string>
     <string name="network_error">网络错误</string>
     <string name="retry">重试</string>
-    <string name="loading">加载中…</string>
+    <string name="loading">加载中</string>
     <string name="no_data">暂无数据</string>
     <string name="copied">已复制</string>
     <string name="saved">已保存</string>
@@ -410,7 +410,7 @@
     <string name="storage_permission_required">需要存储权限</string>
     <string name="grant_permission">授予权限</string>
 
-    <!-- 构建环境 -->
+    
     <string name="build_environment">构建环境</string>
     <string name="env_ready">环境就绪</string>
     <string name="env_not_installed">可用</string>
@@ -437,7 +437,7 @@
     <string name="clear_cache_confirm">这将清理构建缓存和临时文件。</string>
     <string name="clean">清理</string>
 
-    <!-- 前端项目 -->
+    
     <string name="select_project">选择项目</string>
     <string name="select_project_folder">选择项目文件夹</string>
     <string name="select_project_hint">选择项目根目录或构建输出目录（dist/build）</string>
@@ -465,10 +465,10 @@
     <string name="import_frontend_project">导入前端项目</string>
     <string name="support_vue_react_vite">支持 Vue、React、Vite 等已构建的项目</string>
     <string name="usage_steps">📋 使用步骤</string>
-    <string name="usage_steps_content">1. 在电脑上构建项目：npm run build\n2. 将构建输出（dist/build）复制到手机\n3. 选择项目文件夹导入</string>
-    <string name="built_in_engine_ready">内置构建引擎已就绪。支持导入已构建的项目，或使用 esbuild 进行简单构建。推荐在电脑上完成复杂项目的构建。</string>
+    <string name="usage_steps_content">1. 电脑构建\n2. 复制输出到手机\n3. 选文件夹导入</string>
+    <string name="built_in_engine_ready">构建引擎已就绪。复杂项目建议先在电脑构建。</string>
 
-    <!-- 媒体应用 -->
+    
     <string name="create_media_app_title">创建媒体应用</string>
     <string name="select_media_type">选择媒体类型</string>
     <string name="image">图片</string>
@@ -492,7 +492,7 @@
     <string name="fullscreen_display_image">全屏显示您选择的图片</string>
     <string name="fullscreen_play_video">全屏播放您选择的视频</string>
 
-    <!-- HTML应用 -->
+    
     <string name="create_html_app_title">创建HTML应用</string>
     <string name="select_files">选择文件</string>
     <string name="select_files_hint">分别选择HTML、CSS、JS文件（CSS和JS为可选）</string>
@@ -510,18 +510,18 @@
     <string name="warnings_count">%d 个警告</string>
     <string name="auto_fix_hint">应用会自动修复路径问题并内联CSS/JS，但建议查看详情确认</string>
     <string name="view_analysis_result">查看分析结果</string>
-    <string name="html_app_tip">提示：HTML文件为必选，CSS和JS文件为可选。如果你的HTML文件中引用了CSS或JS，请分别选择对应的文件。</string>
-    <string name="feature_tip">💡 激活码验证、背景音乐等功能可在创建项目后，通过项目管理界面点击「编辑」进行添加和配置。</string>
+    <string name="html_app_tip">HTML 必选，CSS/JS 可选；有引用就一并选择。</string>
+    <string name="feature_tip">激活码、BGM 等功能可在创建后编辑。</string>
     <string name="about_file_reference">关于文件引用</string>
-    <string name="file_reference_hint">• 应用会自动将CSS和JS内联到HTML中\n• 绝对路径（如 /css/style.css）会自动转换\n• 建议使用相对路径（如 ./style.css）</string>
+    <string name="file_reference_hint">• CSS/JS 会自动内联\n• 绝对路径会转换\n• 尽量用相对路径</string>
     <string name="project_analysis_result">项目分析结果</string>
     <string name="file_info">文件信息</string>
     <string name="detected_issues">检测到的问题</string>
     <string name="suggestions">建议</string>
-    <string name="auto_process_hint">应用会自动处理：路径修复、CSS/JS内联、编码转换、viewport适配</string>
+    <string name="auto_process_hint">会自动处理：路径修复、CSS/JS 内联、编码转换、viewport 适配</string>
     <string name="got_it">知道了</string>
 
-    <!-- 创建应用页面 -->
+    
     <string name="edit_app">编辑应用</string>
     <string name="input_app_name">输入应用显示名称</string>
     <string name="activation_code_verify">激活码验证</string>
@@ -551,7 +551,7 @@
     <string name="video_app">视频应用</string>
     <string name="unknown_file">未知文件</string>
 
-    <!-- 扩展模块页面 -->
+    
     <string name="search_modules">搜索模块…</string>
     <string name="all">全部</string>
     <string name="total_modules">共 %d 个模块</string>
@@ -578,14 +578,14 @@
     <string name="create_module_label">创建模块</string>
     <string name="ai_module_developer_label">AI 模块开发</string>
 
-    <!-- 主题设置页面 -->
+    
     <string name="theme_settings_title">主题设置</string>
     <string name="enhanced_mode">强化版</string>
     <string name="theme">主题</string>
     <string name="appearance">外观</string>
     <string name="effects">效果</string>
     <string name="ui_mode">UI 模式</string>
-    <string name="select_ui_style">选择界面视觉风格</string>
+    <string name="select_ui_style">选择风格</string>
     <string name="dark_mode">深色模式</string>
     <string name="follow_system">跟随系统</string>
     <string name="follow_system_hint">根据系统设置自动切换</string>
@@ -611,7 +611,7 @@
     <string name="glow">发光</string>
     <string name="particles">粒子</string>
 
-    <!-- 关于页面 -->
+    
     <string name="about">关于</string>
     <string name="independent_developer">独立开发者 · AI 爱好者</string>
     <string name="check_update">检查更新</string>
@@ -619,7 +619,7 @@
     <string name="downloading">正在下载…</string>
     <string name="current_version">当前版本</string>
     <string name="about_this_app">关于这个应用</string>
-    <string name="about_app_description">WebToApp 是我独立开发的一款工具，可以将网站、图片、视频快速转换成独立的 Android 应用。\n\n如果你有任何问题、建议或想法，欢迎随时联系我！</string>
+    <string name="about_app_description">安卓上功能最完善的WEB转APK工具型应用。</string>
     <string name="social_media">社交媒体</string>
     <string name="exchange_group">交流群</string>
     <string name="video_tutorial">视频教程</string>
@@ -637,20 +637,20 @@
     <string name="download_complete">下载完成，正在安装…</string>
     <string name="check_update_failed">检查更新失败</string>
 
-    <!-- AI 状态 -->
+    
     <string name="ai_generating_status">AI 生成中…</string>
     <string name="ai_analyzing_status">正在分析需求…</string>
     <string name="ai_completed_status">生成完成</string>
     <string name="ai_planning_status">制定开发计划…</string>
     <string name="ai_coding_status">生成代码中…</string>
 
-    <!-- 加密 -->
+    
     <string name="encryption_settings">加密设置</string>
     <string name="enable_encryption">启用加密</string>
     <string name="encryption_hint">加密应用资源以保护</string>
 
-    <!-- 强制运行/辅助功能 -->
-    <string name="accessibility_service_description">强制运行防护服务。启用后，当应用处于强制运行模式时，会阻止用户切换到其他应用，确保专注使用。此服务仅在您主动开启强制运行功能时生效。</string>
+    
+    <string name="accessibility_service_description">强制运行防护服务。启用后会阻止切换到其他应用。</string>
     <string name="forced_run_service_name">专注模式守护</string>
     <string name="forced_run_active">专注模式运行中</string>
     <string name="forced_run_remaining">剩余时间: %s</string>
@@ -670,7 +670,7 @@
     <string name="standard_encryption">标准</string>
     <string name="advanced_encryption">高级</string>
 
-    <!-- 隔离 -->
+    
     <string name="isolation_settings">隔离设置</string>
     <string name="enable_isolation">启用隔离</string>
     <string name="isolation_hint">创建隔离的浏览器环境</string>
@@ -680,7 +680,7 @@
     <string name="storage_isolation">存储隔离</string>
     <string name="regenerate_on_launch">启动时重新生成</string>
 
-    <!-- 多桌面图标/伪装功能 -->
+    
     <string name="disguise_multi_icon_title">多桌面图标</string>
     <string name="disguise_icon_count_format">%d 个图标</string>
     <string name="disguise_not_enabled">未启用</string>
@@ -692,9 +692,9 @@
     <string name="disguise_count_hint">建议 2–10 个</string>
     <string name="disguise_hide_main_icon">隐藏主图标</string>
     <string name="disguise_hide_main_icon_desc">仅保留别名图标，隐藏主 Activity 的图标</string>
-    <string name="disguise_multi_icon_tip">多图标功能通过 Android 原生的 activity-alias 机制实现，安装后自动显示多个桌面图标，无需任何额外权限。</string>
+    <string name="disguise_multi_icon_tip">通过 activity-alias 生成多个桌面图标，无需额外权限。</string>
 
-    <!-- 账号注销 -->
+    
     <string name="delete_account_title">注销账号</string>
     <string name="delete_account_warning">此操作不可撤销，您的所有数据将被永久删除。</string>
     <string name="delete_account_password_label">请输入密码确认</string>
@@ -702,11 +702,11 @@
     <string name="delete_account_confirm_label">输入 DELETE 确认</string>
     <string name="delete_account_button">永久删除账号</string>
 
-    <!-- 模块导入消息 -->
+    
     <string name="msg_import_success">模块 %s 导入成功</string>
     <string name="msg_import_failed">模块导入失败: %s</string>
 
-    <!-- 个人资料页面 -->
+    
     <string name="change_password">修改密码</string>
     <string name="update_login_password">更新您的登录密码</string>
     <string name="logout_all_devices">在所有设备上登出</string>
@@ -719,7 +719,7 @@
     <string name="password_min_length">至少 6 位</string>
     <string name="confirm_change">确认修改</string>
 
-    <!-- 公告模板 -->
+    
     <string name="template_minimal">极简风</string>
     <string name="template_minimal_desc">简洁克制的留白排版</string>
     <string name="template_xiaohongshu">小红书风</string>
@@ -741,7 +741,7 @@
     <string name="template_nature">自然风</string>
     <string name="template_nature_desc">舒缓清新的平衡表达</string>
 
-    <!-- AI 错误卡片 -->
+    
     <string name="retry_action">重新尝试上一次操作</string>
     <string name="retry_different_model">换个模型重试</string>
     <string name="retry_different_model_desc">使用其他 AI 模型重试</string>
@@ -768,19 +768,19 @@
     <string name="auto_retry_after_seconds">%d秒后自动重试</string>
     <string name="retrying">正在重试...</string>
 
-    <!-- AI 模块开发 UI -->
+    
     <string name="you">你</string>
     <string name="generating">生成中</string>
     <string name="copy_code">复制</string>
     <string name="verify_code">验证</string>
     <string name="thinking_label">思考中...</string>
 
-    <!-- 关于页面 - 法律声明 -->
-    <string name="legal_disclaimer_content_1">本软件为开源技术研究与教育演示工具，所有功能均基于Android系统公开API实现，旨在展示移动应用开发技术。本软件不鼓励、不支持任何非法用途。</string>
-    <string name="legal_disclaimer_content_2">用户应确保在合法、正当的场景下使用本软件，包括但不限于：\n• 自我管理：用于个人专注力训练、学习时间管理\n• 企业展示：用于展会、商场等场景的展示终端\n• 家长监护：在未成年人知情同意下的合理使用\n• 教育研究：用于技术学习和安全研究\n\n严禁将本软件用于任何侵犯他人人身自由、隐私权、财产权等合法权益的行为。</string>
-    <string name="legal_disclaimer_content_3">本软件包含的「强制运行」及相关硬件控制功能（以下简称「高级功能」）属于技术演示性质：\n\n1. 【知情同意原则】高级功能仅应在设备所有者或使用者完全知情并明确同意的情况下启用\n\n2. 【自主控制原则】所有功能均提供紧急退出机制，用户可通过密码随时终止\n\n3. 【技术中立原则】功能本身不具有违法性，其合法性取决于使用者的具体使用方式和目的\n\n</string>
+    
+    <string name="legal_disclaimer_content_1">本软件用于开源研究与演示，请勿用于非法用途。</string>
+    <string name="legal_disclaimer_content_2">仅限合法场景使用，禁止侵害他人自由、隐私或财产。</string>
+    <string name="legal_disclaimer_content_3">强制运行等高级功能需经设备使用者明确同意，可随时用密码退出，风险自担。</string>
 
-    <!-- 关于页面 - 更新错误 -->
+    
     <string name="update_check_failed_title">检查更新失败</string>
     <string name="update_check_manual_stage">手动检查更新</string>
     <string name="update_check_request_failed">更新服务请求失败，已停止继续处理。</string>

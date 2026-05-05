@@ -22,13 +22,14 @@ import com.webtoapp.core.i18n.Strings
 import com.webtoapp.core.webview.WebViewCallbacks
 import com.webtoapp.ui.components.EdgeSwipeRefreshLayout
 import com.webtoapp.data.model.WebViewConfig
+import androidx.activity.compose.BackHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 
-/**
- * WordPress Shell 模式 — 从 APK assets 提取 PHP + WordPress 文件并启动本地服务器
- */
+
+
+
 @Composable
 fun WordPressShellMode(
     config: ShellConfig,
@@ -42,21 +43,21 @@ fun WordPressShellMode(
 ) {
     val context = LocalContext.current
 
-    // 状态
-    var phase by remember { mutableStateOf("extracting") } // extracting | starting | ready | error
+
+    var phase by remember { mutableStateOf("extracting") }
     var errorMsg by remember { mutableStateOf<String?>(null) }
     var serverUrl by remember { mutableStateOf<String?>(null) }
     var webViewRef by remember { mutableStateOf<WebView?>(null) }
 
     val phpRuntime = remember { com.webtoapp.core.wordpress.WordPressPhpRuntime(context) }
 
-    // ---- 提取 + 启动 PHP 服务器 ----
+
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
             try {
-                // 1. 解析 PHP 二进制路径
-                // 优先 nativeLibraryDir/libphp.so（Android 15+ 唯一可执行路径）
-                // 回退到从 assets 提取（旧版 APK 兼容）
+
+
+
                 val nativePhp = File(context.applicationInfo.nativeLibraryDir, "libphp.so")
                 if (!nativePhp.exists()) {
                     val abi = com.webtoapp.core.wordpress.WordPressDependencyManager.getDeviceAbi()
@@ -71,7 +72,7 @@ fun WordPressShellMode(
                     }
                 }
 
-                // 2. 提取 WordPress 文件到私有目录（仅首次）
+
                 val wpDir = File(context.filesDir, "wordpress_site")
                 val marker = File(wpDir, ".wp_extracted")
                 val extractionToken = buildExtractionToken(
@@ -88,13 +89,34 @@ fun WordPressShellMode(
                     writeExtractionMarker(marker, extractionToken)
                 }
 
-                // 3. 启动 PHP 内置服务器
+
                 phase = "starting"
                 val requestPort = config.wordpressConfig.phpPort
                 val port = phpRuntime.startServer(wpDir.absolutePath, requestPort)
 
                 if (port > 0) {
                     serverUrl = "http://127.0.0.1:$port"
+                    phase = "installing"
+                    if (config.wordpressConfig.autoInstall) {
+                        com.webtoapp.core.wordpress.WordPressManager.autoInstallIfNeeded(
+                            baseUrl = serverUrl!!,
+                            siteTitle = config.wordpressConfig.siteTitle,
+                            adminUser = config.wordpressConfig.adminUser,
+                            adminPassword = config.wordpressConfig.adminPassword,
+                            adminEmail = config.wordpressConfig.adminEmail.ifBlank { "admin@localhost.local" },
+                            siteLanguage = config.wordpressConfig.siteLanguage
+                        )
+                    }
+                    phase = "configuring"
+                    com.webtoapp.core.wordpress.WordPressManager.applyRuntimeConfig(
+                        phpBinary = phpRuntime.getPhpBinaryPath(),
+                        projectDir = wpDir,
+                        siteTitle = config.wordpressConfig.siteTitle,
+                        permalinkStructure = config.wordpressConfig.permalinkStructure,
+                        siteLanguage = config.wordpressConfig.siteLanguage,
+                        themeName = config.wordpressConfig.themeName,
+                        activePlugins = config.wordpressConfig.activePlugins
+                    )
                     phase = "ready"
                     AppLogger.i("WordPressShell", "WordPress 就绪: $serverUrl")
                 } else {
@@ -109,12 +131,12 @@ fun WordPressShellMode(
         }
     }
 
-    // ---- 清理 PHP 服务器 ----
+
     DisposableEffect(phpRuntime) {
         onDispose { phpRuntime.stopServer() }
     }
 
-    // ---- UI ----
+
     Box(modifier = Modifier.fillMaxSize()) {
         when (phase) {
             "ready" -> {
@@ -153,11 +175,11 @@ fun WordPressShellMode(
                                     config.extensionFabIcon, allowGlobalModuleFallback = false,
                                     browserDisguiseConfig = config.browserDisguiseConfig,
                                     deviceDisguiseConfig = config.deviceDisguiseConfig)
-                                // WordPress 通过 localhost 加载，允许混合内容
+
                                 settings.mixedContentMode =
                                     android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
 
-                                // 长按监听
+
                                 var lastTouchX = 0f
                                 var lastTouchY = 0f
                                 setOnTouchListener { view, event ->
@@ -238,11 +260,11 @@ fun WordPressShellMode(
     }
 }
 
-/**
- * HTML / FRONTEND 应用 Shell 模式
- * 从 APK assets 提取静态站点文件后，通过 LocalHttpServer 以 localhost 方式加载，
- * 以支持 WASM / ONNX / Worker / SharedArrayBuffer 等能力。
- */
+
+
+
+
+
 @Composable
 fun HtmlFrontendShellMode(
     config: ShellConfig,
@@ -265,7 +287,10 @@ fun HtmlFrontendShellMode(
         onDispose { httpServer.stop() }
     }
 
-    LaunchedEffect(config.versionCode, config.htmlConfig.entryFile, config.webViewConfig.enableCrossOriginIsolation) {
+
+    val effectiveEntryFile = config.htmlConfig.getValidEntryFile()
+
+    LaunchedEffect(config.versionCode, effectiveEntryFile, config.webViewConfig.enableCrossOriginIsolation) {
         withContext(Dispatchers.IO) {
             try {
                 val siteDir = File(context.filesDir, "html_shell_site")
@@ -286,7 +311,7 @@ fun HtmlFrontendShellMode(
                 }
 
                 phase = "starting"
-                val resolvedEntry = resolveExtractedHtmlEntry(siteDir, configuredEntryFile)
+                val resolvedEntry = resolveExtractedHtmlEntry(siteDir, effectiveEntryFile)
                 val shouldEnableIsolation = config.webViewConfig.enableCrossOriginIsolation ||
                     com.webtoapp.core.webview.LocalHttpServer.shouldEnableCrossOriginIsolation(siteDir)
                 val baseUrl = httpServer.start(siteDir, enableCrossOriginIsolation = shouldEnableIsolation)
@@ -391,10 +416,10 @@ private fun buildLocalHttpTargetUrl(baseUrl: String, relativePath: String): Stri
     return "$baseUrl/${Uri.encode(normalizedPath, "/")}"
 }
 
-/**
- * Node.js 应用 Shell 模式
- * 通过 JNI 加载 libnode.so 共享库，在进程内启动 Node.js 服务器，WebView 加载 localhost
- */
+
+
+
+
 @Composable
 fun NodeJsShellMode(
     config: com.webtoapp.core.shell.ShellConfig,
@@ -408,22 +433,22 @@ fun NodeJsShellMode(
 ) {
     val context = LocalContext.current
 
-    var phase by remember { mutableStateOf("extracting") } // extracting | starting | ready | error
+    var phase by remember { mutableStateOf("extracting") }
     var errorMsg by remember { mutableStateOf<String?>(null) }
     var serverUrl by remember { mutableStateOf<String?>(null) }
     var webViewRef by remember { mutableStateOf<WebView?>(null) }
 
     val nodeRuntime = remember { com.webtoapp.core.nodejs.NodeRuntime(context) }
 
-    // 提取 + 启动 Node.js 服务器
+
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
             try {
-                // 1. 检查 libnode.so 是否存在
+
                 val nodePath = com.webtoapp.core.nodejs.NodeDependencyManager.getNodeLibraryPath(context)
                 AppLogger.i("NodeJsShell", "nativeLibraryDir: ${context.applicationInfo.nativeLibraryDir}")
                 com.webtoapp.core.shell.ShellLogger.i("NodeJsShell", "nativeLibraryDir: ${context.applicationInfo.nativeLibraryDir}")
-                
+
                 if (nodePath == null) {
                     AppLogger.e("NodeJsShell", "libnode.so 未找到")
                     com.webtoapp.core.shell.ShellLogger.e("NodeJsShell", "libnode.so 未找到")
@@ -431,11 +456,11 @@ fun NodeJsShellMode(
                     errorMsg = Strings.nodeRuntimeNotFound
                     return@withContext
                 }
-                
+
                 AppLogger.i("NodeJsShell", "libnode.so 路径: $nodePath (size=${java.io.File(nodePath).length()})")
                 com.webtoapp.core.shell.ShellLogger.i("NodeJsShell", "libnode.so 路径: $nodePath (size=${java.io.File(nodePath).length()})")
 
-                // 2. 提取项目文件到私有目录（仅首次）
+
                 val projectDir = File(context.filesDir, "nodejs_site")
                 val marker = File(projectDir, ".nodejs_extracted")
                 val extractionToken = buildExtractionToken(
@@ -453,14 +478,14 @@ fun NodeJsShellMode(
                     writeExtractionMarker(marker, extractionToken)
                 }
 
-                // 3. 设置环境变量
+
                 val envVars = config.nodejsConfig.envVars.toMutableMap()
                 val requestPort = config.nodejsConfig.port.takeIf { it > 0 }
                 if (requestPort != null && !envVars.containsKey("PORT")) {
                     envVars["PORT"] = requestPort.toString()
                 }
 
-                // 4. 启动 Node.js 服务器（通过 JNI）
+
                 phase = "starting"
                 val entryFile = config.nodejsConfig.entryFile.ifEmpty { "index.js" }
                 val port = nodeRuntime.startServer(
@@ -491,12 +516,12 @@ fun NodeJsShellMode(
         }
     }
 
-    // 清理 Node.js 服务器
+
     DisposableEffect(nodeRuntime) {
         onDispose { nodeRuntime.stopServer() }
     }
 
-    // UI
+
     Box(modifier = Modifier.fillMaxSize()) {
         when (phase) {
             "ready" -> {
@@ -613,9 +638,9 @@ fun NodeJsShellMode(
     }
 }
 
-/**
- * PHP 应用 Shell 模式 — 从 APK assets 提取 PHP 文件并启动本地 PHP 服务器
- */
+
+
+
 @Composable
 fun PhpAppShellMode(
     config: com.webtoapp.core.shell.ShellConfig,
@@ -637,12 +662,12 @@ fun PhpAppShellMode(
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
             try {
-                // 1. 解析 PHP 二进制路径
-                // 优先 nativeLibraryDir/libphp.so（Android 15+ 唯一可执行路径）
-                // 回退到从 assets 提取（旧版 APK 兼容）
+
+
+
                 val nativePhp = File(context.applicationInfo.nativeLibraryDir, "libphp.so")
                 if (!nativePhp.exists()) {
-                    // 旧版 APK: 从 assets 提取到 DependencyManager 期望的路径
+
                     val abi = com.webtoapp.core.wordpress.WordPressDependencyManager.getDeviceAbi()
                     val phpDir = com.webtoapp.core.wordpress.WordPressDependencyManager.getPhpDir(context)
                     val phpBinary = File(phpDir, "php")
@@ -654,7 +679,7 @@ fun PhpAppShellMode(
                     }
                 }
 
-                // 2. 提取 PHP 项目文件
+
                 val phpProjectDir = File(context.filesDir, "php_app_site")
                 val marker = File(phpProjectDir, ".php_extracted")
                 val extractionToken = buildExtractionToken(
@@ -669,7 +694,7 @@ fun PhpAppShellMode(
                     writeExtractionMarker(marker, extractionToken)
                 }
 
-                // 3. 启动 PHP 服务器
+
                 phase = "starting"
                 val docRoot = config.phpAppConfig.documentRoot
                 val entryFile = config.phpAppConfig.entryFile.ifBlank { "index.php" }
@@ -774,9 +799,9 @@ fun PhpAppShellMode(
     }
 }
 
-/**
- * Python 应用 Shell 模式 — 从 APK assets 提取 Python 文件并通过 PythonRuntime 启动真实 Python 服务器
- */
+
+
+
 @Composable
 fun PythonAppShellMode(
     config: com.webtoapp.core.shell.ShellConfig,
@@ -799,9 +824,9 @@ fun PythonAppShellMode(
         withContext(Dispatchers.IO) {
             try {
                 val pyConfig = config.pythonAppConfig
-                
-                // 1. 提取 Python 标准库（从 assets/python_runtime/ 到 python_deps/python/）
-                //    Python 二进制已通过 lib/$abi/libpython3.so 自动安装到 nativeLibraryDir
+
+
+
                 val pythonHome = com.webtoapp.core.python.PythonDependencyManager.getPythonDir(context)
                 val runtimeMarker = File(pythonHome, ".runtime_extracted")
                 if (!runtimeMarker.exists()) {
@@ -814,7 +839,7 @@ fun PythonAppShellMode(
                             AppLogger.i("PythonShell", "Python 标准库提取完成")
                         } else {
                             AppLogger.w("PythonShell", "assets/python_runtime 不存在或为空，尝试 legacy assets/python/ 路径")
-                            // Legacy fallback: 从 assets/python/$abi/python3 提取二进制
+
                             val abi = com.webtoapp.core.python.PythonDependencyManager.getDeviceAbi()
                             try {
                                 val binDir = File(pythonHome, "bin")
@@ -837,11 +862,11 @@ fun PythonAppShellMode(
                 } else {
                     AppLogger.i("PythonShell", "Python 标准库已提取，跳过")
                 }
-                
-                // 2. 检查 Python 运行时是否可用
+
+
                 if (!pythonRuntime.isPythonAvailable()) {
                     AppLogger.w("PythonShell", "Python 运行时不可用，回退到预览模式")
-                    // 回退：尝试加载 _preview_.html
+
                     val projectDir = File(context.filesDir, "python_app_site")
                     projectDir.mkdirs()
                     extractAssetsRecursive(context, "python_app", projectDir)
@@ -858,7 +883,7 @@ fun PythonAppShellMode(
                 }
                 AppLogger.i("PythonShell", "Python 运行时已就绪")
 
-                // 3. 提取项目文件到私有目录（仅首次）
+
                 val projectDir = File(context.filesDir, "python_app_site")
                 val marker = File(projectDir, ".python_extracted")
                 val extractionToken = buildExtractionToken(
@@ -877,7 +902,7 @@ fun PythonAppShellMode(
                     AppLogger.i("PythonShell", "已存在提取标记, 跳过提取")
                 }
 
-                // 4. 启动 Python 服务器（通过 PythonRuntime）
+
                 phase = "starting"
                 val entryFile = pyConfig.entryFile.ifEmpty { "app.py" }
                 val framework = pyConfig.framework.ifEmpty { "flask" }
@@ -1027,9 +1052,9 @@ fun PythonAppShellMode(
     }
 }
 
-/**
- * Go 应用 Shell 模式 — 从 APK assets 提取 Go 项目文件并通过 GoRuntime 启动预编译二进制服务器
- */
+
+
+
 @Composable
 fun GoAppShellMode(
     config: com.webtoapp.core.shell.ShellConfig,
@@ -1053,7 +1078,7 @@ fun GoAppShellMode(
             try {
                 val goConfig = config.goAppConfig
 
-                // 1. 提取项目文件到私有目录（仅首次）
+
                 val projectDir = File(context.filesDir, "go_app_site")
                 val marker = File(projectDir, ".go_extracted")
                 val extractionToken = buildExtractionToken(
@@ -1072,7 +1097,7 @@ fun GoAppShellMode(
                     AppLogger.i("GoShell", "已存在提取标记, 跳过提取")
                 }
 
-                // 2. 检测 Go 二进制
+
                 val binaryName = goConfig.binaryName.ifEmpty {
                     goRuntime.detectBinary(projectDir) ?: ""
                 }
@@ -1091,7 +1116,7 @@ fun GoAppShellMode(
                 }
                 AppLogger.i("GoShell", "检测到 Go 二进制: $binaryName")
 
-                // 3. 启动 Go 服务器（通过 GoRuntime）
+
                 phase = "starting"
                 val port = goRuntime.startServer(
                     projectDir = projectDir.absolutePath,
@@ -1219,10 +1244,10 @@ fun GoAppShellMode(
     }
 }
 
-/**
- * 旧版静态前端产物 Shell 模式（保留用于向后兼容）
- * 从 assets 提取项目文件并通过 LocalHttpServer + WebView 加载
- */
+
+
+
+
 @Composable
 fun ServerAppShellMode(
     appType: String,
@@ -1259,11 +1284,11 @@ fun ServerAppShellMode(
                         "${config.goAppConfig.framework}|${config.goAppConfig.binaryName}|${config.goAppConfig.staticDir}"
                     }
                 )
-                
+
                 AppLogger.i("ServerAppShellMode", "========== $appType Shell 启动 ==========")
                 AppLogger.i("ServerAppShellMode", "assetDir=$assetDir, siteDir=${siteDir.absolutePath}")
                 AppLogger.i("ServerAppShellMode", "marker exists=${marker.exists()}")
-                
+
                 if (appType == "PYTHON_APP") {
                     val pyConfig = config.pythonAppConfig
                     AppLogger.i("ServerAppShellMode", "Python配置: framework=${pyConfig.framework}, entryFile=${pyConfig.entryFile}, entryModule=${pyConfig.entryModule}, serverType=${pyConfig.serverType}, port=${pyConfig.port}")
@@ -1272,8 +1297,8 @@ fun ServerAppShellMode(
                     val goConfig = config.goAppConfig
                     AppLogger.i("ServerAppShellMode", "Go配置: framework=${goConfig.framework}, binaryName=${goConfig.binaryName}, port=${goConfig.port}, staticDir=${goConfig.staticDir}")
                 }
-                
-                // 列出 assets 中的顶层内容
+
+
                 try {
                     val assetChildren = context.assets.list(assetDir)
                     AppLogger.i("ServerAppShellMode", "assets/$assetDir 内容 (${assetChildren?.size ?: 0} 项): ${assetChildren?.joinToString()}")
@@ -1283,7 +1308,7 @@ fun ServerAppShellMode(
                 } catch (e: Exception) {
                     AppLogger.e("ServerAppShellMode", "列出 assets/$assetDir 失败", e)
                 }
-                
+
                 if (shouldReextractAssets(marker, extractionToken)) {
                     AppLogger.i("ServerAppShellMode", "首次提取: 删除旧目录并从 assets 提取...")
                     siteDir.deleteRecursively()
@@ -1293,8 +1318,8 @@ fun ServerAppShellMode(
                 } else {
                     AppLogger.i("ServerAppShellMode", "已存在提取标记, 跳过提取")
                 }
-                
-                // 列出提取后的目录结构 (最多30项)
+
+
                 val fileList = StringBuilder()
                 siteDir.walkTopDown().take(30).forEach { f ->
                     val rel = f.relativeTo(siteDir).path
@@ -1303,10 +1328,10 @@ fun ServerAppShellMode(
                 }
                 val totalFiles = siteDir.walkTopDown().filter { it.isFile }.count()
                 AppLogger.i("ServerAppShellMode", "提取后目录结构 ($totalFiles 个文件):\n$fileList")
-                
+
                 phase = "starting"
 
-                // 通过 LocalHttpServer 加载项目静态前端产物
+
                 val candidates = listOf("dist", "build", "public", "static", "www", "")
                 var docRoot: File? = null
                 for (dir in candidates) {
@@ -1320,14 +1345,14 @@ fun ServerAppShellMode(
                         break
                     }
                 }
-                
+
                 if (docRoot != null) {
                     serverUrl = httpServer.start(docRoot)
                     phase = "ready"
                     AppLogger.i("ServerAppShellMode", "LocalHttpServer 已启动, URL=$serverUrl")
                 } else {
                     AppLogger.w("ServerAppShellMode", "所有候选目录均未找到 index.html")
-                    // 没有找到 index.html，尝试直接通过 file:// 加载
+
                     serverUrl = "file://${siteDir.absolutePath}/index.html"
                     if (File(siteDir, "index.html").exists()) {
                         phase = "ready"
@@ -1339,7 +1364,7 @@ fun ServerAppShellMode(
                         AppLogger.e("ServerAppShellMode", "Python/Go 后端应用需要对应运行时才能提供页面，当前实现仅支持静态前端产物")
                     }
                 }
-                
+
                 AppLogger.i("ServerAppShellMode", "========== 最终状态: phase=$phase, serverUrl=$serverUrl, error=$errorMsg ==========")
             } catch (e: Exception) {
                 phase = "error"

@@ -5,9 +5,9 @@ import org.junit.Test
 
 class ActivationCodeExtendedTest {
 
-    // ═══════════════════════════════════════════
-    // fromJson
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `fromJson parses valid JSON object`() {
@@ -81,9 +81,9 @@ class ActivationCodeExtendedTest {
         assertThat(code!!.code).isEqualTo("ABC")
     }
 
-    // ═══════════════════════════════════════════
-    // toJson
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `toJson produces valid JSON with code`() {
@@ -112,9 +112,9 @@ class ActivationCodeExtendedTest {
         assertThat(restored.note).isEqualTo(original.note)
     }
 
-    // ═══════════════════════════════════════════
-    // fromLegacyString
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `fromLegacyString creates PERMANENT code`() {
@@ -131,9 +131,9 @@ class ActivationCodeExtendedTest {
         assertThat(code.allowDeviceBinding).isFalse()
     }
 
-    // ═══════════════════════════════════════════
-    // ActivationCodeType enum
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `ActivationCodeType has all expected values`() {

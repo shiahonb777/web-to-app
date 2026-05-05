@@ -8,16 +8,16 @@ import androidx.compose.ui.platform.LocalContext
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.core.webview.LongPressHandler
 
-/**
- * 长按菜单 - 根据样式显示不同的菜单组件
- *
- * @param menuStyle 菜单样式：SIMPLE, FULL, IOS, FLOATING, CONTEXT
- * @param result 长按结果
- * @param touchX 触摸 X 坐标（用于 FLOATING 和 CONTEXT 样式定位）
- * @param touchY 触摸 Y 坐标
- * @param longPressHandler 长按处理器（保存图片、复制链接等）
- * @param onDismiss 关闭菜单回调
- */
+
+
+
+
+
+
+
+
+
+
 @Composable
 fun ShellLongPressMenu(
     menuStyle: String,
@@ -28,10 +28,10 @@ fun ShellLongPressMenu(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
-    
+
     when (menuStyle) {
         "SIMPLE" -> {
-            // 简洁模式：仅保存图片和复制链接
+
             com.webtoapp.ui.components.SimpleLongPressMenuSheet(
                 result = result,
                 onDismiss = onDismiss,
@@ -46,7 +46,7 @@ fun ShellLongPressMenu(
             )
         }
         "FULL" -> {
-            // 完整模式：BottomSheet
+
             com.webtoapp.ui.components.LongPressMenuSheet(
                 result = result,
                 onDismiss = onDismiss,
@@ -74,7 +74,7 @@ fun ShellLongPressMenu(
             )
         }
         "IOS" -> {
-            // iOS 风格：毛玻璃卡片
+
             com.webtoapp.ui.components.IosStyleLongPressMenu(
                 result = result,
                 onDismiss = onDismiss,
@@ -102,7 +102,7 @@ fun ShellLongPressMenu(
             )
         }
         "FLOATING" -> {
-            // 悬浮气泡风格
+
             com.webtoapp.ui.components.FloatingBubbleLongPressMenu(
                 result = result,
                 touchX = touchX,
@@ -132,7 +132,7 @@ fun ShellLongPressMenu(
             )
         }
         "CONTEXT" -> {
-            // 右键菜单风格
+
             com.webtoapp.ui.components.ContextMenuLongPressMenu(
                 result = result,
                 touchX = touchX,
@@ -162,7 +162,7 @@ fun ShellLongPressMenu(
             )
         }
         else -> {
-            // DISABLED 或其他情况
+
             onDismiss()
         }
     }

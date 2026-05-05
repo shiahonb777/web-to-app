@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 """
 Flask Analytics Dashboard — 精美的 Python Web 应用示例
 一个现代化的数据分析仪表盘，展示 Flask 的强大功能
@@ -12,7 +12,7 @@ from flask import Flask, render_template_string, jsonify, request
 
 app = Flask(__name__)
 
-# ==================== 模拟数据 ====================
+
 
 def generate_weekly_data():
     """生成最近 7 天的模拟数据"""
@@ -56,7 +56,7 @@ def generate_activities():
         })
     return result
 
-# ==================== 路由 ====================
+
 
 DASHBOARD_HTML = r"""<!DOCTYPE html>
 <html lang="zh-CN">

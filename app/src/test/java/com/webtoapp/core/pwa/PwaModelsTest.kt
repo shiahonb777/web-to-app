@@ -5,9 +5,9 @@ import org.junit.Test
 
 class PwaModelsTest {
 
-    // ═══════════════════════════════════════════
-    // PwaIcon.maxSizePixels
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `maxSizePixels returns Int MAX_VALUE for blank sizes`() {
@@ -51,9 +51,9 @@ class PwaModelsTest {
         assertThat(icon.maxSizePixels).isEqualTo(Int.MAX_VALUE)
     }
 
-    // ═══════════════════════════════════════════
-    // PwaManifest defaults
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `PwaManifest default has empty icons list`() {
@@ -70,9 +70,9 @@ class PwaModelsTest {
         assertThat(manifest.themeColor).isNull()
     }
 
-    // ═══════════════════════════════════════════
-    // PwaAnalysisResult defaults
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `PwaAnalysisResult default is not PWA`() {
@@ -88,9 +88,9 @@ class PwaModelsTest {
         assertThat(result.source).isEqualTo(PwaDataSource.MANIFEST)
     }
 
-    // ═══════════════════════════════════════════
-    // PwaDataSource enum
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `PwaDataSource has all expected values`() {
@@ -101,9 +101,9 @@ class PwaModelsTest {
         )
     }
 
-    // ═══════════════════════════════════════════
-    // PwaAnalysisState sealed class
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `PwaAnalysisState Idle is data object`() {

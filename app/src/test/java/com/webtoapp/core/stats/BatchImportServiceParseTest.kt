@@ -3,10 +3,10 @@ package com.webtoapp.core.stats
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
-/**
- * Tests for BatchImportService parsing logic.
- * Replicates the pure parsing algorithm since the service requires Context/Repository.
- */
+
+
+
+
 class BatchImportServiceParseTest {
 
     private fun parseFromText(text: String): List<TestParsedEntry> {
@@ -53,9 +53,9 @@ class BatchImportServiceParseTest {
 
     data class TestParsedEntry(val name: String, val url: String)
 
-    // ═══════════════════════════════════════════
-    // Basic parsing
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `parseFromText parses single URL`() {
@@ -92,9 +92,9 @@ class BatchImportServiceParseTest {
         assertThat(result).hasSize(3)
     }
 
-    // ═══════════════════════════════════════════
-    // Comment and blank line handling
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `parseFromText skips comment lines starting with hash`() {
@@ -123,9 +123,9 @@ class BatchImportServiceParseTest {
         assertThat(result).hasSize(2)
     }
 
-    // ═══════════════════════════════════════════
-    // Deduplication
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `parseFromText deduplicates URLs`() {
@@ -137,9 +137,9 @@ class BatchImportServiceParseTest {
         assertThat(result).hasSize(1)
     }
 
-    // ═══════════════════════════════════════════
-    // Invalid input
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `parseFromText returns empty for non-URL text`() {
@@ -159,9 +159,9 @@ class BatchImportServiceParseTest {
         assertThat(result).isEmpty()
     }
 
-    // ═══════════════════════════════════════════
-    // Name extraction
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `extractName removes www prefix and TLD`() {

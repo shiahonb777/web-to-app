@@ -1,18 +1,18 @@
 package com.webtoapp.core.extension
 
-/**
- * 油猴脚本浮窗管理器 JS 脚本
- * 
- * 在 WebView 中注入，提供 window.__WTA_SCRIPT_WINDOWS__ 全局对象，
- * 实现多窗口管理：创建、关闭、最小化、恢复、拖动、缩放、任务栏。
- * 复用 ExtensionPanelScript 的 CSS 变量风格。
- */
+
+
+
+
+
+
+
 object UserScriptWindowScript {
 
-    /**
-     * 获取浮窗管理器 JS 代码
-     * 应在 GM polyfill 之后、userscript 代码之前注入
-     */
+
+
+
+
     fun getWindowManagerScript(): String = """
 (function() {
     'use strict';

@@ -3,6 +3,7 @@ package com.webtoapp.ui.screens.create.runtime
 import com.google.gson.JsonObject
 import com.webtoapp.data.model.NodeJsBuildMode
 import com.webtoapp.ui.screens.create.common.ProjectImportAnalysis
+import com.webtoapp.core.i18n.Strings
 import com.webtoapp.ui.screens.create.common.ProjectImportException
 import com.webtoapp.ui.screens.create.common.detectPortFromText
 import com.webtoapp.ui.screens.create.common.formatProjectName
@@ -33,12 +34,12 @@ data class NodeJsProjectImportAnalysis(
 class NodeJsProjectImportAnalyzer {
     fun analyze(projectDir: File): NodeJsProjectImportAnalysis {
         if (!projectDir.exists() || !projectDir.isDirectory) {
-            throw ProjectImportException("Node.js 项目目录不存在")
+            throw ProjectImportException(Strings.importNodeDirNotFound)
         }
 
         val packageJsonFile = File(projectDir, "package.json")
         if (!packageJsonFile.exists()) {
-            throw ProjectImportException("未找到 package.json")
+            throw ProjectImportException(Strings.importPackageJsonNotFound)
         }
 
         val packageJson = GsonProvider.gson.fromJson(

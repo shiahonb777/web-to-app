@@ -5,9 +5,9 @@ import org.junit.Test
 
 class ForcedRunConfigTest {
 
-    // ═══════════════════════════════════════════
-    // DISABLED preset
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `DISABLED preset has enabled false`() {
@@ -19,9 +19,9 @@ class ForcedRunConfigTest {
         assertThat(ForcedRunConfig.DISABLED.mode).isEqualTo(ForcedRunMode.FIXED_TIME)
     }
 
-    // ═══════════════════════════════════════════
-    // STUDY_MODE preset
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `STUDY_MODE preset is enabled`() {
@@ -50,9 +50,9 @@ class ForcedRunConfigTest {
         assertThat(ForcedRunConfig.STUDY_MODE.showCountdown).isTrue()
     }
 
-    // ═══════════════════════════════════════════
-    // FOCUS_MODE preset
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `FOCUS_MODE preset is enabled`() {
@@ -74,9 +74,9 @@ class ForcedRunConfigTest {
         assertThat(ForcedRunConfig.FOCUS_MODE.allowEmergencyExit).isTrue()
     }
 
-    // ═══════════════════════════════════════════
-    // KIDS_MODE preset
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `KIDS_MODE preset is enabled`() {
@@ -106,9 +106,9 @@ class ForcedRunConfigTest {
         assertThat(ForcedRunConfig.KIDS_MODE.accessDays).containsExactly(1, 2, 3, 4, 5, 6, 7)
     }
 
-    // ═══════════════════════════════════════════
-    // ForcedRunMode enum
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `ForcedRunMode has all expected modes`() {
@@ -119,9 +119,9 @@ class ForcedRunConfigTest {
         )
     }
 
-    // ═══════════════════════════════════════════
-    // ProtectionLevel
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `default config has MAXIMUM protection level`() {
@@ -129,9 +129,9 @@ class ForcedRunConfigTest {
         assertThat(config.protectionLevel).isEqualTo(ProtectionLevel.MAXIMUM)
     }
 
-    // ═══════════════════════════════════════════
-    // Data class copy
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `config can be copied with modifications`() {

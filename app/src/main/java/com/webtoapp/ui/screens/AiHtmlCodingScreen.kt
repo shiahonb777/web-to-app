@@ -43,58 +43,58 @@ import com.webtoapp.ui.components.ThemedBackgroundBox
 import java.io.File
 import androidx.compose.ui.graphics.Color
 
-/**
- * HTML编程AI主界面
- */
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AiHtmlCodingScreen(
     onBack: () -> Unit,
-    onExportToHtmlProject: ((List<ProjectFile>, String) -> Unit)? = null,  // Export到HTML项目的回调
-    onNavigateToAiSettings: () -> Unit = {}  // 导航到AI设置的回调
+    onExportToHtmlProject: ((List<ProjectFile>, String) -> Unit)? = null,
+    onNavigateToAiSettings: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    
-    // 管理器
+
+
     val storage = remember { AiCodingStorage(context) }
     val configManager = remember { AiConfigManager(context) }
     val apiClient = remember { AiApiClient(context) }
     val htmlAgent = remember { AiCodingAgent(context) }
-    
-    // 状态 - 使用try-catch包装防止异常导致白屏
+
+
     var isLoading by remember { mutableStateOf(true) }
     var loadError by remember { mutableStateOf<String?>(null) }
-    
+
     val sessions by storage.sessionsFlow.collectAsState(initial = emptyList())
     val currentSessionId by storage.currentSessionIdFlow.collectAsState(initial = null)
     val savedModels by configManager.savedModelsFlow.collectAsState(initial = emptyList())
     val apiKeys by configManager.apiKeysFlow.collectAsState(initial = emptyList())
-    
-    // 标记加载完成
+
+
     LaunchedEffect(sessions) {
         isLoading = false
     }
-    
-    // 筛选模型 - 使用功能场景筛选
+
+
     val textModels = savedModels.filter { it.supportsFeature(AiFeature.AI_CODING) }
     val imageModels = savedModels.filter { it.supportsFeature(AiFeature.AI_CODING_IMAGE) }
-    
-    // 当前会话
+
+
     var currentSession by remember { mutableStateOf<AiCodingSession?>(null) }
-    
-    // 从 sessions Flow 同步 currentSession
-    // 注意：只有当 sessions 更新时才同步，避免覆盖本地修改
+
+
+
     LaunchedEffect(currentSessionId, sessions) {
         val sessionFromFlow = sessions.find { it.id == currentSessionId }
-        // 只有当 Flow 中的会话比本地更新时才同步
+
         if (sessionFromFlow != null) {
-            val shouldUpdate = currentSession == null || 
+            val shouldUpdate = currentSession == null ||
                 currentSession?.id != sessionFromFlow.id ||
                 sessionFromFlow.updatedAt > (currentSession?.updatedAt ?: 0)
-            
+
             AppLogger.d("AiHtmlCodingScreen", "LaunchedEffect: sessionFromFlow=${sessionFromFlow.id}, currentSession=${currentSession?.id}, shouldUpdate=$shouldUpdate, flowUpdatedAt=${sessionFromFlow.updatedAt}, localUpdatedAt=${currentSession?.updatedAt}")
-            
+
             if (shouldUpdate) {
                 AppLogger.d("AiHtmlCodingScreen", "LaunchedEffect: Updating currentSession from Flow")
                 currentSession = sessionFromFlow
@@ -103,25 +103,25 @@ fun AiHtmlCodingScreen(
             currentSession = null
         }
     }
-    
-    // UI state
+
+
     var inputText by remember { mutableStateOf("") }
     var attachedImages by remember { mutableStateOf<List<String>>(emptyList()) }
     var chatState by remember { mutableStateOf<ChatState>(ChatState.Idle) }
     var streamingContent by remember { mutableStateOf("") }
     var streamingThinking by remember { mutableStateOf("") }
-    
-    // 记录当前正在生成的会话ID，用于隔离不同会话的流式输出
+
+
     var generatingSessionId by remember { mutableStateOf<String?>(null) }
-    
-    // 项目文件相关状态
+
+
     val projectFileManager = remember { ProjectFileManager(context) }
     var projectFiles by remember { mutableStateOf<List<ProjectFileInfo>>(emptyList()) }
     var selectedProjectFile by remember { mutableStateOf<ProjectFileInfo?>(null) }
     var selectedFileContent by remember { mutableStateOf<String?>(null) }
     var isFilesPanelExpanded by remember { mutableStateOf(true) }
-    
-    // 当会话变化时刷新项目文件列表
+
+
     LaunchedEffect(currentSessionId) {
         currentSessionId?.let { sessionId ->
             projectFiles = projectFileManager.listFiles(sessionId)
@@ -133,35 +133,35 @@ fun AiHtmlCodingScreen(
             selectedFileContent = null
         }
     }
-    
-    // Refresh项目文件列表的函数
+
+
     fun refreshProjectFiles() {
         currentSessionId?.let { sessionId ->
             projectFiles = projectFileManager.listFiles(sessionId)
         }
     }
-    
-    // 当前事件收集 Job，用于在新任务开始时取消旧的收集
+
+
     var eventCollectorJob by remember { mutableStateOf<Job?>(null) }
-    
-    // 当前服务连接引用，用于在新任务开始时解绑旧的连接
+
+
     var currentServiceConnection by remember { mutableStateOf<ServiceConnection?>(null) }
     var isServiceBound by remember { mutableStateOf(false) }
-    
-    // Session切换时，清空当前会话的流式状态（但不中断后台任务）
+
+
     LaunchedEffect(currentSessionId) {
-        // 如果切换到的会话不是正在生成的会话，清空流式显示
+
         if (currentSessionId != generatingSessionId) {
             streamingContent = ""
             streamingThinking = ""
-            // Reset聊天状态为空闲（UI层面），后台任务继续运行
+
             if (chatState is ChatState.Streaming || chatState is ChatState.GeneratingImage) {
                 chatState = ChatState.Idle
             }
             AppLogger.d("AiHtmlCodingScreen", "Session switched: cleared streaming state, currentSessionId=$currentSessionId, generatingSessionId=$generatingSessionId")
         }
     }
-    
+
     var showDrawer by remember { mutableStateOf(false) }
     var showConfigSheet by remember { mutableStateOf(false) }
     var showTemplatesSheet by remember { mutableStateOf(false) }
@@ -172,8 +172,8 @@ fun AiHtmlCodingScreen(
     var showConversationCheckpointsSheet by remember { mutableStateOf(false) }
     var showSaveDialog by remember { mutableStateOf(false) }
     var editingMessage by remember { mutableStateOf<AiCodingMessage?>(null) }
-    
-    // Image选择器
+
+
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -192,11 +192,11 @@ fun AiHtmlCodingScreen(
             }
         }
     }
-    
-    // List滚动状态
+
+
     val listState = rememberLazyListState()
-    
-    // Auto滚动到底部
+
+
     LaunchedEffect(currentSession?.messages?.size) {
         currentSession?.messages?.size?.let { size ->
             if (size > 0) {
@@ -204,11 +204,11 @@ fun AiHtmlCodingScreen(
             }
         }
     }
-    
-    // 发送消息函数 - 使用前台服务保持后台运行
+
+
     fun sendMessage() {
         AppLogger.d("AiHtmlCodingScreen", "sendMessage called: inputText='${inputText.take(50)}', chatState=$chatState, currentSession=${currentSession?.id}, generatingSessionId=$generatingSessionId")
-        
+
         if (inputText.isBlank()) {
             AppLogger.d("AiHtmlCodingScreen", "sendMessage: inputText is blank, returning")
             return
@@ -217,73 +217,73 @@ fun AiHtmlCodingScreen(
             AppLogger.d("AiHtmlCodingScreen", "sendMessage: chatState is not Idle ($chatState), returning")
             return
         }
-        
+
         scope.launch {
-            // 如果没有当前会话，先创建一个新会话
+
             val session = currentSession ?: run {
                 val newSession = storage.createSession()
                 currentSession = newSession
                 newSession
             }
             val config = session.config
-            
-            // Check模型配置
+
+
             if (config.textModelId == null) {
                 Toast.makeText(context, Strings.pleaseSelectTextModel, Toast.LENGTH_SHORT).show()
                 showConfigSheet = true
                 return@launch
             }
-            
-            // Create用户消息
+
+
             val userMessage = AiCodingMessage(
                 role = MessageRole.USER,
                 content = inputText,
                 images = attachedImages
             )
-            
-            // 添加到会话
+
+
             val updatedSession = storage.addMessage(session.id, userMessage)
             currentSession = updatedSession
-            
-            // 清空输入
+
+
             val sentText = inputText
             inputText = ""
             attachedImages = emptyList()
-            
-            // 进入流式状态
+
+
             chatState = ChatState.Streaming("")
-            
-            // 记录正在生成的会话ID
+
+
             val targetSessionId = session.id
             generatingSessionId = targetSessionId
-            
+
             try {
-                // Get模型
+
                 val textModel = savedModels.find { it.id == config.textModelId }
                 if (textModel == null) {
                     throw Exception(Strings.modelConfigInvalid)
                 }
-                
-                // Set当前HTML（用于edit_html工具）
+
+
                 val currentHtml = updatedSession?.messages
                     ?.flatMap { it.codeBlocks }
                     ?.lastOrNull { it.language == "html" }
                     ?.content
-                
-                // Reset流式状态
+
+
                 streamingContent = ""
                 streamingThinking = ""
-                
-                // Start前台服务
+
+
                 val serviceIntent = Intent(context, AiGenerationService::class.java)
                 ContextCompat.startForegroundService(context, serviceIntent)
-                
-                // Cancel之前的事件收集 Job
+
+
                 eventCollectorJob?.cancel()
                 eventCollectorJob = null
                 AppLogger.d("AiHtmlCodingScreen", "Cancelled previous event collector job")
-                
-                // 解绑之前的服务连接（如果存在）
+
+
                 if (isServiceBound && currentServiceConnection != null) {
                     try {
                         context.unbindService(currentServiceConnection!!)
@@ -294,24 +294,24 @@ fun AiHtmlCodingScreen(
                     isServiceBound = false
                     currentServiceConnection = null
                 }
-                
-                // 绑定服务并开始生成
+
+
                 val serviceConnection = object : ServiceConnection {
                     override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
                         val service = (binder as AiGenerationService.LocalBinder).getService()
                         isServiceBound = true
-                        
-                        // Listen服务事件 - 保存 Job 引用以便后续取消
+
+
                         eventCollectorJob = scope.launch {
                             val thinkingBuilder = StringBuilder()
                             var finalHtmlContent: String? = null
                             var textContent = ""
-                            
-                            // Check是否应该更新UI（当前会话与生成会话匹配）
+
+
                             fun shouldUpdateUI(): Boolean = currentSessionId == targetSessionId
-                            
+
                             AppLogger.d("AiHtmlCodingScreen", "Started event collector for session: $targetSessionId")
-                            
+
                             service.eventFlow.collect { event ->
                                 AppLogger.d("AiHtmlCodingScreen", "Received event: ${event::class.simpleName} for session: $targetSessionId")
                                 when (event) {
@@ -319,9 +319,9 @@ fun AiHtmlCodingScreen(
                                         if (shouldUpdateUI()) {
                                             when (event.state) {
                                                 HtmlAgentState.GENERATING -> chatState = ChatState.Streaming("")
-                                                HtmlAgentState.COMPLETED -> { /* 稍后处理 */ }
-                                                HtmlAgentState.ERROR -> { /* 错误在Error事件中处理 */ }
-                                                HtmlAgentState.IDLE -> { /* 空闲 */ }
+                                                HtmlAgentState.COMPLETED -> {  }
+                                                HtmlAgentState.ERROR -> {  }
+                                                HtmlAgentState.IDLE -> {  }
                                             }
                                         }
                                     }
@@ -348,7 +348,7 @@ fun AiHtmlCodingScreen(
                                     }
                                     is HtmlAgentEvent.ToolExecuted -> {
                                         AppLogger.d("AiHtmlCodingScreen", "Tool executed: ${event.result.toolName}, success=${event.result.success}")
-                                        // 如果工具执行失败，显示错误信息（特别是图像生成失败）
+
                                         if (!event.result.success && shouldUpdateUI()) {
                                             val toolError = when (event.result.toolName) {
                                                 "generate_image" -> "\uD83D\uDDBC\uFE0F ${Strings.imageGenerationFailed}: ${event.result.result}"
@@ -359,7 +359,7 @@ fun AiHtmlCodingScreen(
                                     }
                                     is HtmlAgentEvent.FileCreated -> {
                                         AppLogger.d("AiHtmlCodingScreen", "File created: ${event.fileInfo.name}, version=${event.fileInfo.version}")
-                                        // Refresh项目文件列表
+
                                         if (shouldUpdateUI()) {
                                             projectFiles = projectFileManager.listFiles(targetSessionId)
                                         }
@@ -380,7 +380,7 @@ fun AiHtmlCodingScreen(
                                     is HtmlAgentEvent.Completed -> {
                                         val finalTextContent = event.textContent.ifBlank { textContent }
                                         val thinkingContent = thinkingBuilder.toString()
-                                        
+
                                         val codeBlocks = if (finalHtmlContent != null) {
                                             listOf(CodeBlock(
                                                 language = "html",
@@ -391,9 +391,9 @@ fun AiHtmlCodingScreen(
                                         } else {
                                             emptyList()
                                         }
-                                        
-                                        // 如果没有文本内容也没有代码，说明 AI 没有返回有效响应
-                                        // Show详细的调试信息帮助用户诊断问题
+
+
+
                                         val messageContent = when {
                                             finalTextContent.isNotBlank() -> finalTextContent
                                             codeBlocks.isNotEmpty() -> Strings.codeGenerated
@@ -418,52 +418,52 @@ fun AiHtmlCodingScreen(
                                                 debugInfo
                                             }
                                         }
-                                        
+
                                         val aiMessage = AiCodingMessage(
                                             role = MessageRole.ASSISTANT,
                                             content = messageContent,
                                             thinking = thinkingContent.takeIf { it.isNotBlank() },
                                             codeBlocks = codeBlocks
                                         )
-                                        
-                                        // 无论当前显示哪个会话，都要保存消息到目标会话
+
+
                                         val finalSession = storage.addMessage(targetSessionId, aiMessage)
-                                        
-                                        // 只有当前显示的是目标会话时才更新UI
+
+
                                         if (shouldUpdateUI()) {
                                             currentSession = finalSession
                                         }
-                                        
+
                                         if (codeBlocks.isNotEmpty()) {
                                             storage.addToCodeLibrary(
                                                 sessionId = targetSessionId,
                                                 messageId = aiMessage.id,
                                                 userPrompt = userMessage.content,
                                                 codeBlocks = codeBlocks,
-                                                conversationContext = session.messages.takeLast(3).joinToString("\n") { 
-                                                    "${it.role}: ${it.content.take(100)}" 
+                                                conversationContext = session.messages.takeLast(3).joinToString("\n") {
+                                                    "${it.role}: ${it.content.take(100)}"
                                                 }
                                             )
                                         }
-                                        
+
                                         storage.createConversationCheckpoint(
                                             sessionId = targetSessionId,
                                             name = Strings.conversationCheckpoint.replace("%d", "${(finalSession?.messages?.size ?: 0) / 2}")
                                         )
-                                        
-                                        // Cleanup生成状态
+
+
                                         if (generatingSessionId == targetSessionId) {
                                             generatingSessionId = null
                                         }
-                                        
-                                        // 只有当前显示的是目标会话时才清空流式状态
+
+
                                         if (shouldUpdateUI()) {
                                             streamingContent = ""
                                             streamingThinking = ""
                                             chatState = ChatState.Idle
                                         }
-                                        
-                                        // 解绑服务
+
+
                                         if (isServiceBound && currentServiceConnection != null) {
                                             try {
                                                 context.unbindService(currentServiceConnection!!)
@@ -476,12 +476,12 @@ fun AiHtmlCodingScreen(
                                         }
                                     }
                                     is HtmlAgentEvent.Error -> {
-                                        // Cleanup生成状态
+
                                         if (generatingSessionId == targetSessionId) {
                                             generatingSessionId = null
                                         }
-                                        
-                                        // 将错误消息保存到会话中，方便用户查看和复制
+
+
                                         val errorMessage = AiCodingMessage(
                                             role = MessageRole.ASSISTANT,
                                             content = "${Strings.errorPrefix}: ${event.message}",
@@ -489,19 +489,19 @@ fun AiHtmlCodingScreen(
                                             codeBlocks = emptyList()
                                         )
                                         val updatedSession = storage.addMessage(targetSessionId, errorMessage)
-                                        
-                                        // 只有当前显示的是目标会话时才更新UI
+
+
                                         if (shouldUpdateUI()) {
                                             currentSession = updatedSession
                                             chatState = ChatState.Idle
                                             streamingContent = ""
                                             streamingThinking = ""
                                         } else {
-                                            // 后台会话出错，显示通知
+
                                             AppLogger.w("AiHtmlCodingScreen", "Background session $targetSessionId error: ${event.message}")
                                         }
-                                        
-                                        // 解绑服务
+
+
                                         if (isServiceBound && currentServiceConnection != null) {
                                             try {
                                                 context.unbindService(currentServiceConnection!!)
@@ -516,27 +516,27 @@ fun AiHtmlCodingScreen(
                                 }
                             }
                         }
-                        
-                        // Start生成
+
+
                         service.startGeneration(
                             requirement = sentText,
                             currentHtml = currentHtml,
                             sessionConfig = config,
                             model = textModel,
-                            sessionId = targetSessionId  // 传递会话ID用于文件操作
+                            sessionId = targetSessionId
                         )
                     }
-                    
+
                     override fun onServiceDisconnected(name: ComponentName?) {
                         isServiceBound = false
                         currentServiceConnection = null
                     }
                 }
-                
-                // Save服务连接引用
+
+
                 currentServiceConnection = serviceConnection
                 context.bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
-                
+
             } catch (e: Exception) {
                 chatState = ChatState.Error(e.message ?: Strings.sendFailed)
                 Toast.makeText(context, "${Strings.errorPrefix}: ${e.message}", Toast.LENGTH_LONG).show()
@@ -544,17 +544,17 @@ fun AiHtmlCodingScreen(
             }
         }
     }
-    
-    // 预览HTML
+
+
     fun previewHtml(codeBlock: CodeBlock) {
         scope.launch {
             try {
-                // 直接使用代码块的内容，不再合并
+
                 val htmlContent = codeBlock.content
-                
+
                 val file = storage.saveForPreview(htmlContent)
-                
-                // Start预览Activity
+
+
                 val intent = Intent(context, HtmlPreviewActivity::class.java).apply {
                     putExtra(HtmlPreviewActivity.EXTRA_FILE_PATH, file.absolutePath)
                     putExtra(HtmlPreviewActivity.EXTRA_TITLE, codeBlock.filename?.takeIf { it.isNotBlank() } ?: Strings.preview)
@@ -565,8 +565,8 @@ fun AiHtmlCodingScreen(
             }
         }
     }
-    
-    // 预览项目文件
+
+
     fun previewProjectFile(fileInfo: ProjectFileInfo) {
         scope.launch {
             try {
@@ -580,8 +580,8 @@ fun AiHtmlCodingScreen(
             }
         }
     }
-    
-    // Select项目文件并加载内容
+
+
     fun selectProjectFile(fileInfo: ProjectFileInfo) {
         scope.launch {
             selectedProjectFile = fileInfo
@@ -590,16 +590,16 @@ fun AiHtmlCodingScreen(
             }
         }
     }
-    
-    // Download代码到本地（下载目录）
+
+
     fun downloadCode(codeBlock: CodeBlock) {
         scope.launch {
             try {
                 val downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
                 val filename = codeBlock.filename?.takeIf { it.isNotBlank() } ?: "code.${codeBlock.language}"
                 val file = File(downloadDir, filename)
-                
-                // 如果文件已存在，添加时间戳
+
+
                 val actualFile = if (file.exists()) {
                     val timestamp = System.currentTimeMillis()
                     val nameWithoutExt = filename.substringBeforeLast(".")
@@ -608,7 +608,7 @@ fun AiHtmlCodingScreen(
                 } else {
                     file
                 }
-                
+
                 actualFile.writeText(codeBlock.content)
                 Toast.makeText(context, Strings.savedToPath.replace("%s", actualFile.absolutePath), Toast.LENGTH_LONG).show()
             } catch (e: Exception) {
@@ -616,21 +616,21 @@ fun AiHtmlCodingScreen(
             }
         }
     }
-    
-    // Export所有代码到HTML项目
+
+
     fun exportAllToHtmlProject() {
         scope.launch {
             try {
                 val allCodeBlocks = currentSession?.messages
                     ?.flatMap { it.codeBlocks }
                     ?: emptyList()
-                
+
                 if (allCodeBlocks.isEmpty()) {
                     Toast.makeText(context, Strings.noCodeToExport, Toast.LENGTH_SHORT).show()
                     return@launch
                 }
-                
-                // 转换为 ProjectFile 列表
+
+
                 val files = allCodeBlocks.map { block ->
                     val filename = block.filename?.takeIf { it.isNotBlank() } ?: when (block.language) {
                         "html" -> "index.html"
@@ -646,14 +646,14 @@ fun AiHtmlCodingScreen(
                     }
                     ProjectFile(filename, block.content, type)
                 }
-                
-                // 使用回调导出到HTML项目
+
+
                 if (onExportToHtmlProject != null) {
                     val projectName = currentSession?.title?.take(20) ?: Strings.aiGeneratedProject
                     onExportToHtmlProject.invoke(files, projectName)
                     Toast.makeText(context, Strings.exportedToHtmlProject, Toast.LENGTH_SHORT).show()
                 } else {
-                    // 如果没有回调，保存到本地项目目录
+
                     val projectName = currentSession?.title?.take(20) ?: "${Strings.aiGeneratedProject}_${System.currentTimeMillis()}"
                     val result = storage.saveProject(
                         SaveConfig(
@@ -675,8 +675,8 @@ fun AiHtmlCodingScreen(
             }
         }
     }
-    
-    // Create新会话
+
+
     fun createNewSession() {
         scope.launch {
             val session = storage.createSession()
@@ -717,23 +717,23 @@ fun AiHtmlCodingScreen(
                     }
                 },
                 actions = {
-                    // 代码库
+
                     IconButton(onClick = { showCodeLibrarySheet = true }) {
                         Icon(Icons.Outlined.Folder, Strings.codeLibrary)
                     }
-                    // Check点回退
+
                     IconButton(onClick = { showConversationCheckpointsSheet = true }) {
                         Icon(Icons.Outlined.Restore, Strings.rollback)
                     }
-                    // 模板
+
                     IconButton(onClick = { showTemplatesSheet = true }) {
                         Icon(Icons.Outlined.Palette, Strings.templates)
                     }
-                    // Set
+
                     IconButton(onClick = { showConfigSheet = true }) {
                         Icon(Icons.Outlined.Settings, Strings.settings)
                     }
-                    // 侧边栏（切换开关）
+
                     IconButton(onClick = { showDrawer = !showDrawer }) {
                         Icon(Icons.Default.Menu, Strings.sessionList)
                     }
@@ -759,7 +759,7 @@ fun AiHtmlCodingScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Load状态显示
+
             if (isLoading) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -776,7 +776,7 @@ fun AiHtmlCodingScreen(
                     }
                 }
             } else if (currentSession == null) {
-                // 无会话时显示欢迎界面
+
                 WelcomeContent(
                     onNewChat = { createNewSession() },
                     onSelectTemplate = { showTemplatesSheet = true },
@@ -791,9 +791,9 @@ fun AiHtmlCodingScreen(
                     }
                 )
             } else {
-                // 主内容区域 - 使用 Box 叠加消息列表和文件面板
+
                 Box(modifier = Modifier.fillMaxSize()) {
-                    // 消息列表
+
                     LazyColumn(
                         state = listState,
                         modifier = Modifier
@@ -820,9 +820,9 @@ fun AiHtmlCodingScreen(
                                 onExportToProject = { exportAllToHtmlProject() }
                             )
                         }
-                        
-                        
-                        // 流式输出显示（仅在收到首个分片后渲染）
+
+
+
                         if (streamingContent.isNotEmpty() || streamingThinking.isNotEmpty()) {
                             item {
                                 StreamingMessageBubble(
@@ -831,7 +831,7 @@ fun AiHtmlCodingScreen(
                                 )
                             }
                         }
-                        
+
                         if (chatState is ChatState.GeneratingImage) {
                             item {
                                 ImageGeneratingIndicator(
@@ -840,13 +840,13 @@ fun AiHtmlCodingScreen(
                             }
                         }
                     }
-                    
-                    // 项目文件面板 - 底部固定
+
+
                     if (currentSession != null) {
                         Column(
                             modifier = Modifier.align(Alignment.BottomCenter)
                         ) {
-                            // File预览面板（选中文件时显示）
+
                             AnimatedVisibility(
                                 visible = selectedProjectFile != null && selectedFileContent != null,
                                 enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
@@ -865,8 +865,8 @@ fun AiHtmlCodingScreen(
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                 )
                             }
-                            
-                            // 项目文件列表面板
+
+
                             ProjectFilesPanel(
                                 files = projectFiles,
                                 selectedFile = selectedProjectFile,
@@ -882,10 +882,10 @@ fun AiHtmlCodingScreen(
             }
         }
     }
-    
-    // 侧边抽屉 - 会话列表
+
+
     if (showDrawer) {
-        // 半透明遮罩，点击关闭
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -894,7 +894,7 @@ fun AiHtmlCodingScreen(
                     showDrawer = false
                 }
         )
-        // 从右侧滑入的会话面板
+
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.CenterEnd
@@ -922,15 +922,15 @@ fun AiHtmlCodingScreen(
             }
         }
     }
-    
-    // Configure底部弹窗
+
+
     if (showConfigSheet) {
         ModalBottomSheet(
             onDismissRequest = { showConfigSheet = false }
         ) {
-            // 如果没有当前会话，先创建一个
+
             val sessionForConfig = currentSession ?: run {
-                // 使用 LaunchedEffect 创建会话
+
                 var newSession by remember { mutableStateOf<AiCodingSession?>(null) }
                 LaunchedEffect(Unit) {
                     newSession = storage.createSession()
@@ -938,7 +938,7 @@ fun AiHtmlCodingScreen(
                 }
                 newSession
             }
-            
+
             sessionForConfig?.let { session ->
                 ConfigPanel(
                     config = session.config,
@@ -959,7 +959,7 @@ fun AiHtmlCodingScreen(
                     modifier = Modifier.padding(bottom = 32.dp)
                 )
             } ?: run {
-                // 正在创建会话，显示加载状态
+
                 Box(
                     modifier = Modifier.fillMaxWidth().padding(32.dp),
                     contentAlignment = Alignment.Center
@@ -969,8 +969,8 @@ fun AiHtmlCodingScreen(
             }
         }
     }
-    
-    // 模板选择弹窗
+
+
     if (showTemplatesSheet) {
         ModalBottomSheet(
             onDismissRequest = { showTemplatesSheet = false }
@@ -1000,8 +1000,8 @@ fun AiHtmlCodingScreen(
             )
         }
     }
-    
-    // 教程弹窗
+
+
     if (showTutorialSheet) {
         ModalBottomSheet(
             onDismissRequest = { showTutorialSheet = false }
@@ -1012,8 +1012,8 @@ fun AiHtmlCodingScreen(
             )
         }
     }
-    
-    // Version检查点弹窗
+
+
     if (showCheckpointsSheet) {
         ModalBottomSheet(
             onDismissRequest = { showCheckpointsSheet = false }
@@ -1026,11 +1026,11 @@ fun AiHtmlCodingScreen(
                         scope.launch {
                             storage.rollbackToCheckpoint(session.id, checkpointId)?.let {
                                 currentSession = it
-                                // Reset聊天状态，确保回退后可以正常发送消息
+
                                 chatState = ChatState.Idle
                                 streamingContent = ""
                                 streamingThinking = ""
-                                // 清除正在生成的会话ID，允许新的消息发送
+
                                 generatingSessionId = null
                             }
                         }
@@ -1053,8 +1053,8 @@ fun AiHtmlCodingScreen(
             }
         }
     }
-    
-    // 编辑消息对话框
+
+
     editingMessage?.let { message ->
         EditMessageDialog(
             message = message,
@@ -1064,7 +1064,7 @@ fun AiHtmlCodingScreen(
                     currentSession?.let { session ->
                         storage.editUserMessage(session.id, message.id, newContent, newImages)?.let {
                             currentSession = it
-                            // Reset聊天状态，确保编辑后可以正常发送消息
+
                             chatState = ChatState.Idle
                             streamingContent = ""
                             streamingThinking = ""
@@ -1075,8 +1075,8 @@ fun AiHtmlCodingScreen(
             }
         )
     }
-    
-    // Save项目对话框
+
+
     if (showSaveDialog) {
         SaveProjectDialog(
             storage = storage,
@@ -1088,18 +1088,18 @@ fun AiHtmlCodingScreen(
             }
         )
     }
-    
-    // 代码库弹窗
+
+
     if (showCodeLibrarySheet) {
         val codeLibrary by storage.codeLibraryFlow.collectAsState(initial = emptyList())
-        
+
         ModalBottomSheet(
             onDismissRequest = { showCodeLibrarySheet = false }
         ) {
             CodeLibrarySheetContent(
                 items = codeLibrary,
                 onPreview = { item ->
-                    // 预览代码
+
                     scope.launch {
                         val file = storage.getCodeLibraryPreviewFile(item.id)
                         if (file != null) {
@@ -1112,12 +1112,12 @@ fun AiHtmlCodingScreen(
                     }
                 },
                 onUseContent = { item ->
-                    // 使用内容（填入输入框）
+
                     inputText = "${Strings.continueDevBasedOnCode}\n${item.userPrompt}"
                     showCodeLibrarySheet = false
                 },
                 onExportToProject = { item ->
-                    // Export到项目库
+
                     scope.launch {
                         val result = storage.exportToProjectLibrary(item, item.title.take(20))
                         if (result.isSuccess) {
@@ -1137,12 +1137,12 @@ fun AiHtmlCodingScreen(
             )
         }
     }
-    
-    // 对话检查点回退弹窗
-    // 将状态提升到外部，避免在 ModalBottomSheet 内部使用 LaunchedEffect
+
+
+
     var conversationCheckpoints by remember { mutableStateOf<List<ConversationCheckpoint>>(emptyList()) }
-    
-    // 在显示弹窗时加载检查点
+
+
     LaunchedEffect(showConversationCheckpointsSheet, currentSession?.id) {
         if (showConversationCheckpointsSheet) {
             currentSession?.id?.let { sessionId ->
@@ -1150,7 +1150,7 @@ fun AiHtmlCodingScreen(
             }
         }
     }
-    
+
     if (showConversationCheckpointsSheet) {
         ModalBottomSheet(
             onDismissRequest = { showConversationCheckpointsSheet = false }
@@ -1161,44 +1161,44 @@ fun AiHtmlCodingScreen(
                     scope.launch {
                         AppLogger.d("AiHtmlCodingScreen", "Rolling back to checkpoint: ${checkpoint.id}, name: ${checkpoint.name}")
                         AppLogger.d("AiHtmlCodingScreen", "Before rollback: chatState=$chatState, generatingSessionId=$generatingSessionId")
-                        
+
                         storage.rollbackToConversationCheckpoint(checkpoint.id)?.let { restoredSession ->
                             AppLogger.d("AiHtmlCodingScreen", "Rollback successful, restoredSession: ${restoredSession.id}, messages: ${restoredSession.messages.size}")
-                            
-                            // Reset聊天状态，确保回退后可以正常发送消息
+
+
                             chatState = ChatState.Idle
                             streamingContent = ""
                             streamingThinking = ""
-                            // 清除正在生成的会话ID，允许新的消息发送
+
                             generatingSessionId = null
-                            
-                            // Check最后一条消息是否是用户消息
+
+
                             val lastMessage = restoredSession.messages.lastOrNull()
                             AppLogger.d("AiHtmlCodingScreen", "Last message role: ${lastMessage?.role}, content: ${lastMessage?.content?.take(50)}")
-                            
+
                             if (lastMessage?.role == MessageRole.USER) {
-                                // 将最后一条用户消息填入输入框，方便用户重新发送
+
                                 inputText = lastMessage.content
                                 attachedImages = lastMessage.images
                                 AppLogger.d("AiHtmlCodingScreen", "Set inputText to: ${inputText.take(50)}")
-                                
-                                // 重要：从会话中移除这条用户消息，避免重复添加
-                                // User点击发送时会重新添加这条消息
+
+
+
                                 val sessionWithoutLastUserMessage = restoredSession.copy(
                                     messages = restoredSession.messages.dropLast(1),
-                                    updatedAt = System.currentTimeMillis() + 1000 // 确保时间戳更新，防止被 Flow 覆盖
+                                    updatedAt = System.currentTimeMillis() + 1000
                                 )
                                 currentSession = sessionWithoutLastUserMessage
-                                // 同步更新存储
+
                                 storage.updateSession(sessionWithoutLastUserMessage)
                                 AppLogger.d("AiHtmlCodingScreen", "Updated currentSession, messages: ${sessionWithoutLastUserMessage.messages.size}")
-                                
+
                                 Toast.makeText(context, Strings.rolledBackWithInputHint.replace("%s", checkpoint.name), Toast.LENGTH_LONG).show()
                             } else {
                                 currentSession = restoredSession
                                 Toast.makeText(context, Strings.rolledBackTo.replace("%s", checkpoint.name), Toast.LENGTH_SHORT).show()
                             }
-                            
+
                             AppLogger.d("AiHtmlCodingScreen", "After rollback: chatState=$chatState, inputText='${inputText.take(50)}'")
                         } ?: run {
                             AppLogger.e("AiHtmlCodingScreen", "Rollback failed: rollbackToConversationCheckpoint returned null")

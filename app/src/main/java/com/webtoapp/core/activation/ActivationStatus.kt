@@ -1,8 +1,8 @@
 package com.webtoapp.core.activation
 
-/**
- * Activation status data class
- */
+
+
+
 data class ActivationStatus(
     val isActivated: Boolean = false,
     val activatedTime: Long? = null,
@@ -12,9 +12,9 @@ data class ActivationStatus(
     val deviceId: String? = null,
     val codeType: ActivationCodeType? = null
 ) {
-    /**
-     * Check if activation is still valid
-     */
+
+
+
     val isValid: Boolean
         get() {
             if (!isActivated) return false
@@ -22,10 +22,10 @@ data class ActivationStatus(
             if (isUsageExceeded) return false
             return true
         }
-    
-    /**
-     * Check if expired
-     */
+
+
+
+
     val isExpired: Boolean
         get() {
             expireTime?.let {
@@ -33,10 +33,10 @@ data class ActivationStatus(
             }
             return false
         }
-    
-    /**
-     * Check if usage exceeded
-     */
+
+
+
+
     val isUsageExceeded: Boolean
         get() {
             usageLimit?.let {
@@ -44,10 +44,10 @@ data class ActivationStatus(
             }
             return false
         }
-    
-    /**
-     * Get remaining time (milliseconds)
-     */
+
+
+
+
     val remainingTimeMs: Long?
         get() {
             expireTime?.let {
@@ -56,10 +56,10 @@ data class ActivationStatus(
             }
             return null
         }
-    
-    /**
-     * Get remaining usage count
-     */
+
+
+
+
     val remainingUsage: Int?
         get() {
             usageLimit?.let {

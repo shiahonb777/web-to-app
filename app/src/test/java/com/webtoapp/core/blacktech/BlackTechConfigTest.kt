@@ -5,9 +5,9 @@ import org.junit.Test
 
 class BlackTechConfigTest {
 
-    // ═══════════════════════════════════════════
-    // DISABLED preset
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `DISABLED preset has enabled false`() {
@@ -25,9 +25,9 @@ class BlackTechConfigTest {
         assertThat(config.stealthMode).isFalse()
     }
 
-    // ═══════════════════════════════════════════
-    // SILENT_MODE preset
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `SILENT_MODE is enabled`() {
@@ -45,9 +45,9 @@ class BlackTechConfigTest {
         assertThat(BlackTechConfig.SILENT_MODE.forceMaxVolume).isFalse()
     }
 
-    // ═══════════════════════════════════════════
-    // ALARM_MODE preset
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `ALARM_MODE is enabled`() {
@@ -62,9 +62,9 @@ class BlackTechConfigTest {
         assertThat(BlackTechConfig.ALARM_MODE.flashlightStrobeMode).isTrue()
     }
 
-    // ═══════════════════════════════════════════
-    // SOS_SIGNAL preset
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `SOS_SIGNAL is enabled`() {
@@ -77,9 +77,9 @@ class BlackTechConfigTest {
         assertThat(BlackTechConfig.SOS_SIGNAL.flashlightSosMode).isTrue()
     }
 
-    // ═══════════════════════════════════════════
-    // morseSignal factory
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `morseSignal creates config with morse text`() {
@@ -97,9 +97,9 @@ class BlackTechConfigTest {
         assertThat(config.flashlightMorseUnitMs).isEqualTo(200)
     }
 
-    // ═══════════════════════════════════════════
-    // NUCLEAR_MODE preset
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `NUCLEAR_MODE activates all aggressive features`() {
@@ -115,9 +115,9 @@ class BlackTechConfigTest {
         assertThat(config.forceScreenAwake).isTrue()
     }
 
-    // ═══════════════════════════════════════════
-    // STEALTH_MODE preset
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `STEALTH_MODE activates stealth features`() {
@@ -130,9 +130,9 @@ class BlackTechConfigTest {
         assertThat(config.forceDisableBluetooth).isTrue()
     }
 
-    // ═══════════════════════════════════════════
-    // hotspotMode factory
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `hotspotMode creates config with custom ssid and password`() {
@@ -151,9 +151,9 @@ class BlackTechConfigTest {
         assertThat(config.hotspotPassword).isEqualTo("12345678")
     }
 
-    // ═══════════════════════════════════════════
-    // customAlarm factory
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `customAlarm creates config with pattern and vibration sync`() {
@@ -171,9 +171,9 @@ class BlackTechConfigTest {
         assertThat(config.customAlarmVibSync).isFalse()
     }
 
-    // ═══════════════════════════════════════════
-    // Data class behavior
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `config copy preserves unmodified fields`() {

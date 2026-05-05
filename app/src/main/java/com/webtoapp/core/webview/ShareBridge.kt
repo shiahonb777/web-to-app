@@ -4,15 +4,15 @@ import android.content.Context
 import android.webkit.JavascriptInterface
 import com.webtoapp.core.logging.AppLogger
 
-/**
- * navigator.share bridge class
- * Provide system share functionality
- */
+
+
+
+
 class ShareBridge(private val context: Context) {
-    
-    /**
-     * Share text
-     */
+
+
+
+
     @JavascriptInterface
     fun shareText(title: String?, text: String?, url: String?) {
         try {
@@ -37,10 +37,10 @@ class ShareBridge(private val context: Context) {
             AppLogger.e("ShareBridge", "Share failed", e)
         }
     }
-    
-    /**
-     * Check if sharing is supported
-     */
+
+
+
+
     @JavascriptInterface
     fun canShare(): Boolean = true
 }

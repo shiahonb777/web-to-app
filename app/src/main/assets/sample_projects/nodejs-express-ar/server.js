@@ -1,7 +1,7 @@
-/**
- * تطبيق المهام — وضع داكن
- * Node.js بدون تبعيات
- */
+
+
+
+
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -13,7 +13,7 @@ let todos = loadTodos(), nextId = Math.max(...todos.map(t => t.id), 0) + 1;
 function parseBody(req) { return new Promise(r => { let b = ''; req.on('data', c => b += c); req.on('end', () => { try { r(JSON.parse(b)) } catch (e) { r({}) } }) }) }
 function sendJson(res, data, s = 200) { res.writeHead(s, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify(data)) }
 const server = http.createServer(async (req, res) => {
-  const url = new URL(req.url, `http://${req.headers.host}`), p = url.pathname, m = req.method;
+  const url = new URL(req.url, `http:
   if (m === 'GET' && p === '/') { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); return res.end(getPage()) }
   if (m === 'GET' && p === '/api/todos') return sendJson(res, { success: true, data: todos });
   if (m === 'POST' && p === '/api/todos') { const { text } = await parseBody(req); if (!text?.trim()) return sendJson(res, { success: false }, 400); const t = { id: nextId++, text: text.trim(), done: false, createdAt: Date.now() }; todos.unshift(t); saveTodos(todos); return sendJson(res, { success: true, data: t }) }

@@ -8,12 +8,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -34,23 +31,24 @@ import com.webtoapp.data.model.AppType
 import com.webtoapp.data.model.MediaConfig
 import com.webtoapp.data.model.SplashOrientation
 import com.webtoapp.ui.components.*
+import com.webtoapp.ui.screens.create.WtaCreateFlowScaffold
+import com.webtoapp.ui.screens.create.WtaCreateFlowSection
 import kotlinx.coroutines.flow.first
-import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
-/**
- * 创建/编辑媒体应用页面（图片/视频转APP）
- * 
- * 增强功能：
- * - 媒体类型品牌化 Hero 区域（图片=紫蓝渐变, 视频=红橙渐变）
- * - 文件元数据显示（文件名、大小、格式）
- * - 图片调整面板（亮度、对比度、饱和度滑块）
- * - 视频播放速度选择器
- * - 背景颜色选择
- * - 屏幕常亮开关
- * - 手势设置（滑动退出、双击缩放）
- * - 增强的媒体预览区
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun CreateMediaAppScreen(
@@ -67,8 +65,8 @@ fun CreateMediaAppScreen(
 ) {
     val context = LocalContext.current
     val isEditMode = existingAppId != null
-    
-    // 编辑模式时加载已有应用数据
+
+
     var existingApp by remember { mutableStateOf<com.webtoapp.data.model.WebApp?>(null) }
     LaunchedEffect(existingAppId) {
         if (existingAppId != null) {
@@ -77,51 +75,50 @@ fun CreateMediaAppScreen(
                 .first()
         }
     }
-    val scrollState = rememberScrollState()
-    
-    // App信息
+
+
     var appName by remember { mutableStateOf("") }
     var appIcon by remember { mutableStateOf<Uri?>(null) }
     var appIconPath by remember { mutableStateOf<String?>(null) }
-    
-    // Media类型
+
+
     var mediaType by remember { mutableStateOf(AppType.IMAGE) }
-    
-    // 单媒体模式
+
+
     var mediaUri by remember { mutableStateOf<Uri?>(null) }
-    
-    // Media配置
+
+
     var enableAudio by remember { mutableStateOf(true) }
     var loop by remember { mutableStateOf(true) }
     var autoPlay by remember { mutableStateOf(true) }
     var fillScreen by remember { mutableStateOf(true) }
     var orientation by remember { mutableStateOf(SplashOrientation.PORTRAIT) }
     var backgroundColor by remember { mutableStateOf("#000000") }
-    
-    // 增强：文件元数据
+
+
     var fileName by remember { mutableStateOf<String?>(null) }
     var fileSize by remember { mutableStateOf<Long?>(null) }
     var fileMimeType by remember { mutableStateOf<String?>(null) }
-    
-    // 增强：图片调整
+
+
     var brightness by remember { mutableFloatStateOf(1.0f) }
     var contrast by remember { mutableFloatStateOf(1.0f) }
     var saturation by remember { mutableFloatStateOf(1.0f) }
-    
-    // 增强：视频播放速度
+
+
     var playbackSpeed by remember { mutableFloatStateOf(1.0f) }
-    
-    // 增强：屏幕常亮
+
+
     var keepScreenOn by remember { mutableStateOf(true) }
-    
-    // 增强：手势配置
+
+
     var swipeDismiss by remember { mutableStateOf(true) }
     var doubleTapZoom by remember { mutableStateOf(true) }
-    
-    // Theme配置
+
+
     var themeType by remember { mutableStateOf("AURORA") }
-    
-    // 品牌色
+
+
     val brandColor = remember(mediaType) {
         if (mediaType == AppType.IMAGE) Color(0xFF7C4DFF) else Color(0xFFFF5252)
     }
@@ -131,8 +128,8 @@ fun CreateMediaAppScreen(
         else
             listOf(Color(0xFFFF5252).copy(alpha = 0.15f), Color(0xFFFF6E40).copy(alpha = 0.05f))
     }
-    
-    // 编辑模式：加载现有应用数据到UI状态
+
+
     LaunchedEffect(existingApp) {
         existingApp?.let { app ->
             appName = app.name
@@ -158,8 +155,8 @@ fun CreateMediaAppScreen(
             themeType = app.themeType
         }
     }
-    
-    // 读取文件元数据
+
+
     fun readFileMetadata(uri: Uri) {
         try {
             context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
@@ -172,80 +169,64 @@ fun CreateMediaAppScreen(
             }
             fileMimeType = context.contentResolver.getType(uri)
         } catch (e: Exception) {
-            // 元数据读取失败不影响主流程
+
         }
     }
-    
-    // File选择器
+
+
     val imagePickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri -> uri?.let { mediaUri = it; readFileMetadata(it) } }
-    
+
     val videoPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri -> uri?.let { mediaUri = it; readFileMetadata(it) } }
-    
+
     val iconPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri -> uri?.let { appIcon = it } }
-    
-    // 判断是否可以创建
+
+
     val canCreate = mediaUri != null
-    
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            TopAppBar(
-                title = { Text(Strings.createMediaAppTitle) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
+
+    WtaCreateFlowScaffold(
+        title = Strings.createMediaAppTitle,
+        onBack = onBack,
+        actions = {
+            TextButton(
+                onClick = {
+                    val finalIconUri = appIconPath?.let { Uri.parse("file://$it") } ?: appIcon
+                    mediaUri?.let { uri ->
+                        onCreated(
+                            appName.ifBlank { Strings.createMediaApp },
+                            mediaType,
+                            uri,
+                            MediaConfig(
+                                mediaPath = uri.toString(),
+                                enableAudio = enableAudio,
+                                loop = loop,
+                                autoPlay = autoPlay,
+                                fillScreen = fillScreen,
+                                orientation = orientation,
+                                backgroundColor = backgroundColor,
+                                keepScreenOn = keepScreenOn
+                            ),
+                            finalIconUri,
+                            themeType
+                        )
                     }
                 },
-                actions = {
-                    TextButton(
-                        onClick = {
-                            val finalIconUri = appIconPath?.let { Uri.parse("file://$it") } ?: appIcon
-                            mediaUri?.let { uri ->
-                                onCreated(
-                                    appName.ifBlank { Strings.createMediaApp },
-                                    mediaType,
-                                    uri,
-                                    MediaConfig(
-                                        mediaPath = uri.toString(),
-                                        enableAudio = enableAudio,
-                                        loop = loop,
-                                        autoPlay = autoPlay,
-                                        fillScreen = fillScreen,
-                                        orientation = orientation,
-                                        backgroundColor = backgroundColor,
-                                        keepScreenOn = keepScreenOn
-                                    ),
-                                    finalIconUri,
-                                    themeType
-                                )
-                            }
-                        },
-                        enabled = canCreate
-                    ) {
-                        Text(Strings.btnCreate)
-                    }
-                }
-            )
+                enabled = canCreate
+            ) {
+                Text(Strings.btnCreate)
+            }
         }
-    ) { padding ->
-        ThemedBackgroundBox(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
+    ) {
         Column(
-            modifier = Modifier.fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // ========== 1. 媒体类型品牌化 Hero ==========
+            WtaCreateFlowSection(title = Strings.importProject) {
+
             MediaHeroSection(
                 mediaType = mediaType,
                 brandColor = brandColor,
@@ -254,8 +235,8 @@ fun CreateMediaAppScreen(
                 fileSize = fileSize,
                 fileMimeType = fileMimeType
             )
-            
-            // ========== 2. 媒体类型选择 ==========
+
+
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
@@ -263,7 +244,7 @@ fun CreateMediaAppScreen(
                         style = MaterialTheme.typography.titleMedium
                     )
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -297,8 +278,8 @@ fun CreateMediaAppScreen(
                     }
                 }
             }
-            
-            // ========== 3. 媒体文件选择（增强预览） ==========
+
+
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -317,7 +298,7 @@ fun CreateMediaAppScreen(
                         )
                     }
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -371,7 +352,7 @@ fun CreateMediaAppScreen(
                                     )
                                 }
                             }
-                            // 文件名标签
+
                             fileName?.let { name ->
                                 Box(
                                     modifier = Modifier
@@ -406,8 +387,8 @@ fun CreateMediaAppScreen(
                             }
                         }
                     }
-                    
-                    // 增强：文件元数据
+
+
                     if (mediaUri != null && (fileSize != null || fileMimeType != null)) {
                         Spacer(modifier = Modifier.height(8.dp))
                         MediaFileInfoRow(
@@ -418,8 +399,10 @@ fun CreateMediaAppScreen(
                     }
                 }
             }
-            
-            // ========== 4. 应用信息（仅新建时显示，编辑时在通用配置中设置） ==========
+            }
+
+
+            WtaCreateFlowSection(title = Strings.appConfig) {
             if (!isEditMode) {
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
@@ -428,14 +411,14 @@ fun CreateMediaAppScreen(
                         style = MaterialTheme.typography.titleMedium
                     )
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     AppNameTextFieldSimple(
                         value = appName,
                         onValueChange = { appName = it },
                         placeholder = Strings.createMediaApp
                     )
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     IconPickerWithLibrary(
                         iconUri = appIcon,
                         iconPath = appIconPath,
@@ -448,8 +431,8 @@ fun CreateMediaAppScreen(
                 }
             }
             }
-            
-            // ========== 5. 显示配置 ==========
+
+
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -462,15 +445,15 @@ fun CreateMediaAppScreen(
                         Text(Strings.labelDisplaySettings, style = MaterialTheme.typography.titleMedium)
                     }
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     SettingsRow(title = Strings.fillScreen, subtitle = Strings.fillScreenHint) {
                         PremiumSwitch(
                             checked = fillScreen,
                             onCheckedChange = { fillScreen = it },
                         )
                     }
-                    
-                    // 横屏模式（仅新建时显示，编辑时在通用配置中设置）
+
+
                     if (!isEditMode) {
                     SettingsRow(title = Strings.landscapeMode, subtitle = Strings.landscapeModeHint) {
                         PremiumSwitch(
@@ -481,8 +464,8 @@ fun CreateMediaAppScreen(
                         )
                     }
                     }
-                    
-                    // 增强：屏幕常亮
+
+
                     HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                     SettingsRow(title = Strings.mediaScreenLock, subtitle = Strings.mediaScreenLockHint) {
                         PremiumSwitch(
@@ -490,10 +473,10 @@ fun CreateMediaAppScreen(
                             onCheckedChange = { keepScreenOn = it },
                         )
                     }
-                    
+
                     if (mediaType == AppType.VIDEO) {
                         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-                        
+
                         SettingsRow(title = Strings.enableAudio, subtitle = Strings.enableAudioHint) {
                             PremiumSwitch(
                                 checked = enableAudio,
@@ -515,8 +498,8 @@ fun CreateMediaAppScreen(
                     }
                 }
             }
-            
-            // ========== 6. 视频播放速度（仅视频） ==========
+
+
             if (mediaType == AppType.VIDEO && mediaUri != null) {
                 MediaPlaybackSpeedCard(
                     speed = playbackSpeed,
@@ -524,8 +507,8 @@ fun CreateMediaAppScreen(
                     brandColor = brandColor
                 )
             }
-            
-            // ========== 7. 图片调整（仅图片） ==========
+
+
             if (mediaType == AppType.IMAGE && mediaUri != null) {
                 MediaImageAdjustCard(
                     brightness = brightness,
@@ -538,8 +521,8 @@ fun CreateMediaAppScreen(
                     brandColor = brandColor
                 )
             }
-            
-            // ========== 8. 背景颜色 ==========
+
+
             if (mediaUri != null) {
                 MediaBackgroundColorCard(
                     selected = backgroundColor,
@@ -547,8 +530,8 @@ fun CreateMediaAppScreen(
                     brandColor = brandColor
                 )
             }
-            
-            // ========== 9. 手势设置 ==========
+
+
             if (mediaUri != null) {
                 MediaGestureCard(
                     swipeDismiss = swipeDismiss,
@@ -559,8 +542,10 @@ fun CreateMediaAppScreen(
                     brandColor = brandColor
                 )
             }
-            
-            // 提示信息
+            }
+
+
+            WtaCreateFlowSection(title = Strings.preview) {
             EnhancedElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = brandColor.copy(alpha = 0.08f))
@@ -581,18 +566,18 @@ fun CreateMediaAppScreen(
                     )
                 }
             }
-            
+            }
+
             Spacer(modifier = Modifier.height(32.dp))
         }
     }
-        }
 }
 
-// ==================== 私有 Composable 组件 ====================
 
-/**
- * 媒体品牌化 Hero 区域
- */
+
+
+
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun MediaHeroSection(
@@ -648,7 +633,7 @@ private fun MediaHeroSection(
                     if (fileName != null || fileSize != null) {
                         Spacer(modifier = Modifier.height(6.dp))
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            // 格式标签
+
                             fileMimeType?.let { mime ->
                                 val ext = mime.substringAfter("/").uppercase()
                                 Surface(
@@ -664,7 +649,7 @@ private fun MediaHeroSection(
                                     )
                                 }
                             }
-                            // 大小标签
+
                             fileSize?.let { size ->
                                 Surface(
                                     shape = RoundedCornerShape(4.dp),
@@ -687,9 +672,9 @@ private fun MediaHeroSection(
     }
 }
 
-/**
- * 文件信息行
- */
+
+
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun MediaFileInfoRow(
@@ -733,9 +718,9 @@ private fun MediaFileInfoRow(
     }
 }
 
-/**
- * 视频播放速度卡片
- */
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MediaPlaybackSpeedCard(
@@ -744,7 +729,7 @@ private fun MediaPlaybackSpeedCard(
     brandColor: Color
 ) {
     val speeds = listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f)
-    
+
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -757,7 +742,7 @@ private fun MediaPlaybackSpeedCard(
                 Text(Strings.mediaPlaybackSpeed, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -782,9 +767,9 @@ private fun MediaPlaybackSpeedCard(
     }
 }
 
-/**
- * 图片调整卡片
- */
+
+
+
 @Composable
 private fun MediaImageAdjustCard(
     brightness: Float,
@@ -818,8 +803,8 @@ private fun MediaImageAdjustCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(12.dp))
-            
-            // 亮度
+
+
             MediaSliderRow(
                 label = Strings.mediaBrightness,
                 value = brightness,
@@ -827,7 +812,7 @@ private fun MediaImageAdjustCard(
                 valueRange = 0.5f..2.0f,
                 brandColor = brandColor
             )
-            // 对比度
+
             MediaSliderRow(
                 label = Strings.mediaContrast,
                 value = contrast,
@@ -835,7 +820,7 @@ private fun MediaImageAdjustCard(
                 valueRange = 0.5f..2.0f,
                 brandColor = brandColor
             )
-            // 饱和度
+
             MediaSliderRow(
                 label = Strings.mediaSaturation,
                 value = saturation,
@@ -847,9 +832,9 @@ private fun MediaImageAdjustCard(
     }
 }
 
-/**
- * 调整滑块行
- */
+
+
+
 @Composable
 private fun MediaSliderRow(
     label: String,
@@ -885,9 +870,9 @@ private fun MediaSliderRow(
     }
 }
 
-/**
- * 背景颜色选择卡片
- */
+
+
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun MediaBackgroundColorCard(
@@ -905,7 +890,7 @@ private fun MediaBackgroundColorCard(
         "#0D1117" to "GitHub Dark",
         "#282C34" to "VS Code"
     )
-    
+
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -918,7 +903,7 @@ private fun MediaBackgroundColorCard(
                 Text(Strings.mediaBackgroundColor, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -952,9 +937,9 @@ private fun MediaBackgroundColorCard(
     }
 }
 
-/**
- * 手势设置卡片
- */
+
+
+
 @Composable
 private fun MediaGestureCard(
     swipeDismiss: Boolean,
@@ -976,14 +961,14 @@ private fun MediaGestureCard(
                 Text(Strings.mediaGestureConfig, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             SettingsRow(title = Strings.mediaSwipeDismiss, subtitle = Strings.mediaSwipeDismissHint) {
                 PremiumSwitch(
                     checked = swipeDismiss,
                     onCheckedChange = onSwipeDismissChange,
                 )
             }
-            
+
             if (isImage) {
                 SettingsRow(title = Strings.mediaDoubleTapZoom, subtitle = Strings.mediaDoubleTapZoomHint) {
                     PremiumSwitch(
@@ -996,9 +981,9 @@ private fun MediaGestureCard(
     }
 }
 
-/**
- * 媒体类型选项卡片
- */
+
+
+
 @Composable
 fun MediaTypeOption(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
@@ -1044,9 +1029,9 @@ fun MediaTypeOption(
     }
 }
 
-/**
- * 设置项行
- */
+
+
+
 @Composable
 fun SettingsRow(
     title: String,
@@ -1072,9 +1057,9 @@ fun SettingsRow(
     }
 }
 
-/**
- * 格式化文件大小
- */
+
+
+
 private fun formatFileSize(bytes: Long): String {
     return when {
         bytes < 1024 -> "$bytes B"

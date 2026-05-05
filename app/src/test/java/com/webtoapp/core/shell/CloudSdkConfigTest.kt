@@ -5,37 +5,43 @@ import org.junit.Test
 
 class CloudSdkConfigTest {
 
-    // ═══════════════════════════════════════════
-    // isValid
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `isValid returns false when disabled`() {
-        val config = CloudSdkConfig(enabled = false, projectKey = "abc")
+        val config = CloudSdkConfig(enabled = false, runtimeKey = "rt-abc")
         assertThat(config.isValid()).isFalse()
     }
 
     @Test
-    fun `isValid returns false when enabled but blank projectKey`() {
-        val config = CloudSdkConfig(enabled = true, projectKey = "")
+    fun `isValid returns false when enabled but blank runtimeKey`() {
+        val config = CloudSdkConfig(enabled = true, runtimeKey = "")
         assertThat(config.isValid()).isFalse()
     }
 
     @Test
-    fun `isValid returns false when enabled but blank projectKey whitespace`() {
-        val config = CloudSdkConfig(enabled = true, projectKey = "   ")
+    fun `isValid returns false when enabled but blank runtimeKey whitespace`() {
+        val config = CloudSdkConfig(enabled = true, runtimeKey = "   ")
         assertThat(config.isValid()).isFalse()
     }
 
     @Test
-    fun `isValid returns true when enabled and projectKey present`() {
-        val config = CloudSdkConfig(enabled = true, projectKey = "proj-123")
+    fun `isValid returns true when enabled and runtimeKey present`() {
+        val config = CloudSdkConfig(enabled = true, runtimeKey = "rt-123")
         assertThat(config.isValid()).isTrue()
     }
 
-    // ═══════════════════════════════════════════
-    // DISABLED preset
-    // ═══════════════════════════════════════════
+    @Test
+    fun `isValid returns true when runtimeKey present`() {
+        val config = CloudSdkConfig(enabled = true, runtimeKey = "rt-123")
+        assertThat(config.isValid()).isTrue()
+    }
+
+
+
+
 
     @Test
     fun `DISABLED preset is not valid`() {
@@ -47,40 +53,40 @@ class CloudSdkConfigTest {
         assertThat(CloudSdkConfig.DISABLED.apiBaseUrl).isEqualTo(CloudSdkConfig.DEFAULT_API_BASE_URL)
     }
 
-    // ═══════════════════════════════════════════
-    // getSdkApiUrl
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `getSdkApiUrl constructs correct path`() {
-        val config = CloudSdkConfig(projectKey = "abc-123")
+        val config = CloudSdkConfig(runtimeKey = "rt-abc-123")
         val url = config.getSdkApiUrl("check-update")
-        assertThat(url).isEqualTo("https://api.shiaho.sbs/api/v1/sdk/abc-123/check-update")
+        assertThat(url).isEqualTo("https://api.shiaho.sbs/api/v1/sdk/rt-abc-123/check-update")
     }
 
     @Test
     fun `getSdkApiUrl handles custom apiBaseUrl with trailing slash`() {
         val config = CloudSdkConfig(
-            projectKey = "my-proj",
+            runtimeKey = "rt-my-proj",
             apiBaseUrl = "https://custom.api.com/"
         )
         val url = config.getSdkApiUrl("announcements")
-        assertThat(url).isEqualTo("https://custom.api.com/api/v1/sdk/my-proj/announcements")
+        assertThat(url).isEqualTo("https://custom.api.com/api/v1/sdk/rt-my-proj/announcements")
     }
 
     @Test
     fun `getSdkApiUrl handles custom apiBaseUrl without trailing slash`() {
         val config = CloudSdkConfig(
-            projectKey = "my-proj",
+            runtimeKey = "rt-my-proj",
             apiBaseUrl = "https://custom.api.com"
         )
         val url = config.getSdkApiUrl("config")
-        assertThat(url).isEqualTo("https://custom.api.com/api/v1/sdk/my-proj/config")
+        assertThat(url).isEqualTo("https://custom.api.com/api/v1/sdk/rt-my-proj/config")
     }
 
-    // ═══════════════════════════════════════════
-    // Default values
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `default config has sensible defaults`() {

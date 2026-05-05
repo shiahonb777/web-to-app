@@ -27,19 +27,19 @@ import androidx.compose.ui.unit.sp
 import com.webtoapp.core.extension.agent.ToolCallInfo
 import com.webtoapp.core.extension.agent.ToolStatus
 
-/**
- * 工具调用卡片组件
- * 
- * 用于显示 Agent 工具调用的详细信息，包括工具名称、图标、状态、参数和结果
- * 支持折叠/展开详情
- * 
- * @param toolCall 工具调用信息
- * @param isExpanded 是否展开显示详情
- * @param onExpandToggle 展开/折叠切换回调
- * @param modifier Modifier
- * 
- * Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
 @Composable
 fun ToolCallCard(
     toolCall: ToolCallInfo,
@@ -48,11 +48,11 @@ fun ToolCallCard(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember(isExpanded) { mutableStateOf(isExpanded) }
-    
-    // 根据状态确定颜色
+
+
     val (borderColor, backgroundColor) = getToolCallColors(toolCall.status)
-    
-    // Execute中动画
+
+
     val infiniteTransition = rememberInfiniteTransition(label = "toolCall")
     val borderAlpha by infiniteTransition.animateFloat(
         initialValue = 0.4f,
@@ -63,13 +63,13 @@ fun ToolCallCard(
         ),
         label = "borderAlpha"
     )
-    
+
     val animatedBorderColor = if (toolCall.status == ToolStatus.EXECUTING) {
         borderColor.copy(alpha = borderAlpha)
     } else {
         borderColor
     }
-    
+
     Surface(
         modifier = modifier
             .fillMaxWidth()
@@ -87,13 +87,13 @@ fun ToolCallCard(
         color = backgroundColor
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            // 头部：工具名称、图标、状态
+
             ToolCallHeader(
                 toolCall = toolCall,
                 isExpanded = expanded
             )
-            
-            // Expand的详情区域
+
+
             AnimatedVisibility(
                 visible = expanded,
                 enter = expandVertically() + fadeIn(),
@@ -106,21 +106,21 @@ fun ToolCallCard(
                         thickness = 0.5.dp
                     )
                     Spacer(modifier = Modifier.height(10.dp))
-                    
-                    // Parameters显示
+
+
                     if (toolCall.parameters.isNotEmpty()) {
                         ToolCallParameters(parameters = toolCall.parameters)
                         Spacer(modifier = Modifier.height(8.dp))
                     }
-                    
-                    // 结果显示
+
+
                     if (toolCall.status == ToolStatus.SUCCESS || toolCall.status == ToolStatus.FAILED) {
                         ToolCallResult(toolCall = toolCall)
                     }
                 }
             }
-            
-            // Collapse时显示简要信息
+
+
             if (!expanded && toolCall.status == ToolStatus.SUCCESS) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
@@ -135,9 +135,9 @@ fun ToolCallCard(
     }
 }
 
-/**
- * 工具调用头部
- */
+
+
+
 @Composable
 private fun ToolCallHeader(
     toolCall: ToolCallInfo,
@@ -148,13 +148,13 @@ private fun ToolCallHeader(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        // 工具图标
+
         ToolIcon(
             icon = toolCall.toolIcon,
             status = toolCall.status
         )
-        
-        // 工具名称和状态
+
+
         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
             Text(
                 text = getToolDisplayName(toolCall.toolName),
@@ -163,15 +163,15 @@ private fun ToolCallHeader(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                // 状态标签
+
                 ToolStatusBadge(status = toolCall.status)
-                
-                // Execute时间（如果已完成）
+
+
                 if (toolCall.executionTimeMs > 0) {
                     Text(
                         text = formatExecutionTime(toolCall.executionTimeMs),
@@ -181,8 +181,8 @@ private fun ToolCallHeader(
                 }
             }
         }
-        
-        // Expand/折叠按钮
+
+
         Icon(
             imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
             contentDescription = if (isExpanded) Strings.cdCollapse else Strings.cdExpand,
@@ -192,9 +192,9 @@ private fun ToolCallHeader(
     }
 }
 
-/**
- * 工具图标
- */
+
+
+
 @Composable
 private fun ToolIcon(
     icon: String,
@@ -207,8 +207,8 @@ private fun ToolIcon(
         ToolStatus.SUCCESS -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
         ToolStatus.FAILED -> MaterialTheme.colorScheme.errorContainer
     }
-    
-    // Execute中旋转动画
+
+
     val infiniteTransition = rememberInfiniteTransition(label = "iconRotation")
     val rotation by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -219,7 +219,7 @@ private fun ToolIcon(
         ),
         label = "rotation"
     )
-    
+
     Box(
         modifier = modifier
             .size(32.dp)
@@ -241,9 +241,9 @@ private fun ToolIcon(
     }
 }
 
-/**
- * 工具状态标签
- */
+
+
+
 @Composable
 private fun ToolStatusBadge(status: ToolStatus) {
     val (text, color, backgroundColor) = when (status) {
@@ -252,7 +252,7 @@ private fun ToolStatusBadge(status: ToolStatus) {
         ToolStatus.SUCCESS -> Triple(Strings.toolStatusSuccess, MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
         ToolStatus.FAILED -> Triple(Strings.toolStatusFailed, MaterialTheme.colorScheme.error, MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f))
     }
-    
+
     Surface(
         shape = RoundedCornerShape(4.dp),
         color = backgroundColor
@@ -262,11 +262,11 @@ private fun ToolStatusBadge(status: ToolStatus) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            // Execute中显示动画点
+
             if (status == ToolStatus.EXECUTING) {
                 ExecutingDots()
             } else {
-                // 状态图标
+
                 val icon = when (status) {
                     ToolStatus.PENDING -> Icons.Outlined.Schedule
                     ToolStatus.SUCCESS -> Icons.Default.Check
@@ -282,7 +282,7 @@ private fun ToolStatusBadge(status: ToolStatus) {
                     )
                 }
             }
-            
+
             Text(
                 text = text,
                 style = MaterialTheme.typography.labelSmall,
@@ -292,13 +292,13 @@ private fun ToolStatusBadge(status: ToolStatus) {
     }
 }
 
-/**
- * 执行中动画点
- */
+
+
+
 @Composable
 private fun ExecutingDots() {
     val infiniteTransition = rememberInfiniteTransition(label = "executingDots")
-    
+
     Row(
         horizontalArrangement = Arrangement.spacedBy(2.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -318,7 +318,7 @@ private fun ExecutingDots() {
                 ),
                 label = "dot$index"
             )
-            
+
             Box(
                 modifier = Modifier
                     .size(4.dp)
@@ -329,9 +329,9 @@ private fun ExecutingDots() {
     }
 }
 
-/**
- * 工具调用参数显示
- */
+
+
+
 @Composable
 private fun ToolCallParameters(parameters: Map<String, Any?>) {
     Column(
@@ -343,7 +343,7 @@ private fun ToolCallParameters(parameters: Map<String, Any?>) {
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
         )
-        
+
         Surface(
             shape = RoundedCornerShape(6.dp),
             color = if (com.webtoapp.ui.theme.LocalIsDarkTheme.current) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.72f)
@@ -360,9 +360,9 @@ private fun ToolCallParameters(parameters: Map<String, Any?>) {
     }
 }
 
-/**
- * 参数行
- */
+
+
+
 @Composable
 private fun ParameterRow(key: String, value: Any?) {
     Row(
@@ -388,9 +388,9 @@ private fun ParameterRow(key: String, value: Any?) {
     }
 }
 
-/**
- * 工具调用结果显示
- */
+
+
+
 @Composable
 private fun ToolCallResult(toolCall: ToolCallInfo) {
     Column(
@@ -406,13 +406,13 @@ private fun ToolCallResult(toolCall: ToolCallInfo) {
                 MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
             }
         )
-        
+
         val backgroundColor = if (toolCall.status == ToolStatus.SUCCESS) {
             MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)
         } else {
             MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
         }
-        
+
         Surface(
             shape = RoundedCornerShape(6.dp),
             color = backgroundColor
@@ -422,7 +422,7 @@ private fun ToolCallResult(toolCall: ToolCallInfo) {
             } else {
                 toolCall.error ?: Strings.toolUnknownError
             }
-            
+
             Text(
                 text = content,
                 style = MaterialTheme.typography.bodySmall,
@@ -439,9 +439,9 @@ private fun ToolCallResult(toolCall: ToolCallInfo) {
     }
 }
 
-/**
- * 获取工具调用颜色
- */
+
+
+
 @Composable
 private fun getToolCallColors(status: ToolStatus): Pair<Color, Color> {
     return when (status) {
@@ -464,9 +464,9 @@ private fun getToolCallColors(status: ToolStatus): Pair<Color, Color> {
     }
 }
 
-/**
- * 获取工具显示名称
- */
+
+
+
 fun getToolDisplayName(toolName: String): String {
     return when (toolName.lowercase()) {
         "syntax_check", "syntaxcheck" -> Strings.toolSyntaxCheck
@@ -484,9 +484,9 @@ fun getToolDisplayName(toolName: String): String {
     }
 }
 
-/**
- * 格式化执行时间
- */
+
+
+
 fun formatExecutionTime(timeMs: Long): String {
     return when {
         timeMs < 1000 -> "${timeMs}ms"
@@ -495,9 +495,9 @@ fun formatExecutionTime(timeMs: Long): String {
     }
 }
 
-/**
- * 格式化参数值
- */
+
+
+
 private fun formatParameterValue(value: Any?): String {
     return when (value) {
         null -> "null"
@@ -508,9 +508,9 @@ private fun formatParameterValue(value: Any?): String {
     }
 }
 
-/**
- * 格式化结果值
- */
+
+
+
 private fun formatResultValue(result: Any?): String {
     return when (result) {
         null -> Strings.toolNoReturnValue
@@ -525,9 +525,9 @@ private fun formatResultValue(result: Any?): String {
     }
 }
 
-/**
- * 获取结果摘要
- */
+
+
+
 private fun getResultSummary(toolCall: ToolCallInfo): String {
     return when {
         toolCall.result is Boolean -> if (toolCall.result) Strings.toolPassResult else Strings.toolFailResult
@@ -543,17 +543,17 @@ private fun getResultSummary(toolCall: ToolCallInfo): String {
     }
 }
 
-/**
- * 简化版工具调用卡片
- * 用于在消息列表中显示工具调用的简洁版本
- */
+
+
+
+
 @Composable
 fun CompactToolCallCard(
     toolCall: ToolCallInfo,
     modifier: Modifier = Modifier
 ) {
     val (_, backgroundColor) = getToolCallColors(toolCall.status)
-    
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -563,14 +563,14 @@ fun CompactToolCallCard(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(toolCall.toolIcon, fontSize = 14.sp)
-        
+
         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
             Text(
                 text = getToolDisplayName(toolCall.toolName),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Medium
             )
-            
+
             if (toolCall.status == ToolStatus.SUCCESS || toolCall.status == ToolStatus.FAILED) {
                 Text(
                     text = getResultSummary(toolCall),
@@ -581,36 +581,36 @@ fun CompactToolCallCard(
                 )
             }
         }
-        
+
         ToolStatusBadge(status = toolCall.status)
     }
 }
 
-/**
- * 工具调用列表
- * 用于显示多个相关的工具调用（如语法检查后的修复）
- */
+
+
+
+
 @Composable
 fun ToolCallGroup(
     toolCalls: List<ToolCallInfo>,
     modifier: Modifier = Modifier
 ) {
     if (toolCalls.isEmpty()) return
-    
+
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         toolCalls.forEachIndexed { index, toolCall ->
             var isExpanded by remember { mutableStateOf(false) }
-            
+
             ToolCallCard(
                 toolCall = toolCall,
                 isExpanded = isExpanded,
                 onExpandToggle = { isExpanded = !isExpanded }
             )
-            
-            // 连接线（除了最后一个）
+
+
             if (index < toolCalls.size - 1) {
                 Box(
                     modifier = Modifier

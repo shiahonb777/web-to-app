@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -32,13 +31,20 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.webtoapp.core.billing.*
 import com.webtoapp.core.i18n.Strings
+import com.webtoapp.ui.design.WtaActionBar
+import com.webtoapp.ui.design.WtaCapabilityLevel
+import com.webtoapp.ui.design.WtaScreen
+import com.webtoapp.ui.design.WtaSection
+import com.webtoapp.ui.design.WtaSectionDivider
+import com.webtoapp.ui.design.WtaSettingCard
+import com.webtoapp.ui.design.WtaStatusBanner
+import com.webtoapp.ui.design.WtaStatusTone
 import com.webtoapp.ui.viewmodel.AuthState
 import com.webtoapp.ui.viewmodel.AuthViewModel
 import kotlinx.coroutines.launch
-import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
-/** Safely find the Activity from a Context, traversing ContextWrapper chain. */
+
 private fun Context.findActivity(): Activity? {
     var ctx = this
     while (ctx is ContextWrapper) {
@@ -48,9 +54,9 @@ private fun Context.findActivity(): Activity? {
     return null
 }
 
-/**
- * 用户当前套餐层级
- */
+
+
+
 private enum class UserTier {
     FREE, PRO_MONTHLY, PRO_QUARTERLY, PRO_YEARLY, PRO_LIFETIME, ULTRA_MONTHLY, ULTRA_QUARTERLY, ULTRA_YEARLY, ULTRA_LIFETIME
 }
@@ -59,12 +65,12 @@ private fun UserTier.isPro() = this in listOf(UserTier.PRO_MONTHLY, UserTier.PRO
 private fun UserTier.isUltra() = this in listOf(UserTier.ULTRA_MONTHLY, UserTier.ULTRA_QUARTERLY, UserTier.ULTRA_YEARLY, UserTier.ULTRA_LIFETIME)
 private fun UserTier.isLifetime() = this == UserTier.PRO_LIFETIME || this == UserTier.ULTRA_LIFETIME
 
-/**
- * 订阅购买页面
- *
- * 展示 Free、Pro、Ultra 三个层级的订阅方案。
- * 支持月度、年度和终身套餐切换。
- */
+
+
+
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SubscriptionScreen(
@@ -75,19 +81,17 @@ fun SubscriptionScreen(
     val context = LocalContext.current
     val activity = context.findActivity()
     val isConnected by billingManager.isConnected.collectAsStateWithLifecycle()
-    val products by billingManager.products.collectAsStateWithLifecycle()
     val purchaseState by billingManager.purchaseState.collectAsStateWithLifecycle()
-    val currentSub by billingManager.currentSubscription.collectAsStateWithLifecycle()
     val authState by authViewModel.authState.collectAsStateWithLifecycle()
 
-    // 确保 Billing 已连接（如果 Application 预初始化失败则在此重试）
+
     LaunchedEffect(Unit) {
         if (!isConnected) {
             billingManager.connect()
         }
     }
 
-    // 从用户登录信息推断当前套餐
+
     val userTier = remember(authState) {
         when (val state = authState) {
             is AuthState.LoggedIn -> {
@@ -108,8 +112,21 @@ fun SubscriptionScreen(
             else -> UserTier.FREE
         }
     }
+    val currentPlanName = remember(userTier) {
+        when (userTier) {
+            UserTier.PRO_MONTHLY -> Strings.proMonthly
+            UserTier.PRO_QUARTERLY -> Strings.proQuarterly
+            UserTier.PRO_YEARLY -> Strings.proYearly
+            UserTier.PRO_LIFETIME -> Strings.proLifetime
+            UserTier.ULTRA_MONTHLY -> Strings.ultraMonthly
+            UserTier.ULTRA_QUARTERLY -> Strings.ultraQuarterly
+            UserTier.ULTRA_YEARLY -> Strings.ultraYearly
+            UserTier.ULTRA_LIFETIME -> Strings.ultraLifetime
+            else -> Strings.tierFree
+        }
+    }
 
-    // 0=月度, 1=季度, 2=年度, 3=终身
+
     var selectedPeriod by remember { mutableIntStateOf(
         when {
             userTier.isLifetime() -> 3
@@ -122,7 +139,7 @@ fun SubscriptionScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    // 处理购买结果
+
     LaunchedEffect(purchaseState) {
         when (val state = purchaseState) {
             is PurchaseState.Success -> {
@@ -137,141 +154,62 @@ fun SubscriptionScreen(
         }
     }
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            TopAppBar(
-                title = { Text(Strings.selectPlan) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
-        },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { padding ->
-        ThemedBackgroundBox(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
+    WtaScreen(
+        title = Strings.selectPlan,
+        onBack = onBack,
+        snackbarHostState = snackbarHostState
+    ) {
         LazyColumn(
-            modifier = Modifier,
-            contentPadding = PaddingValues(20.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                horizontal = 16.dp,
+                vertical = 16.dp
+            ),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 标题
             item {
-                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        Strings.unlockAllFeatures,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        Strings.chooseYourPlan,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            // 周期切换: 月度 / 年度 / 终身
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
+                WtaSection(
+                    title = Strings.unlockAllFeatures,
+                    description = Strings.chooseYourPlan,
+                    headerStyle = com.webtoapp.ui.design.WtaSectionHeaderStyle.Hidden
                 ) {
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant
-                    ) {
-                        Row(modifier = Modifier.padding(4.dp)) {
-                            PeriodChip(
-                                text = Strings.periodMonthly,
-                                selected = selectedPeriod == 0,
-                                onClick = { selectedPeriod = 0 }
-                            )
-                            PeriodChip(
-                                text = Strings.periodQuarterly,
-                                selected = selectedPeriod == 1,
-                                onClick = { selectedPeriod = 1 }
-                            )
-                            PeriodChip(
-                                text = Strings.periodYearly,
-                                selected = selectedPeriod == 2,
-                                onClick = { selectedPeriod = 2 }
-                            )
-                            PeriodChip(
-                                text = Strings.periodLifetime,
-                                selected = selectedPeriod == 3,
-                                onClick = { selectedPeriod = 3 }
-                            )
-                        }
-                    }
+                    WtaStatusBanner(
+                        title = currentPlanName,
+                        message = if (userTier.isLifetime()) Strings.validForever else Strings.subscriptionDisclaimer,
+                        tone = if (userTier.isUltra()) WtaStatusTone.Success else WtaStatusTone.Info
+                    )
                 }
             }
 
-            // 当前用户状态提示（非 Free）
-            if (userTier != UserTier.FREE) {
-                item {
-                    val planDisplayName = when (userTier) {
-                        UserTier.PRO_MONTHLY -> Strings.proMonthly
-                        UserTier.PRO_QUARTERLY -> Strings.proQuarterly
-                        UserTier.PRO_YEARLY -> Strings.proYearly
-                        UserTier.PRO_LIFETIME -> Strings.proLifetime
-                        UserTier.ULTRA_MONTHLY -> Strings.ultraMonthly
-                        UserTier.ULTRA_QUARTERLY -> Strings.ultraQuarterly
-                        UserTier.ULTRA_YEARLY -> Strings.ultraYearly
-                        UserTier.ULTRA_LIFETIME -> Strings.ultraLifetime
-                        else -> Strings.tierFree
-                    }
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = if (userTier.isUltra())
-                            Color(0xFFFFD700).copy(alpha = 0.15f)
-                        else
-                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                Icons.Filled.CheckCircle, null,
-                                tint = if (userTier.isUltra()) Color(0xFFFFD700) else MaterialTheme.colorScheme.primary
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    Strings.currentPlan.format(planDisplayName),
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                                if (userTier.isLifetime()) {
-                                    Text(
-                                        Strings.validForever,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // ═══ Free 方案 ═══
             item {
-                FreeCard(isCurrent = userTier == UserTier.FREE)
+                WtaSection(
+                    title = Strings.periodLifetime,
+                    description = Strings.chooseYourPlan,
+                    level = WtaCapabilityLevel.Common,
+                    headerStyle = com.webtoapp.ui.design.WtaSectionHeaderStyle.Quiet,
+                    collapsible = false
+                ) {
+                    WtaActionBar {
+                        PeriodChip(Strings.periodMonthly, selectedPeriod == 0) { selectedPeriod = 0 }
+                        PeriodChip(Strings.periodQuarterly, selectedPeriod == 1) { selectedPeriod = 1 }
+                        PeriodChip(Strings.periodYearly, selectedPeriod == 2) { selectedPeriod = 2 }
+                        PeriodChip(Strings.periodLifetime, selectedPeriod == 3) { selectedPeriod = 3 }
+                    }
+                }
             }
 
-            // ═══ Pro 方案 ═══
+            item {
+                WtaSection(
+                    title = Strings.tierFree,
+                    description = Strings.freeForever,
+                    level = WtaCapabilityLevel.Common,
+                    headerStyle = com.webtoapp.ui.design.WtaSectionHeaderStyle.Quiet,
+                    collapsible = false
+                ) {
+                    FreeCard(isCurrent = userTier == UserTier.FREE)
+                }
+            }
+
             item {
                 val isCurrentPro = when (selectedPeriod) {
                     0 -> userTier == UserTier.PRO_MONTHLY
@@ -280,77 +218,58 @@ fun SubscriptionScreen(
                     3 -> userTier == UserTier.PRO_LIFETIME
                     else -> false
                 }
-                // 如果用户已经是 Ultra 任意等级，Pro 也不需要显示"订阅"
                 val isDowngrade = userTier.isUltra()
-
-                when (selectedPeriod) {
-                    0 -> {
-                        val plan = SubscriptionPlan.PRO_MONTHLY
-                        val price = billingManager.getFormattedPrice(plan) ?: "$3"
-                        SubscriptionCard(
-                            tierName = Strings.tierPro,
-                            price = price,
-                            period = Strings.perMonth,
-                            gradient = listOf(Color(0xFF42A5F5), Color(0xFF1E88E5)),
-                            features = proFeatures(),
-                            isCurrent = isCurrentPro,
-                            isDowngrade = isDowngrade,
-                            isLoading = purchaseState is PurchaseState.Loading,
-                            onSubscribe = { if (!isCurrentPro && !isDowngrade && activity != null) billingManager.launchPurchase(activity, plan) }
-                        )
-                    }
-                    1 -> {
-                        val plan = SubscriptionPlan.PRO_QUARTERLY
-                        val price = billingManager.getFormattedPrice(plan) ?: "$8.10"
-                        SubscriptionCard(
-                            tierName = Strings.tierPro,
-                            price = price,
-                            period = Strings.perQuarter,
-                            gradient = listOf(Color(0xFF42A5F5), Color(0xFF1E88E5)),
-                            features = proFeatures(),
-                            isCurrent = isCurrentPro,
-                            isDowngrade = isDowngrade,
-                            isLoading = purchaseState is PurchaseState.Loading,
-                            onSubscribe = { if (!isCurrentPro && !isDowngrade && activity != null) billingManager.launchPurchase(activity, plan) }
-                        )
-                    }
-                    2 -> {
-                        val plan = SubscriptionPlan.PRO_YEARLY
-                        val price = billingManager.getFormattedPrice(plan) ?: "$28.80"
-                        SubscriptionCard(
-                            tierName = Strings.tierPro,
-                            price = price,
-                            period = Strings.perYear,
-                            gradient = listOf(Color(0xFF42A5F5), Color(0xFF1E88E5)),
-                            features = proFeatures(),
-                            isCurrent = isCurrentPro,
-                            isDowngrade = isDowngrade,
-                            isLoading = purchaseState is PurchaseState.Loading,
-                            onSubscribe = { if (!isCurrentPro && !isDowngrade && activity != null) billingManager.launchPurchase(activity, plan) }
-                        )
-                    }
-                    3 -> {
-                        val plan = SubscriptionPlan.PRO_LIFETIME
-                        val price = billingManager.getFormattedPrice(plan) ?: "$99"
-                        SubscriptionCard(
-                            tierName = Strings.tierPro,
-                            price = price,
-                            period = Strings.oneTime,
-                            gradient = listOf(Color(0xFF42A5F5), Color(0xFF1E88E5)),
-                            features = proFeatures() + listOf(
-                                FeatureItem(Icons.Outlined.AllInclusive, Strings.neverExpires, Strings.oneTimePurchaseLifetime)
-                            ),
-                            isCurrent = isCurrentPro,
-                            isDowngrade = isDowngrade,
-                            isLoading = purchaseState is PurchaseState.Loading,
-                            isLifetime = true,
-                            onSubscribe = { if (!isCurrentPro && !isDowngrade && activity != null) billingManager.launchPurchase(activity, plan) }
-                        )
-                    }
+                val proPlan = when (selectedPeriod) {
+                    0 -> SubscriptionPlan.PRO_MONTHLY
+                    1 -> SubscriptionPlan.PRO_QUARTERLY
+                    2 -> SubscriptionPlan.PRO_YEARLY
+                    else -> SubscriptionPlan.PRO_LIFETIME
+                }
+                val proPrice = billingManager.getFormattedPrice(proPlan) ?: when (selectedPeriod) {
+                    0 -> "$3"
+                    1 -> "$8.10"
+                    2 -> "$28.80"
+                    else -> "$99"
+                }
+                val proPeriod = when (selectedPeriod) {
+                    0 -> Strings.perMonth
+                    1 -> Strings.perQuarter
+                    2 -> Strings.perYear
+                    else -> Strings.oneTime
+                }
+                WtaSection(
+                    title = Strings.tierPro,
+                    description = proPrice,
+                    level = WtaCapabilityLevel.Advanced,
+                    headerStyle = com.webtoapp.ui.design.WtaSectionHeaderStyle.Quiet,
+                    collapsible = false
+                ) {
+                    SubscriptionCard(
+                        tierName = Strings.tierPro,
+                        price = proPrice,
+                        period = proPeriod,
+                        gradient = listOf(
+                            MaterialTheme.colorScheme.primary,
+                            MaterialTheme.colorScheme.secondary
+                        ),
+                        features = proFeatures() + if (selectedPeriod == 3) {
+                            listOf(FeatureItem(Icons.Outlined.AllInclusive, Strings.neverExpires, Strings.oneTimePurchaseLifetime))
+                        } else {
+                            emptyList()
+                        },
+                        isCurrent = isCurrentPro,
+                        isDowngrade = isDowngrade,
+                        isLoading = purchaseState is PurchaseState.Loading,
+                        isLifetime = selectedPeriod == 3,
+                        onSubscribe = {
+                            if (!isCurrentPro && !isDowngrade && activity != null) {
+                                billingManager.launchPurchase(activity, proPlan)
+                            }
+                        }
+                    )
                 }
             }
 
-            // ═══ Ultra 方案 ═══
             item {
                 val isCurrentUltra = when (selectedPeriod) {
                     0 -> userTier == UserTier.ULTRA_MONTHLY
@@ -359,107 +278,92 @@ fun SubscriptionScreen(
                     3 -> userTier == UserTier.ULTRA_LIFETIME
                     else -> false
                 }
-
-                when (selectedPeriod) {
-                    0 -> {
-                        val plan = SubscriptionPlan.ULTRA_MONTHLY
-                        val price = billingManager.getFormattedPrice(plan) ?: "$9"
-                        SubscriptionCard(
-                            tierName = Strings.tierUltra,
-                            price = price,
-                            period = Strings.perMonth,
-                            gradient = listOf(Color(0xFFF093FB), Color(0xFFF5576C)),
-                            isRecommended = true,
-                            features = ultraFeatures(),
-                            isCurrent = isCurrentUltra,
-                            isLoading = purchaseState is PurchaseState.Loading,
-                            onSubscribe = { if (!isCurrentUltra && activity != null) billingManager.launchPurchase(activity, plan) }
-                        )
-                    }
-                    1 -> {
-                        val plan = SubscriptionPlan.ULTRA_QUARTERLY
-                        val price = billingManager.getFormattedPrice(plan) ?: "$24.30"
-                        SubscriptionCard(
-                            tierName = Strings.tierUltra,
-                            price = price,
-                            period = Strings.perQuarter,
-                            gradient = listOf(Color(0xFFF093FB), Color(0xFFF5576C)),
-                            isRecommended = true,
-                            features = ultraFeatures(),
-                            isCurrent = isCurrentUltra,
-                            isLoading = purchaseState is PurchaseState.Loading,
-                            onSubscribe = { if (!isCurrentUltra && activity != null) billingManager.launchPurchase(activity, plan) }
-                        )
-                    }
-                    2 -> {
-                        val plan = SubscriptionPlan.ULTRA_YEARLY
-                        val price = billingManager.getFormattedPrice(plan) ?: "$86.40"
-                        SubscriptionCard(
-                            tierName = Strings.tierUltra,
-                            price = price,
-                            period = Strings.perYear,
-                            gradient = listOf(Color(0xFFF093FB), Color(0xFFF5576C)),
-                            isRecommended = true,
-                            features = ultraFeatures(),
-                            isCurrent = isCurrentUltra,
-                            isLoading = purchaseState is PurchaseState.Loading,
-                            onSubscribe = { if (!isCurrentUltra && activity != null) billingManager.launchPurchase(activity, plan) }
-                        )
-                    }
-                    3 -> {
-                        val plan = SubscriptionPlan.ULTRA_LIFETIME
-                        val price = billingManager.getFormattedPrice(plan) ?: "$199"
-                        SubscriptionCard(
-                            tierName = Strings.tierUltra,
-                            price = price,
-                            period = Strings.oneTime,
-                            gradient = listOf(Color(0xFFF093FB), Color(0xFFF5576C)),
-                            isRecommended = true,
-                            features = ultraFeatures() + listOf(
-                                FeatureItem(Icons.Outlined.AllInclusive, Strings.neverExpires, Strings.oneTimePurchaseLifetime)
-                            ),
-                            isCurrent = isCurrentUltra,
-                            isLoading = purchaseState is PurchaseState.Loading,
-                            isLifetime = true,
-                            upgradeNote = if (userTier == UserTier.PRO_LIFETIME) Strings.proUpgradeNote else null,
-                            onSubscribe = { if (!isCurrentUltra && activity != null) billingManager.launchPurchase(activity, plan) }
-                        )
-                    }
+                val ultraPlan = when (selectedPeriod) {
+                    0 -> SubscriptionPlan.ULTRA_MONTHLY
+                    1 -> SubscriptionPlan.ULTRA_QUARTERLY
+                    2 -> SubscriptionPlan.ULTRA_YEARLY
+                    else -> SubscriptionPlan.ULTRA_LIFETIME
                 }
-            }
-
-            // 恢复购买
-            item {
-                TextButton(
-                    onClick = {
-                        scope.launch {
-                            billingManager.queryCurrentSubscription()
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
+                val ultraPrice = billingManager.getFormattedPrice(ultraPlan) ?: when (selectedPeriod) {
+                    0 -> "$9"
+                    1 -> "$24.30"
+                    2 -> "$86.40"
+                    else -> "$199"
+                }
+                val ultraPeriod = when (selectedPeriod) {
+                    0 -> Strings.perMonth
+                    1 -> Strings.perQuarter
+                    2 -> Strings.perYear
+                    else -> Strings.oneTime
+                }
+                WtaSection(
+                    title = Strings.tierUltra,
+                    description = ultraPrice,
+                    level = WtaCapabilityLevel.Lab,
+                    headerStyle = com.webtoapp.ui.design.WtaSectionHeaderStyle.Quiet,
+                    collapsible = false
                 ) {
-                    Text(Strings.restorePurchase, textDecoration = TextDecoration.Underline)
+                    SubscriptionCard(
+                        tierName = Strings.tierUltra,
+                        price = ultraPrice,
+                        period = ultraPeriod,
+                        gradient = listOf(
+                            MaterialTheme.colorScheme.tertiary,
+                            MaterialTheme.colorScheme.error
+                        ),
+                        isRecommended = true,
+                        features = ultraFeatures() + if (selectedPeriod == 3) {
+                            listOf(FeatureItem(Icons.Outlined.AllInclusive, Strings.neverExpires, Strings.oneTimePurchaseLifetime))
+                        } else {
+                            emptyList()
+                        },
+                        isCurrent = isCurrentUltra,
+                        isLoading = purchaseState is PurchaseState.Loading,
+                        isLifetime = selectedPeriod == 3,
+                        upgradeNote = if (userTier == UserTier.PRO_LIFETIME) Strings.proUpgradeNote else null,
+                        onSubscribe = {
+                            if (!isCurrentUltra && activity != null) {
+                                billingManager.launchPurchase(activity, ultraPlan)
+                            }
+                        }
+                    )
                 }
             }
 
-            // 说明
             item {
-                Text(
-                    Strings.subscriptionDisclaimer,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                WtaSettingCard {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            Strings.restorePurchase,
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            Strings.subscriptionDisclaimer,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        TextButton(
+                            onClick = {
+                                scope.launch {
+                                    billingManager.queryCurrentSubscription()
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(Strings.restorePurchase, textDecoration = TextDecoration.Underline)
+                        }
+                    }
+                }
             }
-
-            item { Spacer(modifier = Modifier.height(24.dp)) }
         }
     }
-        }
 }
 
-// ─── 功能列表 ───
+
 
 private fun proFeatures() = listOf(
     FeatureItem(Icons.Outlined.Cloud, Strings.proCloudProjects, Strings.proCloudProjectsDesc),
@@ -481,7 +385,7 @@ private fun ultraFeatures() = listOf(
     FeatureItem(Icons.Outlined.Speed, Strings.ultraPrioritySupport, Strings.ultraPrioritySupportDesc),
 )
 
-// ─── 组件 ───
+
 
 private data class FeatureItem(
     val icon: ImageVector,
@@ -493,7 +397,7 @@ private data class FeatureItem(
 private fun PeriodChip(text: String, selected: Boolean, onClick: () -> Unit) {
     Surface(
         modifier = Modifier.clickable(onClick = onClick),
-        shape = RoundedCornerShape(10.dp),
+        shape = RoundedCornerShape(com.webtoapp.ui.design.WtaRadius.Button),
         color = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent
     ) {
         Text(
@@ -506,63 +410,45 @@ private fun PeriodChip(text: String, selected: Boolean, onClick: () -> Unit) {
     }
 }
 
-/**
- * Free 套餐卡片 — 展示免费版功能
- */
+
+
+
 @Composable
 private fun FreeCard(isCurrent: Boolean) {
-    EnhancedElevatedCard(
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-    ) {
-        Column {
-            // 头部
-            Box(
+    WtaSettingCard(contentPadding = PaddingValues(0.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(
-                        Brush.linearGradient(
-                            listOf(
-                                MaterialTheme.colorScheme.surfaceVariant,
-                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
-                            )
-                        )
-                    )
-                    .padding(24.dp)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.55f))
+                    .padding(16.dp),
+                verticalAlignment = Alignment.Bottom
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         Strings.tierFree,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 28.sp,
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
-                    Row(verticalAlignment = Alignment.Bottom) {
-                        Text(
-                            "$0",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 32.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            lineHeight = 36.sp
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            Strings.freeForever,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            fontSize = 14.sp,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
-                    }
+                    Text(
+                        Strings.freeForever,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
+                Text(
+                    "$0",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
-
-            // 功能列表
+            WtaSectionDivider()
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.15f))
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 val freeFeatures = listOf(
                     FeatureItem(Icons.Outlined.PhoneAndroid, Strings.freeUnlimitedApps, Strings.freeUnlimitedAppsDesc),
@@ -574,12 +460,13 @@ private fun FreeCard(isCurrent: Boolean) {
                 freeFeatures.forEach { feature ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            feature.icon, null,
-                            modifier = Modifier.size(20.dp),
+                            feature.icon,
+                            null,
+                            modifier = Modifier.size(18.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.width(12.dp))
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 feature.title,
                                 style = MaterialTheme.typography.bodyMedium,
@@ -589,28 +476,23 @@ private fun FreeCard(isCurrent: Boolean) {
                                 Text(
                                     feature.subtitle,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 11.sp
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
                     }
                 }
-
-                Spacer(modifier = Modifier.height(4.dp))
-
                 OutlinedButton(
                     onClick = { },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp),
-                    shape = RoundedCornerShape(14.dp),
+                        .height(48.dp),
+                    shape = RoundedCornerShape(com.webtoapp.ui.design.WtaRadius.Button),
                     enabled = false
                 ) {
                     Text(
                         if (isCurrent) Strings.currentScheme else Strings.basicPlan,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
             }
@@ -634,54 +516,51 @@ private fun SubscriptionCard(
     onSubscribe: () -> Unit
 ) {
     EnhancedElevatedCard(
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(com.webtoapp.ui.design.WtaRadius.Card),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         modifier = if (isRecommended) {
-            Modifier.border(2.dp, Brush.linearGradient(gradient), RoundedCornerShape(20.dp))
+            Modifier.border(1.5.dp, Brush.linearGradient(gradient), RoundedCornerShape(com.webtoapp.ui.design.WtaRadius.Card))
         } else Modifier
     ) {
-        Column {
-            // 头部（渐变）
+        Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Brush.linearGradient(gradient))
-                    .padding(24.dp)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.45f))
+                    .padding(16.dp)
             ) {
-                Column {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (isRecommended) {
                         Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = Color.White.copy(alpha = 0.25f)
+                            shape = RoundedCornerShape(com.webtoapp.ui.design.WtaRadius.Button),
+                            color = gradient.first().copy(alpha = 0.12f)
                         ) {
                             Text(
                                 Strings.recommended,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp),
-                                color = Color.White,
+                                color = gradient.first(),
                                 fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.SemiBold
                             )
                         }
-                        Spacer(modifier = Modifier.height(8.dp))
                     }
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             tierName,
-                            color = Color.White,
-                            fontSize = 28.sp,
+                            style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
                         if (isLifetime) {
                             Spacer(modifier = Modifier.width(8.dp))
                             Surface(
-                                shape = RoundedCornerShape(6.dp),
-                                color = Color.White.copy(alpha = 0.2f)
+                                shape = RoundedCornerShape(com.webtoapp.ui.design.WtaRadius.Button),
+                                color = MaterialTheme.colorScheme.surfaceContainerHigh
                             ) {
                                 Text(
                                     "∞ " + Strings.periodLifetime,
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                    color = Color.White,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.SemiBold
                                 )
@@ -691,28 +570,26 @@ private fun SubscriptionCard(
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text(
                             price,
-                            color = Color.White,
-                            fontSize = 32.sp,
+                            style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.ExtraBold,
-                            lineHeight = 36.sp
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         if (period.isNotEmpty()) {
                             Spacer(modifier = Modifier.width(2.dp))
                             Text(
                                 period,
-                                color = Color.White.copy(alpha = 0.8f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 14.sp,
-                                modifier = Modifier.padding(bottom = 4.dp)
+                                modifier = Modifier.padding(bottom = 2.dp)
                             )
                         }
                     }
 
-                    // 升级提示
                     if (upgradeNote != null) {
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(4.dp))
                         Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = Color.White.copy(alpha = 0.15f)
+                            shape = RoundedCornerShape(com.webtoapp.ui.design.WtaRadius.Button),
+                            color = MaterialTheme.colorScheme.surfaceContainerHigh
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
@@ -722,12 +599,12 @@ private fun SubscriptionCard(
                                     Icons.Outlined.TrendingUp,
                                     contentDescription = null,
                                     modifier = Modifier.size(14.dp),
-                                    tint = Color.White
+                                    tint = gradient.first()
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     upgradeNote,
-                                    color = Color.White.copy(alpha = 0.9f),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Medium
                                 )
@@ -737,23 +614,22 @@ private fun SubscriptionCard(
                 }
             }
 
-            // 功能列表
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 features.forEach { feature ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             feature.icon, null,
-                            modifier = Modifier.size(20.dp),
+                            modifier = Modifier.size(18.dp),
                             tint = gradient.first()
                         )
                         Spacer(modifier = Modifier.width(12.dp))
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 feature.title,
                                 style = MaterialTheme.typography.bodyMedium,
@@ -773,13 +649,13 @@ private fun SubscriptionCard(
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                // 订阅按钮
+
                 PremiumButton(
                     onClick = onSubscribe,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp),
-                    shape = RoundedCornerShape(14.dp),
+                        .height(48.dp),
+                    shape = RoundedCornerShape(com.webtoapp.ui.design.WtaRadius.Button),
                     enabled = !isCurrent && !isLoading && !isDowngrade,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = gradient.first()
@@ -787,7 +663,7 @@ private fun SubscriptionCard(
                 ) {
                     if (isLoading) {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
+                            modifier = Modifier.size(18.dp),
                             strokeWidth = 2.dp,
                             color = Color.White
                         )

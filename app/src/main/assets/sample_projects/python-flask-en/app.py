@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 """
 Flask Analytics Dashboard — Beautiful Python Web App Demo
 A modern analytics dashboard showcasing Flask's capabilities

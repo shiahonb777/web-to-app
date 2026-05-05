@@ -3,12 +3,9 @@ package com.webtoapp.ui.screens
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,16 +20,18 @@ import androidx.compose.ui.unit.dp
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.core.scraper.WebsiteScraper
 import com.webtoapp.ui.components.*
+import com.webtoapp.ui.screens.create.WtaCreateFlowScaffold
+import com.webtoapp.ui.screens.create.WtaCreateFlowSection
 
-/**
- * 创建离线包页面 — 全屏 Scaffold，风格统一
- *
- * 设计要点：
- * 1. PremiumTextField 使用 leadingIcon 内嵌图标（与 CreateAppScreen 一致）
- * 2. 不包裹多余的 EnhancedElevatedCard，直接使用 PremiumTextField + label
- * 3. 高级配置使用 EnhancedElevatedCard 折叠展示
- * 4. 不重复通用功能（图标/主题等在编辑页配置）
- */
+
+
+
+
+
+
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateOfflinePackScreen(
@@ -61,74 +60,52 @@ fun CreateOfflinePackScreen(
     var timeoutSeconds by remember { mutableIntStateOf(30) }
     var showAdvanced by remember { mutableStateOf(false) }
 
-    // Scraping state
+
     var isScraping by remember { mutableStateOf(false) }
     var scrapeProgress by remember { mutableStateOf<WebsiteScraper.ScrapeProgress?>(null) }
 
-    val scrollState = rememberScrollState()
-
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.surface,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        Strings.websiteOfflinePackTitle,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack, enabled = !isScraping) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
-                    }
-                },
-                actions = {
-                    TextButton(
-                        onClick = {
-                            if (url.isBlank()) return@TextButton
-                            val finalUrl = if (url.startsWith("http")) url else "https://$url"
-                            isScraping = true
-                            onStartScrape(
-                                appName, finalUrl, maxDepth, downloadCdn,
-                                followLinks, maxFiles, maxTotalSizeMb, skipPatterns, timeoutSeconds
-                            ) { progress ->
-                                scrapeProgress = progress
-                                if (progress.phase == WebsiteScraper.ScrapeProgress.Phase.COMPLETE ||
-                                    progress.phase == WebsiteScraper.ScrapeProgress.Phase.ERROR
-                                ) {
-                                    isScraping = false
-                                    if (progress.phase == WebsiteScraper.ScrapeProgress.Phase.COMPLETE) {
-                                        onBack()
-                                    }
-                                }
-                            }
-                        },
-                        enabled = url.isNotBlank() && !isScraping
-                    ) {
-                        Text(
-                            Strings.startScraping,
-                            fontWeight = FontWeight.Bold
-                        )
+    val startScrape = {
+        if (url.isNotBlank() && !isScraping) {
+            val finalUrl = if (url.startsWith("http")) url else "https://$url"
+            isScraping = true
+            onStartScrape(
+                appName, finalUrl, maxDepth, downloadCdn,
+                followLinks, maxFiles, maxTotalSizeMb, skipPatterns, timeoutSeconds
+            ) { progress ->
+                scrapeProgress = progress
+                if (progress.phase == WebsiteScraper.ScrapeProgress.Phase.COMPLETE ||
+                    progress.phase == WebsiteScraper.ScrapeProgress.Phase.ERROR
+                ) {
+                    isScraping = false
+                    if (progress.phase == WebsiteScraper.ScrapeProgress.Phase.COMPLETE) {
+                        onBack()
                     }
                 }
-            )
+            }
         }
-    ) { padding ->
-        ThemedBackgroundBox(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(scrollState)
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Spacer(Modifier.height(8.dp))
+    }
 
-                // URL 输入 — leadingIcon 内嵌
+    WtaCreateFlowScaffold(
+        title = Strings.websiteOfflinePackTitle,
+        onBack = onBack,
+        actions = {
+            TextButton(
+                onClick = startScrape,
+                enabled = url.isNotBlank() && !isScraping
+            ) {
+                Text(
+                    Strings.startScraping,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    ) {
+        WtaCreateFlowSection(title = Strings.labelBasicInfo) {
+            EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
                 PremiumTextField(
                     value = url,
                     onValueChange = {
@@ -154,7 +131,7 @@ fun CreateOfflinePackScreen(
                     )
                 )
 
-                // App 名称 — leadingIcon 内嵌
+
                 PremiumTextField(
                     value = appName,
                     onValueChange = { appName = it },
@@ -166,11 +143,15 @@ fun CreateOfflinePackScreen(
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
                 )
+                }
+            }
+        }
 
-                // ==================== 爬取策略 ====================
+
+        WtaCreateFlowSection(title = Strings.scrapeStrategy) {
                 EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        // Section title
+
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 Icons.Outlined.TravelExplore,
@@ -188,7 +169,7 @@ fun CreateOfflinePackScreen(
 
                         Spacer(Modifier.height(12.dp))
 
-                        // Crawl depth
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
@@ -214,7 +195,7 @@ fun CreateOfflinePackScreen(
 
                         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
-                        // Follow links toggle
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -239,7 +220,7 @@ fun CreateOfflinePackScreen(
 
                         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
-                        // CDN toggle
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -263,8 +244,10 @@ fun CreateOfflinePackScreen(
                         }
                     }
                 }
+        }
 
-                // ==================== 高级配置 ====================
+
+        WtaCreateFlowSection(title = Strings.advancedConfig) {
                 EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(
@@ -301,7 +284,7 @@ fun CreateOfflinePackScreen(
                                 verticalArrangement = Arrangement.spacedBy(12.dp),
                                 modifier = Modifier.padding(top = 12.dp)
                             ) {
-                                // Max files
+
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween
@@ -327,7 +310,7 @@ fun CreateOfflinePackScreen(
 
                                 HorizontalDivider()
 
-                                // Max total size
+
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween
@@ -353,7 +336,7 @@ fun CreateOfflinePackScreen(
 
                                 HorizontalDivider()
 
-                                // Skip patterns
+
                                 PremiumTextField(
                                     value = skipPatterns,
                                     onValueChange = { skipPatterns = it },
@@ -367,7 +350,7 @@ fun CreateOfflinePackScreen(
 
                                 HorizontalDivider()
 
-                                // Timeout
+
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween
@@ -399,8 +382,9 @@ fun CreateOfflinePackScreen(
                         }
                     }
                 }
+        }
 
-                // Info card
+
                 if (!isScraping) {
                     Surface(
                         shape = RoundedCornerShape(12.dp),
@@ -427,7 +411,7 @@ fun CreateOfflinePackScreen(
                     }
                 }
 
-                // Progress section
+
                 if (isScraping && scrapeProgress != null) {
                     val progress = scrapeProgress!!
 
@@ -512,7 +496,7 @@ fun CreateOfflinePackScreen(
                     }
                 }
 
-                // Start button
+
                 if (!isScraping) {
                     PremiumButton(
                         onClick = {
@@ -546,8 +530,6 @@ fun CreateOfflinePackScreen(
                 Spacer(Modifier.height(16.dp))
             }
         }
-    }
-}
 
 @Composable
 private fun StatChip(label: String, value: String, color: androidx.compose.ui.graphics.Color) {

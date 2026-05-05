@@ -4,18 +4,18 @@ import com.google.gson.annotations.SerializedName
 import com.webtoapp.core.extension.*
 import com.webtoapp.core.i18n.Strings
 
-/**
- * Agent 上下文管理
- * 
- * 管理 Agent 的对话历史、工作状态、生成的代码等上下文信息
- */
 
-// ==================== Agent 流式事件类型 ====================
 
-/**
- * Agent 状态枚举
- * 用于表示 Agent 当前的工作状态
- */
+
+
+
+
+
+
+
+
+
+
 enum class AgentState(val icon: String) {
     IDLE("pause"),
     THINKING("thinking"),
@@ -40,10 +40,10 @@ enum class AgentState(val icon: String) {
     }
 }
 
-/**
- * 工具调用信息
- * 用于在 UI 中展示工具调用的详细信息
- */
+
+
+
+
 data class ToolCallInfo(
     @SerializedName("tool_name")
     val toolName: String,
@@ -63,11 +63,11 @@ data class ToolCallInfo(
     val callId: String = java.util.UUID.randomUUID().toString()
 ) {
     companion object {
-        /**
-         * 从 ToolCallRequest 创建 ToolCallInfo
-         */
+
+
+
         fun fromRequest(request: ToolCallRequest): ToolCallInfo {
-            val toolType = AgentToolType.entries.find { 
+            val toolType = AgentToolType.entries.find {
                 it.name.equals(request.toolName, ignoreCase = true) ||
                 request.toolName.equals(it.name.lowercase().replace("_", ""), ignoreCase = true)
             }
@@ -79,10 +79,10 @@ data class ToolCallInfo(
                 callId = request.callId
             )
         }
-        
-        /**
-         * 从 ToolCallResult 更新 ToolCallInfo
-         */
+
+
+
+
         fun fromResult(info: ToolCallInfo, result: ToolCallResult): ToolCallInfo {
             return info.copy(
                 status = if (result.success) ToolStatus.SUCCESS else ToolStatus.FAILED,
@@ -94,124 +94,124 @@ data class ToolCallInfo(
     }
 }
 
-/**
- * 工具执行状态
- */
+
+
+
 enum class ToolStatus {
-    PENDING,    // 等待执行
-    EXECUTING,  // Execute中
-    SUCCESS,    // Execute成功
-    FAILED      // Execute失败
+    PENDING,
+    EXECUTING,
+    SUCCESS,
+    FAILED
 }
 
-/**
- * Agent 流式事件
- * 
- * 用于实时传递 Agent 开发过程中的各种事件，支持流式输出和工具调用可视化
- * 
- * Requirements: 2.1, 2.2, 2.3, 2.4, 5.8
- */
+
+
+
+
+
+
+
 sealed class AgentStreamEvent {
-    
-    /**
-     * 状态变化事件
-     * 当 Agent 状态发生变化时触发
-     */
+
+
+
+
+
     data class StateChange(val state: AgentState) : AgentStreamEvent()
-    
-    /**
-     * 思考内容事件（流式）
-     * 当 AI 正在思考或推理时触发，用于显示思考过程
-     * 
-     * @param content 本次增量的思考内容
-     * @param fullContent 累积的完整思考内容
-     */
+
+
+
+
+
+
+
+
     data class Thinking(
         val content: String,
         val fullContent: String
     ) : AgentStreamEvent()
-    
-    /**
-     * 生成内容事件（流式）
-     * 当 AI 生成内容时触发，用于实时显示生成的文本
-     * 
-     * @param delta 本次增量的内容
-     * @param fullContent 累积的完整内容
-     */
+
+
+
+
+
+
+
+
     data class Content(
         val delta: String,
         val fullContent: String
     ) : AgentStreamEvent()
-    
-    /**
-     * 工具调用开始事件
-     * 当开始执行工具调用时触发
-     * 
-     * @param toolCall 工具调用信息
-     */
+
+
+
+
+
+
+
     data class ToolStart(val toolCall: ToolCallInfo) : AgentStreamEvent()
-    
-    /**
-     * 工具调用完成事件
-     * 当工具调用执行完成时触发
-     * 
-     * @param toolCall 包含执行结果的工具调用信息
-     */
+
+
+
+
+
+
+
     data class ToolComplete(val toolCall: ToolCallInfo) : AgentStreamEvent()
-    
-    /**
-     * 模块生成事件
-     * 当成功解析出模块数据时触发
-     * 
-     * @param module 生成的模块数据
-     */
+
+
+
+
+
+
+
     data class ModuleGenerated(val module: GeneratedModuleData) : AgentStreamEvent()
-    
-    /**
-     * 错误事件
-     * 当发生错误时触发
-     * 
-     * @param message 错误消息
-     * @param code 错误码（可选）
-     * @param recoverable 是否可恢复
-     * @param rawResponse 原始响应（用于调试）
-     */
+
+
+
+
+
+
+
+
+
+
     data class Error(
         val message: String,
         val code: String? = null,
         val recoverable: Boolean = true,
         val rawResponse: String? = null
     ) : AgentStreamEvent()
-    
-    /**
-     * 完成事件
-     * 当整个开发流程完成时触发
-     * 
-     * @param module 最终生成的模块数据
-     */
+
+
+
+
+
+
+
     data class Completed(val module: GeneratedModuleData) : AgentStreamEvent()
 }
 
-// ==================== 原有代码 ====================
 
-/**
- * Agent 会话状态
- */
+
+
+
+
 enum class AgentSessionState {
-    IDLE,           // Empty闲
-    THINKING,       // 思考中
-    PLANNING,       // 规划中
-    EXECUTING,      // Execute工具中
-    GENERATING,     // Generate代码中
-    REVIEWING,      // 审查代码中
-    FIXING,         // 修复错误中
-    COMPLETED,      // Done
-    ERROR           // Error
+    IDLE,
+    THINKING,
+    PLANNING,
+    EXECUTING,
+    GENERATING,
+    REVIEWING,
+    FIXING,
+    COMPLETED,
+    ERROR
 }
 
-/**
- * Agent 思考步骤
- */
+
+
+
 data class AgentThought(
     @SerializedName("step")
     val step: Int,
@@ -223,9 +223,9 @@ data class AgentThought(
     val timestamp: Long = System.currentTimeMillis()
 )
 
-/**
- * 思考类型
- */
+
+
+
 enum class ThoughtType(val icon: String) {
     ANALYSIS("search"),
     PLANNING("clipboard"),
@@ -251,9 +251,9 @@ enum class ThoughtType(val icon: String) {
 }
 
 
-/**
- * Agent 消息
- */
+
+
+
 data class AgentMessage(
     @SerializedName("id")
     val id: String = java.util.UUID.randomUUID().toString(),
@@ -273,19 +273,19 @@ data class AgentMessage(
     val timestamp: Long = System.currentTimeMillis()
 )
 
-/**
- * 消息角色
- */
+
+
+
 enum class MessageRole {
-    USER,       // User消息
-    ASSISTANT,  // AI 助手消息
-    SYSTEM,     // System消息
-    TOOL        // 工具消息
+    USER,
+    ASSISTANT,
+    SYSTEM,
+    TOOL
 }
 
-/**
- * 生成的模块数据
- */
+
+
+
 data class GeneratedModuleData(
     @SerializedName("name")
     val name: String,
@@ -310,22 +310,22 @@ data class GeneratedModuleData(
     @SerializedName("security_safe")
     val securitySafe: Boolean = true
 ) {
-    /**
-     * 转换为 ExtensionModule
-     */
+
+
+
     fun toExtensionModule(): ExtensionModule {
         val cat = try {
             ModuleCategory.valueOf(category.uppercase())
         } catch (e: Exception) {
             ModuleCategory.OTHER
         }
-        
+
         val runTime = try {
             ModuleRunTime.valueOf(runAt.uppercase())
         } catch (e: Exception) {
             ModuleRunTime.DOCUMENT_END
         }
-        
+
         return ExtensionModule(
             name = name,
             description = description,
@@ -356,9 +356,9 @@ data class GeneratedModuleData(
     }
 }
 
-/**
- * Agent 会话上下文
- */
+
+
+
 data class AgentSession(
     @SerializedName("id")
     val id: String = java.util.UUID.randomUUID().toString(),
@@ -377,19 +377,19 @@ data class AgentSession(
     @SerializedName("created_at")
     val createdAt: Long = System.currentTimeMillis()
 ) {
-    /**
-     * 添加用户消息
-     */
+
+
+
     fun addUserMessage(content: String) {
         messages.add(AgentMessage(
             role = MessageRole.USER,
             content = content
         ))
     }
-    
-    /**
-     * 添加助手消息
-     */
+
+
+
+
     fun addAssistantMessage(
         content: String,
         thoughts: List<AgentThought> = emptyList(),
@@ -406,10 +406,10 @@ data class AgentSession(
             generatedModule = generatedModule
         ))
     }
-    
-    /**
-     * 添加思考步骤
-     */
+
+
+
+
     fun addThought(type: ThoughtType, content: String) {
         currentThoughts.add(AgentThought(
             step = currentThoughts.size + 1,
@@ -417,17 +417,17 @@ data class AgentSession(
             content = content
         ))
     }
-    
-    /**
-     * 清空当前思考
-     */
+
+
+
+
     fun clearCurrentThoughts() {
         currentThoughts.clear()
     }
-    
-    /**
-     * 获取对话历史（用于 AI 上下文）
-     */
+
+
+
+
     fun getConversationHistory(): List<Map<String, String>> {
         return messages.map { msg ->
             mapOf(
@@ -441,25 +441,25 @@ data class AgentSession(
             )
         }
     }
-    
-    /**
-     * 获取最近的工具调用结果
-     */
+
+
+
+
     fun getRecentToolResults(): List<ToolCallResult> {
         return messages.lastOrNull()?.toolResults ?: emptyList()
     }
-    
-    /**
-     * 是否可以继续迭代
-     */
+
+
+
+
     fun canContinue(): Boolean {
         return iterationCount < maxIterations && state != AgentSessionState.ERROR
     }
 }
 
-/**
- * Agent 配置
- */
+
+
+
 data class AgentConfig(
     @SerializedName("max_iterations")
     val maxIterations: Int = 5,

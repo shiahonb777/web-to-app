@@ -35,20 +35,20 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 
-/**
- * 状态栏图片裁剪对话框
- * 
- * 功能特点：
- * - 固定裁剪比例：屏幕宽度 × 状态栏高度
- * - 上下拖动选择裁剪区域
- * - 实时预览裁剪效果
- * - 自动保存裁剪后的图片
- * 
- * @param imageUri 原始图片 URI
- * @param statusBarHeightDp 状态栏高度（dp），0 表示使用系统默认
- * @param onCropComplete 裁剪完成回调，返回裁剪后的图片路径
- * @param onDismiss 取消回调
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatusBarImageCropper(
@@ -60,20 +60,20 @@ fun StatusBarImageCropper(
     val context = LocalContext.current
     val density = LocalDensity.current
     val scope = rememberCoroutineScope()
-    
-    // Get屏幕宽度
+
+
     val screenWidthPx = remember {
         context.resources.displayMetrics.widthPixels
     }
-    
+
     val topInsetPx = WindowInsets.statusBars.getTop(density)
     val systemStatusBarHeight = if (topInsetPx > 0) {
         topInsetPx
     } else {
         with(density) { 24.dp.roundToPx() }
     }
-    
-    // 使用自定义高度或系统默认高度
+
+
     val targetHeightPx = remember(statusBarHeightDp) {
         if (statusBarHeightDp > 0) {
             with(density) { statusBarHeightDp.dp.roundToPx() }
@@ -81,24 +81,24 @@ fun StatusBarImageCropper(
             systemStatusBarHeight
         }
     }
-    
-    // 计算裁剪比例（宽:高）
+
+
     val cropAspectRatio = remember(screenWidthPx, targetHeightPx) {
         screenWidthPx.toFloat() / targetHeightPx.toFloat()
     }
-    
-    // Load原始图片
+
+
     var originalBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    
-    // 预览区域尺寸
+
+
     var previewSize by remember { mutableStateOf(IntSize.Zero) }
-    
-    // 裁剪位置（Y 偏移量，相对于缩放后的图片）
+
+
     var cropOffsetY by remember { mutableFloatStateOf(0f) }
-    
-    // 计算缩放比例（图片缩放到预览区域宽度）
+
+
     val scaleFactor = remember(originalBitmap, previewSize) {
         originalBitmap?.let { bitmap ->
             if (previewSize.width > 0 && bitmap.width > 0) {
@@ -106,13 +106,13 @@ fun StatusBarImageCropper(
             } else 1f
         } ?: 1f
     }
-    
-    // Zoom后的图片高度
+
+
     val scaledImageHeight = remember(originalBitmap, scaleFactor) {
         originalBitmap?.let { (it.height * scaleFactor).toInt() } ?: 0
     }
-    
-    // 裁剪框高度（在预览中的像素高度）
+
+
     val cropBoxHeightPx = remember(previewSize, cropAspectRatio) {
         if (previewSize.width > 0) {
             (previewSize.width / cropAspectRatio).toInt()
@@ -120,29 +120,29 @@ fun StatusBarImageCropper(
             with(density) { targetHeightPx.toDp().roundToPx() }
         }
     }
-    
-    // Max偏移量
+
+
     val maxOffsetY = remember(scaledImageHeight, cropBoxHeightPx) {
         (scaledImageHeight - cropBoxHeightPx).coerceAtLeast(0).toFloat()
     }
-    
-    // Load图片
+
+
     LaunchedEffect(imageUri) {
         isLoading = true
         errorMessage = null
         withContext(Dispatchers.IO) {
             try {
                 context.contentResolver.openInputStream(imageUri)?.use { inputStream ->
-                    // 先获取图片尺寸
+
                     val options = BitmapFactory.Options().apply {
                         inJustDecodeBounds = true
                     }
                     BitmapFactory.decodeStream(inputStream, null, options)
-                    
-                    // 重新打开流并解码
+
+
                     context.contentResolver.openInputStream(imageUri)?.use { stream ->
                         val decodeOptions = BitmapFactory.Options().apply {
-                            // 如果图片太大，进行采样
+
                             val maxDimension = 2048
                             if (options.outWidth > maxDimension || options.outHeight > maxDimension) {
                                 inSampleSize = calculateInSampleSize(options, maxDimension, maxDimension)
@@ -164,18 +164,18 @@ fun StatusBarImageCropper(
         }
         isLoading = false
     }
-    
-    // Initialize裁剪位置为中间
+
+
     LaunchedEffect(originalBitmap, previewSize, cropBoxHeightPx) {
         if (originalBitmap != null && previewSize.width > 0) {
             val scaledHeight = originalBitmap!!.height * (previewSize.width.toFloat() / originalBitmap!!.width.coerceAtLeast(1))
             cropOffsetY = ((scaledHeight - cropBoxHeightPx) / 2).coerceAtLeast(0f)
         }
     }
-    
-    // 裁剪处理状态
+
+
     var isCropping by remember { mutableStateOf(false) }
-    
+
     AlertDialog(
         onDismissRequest = { if (!isCropping) onDismiss() },
         title = {
@@ -205,7 +205,7 @@ fun StatusBarImageCropper(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // 提示信息
+
                 Card(
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer
@@ -228,8 +228,8 @@ fun StatusBarImageCropper(
                         )
                     }
                 }
-                
-                // Image预览和裁剪区域
+
+
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -281,15 +281,15 @@ fun StatusBarImageCropper(
                                         }
                                     }
                             ) {
-                                // 原始图片
+
                                 Image(
                                     bitmap = originalBitmap!!.asImageBitmap(),
                                     contentDescription = Strings.originalImage,
                                     modifier = Modifier.fillMaxWidth(),
                                     contentScale = ContentScale.FillWidth
                                 )
-                                
-                                // 半透明遮罩（上方）
+
+
                                 if (cropOffsetY > 0) {
                                     Box(
                                         modifier = Modifier
@@ -298,8 +298,8 @@ fun StatusBarImageCropper(
                                             .background(Color.Black.copy(alpha = 0.6f))
                                     )
                                 }
-                                
-                                // 裁剪框边框
+
+
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -311,8 +311,8 @@ fun StatusBarImageCropper(
                                             shape = RoundedCornerShape(0.dp)
                                         )
                                 )
-                                
-                                // 半透明遮罩（下方）
+
+
                                 val bottomMaskTop = cropOffsetY + cropBoxHeightPx
                                 val bottomMaskHeight = (scaledImageHeight - bottomMaskTop).coerceAtLeast(0f)
                                 if (bottomMaskHeight > 0) {
@@ -328,8 +328,8 @@ fun StatusBarImageCropper(
                         }
                     }
                 }
-                
-                // 裁剪信息
+
+
                 if (originalBitmap != null) {
                     Card(
                         colors = CardDefaults.cardColors(
@@ -367,8 +367,8 @@ fun StatusBarImageCropper(
                         }
                     }
                 }
-                
-                // 裁剪进度
+
+
                 if (isCropping) {
                     LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                 }
@@ -411,30 +411,30 @@ fun StatusBarImageCropper(
     )
 }
 
-/**
- * 计算采样率
- */
+
+
+
 private fun calculateInSampleSize(options: BitmapFactory.Options, reqWidth: Int, reqHeight: Int): Int {
     val (height: Int, width: Int) = options.run { outHeight to outWidth }
     var inSampleSize = 1
-    
+
     if (height > reqHeight || width > reqWidth) {
         val halfHeight: Int = height / 2
         val halfWidth: Int = width / 2
-        
+
         while (halfHeight / inSampleSize >= reqHeight && halfWidth / inSampleSize >= reqWidth) {
             inSampleSize *= 2
         }
     }
-    
+
     return inSampleSize
 }
 
-/**
- * 执行裁剪并保存
- * 
- * @return 裁剪后的图片路径，失败返回 null
- */
+
+
+
+
+
 private suspend fun cropAndSave(
     context: android.content.Context,
     bitmap: Bitmap,
@@ -444,12 +444,12 @@ private suspend fun cropAndSave(
     targetHeightPx: Int
 ): String? = withContext(Dispatchers.IO) {
     try {
-        // 计算原图上的裁剪区域
+
         val originalY = (cropOffsetY / scaleFactor).toInt().coerceIn(0, bitmap.height - 1)
         val originalCropHeight = (targetHeightPx / scaleFactor).toInt()
             .coerceIn(1, bitmap.height - originalY)
-        
-        // 裁剪原图
+
+
         val croppedBitmap = Bitmap.createBitmap(
             bitmap,
             0,
@@ -457,34 +457,34 @@ private suspend fun cropAndSave(
             bitmap.width,
             originalCropHeight.coerceAtMost(bitmap.height - originalY)
         )
-        
-        // Zoom到目标尺寸
+
+
         val scaledBitmap = Bitmap.createScaledBitmap(
             croppedBitmap,
             targetWidthPx,
             targetHeightPx,
             true
         )
-        
-        // Save到应用私有目录
+
+
         val statusBarDir = File(context.filesDir, "statusbar_backgrounds")
         if (!statusBarDir.exists()) {
             statusBarDir.mkdirs()
         }
-        
+
         val outputFile = File(statusBarDir, "statusbar_bg_${System.currentTimeMillis()}.png")
         FileOutputStream(outputFile).use { out ->
             scaledBitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
         }
-        
-        // 回收临时 bitmap
+
+
         if (croppedBitmap != bitmap) {
             croppedBitmap.recycle()
         }
         if (scaledBitmap != croppedBitmap) {
             scaledBitmap.recycle()
         }
-        
+
         outputFile.absolutePath
     } catch (e: Exception) {
         AppLogger.e("StatusBarImageCropper", "Operation failed", e)

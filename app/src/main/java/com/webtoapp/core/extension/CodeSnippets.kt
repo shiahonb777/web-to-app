@@ -2,66 +2,66 @@ package com.webtoapp.core.extension
 
 import com.webtoapp.core.i18n.Strings
 
-/**
- * 代码块库
- * 
- * 提供可复用的代码片段，用户可以在模块编辑器中选择插入
- * 包含 20+ 分类，200+ 代码片段
- */
+
+
+
+
+
+
 object CodeSnippets {
-    
-    /**
-     * 获取所有代码块（按分类）
-     */
+
+
+
+
     fun getAll(): List<CodeSnippetCategory> = listOf(
-        // 原生能力（新增）
+
         nativeBridgeOperations(),
-        
-        // 基础操作
+
+
         domOperations(),
         styleOperations(),
         eventListeners(),
-        
-        // 数据处理
+
+
         storageOperations(),
         networkOperations(),
         dataProcessing(),
-        
-        // UI 组件
+
+
         uiComponents(),
         floatingWidgets(),
         notifications(),
-        
-        // 功能增强
+
+
         scrollOperations(),
         formOperations(),
         mediaOperations(),
-        
-        // Page处理
+
+
         pageEnhance(),
         contentFilter(),
         adBlocker(),
-        
-        // 工具函数
+
+
         utilityFunctions(),
         textProcessing(),
-        
-        // 高级功能
+
+
         interceptors(),
         automation(),
         debugging()
     )
-    
-    /**
-     * 根据分类获取代码块
-     */
+
+
+
+
     fun getByCategory(categoryId: String): CodeSnippetCategory? {
         return getAll().find { it.id == categoryId }
     }
-    
-    /**
-     * Search代码块
-     */
+
+
+
+
     fun search(query: String): List<CodeSnippet> {
         val lowerQuery = query.lowercase()
         return getAll().flatMap { it.snippets }.filter { snippet ->
@@ -70,10 +70,10 @@ object CodeSnippets {
             snippet.tags.any { it.lowercase().contains(lowerQuery) }
         }
     }
-    
-    /**
-     * 获取热门代码块
-     */
+
+
+
+
     fun getPopular(): List<CodeSnippet> = listOf(
         getByCategory("native")?.snippets?.find { it.id == "native-save-image" },
         getByCategory("native")?.snippets?.find { it.id == "native-share" },
@@ -84,8 +84,8 @@ object CodeSnippets {
         getByCategory("adblocker")?.snippets?.find { it.id == "ad-hide-common" },
         getByCategory("events")?.snippets?.find { it.id == "event-mutation" }
     ).filterNotNull()
-    
-    // ==================== 原生能力 (NativeBridge) ====================
+
+
     private fun nativeBridgeOperations() = CodeSnippetCategory(
         id = "native",
         name = Strings.snippetNative,
@@ -298,10 +298,10 @@ function addImageDownloadButtons() {
     document.querySelectorAll('img').forEach(img => {
         if (img.dataset.downloadBtn) return;
         img.dataset.downloadBtn = 'true';
-        
+
         const wrapper = document.createElement('div');
         wrapper.style.cssText = 'position:relative;display:inline-block;';
-        
+
         const btn = document.createElement('button');
         btn.textContent = '💾';
         btn.style.cssText = `
@@ -318,7 +318,7 @@ function addImageDownloadButtons() {
             transition: opacity 0.3s;
             z-index: 100;
         `;
-        
+
         wrapper.onmouseenter = () => btn.style.opacity = '1';
         wrapper.onmouseleave = () => btn.style.opacity = '0';
         btn.onclick = (e) => {
@@ -326,7 +326,7 @@ function addImageDownloadButtons() {
             NativeBridge.saveImageToGallery(img.src);
             NativeBridge.vibrate(50);
         };
-        
+
         img.parentNode.insertBefore(wrapper, img);
         wrapper.appendChild(img);
         wrapper.appendChild(btn);
@@ -334,14 +334,17 @@ function addImageDownloadButtons() {
 }
 
 addImageDownloadButtons();
-new MutationObserver(addImageDownloadButtons)
-    .observe(document.body, { childList: true, subtree: true });""",
+const observerTarget = document.body || document.documentElement;
+if (observerTarget instanceof Node) {
+    new MutationObserver(addImageDownloadButtons)
+        .observe(observerTarget, { childList: true, subtree: true });
+}""",
                 tags = listOf(Strings.tagImage, Strings.tagDownload, Strings.tagButton, Strings.tagFloating)
             )
         )
     )
 
-    // ==================== DOM 操作 ====================
+
     private fun domOperations() = CodeSnippetCategory(
         id = "dom",
         name = Strings.snippetDom,
@@ -485,8 +488,8 @@ replaceElement('.old-class', '<div class="new-class">新内容</div>');""",
             )
         )
     )
-    
-    // ==================== 样式操作 ====================
+
+
     private fun styleOperations() = CodeSnippetCategory(
         id = "style",
         name = Strings.snippetStyle,
@@ -663,8 +666,8 @@ document.head.appendChild(style);""",
         )
     )
 
-    
-    // ==================== 事件监听 ====================
+
+
     private fun eventListeners() = CodeSnippetCategory(
         id = "events",
         name = Strings.snippetEvent,
@@ -708,7 +711,7 @@ window.addEventListener('scroll', () => {
     const scrollTop = window.scrollY;
     const direction = scrollTop > lastScrollTop ? 'down' : 'up';
     lastScrollTop = scrollTop;
-    
+
     if (scrollTop > 300) {
         // Show返回顶部按钮
     }
@@ -732,10 +735,13 @@ window.addEventListener('scroll', () => {
     });
 });
 
-observer.observe(document.body, {
-    childList: true,
-    subtree: true
-});""",
+const observerTarget = document.body || document.documentElement;
+if (observerTarget instanceof Node) {
+    observer.observe(observerTarget, {
+        childList: true,
+        subtree: true
+    });
+}""",
                 tags = listOf(Strings.tagListen, Strings.tagDomChange, Strings.tagDynamic)
             ),
             CodeSnippet(
@@ -796,7 +802,7 @@ window.addEventListener('resize', () => {
                 code = """window.addEventListener('beforeunload', (e) => {
     // Save数据
     localStorage.setItem('lastVisit', Date.now());
-    
+
     // 如需提示用户，取消注释以下代码
     // e.preventDefault();
     // e.returnValue = '';
@@ -818,7 +824,7 @@ document.addEventListener('touchend', (e) => {
     const endY = e.changedTouches[0].clientY;
     const diffX = endX - startX;
     const diffY = endY - startY;
-    
+
     if (Math.abs(diffX) > Math.abs(diffY)) {
         if (diffX > 50) console.log('右滑');
         else if (diffX < -50) console.log('左滑');
@@ -852,8 +858,8 @@ document.addEventListener('touchmove', () => {
             )
         )
     )
-    
-    // ==================== 存储操作 ====================
+
+
     private fun storageOperations() = CodeSnippetCategory(
         id = "storage",
         name = Strings.snippetStorage,
@@ -912,7 +918,7 @@ sessionStorage.clear();""",
                 description = Strings.snippetSetCookieDesc,
                 code = """function setCookie(name, value, days = 7) {
     const expires = new Date(Date.now() + days * 864e5).toUTCString();
-    document.cookie = name + '=' + encodeURIComponent(value) + 
+    document.cookie = name + '=' + encodeURIComponent(value) +
         '; expires=' + expires + '; path=/';
 }
 setCookie('myCookie', 'value', 30);""",
@@ -975,8 +981,8 @@ async function saveToIDB(data) {
             )
         )
     )
-    
-    // ==================== 网络请求 ====================
+
+
     private fun networkOperations() = CodeSnippetCategory(
         id = "network",
         name = Strings.snippetNetwork,
@@ -1027,7 +1033,7 @@ postData('https://api.example.com/submit', { name: 'value' });""",
                 code = """async function fetchWithTimeout(url, timeout = 5000) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
-    
+
     try {
         const response = await fetch(url, { signal: controller.signal });
         clearTimeout(timeoutId);
@@ -1088,13 +1094,13 @@ function downloadBlob(blob, filename) {
     return new Promise((resolve, reject) => {
         const script = document.createElement('script');
         const fnName = 'jsonp_' + Date.now();
-        
+
         window[fnName] = (data) => {
             resolve(data);
             delete window[fnName];
             script.remove();
         };
-        
+
         script.src = url + (url.includes('?') ? '&' : '?') + callbackName + '=' + fnName;
         script.onerror = reject;
         document.head.appendChild(script);
@@ -1105,8 +1111,8 @@ function downloadBlob(blob, filename) {
         )
     )
 
-    
-    // ==================== 数据处理 ====================
+
+
     private fun dataProcessing() = CodeSnippetCategory(
         id = "data",
         name = Strings.snippetData,
@@ -1120,10 +1126,10 @@ function downloadBlob(blob, filename) {
                 code = """function extractTableData(tableSelector) {
     const table = document.querySelector(tableSelector);
     if (!table) return [];
-    
+
     const headers = Array.from(table.querySelectorAll('th'))
         .map(th => th.textContent.trim());
-    
+
     return Array.from(table.querySelectorAll('tbody tr')).map(row => {
         const cells = row.querySelectorAll('td');
         const obj = {};
@@ -1194,13 +1200,13 @@ exportJSON({ name: 'test', value: 123 });""",
                 description = Strings.snippetExportCsvDesc,
                 code = """function exportCSV(data, filename = 'data.csv') {
     if (!data.length) return;
-    
+
     const headers = Object.keys(data[0]);
     const csv = [
         headers.join(','),
         ...data.map(row => headers.map(h => '"' + (row[h] || '') + '"').join(','))
     ].join('\\n');
-    
+
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -1243,8 +1249,8 @@ const url = buildUrl('https://example.com/search', { q: 'test', page: 1 });""",
             )
         )
     )
-    
-    // ==================== UI 组件 ====================
+
+
     private fun uiComponents() = CodeSnippetCategory(
         id = "ui",
         name = Strings.snippetUi,
@@ -1313,7 +1319,7 @@ showToast('操作成功！');""",
         background: rgba(0,0,0,0.5); z-index: 999998;
         display: flex; align-items: center; justify-content: center;
     `;
-    
+
     overlay.innerHTML = `
         <div style="background: white; border-radius: 12px; padding: 20px;
             min-width: 300px; max-width: 80%; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
@@ -1325,7 +1331,7 @@ showToast('操作成功！');""",
             </div>
         </div>
     `;
-    
+
     document.body.appendChild(overlay);
     overlay.querySelector('#modal-cancel').onclick = () => overlay.remove();
     overlay.querySelector('#modal-confirm').onclick = () => { onConfirm?.(); overlay.remove(); };
@@ -1396,13 +1402,13 @@ function hideLoading() {
         ${"$"}{action ? '<button style="background: none; border: none; color: #bb86fc; cursor: pointer; font-weight: bold;">' + action + '</button>' : ''}
     `;
     document.body.appendChild(snackbar);
-    
+
     setTimeout(() => snackbar.style.transform = 'translateX(-50%) translateY(0)', 10);
-    
+
     if (action) {
         snackbar.querySelector('button').onclick = () => { onAction?.(); snackbar.remove(); };
     }
-    
+
     setTimeout(() => {
         snackbar.style.transform = 'translateX(-50%) translateY(100px)';
         setTimeout(() => snackbar.remove(), 300);
@@ -1413,8 +1419,8 @@ showSnackbar('文件已删除', '撤销', () => console.log('撤销'));""",
             )
         )
     )
-    
-    // ==================== 悬浮组件 ====================
+
+
     private fun floatingWidgets() = CodeSnippetCategory(
         id = "widgets",
         name = Strings.snippetWidget,
@@ -1433,7 +1439,7 @@ showSnackbar('文件已删除', '撤销', () => console.log('撤销'));""",
         box-shadow: 0 4px 20px rgba(0,0,0,0.15);
         display: flex; flex-direction: column; gap: 8px;
     `;
-    
+
     buttons.forEach(({ icon, title, onClick }) => {
         const btn = document.createElement('button');
         btn.innerHTML = icon;
@@ -1448,7 +1454,7 @@ showSnackbar('文件已删除', '撤销', () => console.log('撤销'));""",
         btn.onclick = onClick;
         toolbar.appendChild(btn);
     });
-    
+
     document.body.appendChild(toolbar);
     return toolbar;
 }
@@ -1478,7 +1484,7 @@ createToolbar([
             ${"$"}{content}
         </div>
     `;
-    
+
     const toggle = document.createElement('button');
     toggle.innerHTML = '☰';
     toggle.style.cssText = `
@@ -1486,7 +1492,7 @@ createToolbar([
         z-index: 999998; padding: 10px; background: #007bff; color: white;
         border: none; border-radius: 5px 0 0 5px; cursor: pointer;
     `;
-    
+
     let isOpen = false;
     toggle.onclick = () => {
         isOpen = !isOpen;
@@ -1496,7 +1502,7 @@ createToolbar([
         isOpen = false;
         sidebar.style.right = '-300px';
     };
-    
+
     document.body.appendChild(sidebar);
     document.body.appendChild(toggle);
 }
@@ -1510,16 +1516,16 @@ createSidebar('<h3>设置</h3><p>这里是侧边栏内容</p>');""",
                 code = """function makeDraggable(element) {
     let isDragging = false;
     let offsetX, offsetY;
-    
+
     element.style.cursor = 'move';
     element.style.userSelect = 'none';
-    
+
     element.addEventListener('mousedown', (e) => {
         isDragging = true;
         offsetX = e.clientX - element.offsetLeft;
         offsetY = e.clientY - element.offsetTop;
     });
-    
+
     document.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
         element.style.left = (e.clientX - offsetX) + 'px';
@@ -1527,7 +1533,7 @@ createSidebar('<h3>设置</h3><p>这里是侧边栏内容</p>');""",
         element.style.right = 'auto';
         element.style.bottom = 'auto';
     });
-    
+
     document.addEventListener('mouseup', () => {
         isDragging = false;
     });
@@ -1568,8 +1574,8 @@ createSidebar('<h3>设置</h3><p>这里是侧边栏内容</p>');""",
         )
     )
 
-    
-    // ==================== 通知系统 ====================
+
+
     private fun notifications() = CodeSnippetCategory(
         id = "notifications",
         name = Strings.snippetNotification,
@@ -1584,7 +1590,7 @@ createSidebar('<h3>设置</h3><p>这里是侧边栏内容</p>');""",
     if (Notification.permission !== 'granted') {
         await Notification.requestPermission();
     }
-    
+
     if (Notification.permission === 'granted') {
         new Notification(title, { body, icon });
     }
@@ -1626,7 +1632,7 @@ sendNotification('提醒', '这是一条通知消息');""",
         warning: '#FF9800',
         error: '#f44336'
     };
-    
+
     const banner = document.createElement('div');
     banner.style.cssText = `
         position: fixed; top: 0; left: 0; right: 0; z-index: 999999;
@@ -1641,7 +1647,7 @@ sendNotification('提醒', '这是一条通知消息');""",
             background: none; border: none; color: white; font-size: 20px; cursor: pointer;
         ">×</button>
     `;
-    
+
     document.body.appendChild(banner);
     setTimeout(() => banner.style.transform = 'translateY(0)', 10);
     setTimeout(() => {
@@ -1654,8 +1660,8 @@ showBanner('这是一条提示信息', 'success');""",
             )
         )
     )
-    
-    // ==================== 滚动操作 ====================
+
+
     private fun scrollOperations() = CodeSnippetCategory(
         id = "scroll",
         name = Strings.snippetScroll,
@@ -1769,12 +1775,12 @@ window.addEventListener('scroll', () => {
                 description = Strings.snippetInfiniteScrollDesc,
                 code = """function setupInfiniteScroll(loadMore, threshold = 200) {
     let loading = false;
-    
+
     window.addEventListener('scroll', async () => {
         if (loading) return;
-        
+
         const scrollBottom = document.documentElement.scrollHeight - window.scrollY - window.innerHeight;
-        
+
         if (scrollBottom < threshold) {
             loading = true;
             await loadMore();
@@ -1800,10 +1806,10 @@ setupInfiniteScroll(async () => {
         .fade-in { opacity: 1 !important; transform: translateY(0) !important; }
     `;
     document.head.appendChild(style);
-    
+
     const elements = document.querySelectorAll(selector);
     elements.forEach(el => el.classList.add('scroll-hidden'));
-    
+
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -1811,7 +1817,7 @@ setupInfiniteScroll(async () => {
             }
         });
     }, { threshold: 0.1 });
-    
+
     elements.forEach(el => observer.observe(el));
 }
 setupScrollReveal('.card');""",
@@ -1824,7 +1830,7 @@ setupScrollReveal('.card');""",
                 code = """function setupScrollSpy(navSelector, sectionSelector) {
     const navItems = document.querySelectorAll(navSelector);
     const sections = document.querySelectorAll(sectionSelector);
-    
+
     window.addEventListener('scroll', () => {
         let current = '';
         sections.forEach(section => {
@@ -1833,7 +1839,7 @@ setupScrollReveal('.card');""",
                 current = section.getAttribute('id');
             }
         });
-        
+
         navItems.forEach(item => {
             item.classList.remove('active');
             if (item.getAttribute('href') === '#' + current) {
@@ -1847,8 +1853,8 @@ setupScrollSpy('nav a', 'section[id]');""",
             )
         )
     )
-    
-    // ==================== 表单操作 ====================
+
+
     private fun formOperations() = CodeSnippetCategory(
         id = "form",
         name = Strings.snippetForm,
@@ -1883,7 +1889,7 @@ autoFillForm({
                 code = """function getFormData(formSelector) {
     const form = document.querySelector(formSelector);
     if (!form) return null;
-    
+
     const formData = new FormData(form);
     const data = {};
     formData.forEach((value, key) => {
@@ -1904,7 +1910,7 @@ console.log(data);""",
     Object.entries(rules).forEach(([selector, rule]) => {
         const input = document.querySelector(selector);
         if (!input) return;
-        
+
         const value = input.value.trim();
         if (rule.required && !value) {
             errors.push({ field: selector, message: rule.message || '此字段必填' });
@@ -1931,12 +1937,12 @@ const errors = validateForm({
                 code = """document.querySelectorAll('form').forEach(form => {
     form.addEventListener('submit', (e) => {
         e.preventDefault();
-        
+
         const formData = new FormData(form);
         const data = Object.fromEntries(formData);
-        
+
         console.log('表单数据:', data);
-        
+
         // 可以在这里进行自定义处理
         // 然后决定是否继续提交
         // form.submit();
@@ -1968,7 +1974,7 @@ clearForm('#myForm');""",
                 code = """function addPasswordToggle(inputSelector) {
     const input = document.querySelector(inputSelector);
     if (!input) return;
-    
+
     const toggle = document.createElement('button');
     toggle.type = 'button';
     toggle.innerHTML = '👁️';
@@ -1976,10 +1982,10 @@ clearForm('#myForm');""",
         position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
         background: none; border: none; cursor: pointer; font-size: 16px;
     `;
-    
+
     input.parentElement.style.position = 'relative';
     input.parentElement.appendChild(toggle);
-    
+
     toggle.onclick = () => {
         input.type = input.type === 'password' ? 'text' : 'password';
         toggle.innerHTML = input.type === 'password' ? '👁️' : '🙈';
@@ -1991,8 +1997,8 @@ addPasswordToggle('#password');""",
         )
     )
 
-    
-    // ==================== 媒体操作 ====================
+
+
     private fun mediaOperations() = CodeSnippetCategory(
         id = "media",
         name = Strings.snippetMedia,
@@ -2051,18 +2057,18 @@ enablePiP();""",
                 code = """function captureVideoFrame(videoSelector) {
     const video = document.querySelector(videoSelector || 'video');
     if (!video) return null;
-    
+
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     canvas.getContext('2d').drawImage(video, 0, 0);
-    
+
     // Download截图
     const link = document.createElement('a');
     link.download = 'screenshot_' + Date.now() + '.png';
     link.href = canvas.toDataURL('image/png');
     link.click();
-    
+
     return canvas.toDataURL('image/png');
 }
 captureVideoFrame();""",
@@ -2081,11 +2087,11 @@ captureVideoFrame();""",
             display: flex; align-items: center; justify-content: center;
             cursor: zoom-out;
         `;
-        
+
         const img = document.createElement('img');
         img.src = e.target.src;
         img.style.cssText = 'max-width: 95%; max-height: 95%; object-fit: contain;';
-        
+
         overlay.appendChild(img);
         overlay.onclick = () => overlay.remove();
         document.body.appendChild(overlay);
@@ -2100,7 +2106,7 @@ captureVideoFrame();""",
                 code = """function downloadAllImages(minSize = 100) {
     const images = Array.from(document.querySelectorAll('img'))
         .filter(img => img.naturalWidth >= minSize && img.naturalHeight >= minSize);
-    
+
     images.forEach((img, index) => {
         setTimeout(() => {
             const link = document.createElement('a');
@@ -2109,7 +2115,7 @@ captureVideoFrame();""",
             link.click();
         }, index * 500); // 间隔500ms避免浏览器阻止
     });
-    
+
     console.log('开始下载 ' + images.length + ' 张图片');
 }
 downloadAllImages();""",
@@ -2149,7 +2155,7 @@ muteAll(); // 静音所有""",
                 description = Strings.snippetLazyLoadDesc,
                 code = """function setupLazyLoad() {
     const images = document.querySelectorAll('img[data-src]');
-    
+
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -2160,7 +2166,7 @@ muteAll(); // 静音所有""",
             }
         });
     }, { rootMargin: '100px' });
-    
+
     images.forEach(img => observer.observe(img));
 }
 setupLazyLoad();""",
@@ -2191,8 +2197,8 @@ function videoFullscreen() {
             )
         )
     )
-    
-    // ==================== 页面增强 ====================
+
+
     private fun pageEnhance() = CodeSnippetCategory(
         id = "enhance",
         name = Strings.snippetEnhance,
@@ -2204,14 +2210,14 @@ function videoFullscreen() {
                 name = Strings.snippetReadingMode,
                 description = Strings.snippetReadingModeDesc,
                 code = """function enableReadingMode() {
-    const article = document.querySelector('article') || 
+    const article = document.querySelector('article') ||
                    document.querySelector('[class*="content"]') ||
                    document.querySelector('main') ||
                    document.body;
-    
+
     const title = document.querySelector('h1')?.textContent || document.title;
     const content = article.innerHTML;
-    
+
     document.body.innerHTML = `
         <div style="max-width: 700px; margin: 0 auto; padding: 40px 20px;
             font-size: 18px; line-height: 1.8; font-family: Georgia, serif;">
@@ -2312,11 +2318,11 @@ document.addEventListener('mouseup', () => {
         `;
         btn.onclick = () => { speakText(selection); btn.remove(); };
         document.body.appendChild(btn);
-        
+
         const rect = window.getSelection().getRangeAt(0).getBoundingClientRect();
         btn.style.left = rect.left + 'px';
         btn.style.top = (rect.bottom + 10) + 'px';
-        
+
         setTimeout(() => btn.remove(), 5000);
     }
 });""",
@@ -2332,7 +2338,7 @@ document.addEventListener('mouseup', () => {
     const english = (text.match(/[a-zA-Z]+/g) || []).length;
     const numbers = (text.match(/\d+/g) || []).length;
     const total = chinese + english + numbers;
-    
+
     const result = `
         📊 字数统计
         ─────────
@@ -2342,7 +2348,7 @@ document.addEventListener('mouseup', () => {
         总计: ${"$"}{total}
         阅读时间: 约 ${"$"}{Math.ceil(total / 300)} 分钟
     `;
-    
+
     alert(result);
     return { chinese, english, numbers, total };
 }
@@ -2358,19 +2364,19 @@ countWords();""",
     document.querySelectorAll('.search-highlight').forEach(el => {
         el.outerHTML = el.textContent;
     });
-    
+
     if (!keyword) return;
-    
+
     const regex = new RegExp('(' + keyword.replace(/[.*+?^${"$"}{}()|[\]\\]/g, '\\${"$"}&') + ')', 'gi');
-    
+
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     const textNodes = [];
     while (walker.nextNode()) textNodes.push(walker.currentNode);
-    
+
     textNodes.forEach(node => {
         if (regex.test(node.textContent)) {
             const span = document.createElement('span');
-            span.innerHTML = node.textContent.replace(regex, 
+            span.innerHTML = node.textContent.replace(regex,
                 '<mark class="search-highlight" style="background: yellow;">${"$"}1</mark>');
             node.parentNode.replaceChild(span, node);
         }
@@ -2382,8 +2388,8 @@ highlightText('搜索关键词');""",
         )
     )
 
-    
-    // ==================== 内容过滤 ====================
+
+
     private fun contentFilter() = CodeSnippetCategory(
         id = "filter",
         name = Strings.snippetFilter,
@@ -2396,7 +2402,7 @@ highlightText('搜索关键词');""",
                 description = Strings.snippetKeywordFilterDesc,
                 code = """function filterByKeywords(keywords, selector = '*') {
     const keywordList = keywords.map(k => k.toLowerCase());
-    
+
     document.querySelectorAll(selector).forEach(el => {
         const text = el.textContent.toLowerCase();
         if (keywordList.some(keyword => text.includes(keyword))) {
@@ -2427,15 +2433,15 @@ removeEmptyElements();""",
                 description = Strings.snippetFilterCommentsDesc,
                 code = """function filterComments(options = {}) {
     const { minLength = 0, keywords = [], selector = '[class*="comment"]' } = options;
-    
+
     document.querySelectorAll(selector).forEach(comment => {
         const text = comment.textContent;
-        
+
         // Filter短评论
         if (text.length < minLength) {
             comment.style.opacity = '0.3';
         }
-        
+
         // Filter包含关键词的评论
         if (keywords.some(k => text.toLowerCase().includes(k.toLowerCase()))) {
             comment.style.display = 'none';
@@ -2469,8 +2475,8 @@ filterSmallImages(100, 100);""",
             )
         )
     )
-    
-    // ==================== 广告拦截 ====================
+
+
     private fun adBlocker() = CodeSnippetCategory(
         id = "adblocker",
         name = Strings.snippetAdBlock,
@@ -2502,7 +2508,10 @@ function hideAds() {
 
 hideAds();
 const observer = new MutationObserver(hideAds);
-observer.observe(document.body, { childList: true, subtree: true });""",
+const observerTarget = document.body || document.documentElement;
+if (observerTarget instanceof Node) {
+    observer.observe(observerTarget, { childList: true, subtree: true });
+}""",
                 tags = listOf(Strings.tagAd, Strings.tagHide)
             ),
             CodeSnippet(
@@ -2540,17 +2549,17 @@ setInterval(removePopups, 1000);""",
     // 移除固定定位的遮罩
     document.querySelectorAll('*').forEach(el => {
         const style = getComputedStyle(el);
-        if (style.position === 'fixed' && 
+        if (style.position === 'fixed' &&
             (style.zIndex > 1000 || el.style.zIndex > 1000)) {
             const rect = el.getBoundingClientRect();
             // 如果覆盖大部分屏幕
-            if (rect.width > window.innerWidth * 0.5 && 
+            if (rect.width > window.innerWidth * 0.5 &&
                 rect.height > window.innerHeight * 0.5) {
                 el.remove();
             }
         }
     });
-    
+
     // 恢复滚动
     document.body.style.overflow = 'auto';
     document.documentElement.style.overflow = 'auto';
@@ -2601,13 +2610,16 @@ const observer = new MutationObserver(() => {
         el.remove();
     });
 });
-observer.observe(document.body, { childList: true, subtree: true });""",
+const observerTarget = document.body || document.documentElement;
+if (observerTarget instanceof Node) {
+    observer.observe(observerTarget, { childList: true, subtree: true });
+}""",
                 tags = listOf(Strings.tagAntiDetect, Strings.tagAd)
             )
         )
     )
-    
-    // ==================== 工具函数 ====================
+
+
     private fun utilityFunctions() = CodeSnippetCategory(
         id = "utility",
         name = Strings.snippetUtility,
@@ -2662,7 +2674,7 @@ const throttledScroll = throttle(() => {
             resolve(element);
             return;
         }
-        
+
         const observer = new MutationObserver(() => {
             const el = document.querySelector(selector);
             if (el) {
@@ -2670,9 +2682,14 @@ const throttledScroll = throttle(() => {
                 resolve(el);
             }
         });
-        
-        observer.observe(document.body, { childList: true, subtree: true });
-        
+
+        const observerTarget = document.body || document.documentElement;
+        if (!(observerTarget instanceof Node)) {
+            reject(new Error('DOM 还未就绪: ' + selector));
+            return;
+        }
+        observer.observe(observerTarget, { childList: true, subtree: true });
+
         setTimeout(() => {
             observer.disconnect();
             reject(new Error('元素未找到: ' + selector));
@@ -2779,8 +2796,8 @@ retry(() => fetch('/api/data').then(r => r.json()), 3, 1000);""",
         )
     )
 
-    
-    // ==================== 文本处理 ====================
+
+
     private fun textProcessing() = CodeSnippetCategory(
         id = "text",
         name = Strings.snippetText,
@@ -2797,7 +2814,7 @@ retry(() => fetch('/api/data').then(r => r.json()), 3, 1000);""",
         'article', '[class*="article"]', '[class*="content"]',
         '[class*="post"]', '[class*="entry"]', 'main', '.main'
     ];
-    
+
     for (const selector of selectors) {
         const el = document.querySelector(selector);
         if (el && el.textContent.length > 500) {
@@ -2808,7 +2825,7 @@ retry(() => fetch('/api/data').then(r => r.json()), 3, 1000);""",
             };
         }
     }
-    
+
     return { title: document.title, content: document.body.innerText };
 }
 const article = extractArticle();
@@ -2823,7 +2840,7 @@ console.log(article);""",
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     const textNodes = [];
     while (walker.nextNode()) textNodes.push(walker.currentNode);
-    
+
     textNodes.forEach(node => {
         let text = node.textContent;
         Object.entries(replacements).forEach(([from, to]) => {
@@ -2845,10 +2862,10 @@ replaceText({
                 code = """document.addEventListener('mouseup', (e) => {
     const selection = window.getSelection().toString().trim();
     if (!selection || selection.length > 200) return;
-    
+
     // 移除旧的翻译按钮
     document.querySelector('#translate-btn')?.remove();
-    
+
     const btn = document.createElement('button');
     btn.id = 'translate-btn';
     btn.innerHTML = '🌐 翻译';
@@ -2863,7 +2880,7 @@ replaceText({
         window.open(url, '_blank');
         btn.remove();
     };
-    
+
     document.body.appendChild(btn);
     setTimeout(() => btn.remove(), 5000);
 });""",
@@ -2875,32 +2892,32 @@ replaceText({
                 description = Strings.snippetHtmlToMarkdownDesc,
                 code = """function htmlToMarkdown(html) {
     let md = html;
-    
+
     // 标题
     md = md.replace(/<h1[^>]*>(.*?)<\/h1>/gi, '# $1\\n');
     md = md.replace(/<h2[^>]*>(.*?)<\/h2>/gi, '## $1\\n');
     md = md.replace(/<h3[^>]*>(.*?)<\/h3>/gi, '### $1\\n');
-    
+
     // 格式
     md = md.replace(/<strong[^>]*>(.*?)<\/strong>/gi, '**$1**');
     md = md.replace(/<b[^>]*>(.*?)<\/b>/gi, '**$1**');
     md = md.replace(/<em[^>]*>(.*?)<\/em>/gi, '*$1*');
     md = md.replace(/<i[^>]*>(.*?)<\/i>/gi, '*$1*');
-    
+
     // 链接和图片
     md = md.replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/gi, '[$2]($1)');
     md = md.replace(/<img[^>]*src="([^"]*)"[^>]*alt="([^"]*)"[^>]*>/gi, '![$2]($1)');
-    
+
     // List
     md = md.replace(/<li[^>]*>(.*?)<\/li>/gi, '- $1\\n');
-    
+
     // 段落和换行
     md = md.replace(/<p[^>]*>(.*?)<\/p>/gi, '$1\\n\\n');
     md = md.replace(/<br[^>]*>/gi, '\\n');
-    
+
     // 移除其他标签
     md = md.replace(/<[^>]+>/g, '');
-    
+
     return md.trim();
 }
 const md = htmlToMarkdown(document.body.innerHTML);
@@ -2909,8 +2926,8 @@ console.log(md);""",
             )
         )
     )
-    
-    // ==================== 请求拦截 ====================
+
+
     private fun interceptors() = CodeSnippetCategory(
         id = "intercept",
         name = Strings.snippetIntercept,
@@ -2924,15 +2941,15 @@ console.log(md);""",
                 code = """const originalFetch = window.fetch;
 window.fetch = async function(url, options = {}) {
     console.log('[Fetch]', url);
-    
+
     // 可以修改请求
     // if (url.includes('ad')) return new Response('{}');
-    
+
     const response = await originalFetch.call(this, url, options);
-    
+
     // 可以处理响应
     console.log('[Fetch Response]', response.status);
-    
+
     return response;
 };""",
                 tags = listOf(Strings.tagIntercept, Strings.tagFetch)
@@ -2966,19 +2983,19 @@ XMLHttpRequest.prototype.send = function(body) {
                 code = """const OriginalWebSocket = window.WebSocket;
 window.WebSocket = function(url, protocols) {
     console.log('[WebSocket]', url);
-    
+
     const ws = new OriginalWebSocket(url, protocols);
-    
+
     const originalSend = ws.send.bind(ws);
     ws.send = function(data) {
         console.log('[WS Send]', data);
         return originalSend(data);
     };
-    
+
     ws.addEventListener('message', (e) => {
         console.log('[WS Receive]', e.data);
     });
-    
+
     return ws;
 };""",
                 tags = listOf(Strings.tagIntercept, Strings.tagWebSocket)
@@ -3016,8 +3033,8 @@ XMLHttpRequest.prototype.send = function(body) {
             )
         )
     )
-    
-    // ==================== 自动化 ====================
+
+
     private fun automation() = CodeSnippetCategory(
         id = "automation",
         name = Strings.snippetAutomation,
@@ -3052,7 +3069,7 @@ autoClick('.close-btn', 2000);""",
             console.log('[AutoClick]', new Date().toLocaleTimeString());
         }
     };
-    
+
     click(); // 立即执行一次
     return setInterval(click, interval);
 }
@@ -3077,7 +3094,7 @@ const timer = autoClickInterval('.refresh-btn', 5000);
             await new Promise(r => setTimeout(r, 100));
         }
     }
-    
+
     // 点击提交
     if (submitSelector) {
         await new Promise(r => setTimeout(r, 500));
@@ -3097,7 +3114,7 @@ autoFillAndSubmit({
                 description = Strings.snippetAutoRefreshDesc,
                 code = """function autoRefresh(seconds = 60) {
     let countdown = seconds;
-    
+
     const display = document.createElement('div');
     display.style.cssText = `
         position: fixed; top: 10px; right: 10px; z-index: 999999;
@@ -3105,7 +3122,7 @@ autoFillAndSubmit({
         padding: 8px 12px; border-radius: 20px; font-size: 12px;
     `;
     document.body.appendChild(display);
-    
+
     const timer = setInterval(() => {
         countdown--;
         display.textContent = '🔄 ' + countdown + 's';
@@ -3113,13 +3130,13 @@ autoFillAndSubmit({
             location.reload();
         }
     }, 1000);
-    
+
     display.onclick = () => {
         clearInterval(timer);
         display.remove();
     };
     display.title = '点击取消';
-    
+
     return timer;
 }
 autoRefresh(60);""",
@@ -3131,23 +3148,23 @@ autoRefresh(60);""",
                 description = Strings.snippetAutoScrollLoadDesc,
                 code = """async function autoScrollLoad(maxScrolls = 10, delay = 2000) {
     let scrollCount = 0;
-    
+
     while (scrollCount < maxScrolls) {
         const prevHeight = document.documentElement.scrollHeight;
-        
+
         window.scrollTo(0, document.documentElement.scrollHeight);
         await new Promise(r => setTimeout(r, delay));
-        
+
         const newHeight = document.documentElement.scrollHeight;
         if (newHeight === prevHeight) {
             console.log('已到达底部');
             break;
         }
-        
+
         scrollCount++;
         console.log('已滚动 ' + scrollCount + ' 次');
     }
-    
+
     window.scrollTo(0, 0);
     console.log('加载完成');
 }
@@ -3160,14 +3177,14 @@ autoScrollLoad(10, 2000);""",
                 description = Strings.snippetAutoLoginCheckDesc,
                 code = """function checkLoginStatus(loggedInSelector, loginUrl) {
     const isLoggedIn = !!document.querySelector(loggedInSelector);
-    
+
     if (!isLoggedIn) {
         const shouldLogin = confirm('检测到未登录，是否跳转到登录页面？');
         if (shouldLogin) {
             location.href = loginUrl;
         }
     }
-    
+
     return isLoggedIn;
 }
 checkLoginStatus('.user-avatar', '/login');""",
@@ -3175,8 +3192,8 @@ checkLoginStatus('.user-avatar', '/login');""",
             )
         )
     )
-    
-    // ==================== 调试工具 ====================
+
+
     private fun debugging() = CodeSnippetCategory(
         id = "debug",
         name = Strings.snippetDebug,
@@ -3268,7 +3285,7 @@ document.addEventListener('keydown', (e) => {
     const loadTime = perf.loadEventEnd - perf.navigationStart;
     const domReady = perf.domContentLoadedEventEnd - perf.navigationStart;
     const firstPaint = performance.getEntriesByType('paint')[0]?.startTime || 0;
-    
+
     const info = `
         📊 性能信息
         ─────────────
@@ -3278,7 +3295,7 @@ document.addEventListener('keydown', (e) => {
         资源数量: ${"$"}{performance.getEntriesByType('resource').length}
         内存使用: ${"$"}{Math.round((performance.memory?.usedJSHeapSize || 0) / 1024 / 1024)}MB
     `;
-    
+
     console.log(info);
     alert(info);
 }
@@ -3331,9 +3348,9 @@ window.showNetworkLog = () => console.table(networkLog);""",
     )
 }
 
-/**
- * 代码块分类
- */
+
+
+
 data class CodeSnippetCategory(
     val id: String,
     val name: String,
@@ -3342,9 +3359,9 @@ data class CodeSnippetCategory(
     val snippets: List<CodeSnippet>
 )
 
-/**
- * 代码块
- */
+
+
+
 data class CodeSnippet(
     val id: String,
     val name: String,

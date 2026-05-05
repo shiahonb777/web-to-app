@@ -42,9 +42,9 @@ import androidx.compose.ui.res.painterResource
 import com.webtoapp.R
 import java.util.concurrent.TimeUnit
 
-// ═══════════════════════════════════════════
-// Color & icon mapping for each activation code type
-// ═══════════════════════════════════════════
+
+
+
 
 private data class CodeTypeTheme(
     val icon: ImageVector,
@@ -81,13 +81,13 @@ private fun getCodeTypeTheme(type: ActivationCodeType): CodeTypeTheme = when (ty
     )
 }
 
-// ═══════════════════════════════════════════
-// Main Card
-// ═══════════════════════════════════════════
 
-/**
- * 激活码配置卡片（增强版 - 支持多种类型 + 批量操作）
- */
+
+
+
+
+
+
 @Composable
 fun ActivationCodeCard(
     enabled: Boolean,
@@ -114,7 +114,7 @@ fun ActivationCodeCard(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // ── Header with icon + switch ──
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -171,8 +171,8 @@ fun ActivationCodeCard(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                
-                // ── Require Every Launch option ──
+
+
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -197,7 +197,7 @@ fun ActivationCodeCard(
                 }
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
-                // ── Custom Dialog Text Section ──
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -228,7 +228,7 @@ fun ActivationCodeCard(
                         modifier = Modifier.graphicsLayer { rotationZ = customArrowRotation }
                     )
                 }
-                
+
                 AnimatedVisibility(
                     visible = showCustomTextSection,
                     enter = CardExpandTransition,
@@ -271,15 +271,15 @@ fun ActivationCodeCard(
                         )
                     }
                 }
-                
+
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
-                // ── Action buttons: Add + Batch + More ──
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Add single code
+
                     PremiumButton(
                         onClick = { showAddDialog = true },
                         modifier = Modifier.weight(1f)
@@ -289,7 +289,7 @@ fun ActivationCodeCard(
                         Text(Strings.addActivationCode, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
 
-                    // Batch generate
+
                     PremiumOutlinedButton(
                         onClick = { showBatchDialog = true },
                         shape = RoundedCornerShape(12.dp)
@@ -300,7 +300,7 @@ fun ActivationCodeCard(
                     }
                 }
 
-                // ── Toolbar: Copy All + Delete All (only when codes exist) ──
+
                 if (activationCodes.isNotEmpty()) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -334,7 +334,7 @@ fun ActivationCodeCard(
                     }
                 }
 
-                // ── Activation code list ──
+
                 if (activationCodes.isNotEmpty()) {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -349,7 +349,7 @@ fun ActivationCodeCard(
                         }
                     }
                 } else {
-                    // Empty state
+
                     EmptyActivationCodesState()
                 }
               }
@@ -357,7 +357,7 @@ fun ActivationCodeCard(
         }
     }
 
-    // ── Dialogs ──
+
     if (showAddDialog) {
         AddActivationCodeDialog(
             onDismiss = { showAddDialog = false },
@@ -413,9 +413,9 @@ fun ActivationCodeCard(
     }
 }
 
-// ═══════════════════════════════════════════
-// Empty State
-// ═══════════════════════════════════════════
+
+
+
 
 @Composable
 private fun EmptyActivationCodesState() {
@@ -446,9 +446,9 @@ private fun EmptyActivationCodesState() {
     }
 }
 
-// ═══════════════════════════════════════════
-// Enhanced Activation Code Item
-// ═══════════════════════════════════════════
+
+
+
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -486,7 +486,7 @@ private fun EnhancedActivationCodeItem(
                 verticalAlignment = Alignment.Top
             ) {
                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                    // Type badge
+
                     Surface(
                         shape = RoundedCornerShape(8.dp),
                         color = theme.labelBg
@@ -513,7 +513,7 @@ private fun EnhancedActivationCodeItem(
 
                     Spacer(modifier = Modifier.height(6.dp))
 
-                    // Activation code text (clickable to copy)
+
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.combinedClickable(
@@ -546,7 +546,7 @@ private fun EnhancedActivationCodeItem(
                     }
                 }
 
-                // Delete button
+
                 IconButton(
                     onClick = onDelete,
                     modifier = Modifier.size(32.dp)
@@ -560,7 +560,7 @@ private fun EnhancedActivationCodeItem(
                 }
             }
 
-            // ── Restriction info chips ──
+
             val infoChips = buildList {
                 when (code.type) {
                     ActivationCodeType.TIME_LIMITED -> {
@@ -616,9 +616,9 @@ private fun EnhancedActivationCodeItem(
     }
 }
 
-// ═══════════════════════════════════════════
-// Add Activation Code Dialog
-// ═══════════════════════════════════════════
+
+
+
 
 @Composable
 private fun AddActivationCodeDialog(
@@ -656,18 +656,18 @@ private fun AddActivationCodeDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Activation code type selector using chips
+
                 Text(
                     text = Strings.activationCodeType,
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.SemiBold
                 )
-                
+
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     ActivationCodeType.values().forEach { type ->
                         val theme = getCodeTypeTheme(type)
                         val isSelected = codeType == type
-                        
+
                         Surface(
                             shape = RoundedCornerShape(12.dp),
                             color = if (isSelected) theme.labelBg else Color.Transparent,
@@ -715,7 +715,7 @@ private fun AddActivationCodeDialog(
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
-                // Custom activation code
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -735,7 +735,7 @@ private fun AddActivationCodeDialog(
                         PremiumTextField(
                             value = customCode,
                             onValueChange = {
-                                // Allow letters, digits only, max 16 chars
+
                                 val filtered = it.filter { c -> c.isLetterOrDigit() }.take(com.webtoapp.core.activation.ActivationManager.MAX_CODE_LENGTH)
                                 customCode = filtered
                                 codeLengthError = when {
@@ -758,7 +758,7 @@ private fun AddActivationCodeDialog(
                     }
                 }
 
-                // Code length selector (only for auto-generated codes)
+
                 AnimatedVisibility(visible = !useCustomCode) {
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Row(
@@ -787,14 +787,14 @@ private fun AddActivationCodeDialog(
                     }
                 }
 
-                // Time limit configuration
+
                 AnimatedVisibility(
-                    visible = codeType == ActivationCodeType.TIME_LIMITED || 
+                    visible = codeType == ActivationCodeType.TIME_LIMITED ||
                         codeType == ActivationCodeType.COMBINED
                 ) {
                     PremiumTextField(
                         value = timeLimitDays,
-                        onValueChange = { 
+                        onValueChange = {
                             if (it.all { char -> char.isDigit() }) {
                                 timeLimitDays = it
                             }
@@ -812,14 +812,14 @@ private fun AddActivationCodeDialog(
                     )
                 }
 
-                // Usage limit configuration
+
                 AnimatedVisibility(
-                    visible = codeType == ActivationCodeType.USAGE_LIMITED || 
+                    visible = codeType == ActivationCodeType.USAGE_LIMITED ||
                         codeType == ActivationCodeType.COMBINED
                 ) {
                     PremiumTextField(
                         value = usageLimit,
-                        onValueChange = { 
+                        onValueChange = {
                             if (it.all { char -> char.isDigit() }) {
                                 usageLimit = it
                             }
@@ -837,7 +837,7 @@ private fun AddActivationCodeDialog(
                     )
                 }
 
-                // Note
+
                 PremiumTextField(
                     value = note,
                     onValueChange = { note = it },
@@ -856,8 +856,8 @@ private fun AddActivationCodeDialog(
                 onClick = {
                     val timeLimitMs = when (codeType) {
                         ActivationCodeType.TIME_LIMITED, ActivationCodeType.COMBINED -> {
-                            timeLimitDays.toLongOrNull()?.let { 
-                                TimeUnit.DAYS.toMillis(it) 
+                            timeLimitDays.toLongOrNull()?.let {
+                                TimeUnit.DAYS.toMillis(it)
                             }
                         }
                         else -> null
@@ -874,7 +874,7 @@ private fun AddActivationCodeDialog(
                         val trimmed = customCode.trim()
                         if (trimmed.length < com.webtoapp.core.activation.ActivationManager.MIN_CODE_LENGTH) {
                             codeLengthError = Strings.codeTooShort
-                            return@PremiumButton  // abort, code too short
+                            return@PremiumButton
                         }
                         ActivationCode(
                             code = trimmed,
@@ -911,9 +911,9 @@ private fun AddActivationCodeDialog(
     )
 }
 
-// ═══════════════════════════════════════════
-// Batch Generate Dialog
-// ═══════════════════════════════════════════
+
+
+
 
 @Composable
 private fun BatchGenerateDialog(
@@ -945,7 +945,7 @@ private fun BatchGenerateDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Count
+
                 PremiumTextField(
                     value = batchCount,
                     onValueChange = { if (it.all { c -> c.isDigit() } && it.length <= 3) batchCount = it },
@@ -961,7 +961,7 @@ private fun BatchGenerateDialog(
                     )
                 )
 
-                // Type selection (simplified for batch)
+
                 Text(
                     text = Strings.activationCodeType,
                     style = MaterialTheme.typography.labelMedium,
@@ -1023,7 +1023,7 @@ private fun BatchGenerateDialog(
                     }
                 }
 
-                // Code length selector
+
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Row(
@@ -1051,7 +1051,7 @@ private fun BatchGenerateDialog(
                     )
                 }
 
-                // Time limit
+
                 AnimatedVisibility(
                     visible = codeType == ActivationCodeType.TIME_LIMITED || codeType == ActivationCodeType.COMBINED
                 ) {
@@ -1068,7 +1068,7 @@ private fun BatchGenerateDialog(
                     )
                 }
 
-                // Usage limit
+
                 AnimatedVisibility(
                     visible = codeType == ActivationCodeType.USAGE_LIMITED || codeType == ActivationCodeType.COMBINED
                 ) {
@@ -1126,9 +1126,9 @@ private fun BatchGenerateDialog(
     )
 }
 
-// ═══════════════════════════════════════════
-// Utilities
-// ═══════════════════════════════════════════
+
+
+
 
 private fun getActivationTypeName(type: ActivationCodeType): String = when (type) {
     ActivationCodeType.PERMANENT -> Strings.activationTypePermanent

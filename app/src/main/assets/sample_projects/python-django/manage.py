@@ -1,5 +1,5 @@
-#!/usr/bin/env python
-# Django 站点示例
+
+
 import os, sys
 def main():
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'mysite.settings')

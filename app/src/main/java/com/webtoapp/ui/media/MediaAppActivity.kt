@@ -37,49 +37,49 @@ import com.webtoapp.core.i18n.Strings
 import com.webtoapp.data.model.WebApp
 import com.webtoapp.ui.theme.WebToAppTheme
 
-/**
- * 媒体应用展示 Activity
- * 用于显示图片或播放视频的独立应用
- */
+
+
+
+
 class MediaAppActivity : AppCompatActivity() {
-    
+
     companion object {
         private const val EXTRA_WEB_APP = "extra_web_app"
         private val gson = com.webtoapp.util.GsonProvider.gson
-        
-        /**
-         * 启动预览模式（从 WebApp 数据加载）
-         */
+
+
+
+
         fun startForPreview(context: Context, webApp: WebApp) {
             context.startActivity(Intent(context, MediaAppActivity::class.java).apply {
                 putExtra(EXTRA_WEB_APP, gson.toJson(webApp))
             })
         }
     }
-    
+
     private var mediaPlayer: MediaPlayer? = null
     private var currentConfig: MediaAppConfig? = null
-    
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        // 尝试从 Intent 加载 WebApp（预览模式）
+
+
         val webAppJson = intent.getStringExtra(EXTRA_WEB_APP)
         val config = if (webAppJson != null) {
-            // 预览模式：从 WebApp 数据创建配置
+
             val webApp = gson.fromJson(webAppJson, WebApp::class.java)
             createConfigFromWebApp(webApp)
         } else {
-            // 独立应用模式：从 assets 加载配置
+
             loadConfig()
         }
-        
+
         if (config == null) {
             finish()
             return
         }
-        
-        // Set任务列表中显示的应用名称（修复双重名称显示问题）
+
+
         setTaskDescription(
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
                 android.app.ActivityManager.TaskDescription.Builder()
@@ -90,19 +90,19 @@ class MediaAppActivity : AppCompatActivity() {
                 android.app.ActivityManager.TaskDescription(config.appName)
             }
         )
-        
+
         currentConfig = config
-        
-        // Set全屏
+
+
         setupFullscreen()
-        
-        // Set屏幕方向
+
+
         requestedOrientation = if (config.landscape) {
             ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         } else {
             ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
-        
+
         setContent {
             WebToAppTheme { _ ->
                 MediaAppScreen(
@@ -112,10 +112,10 @@ class MediaAppActivity : AppCompatActivity() {
             }
         }
     }
-    
-    /**
-     * 从 WebApp 数据创建 MediaAppConfig（预览模式）
-     */
+
+
+
+
     private fun createConfigFromWebApp(webApp: WebApp): MediaAppConfig? {
         val mediaConfig = webApp.mediaConfig ?: return null
         return MediaAppConfig(
@@ -135,7 +135,7 @@ class MediaAppActivity : AppCompatActivity() {
             keepScreenOn = mediaConfig.keepScreenOn
         )
     }
-    
+
     private fun loadConfig(): MediaAppConfig? {
         return try {
             val configJson = assets.open("app_config.json").bufferedReader().readText()
@@ -145,45 +145,45 @@ class MediaAppActivity : AppCompatActivity() {
             null
         }
     }
-    
+
     private fun setupFullscreen() {
-        // 让内容延伸到系统栏下方
+
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        
-        // Set状态栏和导航栏为完全透明
+
+
         window.statusBarColor = android.graphics.Color.TRANSPARENT
         window.navigationBarColor = android.graphics.Color.TRANSPARENT
-        
-        // 保持屏幕常亮（根据配置）
+
+
         if (currentConfig?.keepScreenOn == true) {
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
-        
-        // Support刘海屏/挖孔屏，内容延伸到刘海区域
+
+
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-            window.attributes.layoutInDisplayCutoutMode = 
+            window.attributes.layoutInDisplayCutoutMode =
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
         }
-        
-        // Hide系统栏（状态栏 + 导航栏）
+
+
         WindowInsetsControllerCompat(window, window.decorView).let { controller ->
             controller.hide(WindowInsetsCompat.Type.systemBars())
-            // 从边缘滑动时临时显示系统栏
+
             controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
     }
-    
-    /**
-     * 窗口获得焦点时重新应用沉浸式模式
-     * 防止用户从边缘滑出系统栏后不自动隐藏
-     */
+
+
+
+
+
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
             setupFullscreen()
         }
     }
-    
+
     override fun onDestroy() {
         super.onDestroy()
         mediaPlayer?.release()
@@ -191,12 +191,12 @@ class MediaAppActivity : AppCompatActivity() {
     }
 }
 
-/**
- * Media app configuration（从 JSON 加载）
- */
+
+
+
 data class MediaAppConfig(
     val appName: String = "",
-    val mediaType: String = "IMAGE",      // "IMAGE" or "VIDEO"
+    val mediaType: String = "IMAGE",
     val mediaPath: String = "",
     val enableAudio: Boolean = true,
     val loop: Boolean = true,
@@ -204,12 +204,12 @@ data class MediaAppConfig(
     val fillScreen: Boolean = true,
     val landscape: Boolean = false,
     val backgroundColor: String = "#000000",
-    val keepScreenOn: Boolean = true       // 保持屏幕常亮
+    val keepScreenOn: Boolean = true
 )
 
-/**
- * 媒体应用主界面
- */
+
+
+
 @Composable
 fun MediaAppScreen(
     config: MediaAppConfig,
@@ -221,7 +221,7 @@ fun MediaAppScreen(
     } catch (e: Exception) {
         Color.Black
     }
-    
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -250,9 +250,9 @@ fun MediaAppScreen(
     }
 }
 
-/**
- * 图片展示组件
- */
+
+
+
 @Composable
 fun ImageDisplay(
     context: android.content.Context,
@@ -266,7 +266,7 @@ fun ImageDisplay(
             .crossfade(true)
             .build()
     )
-    
+
     Image(
         painter = painter,
         contentDescription = Strings.mediaContent,
@@ -275,9 +275,9 @@ fun ImageDisplay(
     )
 }
 
-/**
- * 视频播放组件
- */
+
+
+
 @Composable
 fun VideoPlayer(
     context: android.content.Context,
@@ -290,14 +290,14 @@ fun VideoPlayer(
     var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
     var isPlaying by remember { mutableStateOf(false) }
     var showControls by remember { mutableStateOf(true) }
-    
+
     LaunchedEffect(showControls) {
         if (showControls && isPlaying) {
             kotlinx.coroutines.delay(3000)
             showControls = false
         }
     }
-    
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -325,28 +325,28 @@ fun VideoPlayer(
                                         setDataSource(videoPath)
                                     }
                                     setSurface(holder.surface)
-                                    
+
                                     val volume = if (enableAudio) 1f else 0f
                                     setVolume(volume, volume)
-                                    
+
                                     isLooping = loop
-                                    
+
                                     setOnPreparedListener {
                                         if (autoPlay) {
                                             start()
                                             isPlaying = true
                                         }
                                     }
-                                    
+
                                     prepareAsync()
                                 }
                             } catch (e: Exception) {
                                 AppLogger.e("MediaAppActivity", "Operation failed", e)
                             }
                         }
-                        
+
                         override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}
-                        
+
                         override fun surfaceDestroyed(holder: SurfaceHolder) {
                             mediaPlayer?.release()
                             mediaPlayer = null
@@ -356,7 +356,7 @@ fun VideoPlayer(
             },
             modifier = Modifier.fillMaxSize()
         )
-        
+
         if (showControls && !autoPlay) {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -384,7 +384,7 @@ fun VideoPlayer(
             }
         }
     }
-    
+
     DisposableEffect(Unit) {
         onDispose {
             mediaPlayer?.release()

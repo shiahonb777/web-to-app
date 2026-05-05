@@ -2,19 +2,19 @@ package com.webtoapp.core.errorpage
 
 import com.webtoapp.util.upgradeRemoteHttpToHttps
 
-/**
- * 网络错误页管理器
- * Material Design 3 风格 + 多语言支持 (中/英/阿)
- */
+
+
+
+
 class ErrorPageManager(private val config: ErrorPageConfig) {
 
-    /**
-     * 生成完整的错误页 HTML
-     * @param errorCode WebView 错误码
-     * @param description 错误描述
-     * @param failedUrl 失败的原始 URL
-     * @return 完整的 HTML 字符串，或 null（DEFAULT 模式不拦截）
-     */
+
+
+
+
+
+
+
     @Suppress("UNUSED_PARAMETER")
     fun generateErrorPage(errorCode: Int, description: String, failedUrl: String?): String? {
         return when (config.mode) {
@@ -25,7 +25,7 @@ class ErrorPageManager(private val config: ErrorPageConfig) {
         }
     }
 
-    // ======================== i18n 字符串 ========================
+
 
     private data class I18nStrings(
         val title: String,
@@ -36,8 +36,8 @@ class ErrorPageManager(private val config: ErrorPageConfig) {
         val gameLink: String,
         val gameLabel: String,
         val gameClose: String,
-        val dir: String,       // "ltr" or "rtl"
-        val langCode: String   // HTML lang attribute
+        val dir: String,
+        val langCode: String
     )
 
     private fun getStrings(): I18nStrings {
@@ -81,7 +81,7 @@ class ErrorPageManager(private val config: ErrorPageConfig) {
         }
     }
 
-    // ======================== Material Design 3 页面 ========================
+
 
     private fun generateBuiltInPage(errorCode: Int, description: String, failedUrl: String?): String {
         val style = config.builtInStyle
@@ -91,7 +91,7 @@ class ErrorPageManager(private val config: ErrorPageConfig) {
         val gameType = config.miniGameType
         val autoRetry = config.autoRetrySeconds
 
-        // 如果是旧风格（非 Material），委托给 ErrorPageStyles
+
         if (style != ErrorPageStyle.MATERIAL) {
             return generateLegacyPage(style, strings, retryBtnText, showGame, gameType, autoRetry, failedUrl)
         }
@@ -276,7 +276,7 @@ function startGame(){
         """.trimIndent()
     }
 
-    // ======================== 旧风格兼容 ========================
+
 
     private fun generateLegacyPage(
         style: ErrorPageStyle,
@@ -402,9 +402,9 @@ function startGame(){
         """.trimIndent()
     }
 
-    /**
-     * 生成自定义媒体错误页
-     */
+
+
+
     private fun generateMediaPage(failedUrl: String?): String {
         val strings = getStrings()
         val mediaPath = config.customMediaPath ?: ""

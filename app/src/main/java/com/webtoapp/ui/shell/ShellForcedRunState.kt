@@ -8,10 +8,11 @@ import com.webtoapp.core.forcedrun.ForcedRunManager
 import com.webtoapp.core.forcedrun.ForcedRunMode
 import com.webtoapp.core.logging.AppLogger
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 
-/**
- * 强制运行状态持有类
- */
+
+
+
 class ForcedRunState(
     val forcedRunManager: ForcedRunManager,
     forcedRunActiveState: State<Boolean>,
@@ -29,9 +30,9 @@ class ForcedRunState(
     var forcedRunPermissionChecked by permissionCheckedState
 }
 
-/**
- * 创建并记住强制运行状态
- */
+
+
+
 @Composable
 fun rememberForcedRunState(context: Context): ForcedRunState {
     val forcedRunManager = remember { ForcedRunManager.getInstance(context) }
@@ -55,9 +56,9 @@ fun rememberForcedRunState(context: Context): ForcedRunState {
     }
 }
 
-/**
- * 格式化持续时间（毫秒 -> HH:MM:SS 或 MM:SS）
- */
+
+
+
 fun formatDuration(ms: Long): String {
     val totalSeconds = ms.coerceAtLeast(0) / 1000
     val hours = totalSeconds / 3600
@@ -70,9 +71,9 @@ fun formatDuration(ms: Long): String {
     }
 }
 
-/**
- * 更新强制运行状态
- */
+
+
+
 fun updateForcedRunState(
     state: ForcedRunState,
     config: ForcedRunConfig?,
@@ -103,7 +104,7 @@ fun updateForcedRunState(
 
     state.forcedRunBlocked = false
     val shouldStart = when (config.mode) {
-        ForcedRunMode.COUNTDOWN -> true
+        ForcedRunMode.COUNTDOWN -> state.forcedRunManager.canAutoStart(config)
         else -> state.forcedRunManager.isInForcedRunPeriod(config)
     }
 
@@ -114,9 +115,9 @@ fun updateForcedRunState(
     }
 }
 
-/**
- * 强制运行副作用管理（LaunchedEffect + DisposableEffect）
- */
+
+
+
 @Composable
 fun ForcedRunEffects(
     state: ForcedRunState,
@@ -125,7 +126,7 @@ fun ForcedRunEffects(
     context: Context,
     onForcedRunStateChanged: (Boolean, ForcedRunConfig?) -> Unit
 ) {
-    // 检查强制运行权限
+
     LaunchedEffect(Unit) {
         if (config?.enabled == true && !state.forcedRunPermissionChecked) {
             val protectionLevel = config.protectionLevel
@@ -143,20 +144,21 @@ fun ForcedRunEffects(
         }
     }
 
-    // 定期更新强制运行状态
+
     LaunchedEffect(isActivated, config) {
-        while (true) {
+        while (isActive) {
             updateForcedRunState(state, config, isActivated)
-            delay(60_000L)
+            val nextDelay = config?.let { state.forcedRunManager.getNextStateCheckDelayMs(it) } ?: 60_000L
+            delay(nextDelay.coerceIn(10_000L, 60_000L))
         }
     }
 
-    // 通知强制运行状态变化
+
     LaunchedEffect(state.forcedRunActive, config) {
         onForcedRunStateChanged(state.forcedRunActive, config)
     }
 
-    // 清理
+
     DisposableEffect(Unit) {
         onDispose {
             if (state.forcedRunActive) {

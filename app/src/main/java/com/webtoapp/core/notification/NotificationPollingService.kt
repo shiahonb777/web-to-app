@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
@@ -15,20 +16,22 @@ import android.os.PowerManager
 import com.webtoapp.core.logging.AppLogger
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import org.json.JSONArray
 import org.json.JSONObject
+import java.util.concurrent.atomic.AtomicInteger
 import java.net.HttpURLConnection
 import java.net.URL
 
-/**
- * 轮询通知服务
- *
- * 定时请求指定的 URL，解析返回的 JSON 数据并弹出 Android 通知。
- * 返回格式支持：
- * - 单条: { "title": "...", "body": "...", "url": "..." }
- * - 多条: [{ "title": "...", "body": "...", "url": "..." }, ...]
- * - 空数组或空对象则不弹通知
- */
+
+
+
+
+
+
+
+
+
 class NotificationPollingService : Service() {
 
     companion object {
@@ -46,6 +49,7 @@ class NotificationPollingService : Service() {
 
         private const val ACTION_STOP = "com.webtoapp.action.STOP_POLLING_NOTIFICATION"
 
+        @Volatile
         private var isRunning = false
 
         fun start(
@@ -112,6 +116,7 @@ class NotificationPollingService : Service() {
     }
 
     private var wakeLock: PowerManager.WakeLock? = null
+    private val activePollCount = AtomicInteger(0)
 
     override fun onCreate() {
         super.onCreate()
@@ -125,18 +130,37 @@ class NotificationPollingService : Service() {
             return START_NOT_STICKY
         }
 
-        pollUrl = intent?.getStringExtra(EXTRA_POLL_URL) ?: ""
-        pollIntervalMinutes = intent?.getIntExtra(EXTRA_POLL_INTERVAL, 15)?.coerceAtLeast(MIN_INTERVAL_MINUTES) ?: 15
-        pollMethod = intent?.getStringExtra(EXTRA_POLL_METHOD) ?: "GET"
-        pollHeaders = intent?.getStringExtra(EXTRA_POLL_HEADERS) ?: ""
-        clickUrl = intent?.getStringExtra(EXTRA_CLICK_URL) ?: ""
-        appName = intent?.getStringExtra(EXTRA_APP_NAME) ?: ""
+
+        val prefs = getSharedPreferences("polling_notification_config", MODE_PRIVATE)
+        pollUrl = intent?.getStringExtra(EXTRA_POLL_URL)
+            ?: prefs.getString(EXTRA_POLL_URL, "") ?: ""
+        pollIntervalMinutes = intent?.getIntExtra(EXTRA_POLL_INTERVAL, -1)
+            ?.takeIf { it > 0 }?.coerceAtLeast(MIN_INTERVAL_MINUTES)
+            ?: prefs.getInt(EXTRA_POLL_INTERVAL, 15).coerceAtLeast(MIN_INTERVAL_MINUTES)
+        pollMethod = intent?.getStringExtra(EXTRA_POLL_METHOD)
+            ?: prefs.getString(EXTRA_POLL_METHOD, "GET") ?: "GET"
+        pollHeaders = intent?.getStringExtra(EXTRA_POLL_HEADERS)
+            ?: prefs.getString(EXTRA_POLL_HEADERS, "") ?: ""
+        clickUrl = intent?.getStringExtra(EXTRA_CLICK_URL)
+            ?: prefs.getString(EXTRA_CLICK_URL, "") ?: ""
+        appName = intent?.getStringExtra(EXTRA_APP_NAME)
+            ?: prefs.getString(EXTRA_APP_NAME, "") ?: ""
 
         if (pollUrl.isBlank()) {
             AppLogger.e(TAG, "轮询 URL 为空，服务无法启动")
             stopSelf()
             return START_NOT_STICKY
         }
+
+
+        prefs.edit()
+            .putString(EXTRA_POLL_URL, pollUrl)
+            .putInt(EXTRA_POLL_INTERVAL, pollIntervalMinutes)
+            .putString(EXTRA_POLL_METHOD, pollMethod)
+            .putString(EXTRA_POLL_HEADERS, pollHeaders)
+            .putString(EXTRA_CLICK_URL, clickUrl)
+            .putString(EXTRA_APP_NAME, appName)
+            .apply()
 
         try {
             val notification = createForegroundNotification()
@@ -153,9 +177,9 @@ class NotificationPollingService : Service() {
             return START_NOT_STICKY
         }
 
-        // 启动轮询
+
         handler.removeCallbacks(pollRunnable)
-        handler.postDelayed(pollRunnable, 10 * 1000L) // 启动后 10 秒首次轮询
+        handler.postDelayed(pollRunnable, 10 * 1000L)
 
         AppLogger.i(TAG, "轮询通知服务已启动: url=$pollUrl, interval=${pollIntervalMinutes}min")
 
@@ -173,8 +197,9 @@ class NotificationPollingService : Service() {
     }
 
     private fun performPoll() {
-        // 短暂获取 WakeLock 确保网络请求完成
+
         acquireWakeLock()
+        activePollCount.incrementAndGet()
 
         Thread {
             try {
@@ -185,7 +210,9 @@ class NotificationPollingService : Service() {
             } catch (e: Exception) {
                 AppLogger.e(TAG, "轮询请求失败", e)
             } finally {
-                releaseWakeLock()
+                if (activePollCount.decrementAndGet() == 0) {
+                    releaseWakeLock()
+                }
             }
         }.start()
     }
@@ -199,7 +226,7 @@ class NotificationPollingService : Service() {
                 connectTimeout = 15_000
                 readTimeout = 15_000
 
-                // 设置自定义 Headers
+
                 if (pollHeaders.isNotBlank()) {
                     try {
                         val headersObj = JSONObject(pollHeaders)
@@ -213,7 +240,7 @@ class NotificationPollingService : Service() {
                     }
                 }
 
-                // 默认 Accept
+
                 if (getRequestProperty("Accept") == null) {
                     setRequestProperty("Accept", "application/json")
                 }
@@ -238,7 +265,7 @@ class NotificationPollingService : Service() {
         try {
             val trimmed = jsonString.trim()
             if (trimmed.isEmpty() || trimmed == "[]" || trimmed == "{}" || trimmed == "null") {
-                return // 无通知数据
+                return
             }
 
             val notifications = mutableListOf<PollNotification>()
@@ -254,7 +281,7 @@ class NotificationPollingService : Service() {
                 notifications.add(parseNotification(obj))
             }
 
-            // 弹出通知（限制最多 5 条避免刷屏）
+
             notifications.take(5).forEachIndexed { index, notif ->
                 showPollNotification(notif, baseId = index)
             }
@@ -275,11 +302,14 @@ class NotificationPollingService : Service() {
         try {
             val notificationManager = NotificationManagerCompat.from(this)
             if (!notificationManager.areNotificationsEnabled()) return
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+            ) return
 
             val intent = packageManager.getLaunchIntentForPackage(packageName)?.apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 if (notif.url.isNotBlank()) {
-                    // 通过 extra 传递 URL，ShellActivity 可读取并导航
+
                     putExtra("notification_click_url", notif.url)
                 }
             }
@@ -307,7 +337,12 @@ class NotificationPollingService : Service() {
                 }
                 .build()
 
-            notificationManager.notify(("poll_${System.currentTimeMillis()}_$baseId").hashCode(), notification)
+            try {
+                notificationManager.notify(Math.abs(("poll_${System.currentTimeMillis()}_$baseId").hashCode()), notification)
+            } catch (e: SecurityException) {
+                AppLogger.e(TAG, "通知权限不可用", e)
+                return
+            }
             AppLogger.d(TAG, "弹出轮询通知: ${notif.title}")
         } catch (e: Exception) {
             AppLogger.e(TAG, "弹出轮询通知失败", e)
@@ -356,27 +391,30 @@ class NotificationPollingService : Service() {
     }
 
     private fun acquireWakeLock() {
-        if (wakeLock == null) {
-            val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
-            wakeLock = powerManager.newWakeLock(
-                PowerManager.PARTIAL_WAKE_LOCK,
-                "WebToApp:PollingWakeLock"
-            ).apply { setReferenceCounted(false) }
-        }
-        wakeLock?.let {
-            if (!it.isHeld) {
-                it.acquire(30_000L) // 最多 30 秒，足够完成网络请求
+        synchronized(this) {
+            if (wakeLock == null) {
+                val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+                wakeLock = powerManager.newWakeLock(
+                    PowerManager.PARTIAL_WAKE_LOCK,
+                    "WebToApp:PollingWakeLock"
+                ).apply { setReferenceCounted(false) }
+            }
+            wakeLock?.let {
+                if (!it.isHeld) {
+                    it.acquire(30_000L)
+                }
             }
         }
     }
 
     private fun releaseWakeLock() {
-        wakeLock?.let {
-            if (it.isHeld) {
-                try { it.release() } catch (_: Exception) {}
+        synchronized(this) {
+            wakeLock?.let {
+                if (it.isHeld) {
+                    try { it.release() } catch (_: Exception) {}
+                }
             }
         }
-        wakeLock = null
     }
 
     private data class PollNotification(

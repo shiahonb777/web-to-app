@@ -9,22 +9,22 @@ import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.ui.shell.ShellActivity
 import com.webtoapp.ui.webview.WebViewActivity
 
-/**
- * 自启动应用启动器
- * 集中管理 BootReceiver 和 ScheduledStartReceiver 共用的启动逻辑，消除重复代码
- */
+
+
+
+
 object AutoStartLauncher {
 
     private const val TAG = "AutoStartLauncher"
 
-    /**
-     * 检测当前运行模式并启动相应的应用
-     *
-     * @param context 上下文
-     * @param source 调用来源（用于日志）
-     * @param appId 主应用模式下要启动的应用 ID（Shell 模式下忽略）
-     * @param delayMs 延迟启动毫秒数（0 = 立即启动）
-     */
+
+
+
+
+
+
+
+
     fun launch(
         context: Context,
         source: String,
@@ -55,9 +55,9 @@ object AutoStartLauncher {
         }
     }
 
-    /**
-     * 启动 Shell 模式应用
-     */
+
+
+
     private fun launchShellApp(context: Context, source: String) {
         try {
             val intent = Intent(context, ShellActivity::class.java).apply {
@@ -70,9 +70,9 @@ object AutoStartLauncher {
         }
     }
 
-    /**
-     * 启动主应用中的 WebView 应用
-     */
+
+
+
     private fun launchWebViewApp(context: Context, source: String, appId: Long) {
         try {
             val intent = Intent(context, WebViewActivity::class.java).apply {

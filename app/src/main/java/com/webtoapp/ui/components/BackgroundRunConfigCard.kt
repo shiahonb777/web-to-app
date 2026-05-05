@@ -18,10 +18,10 @@ import com.webtoapp.core.background.BackgroundRunService
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.data.model.BackgroundRunExportConfig
 
-/**
- * 后台运行配置卡片
- * 用于配置应用退出后继续在后台运行
- */
+
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BackgroundRunConfigCard(
@@ -32,14 +32,14 @@ fun BackgroundRunConfigCard(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
-    
+
     EnhancedElevatedCard(
         modifier = modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // 标题行
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -83,14 +83,14 @@ fun BackgroundRunConfigCard(
                     onCheckedChange = onEnabledChange
                 )
             }
-            
-            // Expand的详细配置
+
+
             AnimatedVisibility(visible = enabled) {
                 Column(
                     modifier = Modifier.padding(top = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Show通知开关
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -106,7 +106,7 @@ fun BackgroundRunConfigCard(
                         )
                     }
 
-                    // 保持CPU唤醒开关
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -122,7 +122,7 @@ fun BackgroundRunConfigCard(
                         )
                     }
 
-                    // 电池优化白名单引导
+
                     val context = LocalContext.current
                     OutlinedButton(
                         onClick = { BackgroundRunService.requestIgnoreBatteryOptimizations(context) },
@@ -146,19 +146,19 @@ fun BackgroundRunConfigCard(
                             )
                         }
                     }
-                    
-                    // Expand更多设置
+
+
                     TextButton(
                         onClick = { expanded = !expanded },
                         modifier = Modifier.align(Alignment.End)
                     ) {
                         Text(if (expanded) Strings.hideAdvanced else Strings.showAdvanced)
                     }
-                    
-                    // 高级设置
+
+
                     AnimatedVisibility(visible = expanded) {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            // Custom通知标题
+
                             PremiumTextField(
                                 value = config.notificationTitle,
                                 onValueChange = { onConfigChange(config.copy(notificationTitle = it)) },
@@ -167,8 +167,8 @@ fun BackgroundRunConfigCard(
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true
                             )
-                            
-                            // Custom通知内容
+
+
                             PremiumTextField(
                                 value = config.notificationContent,
                                 onValueChange = { onConfigChange(config.copy(notificationContent = it)) },

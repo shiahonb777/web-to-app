@@ -16,10 +16,10 @@ import com.webtoapp.core.i18n.Strings
 import com.webtoapp.data.model.NotificationExportConfig
 import com.webtoapp.data.model.NotificationType
 
-/**
- * 通知配置卡片
- * 支持两种通知类型：Web API（本地通知）和 Polling（轮询通知）
- */
+
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationConfigCard(
@@ -37,7 +37,7 @@ fun NotificationConfigCard(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // 标题行
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -82,13 +82,13 @@ fun NotificationConfigCard(
                 )
             }
 
-            // 启用后展示配置
+
             AnimatedVisibility(visible = enabled) {
                 Column(
                     modifier = Modifier.padding(top = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // 通知类型选择
+
                     Text(
                         Strings.notificationTypeLabel,
                         style = MaterialTheme.typography.labelMedium,
@@ -110,7 +110,7 @@ fun NotificationConfigCard(
                         )
                     }
 
-                    // Web API 类型说明
+
                     if (config.type == NotificationType.WEB_API) {
                         Card(
                             colors = CardDefaults.cardColors(
@@ -127,9 +127,9 @@ fun NotificationConfigCard(
                         }
                     }
 
-                    // Polling 类型配置
+
                     if (config.type == NotificationType.POLLING) {
-                        // 轮询 URL
+
                         PremiumTextField(
                             value = config.pollUrl,
                             onValueChange = { onConfigChange(config.copy(pollUrl = it)) },
@@ -139,7 +139,7 @@ fun NotificationConfigCard(
                             singleLine = true
                         )
 
-                        // 轮询间隔
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -173,7 +173,7 @@ fun NotificationConfigCard(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
-                        // 展开更多设置
+
                         TextButton(
                             onClick = { expanded = !expanded },
                             modifier = Modifier.align(Alignment.End)
@@ -183,7 +183,7 @@ fun NotificationConfigCard(
 
                         AnimatedVisibility(visible = expanded) {
                             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                // 请求方法
+
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -207,7 +207,7 @@ fun NotificationConfigCard(
                                     }
                                 }
 
-                                // 自定义 Headers
+
                                 PremiumTextField(
                                     value = config.pollHeaders,
                                     onValueChange = { onConfigChange(config.copy(pollHeaders = it)) },
@@ -218,7 +218,7 @@ fun NotificationConfigCard(
                                     maxLines = 4
                                 )
 
-                                // 点击跳转 URL
+
                                 PremiumTextField(
                                     value = config.clickUrl,
                                     onValueChange = { onConfigChange(config.copy(clickUrl = it)) },

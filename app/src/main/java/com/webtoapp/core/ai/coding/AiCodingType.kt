@@ -2,11 +2,11 @@ package com.webtoapp.core.ai.coding
 
 import com.webtoapp.core.i18n.Strings
 
-/**
- * AI 编程支持的应用类型
- * 
- * 7种需要代码构建的应用类型（排除网页、媒体、画廊）
- */
+
+
+
+
+
 enum class AiCodingType(
     val icon: String,
     val supportPreview: Boolean,
@@ -56,9 +56,9 @@ enum class AiCodingType(
         fileExtensions = listOf("go", "html", "css", "js", "json", "mod", "sum", "yaml", "yml")
     );
 
-    /**
-     * 获取本地化显示名称
-     */
+
+
+
     fun getDisplayName(): String = when (this) {
         HTML -> Strings.codingTypeHtml
         FRONTEND -> Strings.codingTypeFrontend
@@ -69,9 +69,9 @@ enum class AiCodingType(
         GO -> Strings.codingTypeGo
     }
 
-    /**
-     * 获取本地化描述
-     */
+
+
+
     fun getDescription(): String = when (this) {
         HTML -> Strings.codingTypeHtmlDesc
         FRONTEND -> Strings.codingTypeFrontendDesc
@@ -82,9 +82,9 @@ enum class AiCodingType(
         GO -> Strings.codingTypeGoDesc
     }
 
-    /**
-     * 获取主要编程语言
-     */
+
+
+
     fun getPrimaryLanguage(): String = when (this) {
         HTML -> "html"
         FRONTEND -> "javascript"
@@ -95,14 +95,14 @@ enum class AiCodingType(
         GO -> "go"
     }
 
-    /**
-     * 获取写入文件的工具名称
-     */
+
+
+
     fun getWriteToolName(): String = "write_file"
 
-    /**
-     * 获取写入文件的工具描述（已本地化）
-     */
+
+
+
     fun getWriteToolDescription(): String = when (this) {
         HTML -> Strings.writeToolDescHtml
         FRONTEND -> Strings.writeToolDescFrontend
@@ -113,9 +113,9 @@ enum class AiCodingType(
         GO -> Strings.writeToolDescGo
     }
 
-    /**
-     * 获取本地化示例提示词
-     */
+
+
+
     fun getExamplePrompts(): List<String> = when (this) {
         HTML -> listOf(Strings.aiPromptHtml1, Strings.aiPromptHtml2)
         FRONTEND -> listOf(Strings.aiPromptFrontend1, Strings.aiPromptFrontend2)

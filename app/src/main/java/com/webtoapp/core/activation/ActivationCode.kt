@@ -2,9 +2,9 @@ package com.webtoapp.core.activation
 
 import com.google.gson.annotations.SerializedName
 
-/**
- * Activation code type
- */
+
+
+
 enum class ActivationCodeType(val displayName: String, val description: String) {
     PERMANENT("Permanent", "Valid permanently after activation, no restrictions"),
     TIME_LIMITED("Time Limited", "Valid within specified time after activation"),
@@ -13,37 +13,37 @@ enum class ActivationCodeType(val displayName: String, val description: String) 
     COMBINED("Combined", "Supports both time and usage limits")
 }
 
-/**
- * Activation code data class
- */
+
+
+
 data class ActivationCode(
     @SerializedName("code")
     val code: String,
-    
+
     @SerializedName("type")
     val type: ActivationCodeType = ActivationCodeType.PERMANENT,
-    
+
     @SerializedName("timeLimitMs")
     val timeLimitMs: Long? = null,
-    
+
     @SerializedName("usageLimit")
     val usageLimit: Int? = null,
-    
+
     @SerializedName("allowDeviceBinding")
     val allowDeviceBinding: Boolean = false,
-    
+
     @SerializedName("note")
     val note: String? = null,
-    
+
     @SerializedName("createdAt")
     val createdAt: Long = System.currentTimeMillis()
 ) {
     companion object {
         private val gson = com.webtoapp.util.GsonProvider.gson
-        
-        /**
-         * Parse activation code from JSON string
-         */
+
+
+
+
         fun fromJson(json: String): ActivationCode? {
             return try {
                 if (json.trimStart().startsWith("{")) {
@@ -55,10 +55,10 @@ data class ActivationCode(
                 null
             }
         }
-        
-        /**
-         * Create permanent activation code from legacy string
-         */
+
+
+
+
         fun fromLegacyString(code: String): ActivationCode {
             return ActivationCode(
                 code = code,
@@ -66,10 +66,10 @@ data class ActivationCode(
             )
         }
     }
-    
-    /**
-     * Convert to JSON string
-     */
+
+
+
+
     fun toJson(): String {
         return gson.toJson(this)
     }

@@ -9,6 +9,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.pm.ActivityInfo
 import android.net.Uri
 import android.os.Build
@@ -16,6 +17,7 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import android.webkit.JavascriptInterface
+import android.webkit.WebView
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
@@ -31,22 +33,23 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/**
- * 原生能力桥接
- * 
- * 为扩展模块提供调用 Android 原生能力的 JavaScript API
- * 在 WebView 中通过 window.NativeBridge 访问
- */
+
+
+
+
+
+
 class NativeBridge(
     private val context: Context,
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
+    private val webViewProvider: () -> WebView? = { null }
 ) {
     companion object {
         const val JS_INTERFACE_NAME = "NativeBridge"
-        
-        /**
-         * 获取 API 文档（供 AI 生成代码时参考）
-         */
+
+
+
+
         fun getApiDocumentation(): String = """
 ## NativeBridge API 文档
 
@@ -230,6 +233,30 @@ NativeBridge.saveToFile('文件内容', 'note.txt', 'text/plain');
 NativeBridge.log('调试信息');
 ```
 
+### 页内查找
+
+#### findInPage(query)
+使用 Android WebView 原生查找能力搜索当前页面
+- `query`: string - 搜索关键词
+- 返回: string - JSON 状态，包含 `numberOfMatches`、`activeMatchOrdinal`、`doneCounting`
+```javascript
+const state = JSON.parse(NativeBridge.findInPage('keyword'));
+```
+
+#### findNextInPage(forward)
+跳转到下一个/上一个匹配项
+- `forward`: boolean - true 下一个，false 上一个
+```javascript
+NativeBridge.findNextInPage(true);
+NativeBridge.findNextInPage(false);
+```
+
+#### clearFindInPage()
+清除当前查找高亮
+```javascript
+NativeBridge.clearFindInPage();
+```
+
 ### 屏幕方向控制
 
 #### setOrientation(orientation)
@@ -302,9 +329,9 @@ if (NativeBridge.isFullscreen()) {
 ```
         """.trimIndent()
     }
-    
-    // ==================== 基础功能 ====================
-    
+
+
+
     @JavascriptInterface
     fun showToast(message: String, duration: String = "short") {
         scope.launch(Dispatchers.Main) {
@@ -312,7 +339,7 @@ if (NativeBridge.isFullscreen()) {
             Toast.makeText(context, message, length).show()
         }
     }
-    
+
     @JavascriptInterface
     fun vibrate(milliseconds: Long = 100) {
         try {
@@ -323,7 +350,7 @@ if (NativeBridge.isFullscreen()) {
                 @Suppress("DEPRECATION")
                 context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
             }
-            
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 vibrator.vibrate(VibrationEffect.createOneShot(milliseconds, VibrationEffect.DEFAULT_AMPLITUDE))
             } else {
@@ -334,13 +361,13 @@ if (NativeBridge.isFullscreen()) {
             AppLogger.e("NativeBridge", "震动失败", e)
         }
     }
-    
+
     @JavascriptInterface
     fun vibratePattern(pattern: String, repeat: Int = -1) {
         try {
             val timings = pattern.split(",").mapNotNull { it.trim().toLongOrNull() }.toLongArray()
             if (timings.isEmpty()) return
-            
+
             val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 val manager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
                 manager.defaultVibrator
@@ -348,7 +375,7 @@ if (NativeBridge.isFullscreen()) {
                 @Suppress("DEPRECATION")
                 context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
             }
-            
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 vibrator.vibrate(VibrationEffect.createWaveform(timings, repeat))
             } else {
@@ -360,9 +387,9 @@ if (NativeBridge.isFullscreen()) {
         }
     }
 
-    
-    // ==================== 剪贴板 ====================
-    
+
+
+
     @JavascriptInterface
     fun copyToClipboard(text: String): Boolean {
         return try {
@@ -375,7 +402,7 @@ if (NativeBridge.isFullscreen()) {
             false
         }
     }
-    
+
     @JavascriptInterface
     fun getClipboardText(): String {
         return try {
@@ -386,9 +413,9 @@ if (NativeBridge.isFullscreen()) {
             ""
         }
     }
-    
-    // ==================== 分享 ====================
-    
+
+
+
     @JavascriptInterface
     fun share(title: String, text: String, url: String = "") {
         scope.launch(Dispatchers.Main) {
@@ -409,21 +436,21 @@ if (NativeBridge.isFullscreen()) {
             }
         }
     }
-    
+
     @JavascriptInterface
     fun shareImage(imageUrl: String, title: String = Strings.shareImage) {
         scope.launch(Dispatchers.Main) {
             Toast.makeText(context, Strings.preparingShare, Toast.LENGTH_SHORT).show()
         }
-        // Image分享需要先下载，这里简化处理
+
         share(title, imageUrl)
     }
-    
-    // ==================== 外部操作 ====================
-    
-    // Allowed URL schemes for openUrl — block dangerous protocols like intent://, file://, content://
+
+
+
+
     private val ALLOWED_SCHEMES = setOf("http", "https", "tel", "mailto", "sms", "geo")
-    
+
     @JavascriptInterface
     fun openUrl(url: String) {
         scope.launch(Dispatchers.Main) {
@@ -450,7 +477,7 @@ if (NativeBridge.isFullscreen()) {
             }
         }
     }
-    
+
     @JavascriptInterface
     fun openApp(packageName: String): Boolean {
         return try {
@@ -468,7 +495,7 @@ if (NativeBridge.isFullscreen()) {
         }
     }
 
-    // ==================== 通知 ====================
+
 
     @JavascriptInterface
     fun getNotificationPermissionState(): String {
@@ -519,6 +546,9 @@ if (NativeBridge.isFullscreen()) {
     fun showWebNotification(title: String, body: String = "", tag: String = ""): Boolean {
         return try {
             if (getNotificationPermissionState() != "granted") return false
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+            ) return false
 
             val channelId = "webapp_notifications"
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -550,27 +580,32 @@ if (NativeBridge.isFullscreen()) {
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .build()
 
-            NotificationManagerCompat.from(context).notify((tag.ifBlank { "$title|$body" }).hashCode(), notification)
+            try {
+                NotificationManagerCompat.from(context).notify((tag.ifBlank { "$title|$body" }).hashCode(), notification)
+            } catch (e: SecurityException) {
+                AppLogger.e("NativeBridge", "通知权限不可用", e)
+                return false
+            }
             true
         } catch (e: Exception) {
             AppLogger.e("NativeBridge", "显示网页通知失败", e)
             false
         }
     }
-    
-    // ==================== 媒体保存 ====================
-    
+
+
+
     @JavascriptInterface
     fun saveImageToGallery(imageUrl: String, filename: String = "") {
         val finalFilename = filename.ifBlank { "IMG_${System.currentTimeMillis()}.jpg" }
-        
+
         scope.launch {
             withContext(Dispatchers.Main) {
                 Toast.makeText(context, Strings.savingImage, Toast.LENGTH_SHORT).show()
             }
-            
+
             val result = MediaSaver.saveFromUrl(context, imageUrl, finalFilename, "image/jpeg")
-            
+
             withContext(Dispatchers.Main) {
                 when (result) {
                     is MediaSaver.SaveResult.Success -> {
@@ -583,18 +618,18 @@ if (NativeBridge.isFullscreen()) {
             }
         }
     }
-    
+
     @JavascriptInterface
     fun saveVideoToGallery(videoUrl: String, filename: String = "") {
         val finalFilename = filename.ifBlank { "VID_${System.currentTimeMillis()}.mp4" }
-        
+
         scope.launch {
             withContext(Dispatchers.Main) {
                 Toast.makeText(context, Strings.savingVideo, Toast.LENGTH_SHORT).show()
             }
-            
+
             val result = MediaSaver.saveFromUrl(context, videoUrl, finalFilename, "video/mp4")
-            
+
             withContext(Dispatchers.Main) {
                 when (result) {
                     is MediaSaver.SaveResult.Success -> {
@@ -607,14 +642,14 @@ if (NativeBridge.isFullscreen()) {
             }
         }
     }
-    
-    // ==================== 设备信息 ====================
-    
+
+
+
     @JavascriptInterface
     fun getDeviceInfo(): String {
         return try {
             val displayMetrics = context.resources.displayMetrics
-            // Use JSONObject to avoid JSON injection from Build fields containing quotes
+
             val json = org.json.JSONObject()
             json.put("model", Build.MODEL)
             json.put("manufacturer", Build.MANUFACTURER)
@@ -630,7 +665,7 @@ if (NativeBridge.isFullscreen()) {
             "{}"
         }
     }
-    
+
     @JavascriptInterface
     fun getAppInfo(): String {
         return try {
@@ -644,9 +679,9 @@ if (NativeBridge.isFullscreen()) {
             "{}"
         }
     }
-    
-    // ==================== 网络状态 ====================
-    
+
+
+
     @JavascriptInterface
     fun isNetworkAvailable(): Boolean {
         return try {
@@ -658,7 +693,7 @@ if (NativeBridge.isFullscreen()) {
             false
         }
     }
-    
+
     @JavascriptInterface
     fun getNetworkType(): String {
         return try {
@@ -674,12 +709,12 @@ if (NativeBridge.isFullscreen()) {
             "unknown"
         }
     }
-    
-    // ==================== 存储 ====================
-    
-    // 复用 DownloadBridge 实例，避免每次 saveToFile 都新建对象
+
+
+
+
     private val downloadBridge by lazy { DownloadBridge(context, scope) }
-    
+
     @JavascriptInterface
     fun saveToFile(content: String, filename: String, mimeType: String = "text/plain") {
         scope.launch(Dispatchers.IO) {
@@ -697,20 +732,132 @@ if (NativeBridge.isFullscreen()) {
             }
         }
     }
-    
-    // ==================== 日志 ====================
-    
+
+
+
     @JavascriptInterface
     fun log(message: String) {
         AppLogger.d("NativeBridge", "[JS] $message")
     }
-    
-    // ==================== 屏幕方向控制 ====================
-    
-    /**
-     * 设置屏幕方向
-     * @param orientation "portrait"(竖屏), "landscape"(横屏), "auto"(跟随传感器)
-     */
+
+
+
+    @Volatile
+    private var findQuery: String = ""
+    @Volatile
+    private var findActiveMatchOrdinal: Int = -1
+    @Volatile
+    private var findNumberOfMatches: Int = 0
+    @Volatile
+    private var findDoneCounting: Boolean = true
+
+    private fun buildFindStateJson(supported: Boolean = webViewProvider() != null): String {
+        return try {
+            org.json.JSONObject().apply {
+                put("supported", supported)
+                put("query", findQuery)
+                put("activeMatchOrdinal", findActiveMatchOrdinal)
+                put("numberOfMatches", findNumberOfMatches)
+                put("doneCounting", findDoneCounting)
+                put("displayIndex", if (findNumberOfMatches > 0 && findActiveMatchOrdinal >= 0) findActiveMatchOrdinal + 1 else 0)
+            }.toString()
+        } catch (_: Exception) {
+            """{"supported":false,"query":"","activeMatchOrdinal":-1,"numberOfMatches":0,"doneCounting":true,"displayIndex":0}"""
+        }
+    }
+
+    private fun publishFindState(webView: WebView?) {
+        val target = webView ?: return
+        val payload = buildFindStateJson(supported = true)
+        target.evaluateJavascript(
+            """
+            (function(){
+                if (typeof window.__wtaFindInPageNativeUpdate === 'function') {
+                    window.__wtaFindInPageNativeUpdate($payload);
+                }
+            })();
+            """.trimIndent(),
+            null
+        )
+    }
+
+    @JavascriptInterface
+    fun findInPage(query: String): String {
+        val safeQuery = query.trim().take(200)
+        if (safeQuery.isBlank()) return clearFindInPage()
+
+        findQuery = safeQuery
+        findActiveMatchOrdinal = -1
+        findNumberOfMatches = 0
+        findDoneCounting = false
+
+        scope.launch(Dispatchers.Main) {
+            try {
+                val webView = webViewProvider()
+                if (webView == null) {
+                    findDoneCounting = true
+                    return@launch
+                }
+
+                webView.setFindListener { activeMatchOrdinal, numberOfMatches, isDoneCounting ->
+                    findActiveMatchOrdinal = if (numberOfMatches > 0) activeMatchOrdinal else -1
+                    findNumberOfMatches = numberOfMatches
+                    findDoneCounting = isDoneCounting
+                    publishFindState(webView)
+                }
+                webView.findAllAsync(safeQuery)
+                publishFindState(webView)
+            } catch (e: Exception) {
+                AppLogger.e("NativeBridge", "页内查找失败", e)
+                findDoneCounting = true
+            }
+        }
+
+        return buildFindStateJson()
+    }
+
+    @JavascriptInterface
+    fun findNextInPage(forward: Boolean): String {
+        scope.launch(Dispatchers.Main) {
+            try {
+                val webView = webViewProvider() ?: return@launch
+                if (findQuery.isNotBlank()) {
+                    webView.findNext(forward)
+                    publishFindState(webView)
+                }
+            } catch (e: Exception) {
+                AppLogger.e("NativeBridge", "页内查找跳转失败", e)
+            }
+        }
+        return buildFindStateJson()
+    }
+
+    @JavascriptInterface
+    fun clearFindInPage(): String {
+        findQuery = ""
+        findActiveMatchOrdinal = -1
+        findNumberOfMatches = 0
+        findDoneCounting = true
+
+        scope.launch(Dispatchers.Main) {
+            try {
+                val webView = webViewProvider() ?: return@launch
+                webView.clearMatches()
+                publishFindState(webView)
+            } catch (e: Exception) {
+                AppLogger.e("NativeBridge", "清除页内查找失败", e)
+            }
+        }
+
+        return buildFindStateJson()
+    }
+
+
+
+
+
+
+
     @JavascriptInterface
     fun setOrientation(orientation: String) {
         scope.launch(Dispatchers.Main) {
@@ -731,11 +878,11 @@ if (NativeBridge.isFullscreen()) {
             }
         }
     }
-    
-    /**
-     * 获取当前屏幕方向
-     * @return "portrait", "landscape", "unknown"
-     */
+
+
+
+
+
     @JavascriptInterface
     fun getOrientation(): String {
         return try {
@@ -749,10 +896,10 @@ if (NativeBridge.isFullscreen()) {
             "unknown"
         }
     }
-    
-    /**
-     * 锁定当前屏幕方向
-     */
+
+
+
+
     @JavascriptInterface
     fun lockOrientation() {
         scope.launch(Dispatchers.Main) {
@@ -770,10 +917,10 @@ if (NativeBridge.isFullscreen()) {
             }
         }
     }
-    
-    /**
-     * 解锁屏幕方向（允许自动旋转）
-     */
+
+
+
+
     @JavascriptInterface
     fun unlockOrientation() {
         scope.launch(Dispatchers.Main) {
@@ -786,21 +933,21 @@ if (NativeBridge.isFullscreen()) {
             }
         }
     }
-    
-    // ==================== 下载功能 ====================
-    
-    /**
-     * 下载视频文件
-     * @param url 视频 URL
-     * @param filename 文件名
-     */
+
+
+
+
+
+
+
+
     @JavascriptInterface
     fun downloadVideo(url: String, filename: String) {
         scope.launch {
             withContext(Dispatchers.Main) {
                 Toast.makeText(context, Strings.startDownload.replace("%s", filename), Toast.LENGTH_SHORT).show()
             }
-            
+
             try {
                 val result = MediaSaver.saveFromUrl(context, url, filename, "video/mp4")
                 withContext(Dispatchers.Main) {
@@ -821,22 +968,22 @@ if (NativeBridge.isFullscreen()) {
             }
         }
     }
-    
-    /**
-     * 带自定义 Headers 下载文件
-     * @param url 文件 URL
-     * @param filename 文件名
-     * @param headersJson JSON 格式的 Headers，如 {"Referer": "https://example.com"}
-     */
+
+
+
+
+
+
+
     @JavascriptInterface
     fun downloadWithHeaders(url: String, filename: String, headersJson: String) {
         scope.launch {
             withContext(Dispatchers.Main) {
                 Toast.makeText(context, Strings.startDownload.replace("%s", filename), Toast.LENGTH_SHORT).show()
             }
-            
+
             try {
-                // Parse headers
+
                 val headers = try {
                     val map = mutableMapOf<String, String>()
                     val json = org.json.JSONObject(headersJson)
@@ -847,7 +994,7 @@ if (NativeBridge.isFullscreen()) {
                 } catch (e: Exception) {
                     emptyMap()
                 }
-                
+
                 val result = MediaSaver.saveFromUrlWithHeaders(context, url, filename, headers)
                 withContext(Dispatchers.Main) {
                     when (result) {
@@ -867,13 +1014,13 @@ if (NativeBridge.isFullscreen()) {
             }
         }
     }
-    
-    // ==================== 屏幕亮度控制 ====================
-    
-    /**
-     * 设置屏幕亮度
-     * @param brightness 亮度值 0.0-1.0，-1 表示跟随系统
-     */
+
+
+
+
+
+
+
     @JavascriptInterface
     fun setScreenBrightness(brightness: Float) {
         scope.launch(Dispatchers.Main) {
@@ -892,11 +1039,11 @@ if (NativeBridge.isFullscreen()) {
             }
         }
     }
-    
-    /**
-     * 保持屏幕常亮
-     * @param keepOn true 保持常亮，false 恢复正常
-     */
+
+
+
+
+
     @JavascriptInterface
     fun setKeepScreenOn(keepOn: Boolean) {
         scope.launch(Dispatchers.Main) {
@@ -913,22 +1060,22 @@ if (NativeBridge.isFullscreen()) {
             }
         }
     }
-    
-    // ==================== 全屏控制 ====================
-    
-    /**
-     * 进入全屏模式
-     */
+
+
+
+
+
+
     @JavascriptInterface
     fun enterFullscreen() {
         scope.launch(Dispatchers.Main) {
             try {
                 val activity = context as? Activity ?: return@launch
                 val decorView = activity.window.decorView
-                
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                     activity.window.insetsController?.hide(
-                        android.view.WindowInsets.Type.statusBars() or 
+                        android.view.WindowInsets.Type.statusBars() or
                         android.view.WindowInsets.Type.navigationBars()
                     )
                 } else {
@@ -948,20 +1095,20 @@ if (NativeBridge.isFullscreen()) {
             }
         }
     }
-    
-    /**
-     * 退出全屏模式
-     */
+
+
+
+
     @JavascriptInterface
     fun exitFullscreen() {
         scope.launch(Dispatchers.Main) {
             try {
                 val activity = context as? Activity ?: return@launch
                 val decorView = activity.window.decorView
-                
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                     activity.window.insetsController?.show(
-                        android.view.WindowInsets.Type.statusBars() or 
+                        android.view.WindowInsets.Type.statusBars() or
                         android.view.WindowInsets.Type.navigationBars()
                     )
                 } else {
@@ -974,16 +1121,16 @@ if (NativeBridge.isFullscreen()) {
             }
         }
     }
-    
-    /**
-     * 检查是否处于全屏模式
-     */
+
+
+
+
     @JavascriptInterface
     fun isFullscreen(): Boolean {
         return try {
             val activity = context as? Activity ?: return false
             val decorView = activity.window.decorView
-            
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 val insets = decorView.rootWindowInsets
                 insets?.isVisible(android.view.WindowInsets.Type.statusBars()) == false

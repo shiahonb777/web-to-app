@@ -27,9 +27,9 @@ import kotlinx.coroutines.withContext
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import androidx.compose.ui.graphics.Color
 
-/**
- * WordPress 设置页面 — 镜像源切换、缓存管理
- */
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WordPressSettingsScreen(
@@ -38,19 +38,19 @@ fun WordPressSettingsScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
-    
-    // 依赖状态
+
+
     var phpReady by remember { mutableStateOf(WordPressDependencyManager.isPhpReady(context)) }
     var wpReady by remember { mutableStateOf(WordPressDependencyManager.isWordPressReady(context)) }
     var sqliteReady by remember { mutableStateOf(WordPressDependencyManager.isSqlitePluginReady(context)) }
     var cacheSize by remember { mutableLongStateOf(0L) }
     var mirrorRegion by remember { mutableStateOf(WordPressDependencyManager.getMirrorRegion()) }
-    
-    // 刷新缓存大小
+
+
     LaunchedEffect(Unit) {
         cacheSize = withContext(Dispatchers.IO) { WordPressDependencyManager.getCacheSize(context) }
     }
-    
+
     fun formatSize(bytes: Long): String {
         return when {
             bytes < 1024 -> "$bytes B"
@@ -58,7 +58,7 @@ fun WordPressSettingsScreen(
             else -> String.format(java.util.Locale.getDefault(), "%.1f MB", bytes / (1024.0 * 1024.0))
         }
     }
-    
+
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
@@ -83,7 +83,7 @@ fun WordPressSettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 依赖状态卡片
+
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -108,14 +108,14 @@ fun WordPressSettingsScreen(
                         )
                     }
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     DependencyStatusRow("PHP", phpReady)
                     DependencyStatusRow("WordPress Core", wpReady)
                     DependencyStatusRow("SQLite Plugin", sqliteReady)
                 }
             }
-            
-            // 镜像源设置卡片
+
+
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -140,8 +140,8 @@ fun WordPressSettingsScreen(
                         )
                     }
                     Spacer(modifier = Modifier.height(12.dp))
-                    
-                    // 自动检测
+
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -156,10 +156,10 @@ fun WordPressSettingsScreen(
                             )
                         }
                     }
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    
-                    // 镜像源选项
+
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -198,8 +198,8 @@ fun WordPressSettingsScreen(
                     }
                 }
             }
-            
-            // 缓存管理卡片
+
+
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -224,15 +224,15 @@ fun WordPressSettingsScreen(
                         )
                     }
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     Text(
                         text = formatSize(cacheSize),
                         style = MaterialTheme.typography.headlineMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
-                    
+
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     PremiumOutlinedButton(
                         onClick = {
                             scope.launch {

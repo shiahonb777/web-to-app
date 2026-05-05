@@ -12,14 +12,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import com.webtoapp.core.i18n.Strings
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
-/**
- * 认证 ViewModel — 管理登录/注册/用户状态/密码管理/账号注销
- */
+
+
+
 class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
 
-    // ─── 状态 ───
+
 
     private val _authState = MutableStateFlow<AuthState>(
         if (authRepository.isLoggedIn()) {
@@ -40,34 +41,34 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
     private val _proStatus = MutableStateFlow<ProStatus?>(null)
     val proStatus: StateFlow<ProStatus?> = _proStatus.asStateFlow()
 
-    // 密码管理状态
+
     private val _passwordState = MutableStateFlow<FormState>(FormState.Idle)
     val passwordState: StateFlow<FormState> = _passwordState.asStateFlow()
 
-    // 忘记密码状态
+
     private val _forgotPasswordState = MutableStateFlow<FormState>(FormState.Idle)
     val forgotPasswordState: StateFlow<FormState> = _forgotPasswordState.asStateFlow()
 
-    // 重置验证码发送状态
+
     private val _resetCodeState = MutableStateFlow<FormState>(FormState.Idle)
     val resetCodeState: StateFlow<FormState> = _resetCodeState.asStateFlow()
 
-    // 账号注销状态
+
     private val _deleteAccountState = MutableStateFlow<FormState>(FormState.Idle)
     val deleteAccountState: StateFlow<FormState> = _deleteAccountState.asStateFlow()
 
-    // 验证码发送状态
+
     private val _sendCodeState = MutableStateFlow<FormState>(FormState.Idle)
     val sendCodeState: StateFlow<FormState> = _sendCodeState.asStateFlow()
 
-    // 头像上传状态
+
     private val _avatarUploadState = MutableStateFlow<FormState>(FormState.Idle)
     val avatarUploadState: StateFlow<FormState> = _avatarUploadState.asStateFlow()
 
     private var heartbeatJob: Job? = null
 
     init {
-        // 已登录时刷新用户信息
+
         if (authRepository.isLoggedIn()) {
             viewModelScope.launch {
                 when (val result = authRepository.refreshProfile()) {
@@ -75,7 +76,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
                         _authState.value = AuthState.LoggedIn(result.data)
                     }
                     is AuthResult.Error -> {
-                        // Token 可能已过期
+
                         if (result.message.contains("过期") || result.message.contains("重新登录")) {
                             _authState.value = AuthState.LoggedOut
                         }
@@ -89,13 +90,10 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
     private fun startHeartbeat() {
         heartbeatJob?.cancel()
         heartbeatJob = viewModelScope.launch {
-            while (true) {
-                delay(60_000) // 60 seconds
-                if (authRepository.isLoggedIn()) {
-                    authRepository.heartbeat()
-                } else {
-                    break
-                }
+            while (isActive) {
+                delay(60_000)
+                if (!authRepository.isLoggedIn()) break
+                authRepository.heartbeat()
             }
         }
     }
@@ -105,7 +103,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         heartbeatJob = null
     }
 
-    // ─── 登录 ───
+
 
     fun login(account: String, password: String) {
         if (account.isBlank() || password.isBlank()) {
@@ -128,7 +126,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         }
     }
 
-    // ─── 发送验证码 ───
+
 
     fun sendVerificationCode(email: String) {
         if (email.isBlank()) {
@@ -148,7 +146,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         }
     }
 
-    // ─── 注册 ───
+
 
     fun register(email: String, username: String, password: String, confirmPassword: String, verificationCode: String) {
         if (email.isBlank() || username.isBlank() || password.isBlank()) {
@@ -185,7 +183,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         }
     }
 
-    // ─── 退出登录（服务器端 Token 失效） ───
+
 
     fun logout() {
         viewModelScope.launch {
@@ -196,9 +194,9 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         }
     }
 
-    /**
-     * 从所有设备登出
-     */
+
+
+
     fun logoutAll() {
         viewModelScope.launch {
             authRepository.logoutAll()
@@ -207,7 +205,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         }
     }
 
-    // ─── 刷新 ───
+
 
     fun refreshProfile() {
         viewModelScope.launch {
@@ -215,7 +213,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
                 is AuthResult.Success -> {
                     _authState.value = AuthState.LoggedIn(result.data)
                 }
-                is AuthResult.Error -> { /* 静默失败 */ }
+                is AuthResult.Error -> {  }
             }
         }
     }
@@ -226,16 +224,16 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
                 is AuthResult.Success -> {
                     _proStatus.value = result.data
                 }
-                is AuthResult.Error -> { /* 静默失败 */ }
+                is AuthResult.Error -> {  }
             }
         }
     }
 
-    // ─── 密码管理 ───
 
-    /**
-     * 修改密码
-     */
+
+
+
+
     fun changePassword(currentPassword: String, newPassword: String, confirmNewPassword: String) {
         if (currentPassword.isBlank() || newPassword.isBlank()) {
             _passwordState.value = FormState.Error(Strings.authFillAllFields)
@@ -254,7 +252,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
             when (val result = authRepository.changePassword(currentPassword, newPassword)) {
                 is AuthResult.Success -> {
                     _passwordState.value = FormState.Success(result.data)
-                    // 密码修改后需要重新登录
+
                     _authState.value = AuthState.LoggedOut
                     _proStatus.value = null
                 }
@@ -265,9 +263,9 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         }
     }
 
-    /**
-     * 发送密码重置验证码
-     */
+
+
+
     fun sendResetCode(email: String) {
         if (email.isBlank()) {
             _resetCodeState.value = FormState.Error(Strings.authEmailRequired)
@@ -286,9 +284,9 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         }
     }
 
-    /**
-     * 重置密码（验证码方式）
-     */
+
+
+
     fun resetPassword(email: String, code: String, newPassword: String) {
         if (email.isBlank() || code.isBlank() || newPassword.isBlank()) {
             _forgotPasswordState.value = FormState.Error(Strings.authFillAllFields)
@@ -306,7 +304,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
             _forgotPasswordState.value = FormState.Loading
             when (val result = authRepository.resetPassword(email, code, newPassword)) {
                 is AuthResult.Success -> {
-                    // Auto-login: set auth state → UI auto-transitions to ProfileScreen
+
                     _authState.value = AuthState.LoggedIn(result.data)
                     _forgotPasswordState.value = FormState.Success(Strings.authPasswordResetDone)
                     loadProStatus()
@@ -319,11 +317,11 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         }
     }
 
-    // ─── 账号注销 ───
 
-    /**
-     * 永久删除账号
-     */
+
+
+
+
     fun deleteAccount(password: String, reason: String = "") {
         if (password.isBlank()) {
             _deleteAccountState.value = FormState.Error(Strings.authDeleteAccountConfirmPassword)
@@ -344,18 +342,18 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         }
     }
 
-    // ─── 头像上传 ───
 
-    /**
-     * 上传头像
-     */
+
+
+
+
     fun uploadAvatar(imageBytes: ByteArray, mimeType: String = "image/jpeg") {
         viewModelScope.launch {
             _avatarUploadState.value = FormState.Loading
             when (val result = authRepository.uploadAvatar(imageBytes, mimeType)) {
                 is AuthResult.Success -> {
                     _avatarUploadState.value = FormState.Success(Strings.authAvatarUploadSuccess)
-                    // 刷新用户信息以获取新头像 URL
+
                     refreshProfile()
                 }
                 is AuthResult.Error -> {
@@ -365,7 +363,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         }
     }
 
-    // ─── Google 登录 ───
+
 
     fun googleLogin(idToken: String) {
         viewModelScope.launch {
@@ -384,7 +382,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         }
     }
 
-    // ─── 重置表单状态 ───
+
 
     fun resetLoginState() {
         _loginState.value = FormState.Idle
@@ -418,7 +416,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         _avatarUploadState.value = FormState.Idle
     }
 
-    // ─── 编辑个人资料 ───
+
 
     private val _updateProfileState = MutableStateFlow<FormState>(FormState.Idle)
     val updateProfileState: StateFlow<FormState> = _updateProfileState.asStateFlow()
@@ -442,7 +440,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         _updateProfileState.value = FormState.Idle
     }
 
-    // ─── 绑定邮箱 ───
+
 
     private val _bindEmailState = MutableStateFlow<FormState>(FormState.Idle)
     val bindEmailState: StateFlow<FormState> = _bindEmailState.asStateFlow()
@@ -461,7 +459,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
             when (val result = authRepository.bindEmail(email, verificationCode)) {
                 is AuthResult.Success -> {
                     _bindEmailState.value = FormState.Success(result.data)
-                    refreshProfile() // 刷新用户信息
+                    refreshProfile()
                 }
                 is AuthResult.Error -> {
                     _bindEmailState.value = FormState.Error(result.message)
@@ -474,14 +472,14 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         _bindEmailState.value = FormState.Idle
     }
 
-    // ─── 刷新 Pro 状态（公开方法，外部可调用） ───
+
 
     fun refreshProStatus() {
         loadProStatus()
     }
 }
 
-// ─── 状态定义 ───
+
 
 sealed class AuthState {
     data object LoggedOut : AuthState()

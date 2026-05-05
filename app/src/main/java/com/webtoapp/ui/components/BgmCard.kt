@@ -3,8 +3,6 @@ package com.webtoapp.ui.components
 import androidx.compose.animation.AnimatedVisibility
 import com.webtoapp.ui.animation.CardExpandTransition
 import com.webtoapp.ui.animation.CardCollapseTransition
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -19,7 +17,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -27,13 +24,14 @@ import androidx.compose.ui.unit.sp
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.data.model.BgmConfig
 import com.webtoapp.data.model.BgmPlayMode
+import com.webtoapp.ui.design.*
 
-/**
- * 背景音乐设置卡片（优化版）
- * - 更精致的播放列表预览
- * - 播放模式/音量/歌词的紧凑展示
- * - 视觉反馈微动画
- */
+
+
+
+
+
+
 @Composable
 fun BgmCard(
     enabled: Boolean,
@@ -43,94 +41,45 @@ fun BgmCard(
 ) {
     var showSelectorDialog by remember { mutableStateOf(false) }
 
-    // 图标微动画
-    val iconScale by animateFloatAsState(
-        targetValue = if (enabled) 1.1f else 1f,
-        animationSpec = tween(300),
-        label = "bgmIconScale"
-    )
 
-    EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // 标题和开关
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .scale(iconScale)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(
-                                if (enabled) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                                else MaterialTheme.colorScheme.surfaceVariant
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            Icons.Outlined.MusicNote,
-                            null,
-                            tint = if (enabled) MaterialTheme.colorScheme.primary
-                                   else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text(
-                            text = Strings.bgmTitle,
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        if (enabled && config.playlist.isNotEmpty()) {
-                            Text(
-                                text = "${config.playlist.size} ${Strings.selectedMusic}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontSize = 11.sp
-                            )
-                        }
-                    }
-                }
-                PremiumSwitch(
-                    checked = enabled,
-                    onCheckedChange = onEnabledChange
-                )
-            }
-            
+    WtaSettingCard {
+        Column(verticalArrangement = Arrangement.spacedBy(WtaSpacing.ContentGap)) {
+            WtaToggleRow(
+                title = Strings.bgmTitle,
+                subtitle = if (enabled && config.playlist.isNotEmpty()) {
+                    "${config.playlist.size} ${Strings.selectedMusic}"
+                } else {
+                    Strings.bgmDescription
+                },
+                icon = Icons.Outlined.MusicNote,
+                checked = enabled,
+                onCheckedChange = onEnabledChange
+            )
+
             AnimatedVisibility(
                 visible = enabled,
                 enter = CardExpandTransition,
                 exit = CardCollapseTransition
             ) {
-              Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    text = Strings.bgmDescription,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                
-                // 当前配置概览（增强版）
+              Column(
+                  modifier = Modifier.padding(horizontal = WtaSpacing.RowHorizontal),
+                  verticalArrangement = Arrangement.spacedBy(12.dp)
+              ) {
                 if (config.playlist.isNotEmpty()) {
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(WtaRadius.Card),
                         color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f),
                         tonalElevation = 1.dp
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
-                            // 播放列表预览（最多显示 3 首）
+
                             config.playlist.take(3).forEachIndexed { index, bgm ->
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    // 序号圆形
+
                                     Box(
                                         modifier = Modifier
                                             .size(22.dp)
@@ -163,8 +112,8 @@ fun BgmCard(
                                     Spacer(modifier = Modifier.height(4.dp))
                                 }
                             }
-                            
-                            // "还有 N 首..." 提示
+
+
                             if (config.playlist.size > 3) {
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
@@ -174,19 +123,19 @@ fun BgmCard(
                                     modifier = Modifier.padding(start = 30.dp)
                                 )
                             }
-                            
+
                             Spacer(modifier = Modifier.height(8.dp))
                             HorizontalDivider(
                                 color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
                             )
                             Spacer(modifier = Modifier.height(8.dp))
-                            
-                            // 状态标签行
+
+
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                // 播放模式
+
                                 StatusChip(
                                     icon = when (config.playMode) {
                                         BgmPlayMode.LOOP -> Icons.Outlined.Repeat
@@ -199,15 +148,15 @@ fun BgmCard(
                                         BgmPlayMode.SHUFFLE -> Strings.shufflePlayback
                                     }
                                 )
-                                
-                                // 音量
+
+
                                 StatusChip(
                                     icon = if (config.volume > 0.5f) Icons.AutoMirrored.Outlined.VolumeUp
                                            else Icons.AutoMirrored.Outlined.VolumeDown,
                                     label = "${(config.volume * 100).toInt()}%"
                                 )
-                                
-                                // 歌词
+
+
                                 if (config.showLyrics) {
                                     StatusChip(
                                         icon = Icons.Outlined.Subtitles,
@@ -218,8 +167,8 @@ fun BgmCard(
                         }
                     }
                 }
-                
-                // 选择/修改按钮
+
+
                 PremiumOutlinedButton(
                     onClick = { showSelectorDialog = true },
                     modifier = Modifier.fillMaxWidth()
@@ -236,8 +185,8 @@ fun BgmCard(
             }
         }
     }
-    
-    // 音乐选择对话框
+
+
     if (showSelectorDialog) {
         BgmSelectorDialog(
             currentConfig = config,
@@ -250,16 +199,16 @@ fun BgmCard(
     }
 }
 
-/**
- * 紧凑状态标签（播放模式/音量/歌词等）
- */
+
+
+
 @Composable
 private fun StatusChip(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String
 ) {
     Surface(
-        shape = RoundedCornerShape(6.dp),
+        shape = RoundedCornerShape(WtaRadius.Button),
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
     ) {
         Row(

@@ -73,14 +73,15 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.webtoapp.core.i18n.InitializeLanguage
 import com.webtoapp.core.i18n.Strings
+import com.webtoapp.core.cloud.CloudApiClient
 import com.webtoapp.core.logging.AppLogger
-import com.webtoapp.data.model.ApkRuntimePermissions
 import com.webtoapp.ui.components.themedBackground
-import com.webtoapp.ui.screens.community.CommunityScreen
 import com.webtoapp.ui.screens.AiSettingsScreen
 import com.webtoapp.ui.screens.AppModifierScreen
-import com.webtoapp.ui.screens.AppStoreScreen
+import com.webtoapp.ui.screens.EcosystemPublishAppSheet
+import com.webtoapp.ui.screens.EcosystemPublishModuleSheet
 import com.webtoapp.ui.screens.BrowserKernelScreen
 import com.webtoapp.ui.screens.HostsAdBlockScreen
 import com.webtoapp.ui.screens.CreateAppScreen
@@ -98,8 +99,6 @@ import com.webtoapp.ui.screens.CreateOfflinePackScreen
 import com.webtoapp.ui.screens.RuntimeDepsScreen
 import com.webtoapp.ui.screens.PortManagerScreen
 import com.webtoapp.ui.screens.LinuxEnvironmentScreen
-import com.webtoapp.ui.screens.PermissionConfigScreen
-import com.webtoapp.ui.screens.DocsScreen
 import com.webtoapp.ui.screens.HomeScreen
 import com.webtoapp.ui.screens.MoreScreen
 import com.webtoapp.ui.screens.AboutScreen
@@ -108,7 +107,6 @@ import com.webtoapp.ui.screens.AiHtmlCodingScreen
 import com.webtoapp.ui.screens.AiCodingScreen
 
 import com.webtoapp.ui.screens.ExtensionModuleScreen
-import com.webtoapp.ui.screens.FeatureToggleSettingsScreen
 import com.webtoapp.ui.screens.ModuleEditorScreen
 import com.webtoapp.ui.screens.AuthScreen
 import com.webtoapp.ui.screens.ProfileScreen
@@ -117,25 +115,24 @@ import com.webtoapp.ui.screens.DeviceManagementScreen
 import com.webtoapp.ui.screens.SubscriptionScreen
 
 import com.webtoapp.ui.screens.aimodule.AiModuleDeveloperScreen
-import com.webtoapp.ui.screens.community.FavoritesScreen
-import com.webtoapp.ui.screens.community.ModuleDetailScreen
-import com.webtoapp.ui.screens.community.NotificationsScreen
-import com.webtoapp.ui.screens.community.UserProfileScreen
-import com.webtoapp.ui.screens.community.PostDetailScreen
+import com.webtoapp.ui.screens.ecosystem.EcosystemBookmarksScreen
+import com.webtoapp.ui.screens.ecosystem.EcosystemDetailScreen
+import com.webtoapp.ui.screens.ecosystem.EcosystemNotificationsScreen
+import com.webtoapp.ui.screens.ecosystem.EcosystemScreen
+import com.webtoapp.ui.screens.ecosystem.EcosystemUserScreen
 import com.webtoapp.ui.viewmodel.AuthViewModel
 import com.webtoapp.ui.viewmodel.CloudViewModel
-import com.webtoapp.ui.viewmodel.CommunityViewModel
 import com.webtoapp.ui.viewmodel.MainViewModel
 import com.webtoapp.ui.webview.WebViewActivity
 import com.webtoapp.ui.components.LiquidTabBar
 import com.webtoapp.ui.components.LiquidTabItem
 
-/**
- * 导航路由定义
- */
-/**
- * 底部 Tab 定义
- */
+
+
+
+
+
+
 enum class BottomTab(
     val route: String,
     val selectedIcon: ImageVector,
@@ -143,29 +140,31 @@ enum class BottomTab(
     val labelKey: String,
 ) {
     HOME(Routes.HOME, Icons.Filled.Home, Icons.Outlined.Home, "home"),
-    STORE(Routes.APP_STORE, Icons.Filled.Storefront, Icons.Outlined.Storefront, "store"),
-    COMMUNITY(Routes.COMMUNITY, Icons.Filled.Forum, Icons.Outlined.Forum, "community"),
+    MARKET(Routes.MARKET, Icons.Filled.Storefront, Icons.Outlined.Storefront, "market"),
     PROFILE(Routes.PROFILE_TAB, Icons.Filled.Person, Icons.Outlined.Person, "profile"),
     MORE(Routes.MORE, Icons.Filled.MoreHoriz, Icons.Outlined.MoreHoriz, "more");
 
     fun label(): String = when (this) {
         HOME -> Strings.tabHome
-        STORE -> Strings.tabStore
-        COMMUNITY -> Strings.tabCommunity
+        MARKET -> Strings.tabStore
         PROFILE -> Strings.tabProfile
         MORE -> Strings.tabMore
     }
 }
 
 object Routes {
-    // 底部 Tab 顶层路由
+
     const val HOME = "home"
-    const val APP_STORE = "app_store"
+    const val MARKET = "market_tab"
+    const val ECOSYSTEM_APPS = "app_store_legacy"
+    const val ECOSYSTEM_PUBLISH_APP = "app_store_publish_app"
+    const val ECOSYSTEM_PUBLISH_MODULE = "app_store_publish_module"
+    @Deprecated("Use MARKET")
     const val COMMUNITY = "community_tab"
     const val PROFILE_TAB = "profile_tab"
     const val MORE = "more"
 
-    // 详细页面路由
+
     const val CREATE_APP = "create_app"
     const val CREATE_MEDIA_APP = "create_media_app"
     const val CREATE_GALLERY_APP = "create_gallery_app"
@@ -173,10 +172,10 @@ object Routes {
     const val CREATE_HTML_APP_WITH_IMPORT = "create_html_app?importDir={importDir}&projectName={projectName}"
     const val CREATE_FRONTEND_APP = "create_frontend_app"
     const val LINUX_ENVIRONMENT = "linux_environment"
-    
-    // 通用编辑（共性功能：公告、广告拦截、扩展模块等）
+
+
     const val EDIT_APP = "edit_app/{appId}"
-    // 各类型专用编辑（核心配置）
+
     const val EDIT_WEB_APP = "edit_web_app/{appId}"
     const val EDIT_MEDIA_APP = "edit_media_app/{appId}"
     const val EDIT_GALLERY_APP = "edit_gallery_app/{appId}"
@@ -194,7 +193,7 @@ object Routes {
     const val CREATE_MULTI_WEB_APP = "create_multi_web_app"
     const val EDIT_MULTI_WEB_APP = "edit_multi_web_app/{appId}"
     const val CREATE_OFFLINE_PACK = "create_offline_pack"
-    
+
     const val PREVIEW = "preview/{appId}"
     const val APP_MODIFIER = "app_modifier"
     const val AI_SETTINGS = "ai_settings"
@@ -209,26 +208,37 @@ object Routes {
     const val AI_MODULE_DEVELOPER = "ai_module_developer"
     const val RUNTIME_DEPS = "runtime_deps"
     const val PORT_MANAGER = "port_manager"
-    const val PERMISSION_CONFIG = "permission_config"
     const val STATS = "stats"
-    const val FEATURE_TOGGLE = "feature_toggle"
     const val ABOUT = "about"
     const val AUTH = "auth"
     const val PROFILE = "profile"
     const val ACTIVATION_CODE = "activation_code"
     const val DEVICE_MANAGEMENT = "device_management"
-    const val MODULE_STORE = "module_store"
     const val SUBSCRIPTION = "subscription"
-    // 社区页面
-    const val COMMUNITY_POST_DETAIL = "community_post/{postId}"
-    const val MODULE_DETAIL = "module_detail/{moduleId}"
-    const val USER_PROFILE = "community_user/{userId}"
+
+    const val LEGACY_COMMUNITY_POST_DETAIL = "community_post/{postId}"
+    const val ECOSYSTEM_DETAIL = "ecosystem/{itemType}/{itemId}"
+    const val LEGACY_MODULE_DETAIL = "module_detail/{moduleId}"
+    const val USER_PROFILE = "ecosystem_user/{userId}"
     const val FAVORITES = "favorites"
     const val NOTIFICATIONS = "notifications"
-    const val DOCS = "docs"
+    @Deprecated("Use ECOSYSTEM_APPS")
+    const val APP_STORE = ECOSYSTEM_APPS
 
-    /** 顶层 Tab 路由集合，用于判断是否显示底部导航 */
-    val TAB_ROUTES = setOf(HOME, APP_STORE, COMMUNITY, PROFILE_TAB, MORE)
+    @Deprecated("Use ECOSYSTEM_PUBLISH_APP")
+    const val APP_STORE_PUBLISH_APP = ECOSYSTEM_PUBLISH_APP
+
+    @Deprecated("Use ECOSYSTEM_PUBLISH_MODULE")
+    const val APP_STORE_PUBLISH_MODULE = ECOSYSTEM_PUBLISH_MODULE
+
+    @Deprecated("Use ECOSYSTEM_DETAIL")
+    const val COMMUNITY_POST_DETAIL = LEGACY_COMMUNITY_POST_DETAIL
+
+    @Deprecated("Use ECOSYSTEM_DETAIL")
+    const val MODULE_DETAIL = LEGACY_MODULE_DETAIL
+
+
+    val TAB_ROUTES = setOf(HOME, MARKET, PROFILE_TAB, MORE)
 
     fun editApp(appId: Long) = "edit_app/$appId"
     fun editWebApp(appId: Long) = "edit_web_app/$appId"
@@ -243,30 +253,43 @@ object Routes {
     fun editMultiWebApp(appId: Long) = "edit_multi_web_app/$appId"
     fun preview(appId: Long) = "preview/$appId"
     fun editModule(moduleId: String) = "module_editor/$moduleId"
-    fun moduleDetail(moduleId: Int) = "module_detail/$moduleId"
-    fun communityUser(userId: Int) = "community_user/$userId"
-    fun communityPost(postId: Int) = "community_post/$postId"
+    fun legacyModuleDetail(moduleId: Int) = "module_detail/$moduleId"
+    fun ecosystemItem(itemType: String, itemId: Int) = "ecosystem/$itemType/$itemId"
+    fun ecosystemUser(userId: Int) = "ecosystem_user/$userId"
+
+    @Deprecated("Use ecosystemUser")
+    fun communityUser(userId: Int) = ecosystemUser(userId)
 }
 
-/**
- * 应用导航
- */
+
+
+
 @Composable
 fun AppNavigation() {
+    InitializeLanguage()
+
     val navController = rememberNavController()
     val viewModel: MainViewModel = koinViewModel()
     val authViewModel: AuthViewModel = koinViewModel()
 
-    // Track the selected tab persistently
+
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     var previousTab by remember { mutableIntStateOf(0) }
 
-    // Track whether we're on a detail screen (pushed from a tab)
+    LaunchedEffect(selectedTab) {
+        val lastIndex = BottomTab.entries.lastIndex
+        if (selectedTab > lastIndex) {
+            previousTab = lastIndex
+            selectedTab = lastIndex
+        }
+    }
+
+
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val isOnDetailScreen = currentRoute != null && currentRoute != "tab_host"
 
-    // ═══════ 自动检查更新 ═══════
+
     val context = LocalContext.current
     val (currentVersionName, currentVersionCode) = remember {
         com.webtoapp.util.AppUpdateChecker.getCurrentVersionInfo(context)
@@ -295,7 +318,7 @@ fun AppNavigation() {
         )
     }
 
-    // 启动时自动检查更新（仅执行一次）
+
     LaunchedEffect(Unit) {
         if (com.webtoapp.util.AppUpdateChecker.shouldAutoCheck(context)) {
             try {
@@ -335,7 +358,7 @@ fun AppNavigation() {
         }
     }
 
-    // 监听下载完成
+
     androidx.compose.runtime.DisposableEffect(autoDownloadId) {
         if (autoDownloadId == -1L) return@DisposableEffect onDispose {}
         val receiver = object : android.content.BroadcastReceiver() {
@@ -358,7 +381,7 @@ fun AppNavigation() {
         }
     }
 
-    // 自动更新提示对话框
+
     if (showAutoUpdateDialog && autoUpdateInfo != null) {
         val info = autoUpdateInfo!!
         val (curVersion, _) = remember { com.webtoapp.util.AppUpdateChecker.getCurrentVersionInfo(context) }
@@ -527,16 +550,16 @@ fun AppNavigation() {
         }
     ) { scaffoldPadding ->
 
-    // Calculate proper insets for landscape — system bars can appear on any side
+
     val systemBarsInsets = WindowInsets.systemBars
-    
+
     androidx.compose.foundation.layout.Box(
         modifier = Modifier
             .fillMaxSize()
             .themedBackground()
-            // Handle display cutout (notch/punch-hole) padding in landscape
+
             .displayCutoutPadding()
-            // Apply system bar padding for horizontal (side nav in landscape) + top (status bar)
+
             .padding(
                 start = with(androidx.compose.ui.platform.LocalDensity.current) {
                     systemBarsInsets.getLeft(this, androidx.compose.ui.unit.LayoutDirection.Ltr).toDp()
@@ -547,15 +570,14 @@ fun AppNavigation() {
             )
             .padding(bottom = if (!isOnDetailScreen) scaffoldPadding.calculateBottomPadding() else 0.dp)
     ) {
-        // ════════════════════════════════════════════
-        // Persistent Tab Content — all tabs stay alive
-        // ════════════════════════════════════════════
 
-        // 滑动方向：目标 tab 在右侧则从右往左滑入
-        val slideDirection = if (selectedTab >= previousTab) 1 else -1
-        val slideOffsetPx = 120f  // 偏移量（像素）
-        
-        // Tab 0: 首页
+
+
+
+
+        val slideOffsetPx = 120f
+
+
         val tab0Active = selectedTab == 0 && !isOnDetailScreen
         val tab0Alpha by animateFloatAsState(
             targetValue = if (tab0Active) 1f else 0f,
@@ -624,11 +646,10 @@ fun AppNavigation() {
                 onOpenAiHtmlCoding = { navController.navigate(Routes.AI_HTML_CODING) },
                 onOpenExtensionModules = { navController.navigate(Routes.EXTENSION_MODULES) },
                 onOpenLinuxEnvironment = { navController.navigate(Routes.LINUX_ENVIRONMENT) },
-                onOpenDocs = { navController.navigate(Routes.DOCS) },
             )
         }
 
-        // Tab 1: 市场
+
         val tab1Active = selectedTab == 1 && !isOnDetailScreen
         val tab1Alpha by animateFloatAsState(
             targetValue = if (tab1Active) 1f else 0f,
@@ -647,25 +668,18 @@ fun AppNavigation() {
                     translationX = tab1OffsetX * density
                 }
         ) {
-            val cloudViewModel: CloudViewModel = org.koin.androidx.compose.koinViewModel()
-            val context = LocalContext.current
-            val coroutineScope = rememberCoroutineScope()
-            val downloadManager = remember { com.webtoapp.core.cloud.AppDownloadManager.getInstance(context) }
-            AppStoreScreen(
-                cloudViewModel = cloudViewModel,
-                onInstallModule = { shareCode ->
-                    coroutineScope.launch {
-                        com.webtoapp.core.extension.ExtensionManager.getInstance(context)
-                            .importFromShareCode(shareCode)
-                    }
-                },
-                onNavigateToModule = { moduleId -> navController.navigate(Routes.moduleDetail(moduleId)) },
-                downloadManager = downloadManager
+            EcosystemScreen(
+                onNavigateToItem = { itemType, itemId -> navController.navigate(Routes.ecosystemItem(itemType, itemId)) },
+                onNavigateToUser = { userId -> navController.navigate(Routes.ecosystemUser(userId)) },
+                onNavigateToNotifications = { navController.navigate(Routes.NOTIFICATIONS) },
+                onNavigateToFavorites = { navController.navigate(Routes.FAVORITES) },
+                onPublishApp = { navController.navigate(Routes.ECOSYSTEM_PUBLISH_APP) },
+                onPublishModule = { navController.navigate(Routes.ECOSYSTEM_PUBLISH_MODULE) }
             )
         }
 
-        // Tab 2: 社区
-        val tab2Active = selectedTab == 2 && !isOnDetailScreen
+
+        val tab2Active = false
         val tab2Alpha by animateFloatAsState(
             targetValue = if (tab2Active) 1f else 0f,
             animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMedium), label = "tab2Alpha"
@@ -683,24 +697,16 @@ fun AppNavigation() {
                     translationX = tab2OffsetX * density
                 }
         ) {
-            CommunityScreen(
-                onNavigateToUser = { userId -> navController.navigate(Routes.communityUser(userId)) },
-                onNavigateToModule = { moduleId -> navController.navigate(Routes.moduleDetail(moduleId)) },
-                onNavigateToPost = { postId -> navController.navigate(Routes.communityPost(postId)) },
-                onNavigateToNotifications = { navController.navigate(Routes.NOTIFICATIONS) },
-                onNavigateToFavorites = { navController.navigate(Routes.FAVORITES) },
-                isTabVisible = tab2Active
-            )
         }
 
-        // Tab 3: 我的
-        val tab3Active = selectedTab == 3 && !isOnDetailScreen
+
+        val tab3Active = selectedTab == 2 && !isOnDetailScreen
         val tab3Alpha by animateFloatAsState(
             targetValue = if (tab3Active) 1f else 0f,
             animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMedium), label = "tab3Alpha"
         )
         val tab3OffsetX by animateFloatAsState(
-            targetValue = if (tab3Active) 0f else (if (3 < selectedTab) -slideOffsetPx else slideOffsetPx),
+            targetValue = if (tab3Active) 0f else (if (2 < selectedTab) -slideOffsetPx else slideOffsetPx),
             animationSpec = spring(dampingRatio = 0.9f, stiffness = Spring.StiffnessMediumLow), label = "tab3Offset"
         )
         androidx.compose.foundation.layout.Box(
@@ -718,7 +724,7 @@ fun AppNavigation() {
                     ProfileScreen(
                         authViewModel = authViewModel,
                         onBack = { selectedTab = 0 },
-                        onLogout = { /* authState → LoggedOut → shows AuthScreen */ },
+                        onLogout = {  },
                         onNavigateDevices = { navController.navigate(Routes.DEVICE_MANAGEMENT) },
                         onNavigateActivationCode = { navController.navigate(Routes.ACTIVATION_CODE) },
                         onNavigateSubscription = { navController.navigate(Routes.SUBSCRIPTION) }
@@ -728,20 +734,20 @@ fun AppNavigation() {
                     AuthScreen(
                         authViewModel = authViewModel,
                         onBack = { selectedTab = 0 },
-                        onLoginSuccess = { /* authState → LoggedIn → shows ProfileScreen */ }
+                        onLoginSuccess = {  }
                     )
                 }
             }
         }
 
-        // Tab 4: 更多
-        val tab4Active = selectedTab == 4 && !isOnDetailScreen
+
+        val tab4Active = selectedTab == 3 && !isOnDetailScreen
         val tab4Alpha by animateFloatAsState(
             targetValue = if (tab4Active) 1f else 0f,
             animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMedium), label = "tab4Alpha"
         )
         val tab4OffsetX by animateFloatAsState(
-            targetValue = if (tab4Active) 0f else (if (4 < selectedTab) -slideOffsetPx else slideOffsetPx),
+            targetValue = if (tab4Active) 0f else (if (3 < selectedTab) -slideOffsetPx else slideOffsetPx),
             animationSpec = spring(dampingRatio = 0.9f, stiffness = Spring.StiffnessMediumLow), label = "tab4Offset"
         )
         androidx.compose.foundation.layout.Box(
@@ -764,21 +770,19 @@ fun AppNavigation() {
                 onOpenLinuxEnvironment = { navController.navigate(Routes.LINUX_ENVIRONMENT) },
                 onOpenRuntimeDeps = { navController.navigate(Routes.RUNTIME_DEPS) },
                 onOpenPortManager = { navController.navigate(Routes.PORT_MANAGER) },
-                onOpenPermissionConfig = { navController.navigate(Routes.PERMISSION_CONFIG) },
                 onOpenStats = { navController.navigate(Routes.STATS) },
-                onOpenAbout = { navController.navigate(Routes.ABOUT) },
-                onOpenFeatureToggles = { navController.navigate(Routes.FEATURE_TOGGLE) }
+                onOpenAbout = { navController.navigate(Routes.ABOUT) }
             )
         }
 
-        // ════════════════════════════════════════════
-        // NavHost — only for detail/push screens
-        // ════════════════════════════════════════════
+
+
+
         NavHost(
             navController = navController,
             startDestination = "tab_host",
             modifier = Modifier.fillMaxSize(),
-            // 全局页面切换动画：右滑入 + 淡入
+
             enterTransition = {
                 slideInHorizontally(
                     initialOffsetX = { it / 3 },
@@ -804,24 +808,58 @@ fun AppNavigation() {
                 ) + fadeOut(animationSpec = tween(250))
             }
         ) {
-        // Invisible placeholder — tabs are rendered above
+
         composable("tab_host") {}
-        
-        // 使用统计 + 健康监控
+
+        composable(Routes.ECOSYSTEM_APPS) {
+            val ecosystemViewModel: com.webtoapp.ui.viewmodel.EcosystemViewModel = org.koin.androidx.compose.koinViewModel()
+            EcosystemScreen(
+                viewModel = ecosystemViewModel,
+                initialType = "app",
+                screenTitle = Strings.ecosystemTitle,
+                screenSubtitle = Strings.ecosystemSubtitle,
+                onNavigateToItem = { itemType, itemId -> navController.navigate(Routes.ecosystemItem(itemType, itemId)) },
+                onNavigateToUser = { userId -> navController.navigate(Routes.ecosystemUser(userId)) },
+                onNavigateToNotifications = { navController.navigate(Routes.NOTIFICATIONS) },
+                onNavigateToFavorites = { navController.navigate(Routes.FAVORITES) },
+                onPublishApp = { navController.navigate(Routes.ECOSYSTEM_PUBLISH_APP) },
+                onPublishModule = { navController.navigate(Routes.ECOSYSTEM_PUBLISH_MODULE) }
+            )
+        }
+
+        composable(Routes.ECOSYSTEM_PUBLISH_APP) {
+            val apiClient: CloudApiClient = org.koin.compose.koinInject()
+            EcosystemPublishAppSheet(
+                apiClient = apiClient,
+                onDismiss = { navController.popBackStack() },
+                onPublished = { navController.popBackStack() }
+            )
+        }
+
+        composable(Routes.ECOSYSTEM_PUBLISH_MODULE) {
+            val apiClient: CloudApiClient = org.koin.compose.koinInject()
+            EcosystemPublishModuleSheet(
+                apiClient = apiClient,
+                onDismiss = { navController.popBackStack() },
+                onPublished = { navController.popBackStack() }
+            )
+        }
+
+
         composable(Routes.STATS) {
             val statsRepository: com.webtoapp.core.stats.AppStatsRepository = org.koin.java.KoinJavaComponent.get(com.webtoapp.core.stats.AppStatsRepository::class.java)
             val healthMonitor: com.webtoapp.core.stats.AppHealthMonitor = org.koin.java.KoinJavaComponent.get(com.webtoapp.core.stats.AppHealthMonitor::class.java)
             val statsScope = androidx.compose.runtime.rememberCoroutineScope()
-            
+
             val apps by viewModel.webApps.collectAsStateWithLifecycle()
             val allStats by statsRepository.allStats.collectAsState(initial = emptyList())
             val healthRecords by healthMonitor.allHealthRecords.collectAsState(initial = emptyList())
             var overallStats by remember { mutableStateOf(com.webtoapp.core.stats.OverallStats()) }
-            
+
             LaunchedEffect(Unit) {
                 overallStats = statsRepository.getOverallStats()
             }
-            
+
             StatsScreen(
                 apps = apps,
                 allStats = allStats,
@@ -842,7 +880,7 @@ fun AppNavigation() {
             )
         }
 
-        // Create应用
+
         composable(Routes.CREATE_APP) {
             CreateAppScreen(
                 viewModel = viewModel,
@@ -851,8 +889,8 @@ fun AppNavigation() {
                 onSaved = { navController.popBackStack() }
             )
         }
-        
-        // Create媒体应用（单图片/视频，兼容旧版）
+
+
         composable(Routes.CREATE_MEDIA_APP) {
             CreateMediaAppScreen(
                 onBack = { navController.popBackStack() },
@@ -864,8 +902,8 @@ fun AppNavigation() {
                 }
             )
         }
-        
-        // Create媒体画廊应用（多图片/视频，新版）
+
+
         composable(Routes.CREATE_GALLERY_APP) {
             CreateGalleryAppScreenV2(
                 onBack = { navController.popBackStack() },
@@ -877,12 +915,12 @@ fun AppNavigation() {
                 }
             )
         }
-        
-        // CreateHTML应用（支持从AI编程导入）
+
+
         composable(
             route = "${Routes.CREATE_HTML_APP}?importDir={importDir}&projectName={projectName}",
             arguments = listOf(
-                navArgument("importDir") { 
+                navArgument("importDir") {
                     type = NavType.StringType
                     nullable = true
                     defaultValue = null
@@ -924,13 +962,13 @@ fun AppNavigation() {
                 importProjectName = projectName
             )
         }
-        
-        // Create前端项目应用（Vue/React/Node.js）
+
+
         composable(Routes.CREATE_FRONTEND_APP) {
             CreateFrontendAppScreen(
                 onBack = { navController.popBackStack() },
                 onCreated = { name, outputPath, iconUri, framework ->
-                    // 将构建输出作为 HTML 应用保存
+
                     viewModel.saveFrontendApp(
                         name = name,
                         outputPath = outputPath,
@@ -944,8 +982,8 @@ fun AppNavigation() {
                 }
             )
         }
-        
-        // Create WordPress 应用
+
+
         composable(Routes.CREATE_WORDPRESS_APP) {
             CreateWordPressAppScreen(
                 onBack = { navController.popBackStack() },
@@ -960,8 +998,8 @@ fun AppNavigation() {
                 }
             )
         }
-        
-        // Create Node.js 应用
+
+
         composable(Routes.CREATE_NODEJS_APP) {
             CreateNodeJsAppScreen(
                 onBack = { navController.popBackStack() },
@@ -976,8 +1014,8 @@ fun AppNavigation() {
                 }
             )
         }
-        
-        // Create PHP 应用
+
+
         composable(Routes.CREATE_PHP_APP) {
             CreatePhpAppScreen(
                 onBack = { navController.popBackStack() },
@@ -992,8 +1030,8 @@ fun AppNavigation() {
                 }
             )
         }
-        
-        // Create Python 应用
+
+
         composable(Routes.CREATE_PYTHON_APP) {
             CreatePythonAppScreen(
                 onBack = { navController.popBackStack() },
@@ -1008,8 +1046,8 @@ fun AppNavigation() {
                 }
             )
         }
-        
-        // Create Go 服务
+
+
         composable(Routes.CREATE_GO_APP) {
             CreateGoAppScreen(
                 onBack = { navController.popBackStack() },
@@ -1024,8 +1062,8 @@ fun AppNavigation() {
                 }
             )
         }
-        
-        // Edit PHP 应用
+
+
         composable(
             route = Routes.EDIT_PHP_APP,
             arguments = listOf(navArgument("appId") { type = NavType.LongType })
@@ -1046,8 +1084,8 @@ fun AppNavigation() {
                 }
             )
         }
-        
-        // Edit Python 应用
+
+
         composable(
             route = Routes.EDIT_PYTHON_APP,
             arguments = listOf(navArgument("appId") { type = NavType.LongType })
@@ -1068,8 +1106,8 @@ fun AppNavigation() {
                 }
             )
         }
-        
-        // Edit Go 服务
+
+
         composable(
             route = Routes.EDIT_GO_APP,
             arguments = listOf(navArgument("appId") { type = NavType.LongType })
@@ -1090,8 +1128,8 @@ fun AppNavigation() {
                 }
             )
         }
-        
-        // Create 多站点聚合应用
+
+
         composable(Routes.CREATE_MULTI_WEB_APP) {
             CreateMultiWebAppScreen(
                 onBack = { navController.popBackStack() },
@@ -1106,8 +1144,8 @@ fun AppNavigation() {
                 }
             )
         }
-        
-        // Edit 多站点聚合应用
+
+
         composable(
             route = Routes.EDIT_MULTI_WEB_APP,
             arguments = listOf(navArgument("appId") { type = NavType.LongType })
@@ -1128,8 +1166,8 @@ fun AppNavigation() {
                 }
             )
         }
-        
-        // Create 离线打包
+
+
         composable(Routes.CREATE_OFFLINE_PACK) {
             CreateOfflinePackScreen(
                 onBack = { navController.popBackStack() },
@@ -1150,15 +1188,15 @@ fun AppNavigation() {
                 }
             )
         }
-        
-        // Linux 环境管理
+
+
         composable(Routes.LINUX_ENVIRONMENT) {
             LinuxEnvironmentScreen(
                 onBack = { navController.popBackStack() }
             )
         }
 
-        // 通用编辑（共性功能：公告、广告拦截等）
+
         composable(
             route = Routes.EDIT_APP,
             arguments = listOf(navArgument("appId") { type = NavType.LongType })
@@ -1170,8 +1208,8 @@ fun AppNavigation() {
                 onSaved = { navController.popBackStack() }
             )
         }
-        
-        // Web page应用专用编辑（核心配置：URL、名称、图标）
+
+
         composable(
             route = Routes.EDIT_WEB_APP,
             arguments = listOf(navArgument("appId") { type = NavType.LongType })
@@ -1183,8 +1221,8 @@ fun AppNavigation() {
                 onSaved = { navController.popBackStack() }
             )
         }
-        
-        // Media应用专用编辑（单图片/视频）
+
+
         composable(
             route = Routes.EDIT_MEDIA_APP,
             arguments = listOf(navArgument("appId") { type = NavType.LongType })
@@ -1201,8 +1239,8 @@ fun AppNavigation() {
                 }
             )
         }
-        
-        // Media画廊应用专用编辑
+
+
         composable(
             route = Routes.EDIT_GALLERY_APP,
             arguments = listOf(navArgument("appId") { type = NavType.LongType })
@@ -1219,8 +1257,8 @@ fun AppNavigation() {
                 }
             )
         }
-        
-        // HTML应用专用编辑
+
+
         composable(
             route = Routes.EDIT_HTML_APP,
             arguments = listOf(navArgument("appId") { type = NavType.LongType })
@@ -1237,8 +1275,8 @@ fun AppNavigation() {
                 }
             )
         }
-        
-        // 前端项目应用专用编辑
+
+
         composable(
             route = Routes.EDIT_FRONTEND_APP,
             arguments = listOf(navArgument("appId") { type = NavType.LongType })
@@ -1258,8 +1296,8 @@ fun AppNavigation() {
                 }
             )
         }
-        
-        // Node.js 应用专用编辑
+
+
         composable(
             route = Routes.EDIT_NODEJS_APP,
             arguments = listOf(navArgument("appId") { type = NavType.LongType })
@@ -1281,7 +1319,7 @@ fun AppNavigation() {
             )
         }
 
-        // 预览
+
         composable(
             route = Routes.PREVIEW,
             arguments = listOf(navArgument("appId") { type = NavType.LongType })
@@ -1293,39 +1331,39 @@ fun AppNavigation() {
             )
         }
 
-        // App修改器
+
         composable(Routes.APP_MODIFIER) {
             AppModifierScreen(
                 onBack = { navController.popBackStack() }
             )
         }
 
-        // AI 设置
+
         composable(Routes.AI_SETTINGS) {
             AiSettingsScreen(
                 onBack = { navController.popBackStack() }
             )
         }
 
-        // HTML编程AI
+
         composable(Routes.AI_HTML_CODING) {
             AiHtmlCodingScreen(
                 onBack = { navController.popBackStack() },
                 onExportToHtmlProject = { files, projectName ->
-                    // 将AI生成的代码导出到HTML项目创建页面
-                    // Save文件到临时目录，然后导航到创建HTML应用页面
-                    val context = navController.context
-                    val tempDir = java.io.File(context.cacheDir, "ai_html_export").apply { 
+
+
+                    val navContext = navController.context
+                    val tempDir = java.io.File(navContext.cacheDir, "ai_html_export").apply {
                         if (exists()) deleteRecursively()
-                        mkdirs() 
+                        mkdirs()
                     }
-                    
-                    // Save所有文件
+
+
                     files.forEach { file ->
                         java.io.File(tempDir, file.name).writeText(file.content)
                     }
-                    
-                    // 导航到创建HTML应用页面（带参数）
+
+
                     navController.navigate("${Routes.CREATE_HTML_APP}?importDir=${java.net.URLEncoder.encode(tempDir.absolutePath, "UTF-8")}&projectName=${java.net.URLEncoder.encode(projectName, "UTF-8")}")
                 },
                 onNavigateToAiSettings = {
@@ -1334,22 +1372,22 @@ fun AppNavigation() {
             )
         }
 
-        // AI编程（统一入口）
+
         composable(Routes.AI_CODING) {
             AiCodingScreen(
                 onBack = { navController.popBackStack() },
                 onExportToProject = { files, projectName, codingType ->
-                    val context = navController.context
-                    val tempDir = java.io.File(context.cacheDir, "ai_coding_export").apply { 
+                    val navContext = navController.context
+                    val tempDir = java.io.File(navContext.cacheDir, "ai_coding_export").apply {
                         if (exists()) deleteRecursively()
-                        mkdirs() 
+                        mkdirs()
                     }
-                    
+
                     files.forEach { file ->
                         java.io.File(tempDir, file.name).writeText(file.content)
                     }
-                    
-                    // 根据编程类型导航到对应的创建页面
+
+
                     when (codingType) {
                         com.webtoapp.core.ai.coding.AiCodingType.HTML -> {
                             navController.navigate("${Routes.CREATE_HTML_APP}?importDir=${java.net.URLEncoder.encode(tempDir.absolutePath, "UTF-8")}&projectName=${java.net.URLEncoder.encode(projectName, "UTF-8")}")
@@ -1381,66 +1419,40 @@ fun AppNavigation() {
         }
 
 
-        
-        // 浏览器内核设置
+
+
         composable(Routes.BROWSER_KERNEL) {
             BrowserKernelScreen(
                 onBack = { navController.popBackStack() }
             )
         }
-        
-        // Hosts 广告拦截
+
+
         composable(Routes.HOSTS_ADBLOCK) {
             HostsAdBlockScreen(
                 onBack = { navController.popBackStack() }
             )
         }
 
-        // 运行时 & 依赖管理
+
         composable(Routes.RUNTIME_DEPS) {
             RuntimeDepsScreen(
                 onBack = { navController.popBackStack() }
             )
         }
-        
-        // 端口管理
+
+
         composable(Routes.PORT_MANAGER) {
             PortManagerScreen(
                 onBack = { navController.popBackStack() }
             )
         }
-        
-        // 权限配置
-        composable(Routes.PERMISSION_CONFIG) {
-            PermissionConfigScreen(
-                permissions = ApkRuntimePermissions(),
-                onPermissionsChange = { /* Standalone view - no-op, changes saved via edit flow */ },
-                onBack = { navController.popBackStack() }
-            )
-        }
-        
-        // 功能开关设置页面
-        composable(Routes.FEATURE_TOGGLE) {
-            FeatureToggleSettingsScreen(
-                onBack = { navController.popBackStack() }
-            )
-        }
-
-        // 关于页面
         composable(Routes.ABOUT) {
             AboutScreen(
                 onBack = { navController.popBackStack() }
             )
         }
 
-        // 文档中心
-        composable(Routes.DOCS) {
-            DocsScreen(
-                onBack = { navController.popBackStack() }
-            )
-        }
-        
-        // 扩展模块管理
         composable(Routes.EXTENSION_MODULES) {
             ExtensionModuleScreen(
                 onNavigateBack = { navController.popBackStack() },
@@ -1456,16 +1468,16 @@ fun AppNavigation() {
                 }
             )
         }
-        
-        // Module编辑器 - 新建
+
+
         composable(Routes.MODULE_EDITOR) {
             ModuleEditorScreen(
                 moduleId = null,
                 onNavigateBack = { navController.popBackStack() }
             )
         }
-        
-        // Module编辑器 - 编辑
+
+
         composable(
             route = Routes.MODULE_EDITOR_EDIT,
             arguments = listOf(navArgument("moduleId") { type = NavType.StringType })
@@ -1476,13 +1488,13 @@ fun AppNavigation() {
                 onNavigateBack = { navController.popBackStack() }
             )
         }
-        
-        // AI 模块开发器
+
+
         composable(Routes.AI_MODULE_DEVELOPER) {
             AiModuleDeveloperScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onModuleCreated = { module ->
-                    // Module创建成功后返回
+                onModuleCreated = { _ ->
+
                     navController.popBackStack()
                 },
                 onNavigateToAiSettings = {
@@ -1490,8 +1502,8 @@ fun AppNavigation() {
                 }
             )
         }
-        
-        // 登录 / 注册
+
+
         composable(Routes.AUTH) {
             AuthScreen(
                 authViewModel = authViewModel,
@@ -1499,8 +1511,8 @@ fun AppNavigation() {
                 onLoginSuccess = { navController.popBackStack() }
             )
         }
-        
-        // 个人中心
+
+
         composable(Routes.PROFILE) {
             ProfileScreen(
                 authViewModel = authViewModel,
@@ -1511,8 +1523,8 @@ fun AppNavigation() {
                 onNavigateSubscription = { navController.navigate(Routes.SUBSCRIPTION) }
             )
         }
-        
-        // 订阅套餐页面
+
+
         composable(Routes.SUBSCRIPTION) {
             val billingManager: com.webtoapp.core.billing.BillingManager = org.koin.java.KoinJavaComponent.get(com.webtoapp.core.billing.BillingManager::class.java)
             SubscriptionScreen(
@@ -1521,8 +1533,8 @@ fun AppNavigation() {
                 onBack = { navController.popBackStack() }
             )
         }
-        
-        // 激活码兑换
+
+
         composable(Routes.ACTIVATION_CODE) {
             val cloudViewModel: CloudViewModel = org.koin.androidx.compose.koinViewModel()
             ActivationCodeScreen(
@@ -1530,8 +1542,8 @@ fun AppNavigation() {
                 onBack = { navController.popBackStack() }
             )
         }
-        
-        // 设备管理
+
+
         composable(Routes.DEVICE_MANAGEMENT) {
             val cloudViewModel: CloudViewModel = org.koin.androidx.compose.koinViewModel()
             DeviceManagementScreen(
@@ -1539,90 +1551,110 @@ fun AppNavigation() {
                 onBack = { navController.popBackStack() }
             )
         }
-        
-        
-        // ─── 社区页面 ───
 
-        // 模块详情（评论区、投票、收藏）
-        composable(
-            route = Routes.MODULE_DETAIL,
-            arguments = listOf(navArgument("moduleId") { type = NavType.IntType })
-        ) { backStackEntry ->
-            val moduleId = backStackEntry.arguments?.getInt("moduleId") ?: 0
-            val communityViewModel: CommunityViewModel = org.koin.androidx.compose.koinViewModel()
-            val context = LocalContext.current
-            val coroutineScope = rememberCoroutineScope()
-            ModuleDetailScreen(
-                moduleId = moduleId,
-                communityViewModel = communityViewModel,
-                onBack = { navController.popBackStack() },
-                onNavigateToUser = { userId -> navController.navigate(Routes.communityUser(userId)) },
-                onInstallModule = { shareCode ->
-                    coroutineScope.launch {
-                        com.webtoapp.core.extension.ExtensionManager.getInstance(context)
-                            .importFromShareCode(shareCode)
-                    }
-                    navController.popBackStack()
-                }
-            )
-        }
 
-        // 用户主页
+
+
+
         composable(
             route = Routes.USER_PROFILE,
             arguments = listOf(navArgument("userId") { type = NavType.IntType })
         ) { backStackEntry ->
             val userId = backStackEntry.arguments?.getInt("userId") ?: 0
-            val communityViewModel: CommunityViewModel = org.koin.androidx.compose.koinViewModel()
-            UserProfileScreen(
+            EcosystemUserScreen(
                 userId = userId,
-                communityViewModel = communityViewModel,
                 onBack = { navController.popBackStack() },
-                onModuleClick = { moduleId -> navController.navigate(Routes.moduleDetail(moduleId)) },
-                onPostClick = { postId -> navController.navigate(Routes.communityPost(postId)) },
-                onNavigateToUser = { uid -> navController.navigate(Routes.communityUser(uid)) }
+                onNavigateToItem = { itemType, itemId -> navController.navigate(Routes.ecosystemItem(itemType, itemId)) }
             )
         }
 
-        // 收藏列表
-        composable(Routes.FAVORITES) {
-            val communityViewModel: CommunityViewModel = org.koin.androidx.compose.koinViewModel()
-            FavoritesScreen(
-                communityViewModel = communityViewModel,
-                onBack = { navController.popBackStack() },
-                onModuleClick = { moduleId -> navController.navigate(Routes.moduleDetail(moduleId)) }
-            )
-        }
-
-        // 通知与动态
-        composable(Routes.NOTIFICATIONS) {
-            val communityViewModel: CommunityViewModel = org.koin.androidx.compose.koinViewModel()
-            NotificationsScreen(
-                communityViewModel = communityViewModel,
-                onBack = { navController.popBackStack() },
-                onNavigateToModule = { moduleId -> navController.navigate(Routes.moduleDetail(moduleId)) },
-                onNavigateToUser = { userId -> navController.navigate(Routes.communityUser(userId)) }
-            )
-        }
-
-        // 帖子详情
         composable(
-            route = Routes.COMMUNITY_POST_DETAIL,
+            route = Routes.LEGACY_MODULE_DETAIL,
+            arguments = listOf(navArgument("moduleId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val moduleId = backStackEntry.arguments?.getInt("moduleId") ?: 0
+            val screenContext = LocalContext.current
+            val downloadManager = remember { com.webtoapp.core.cloud.AppDownloadManager.getInstance(screenContext) }
+            EcosystemDetailScreen(
+                type = "module",
+                id = moduleId,
+                onBack = { navController.popBackStack() },
+                onNavigateToUser = { userId -> navController.navigate(Routes.ecosystemUser(userId)) },
+                onDownloadApp = { item, url ->
+                    downloadManager.startDownload(item.id, item.title, url)
+                },
+                onInstallModule = { shareCode ->
+                    com.webtoapp.core.extension.ExtensionManager.getInstance(screenContext)
+                        .importFromShareCode(shareCode)
+                        .map { Unit }
+                }
+            )
+        }
+
+        composable(
+            route = Routes.LEGACY_COMMUNITY_POST_DETAIL,
             arguments = listOf(navArgument("postId") { type = NavType.IntType })
         ) { backStackEntry ->
             val postId = backStackEntry.arguments?.getInt("postId") ?: 0
-            val communityViewModel: CommunityViewModel = org.koin.androidx.compose.koinViewModel()
-            PostDetailScreen(
-                postId = postId,
-                communityViewModel = communityViewModel,
+            EcosystemDetailScreen(
+                type = "post",
+                id = postId,
                 onBack = { navController.popBackStack() },
-                onNavigateToUser = { userId -> navController.navigate(Routes.communityUser(userId)) }
+                onNavigateToUser = { userId -> navController.navigate(Routes.ecosystemUser(userId)) },
+                onDownloadApp = { _, _ -> },
+                onInstallModule = { Result.success(Unit) }
             )
         }
 
-    } // NavHost
-    } // Box
-    } // Scaffold
+
+        composable(Routes.FAVORITES) {
+            EcosystemBookmarksScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateToItem = { itemType, itemId -> navController.navigate(Routes.ecosystemItem(itemType, itemId)) },
+                onNavigateToUser = { userId -> navController.navigate(Routes.ecosystemUser(userId)) }
+            )
+        }
+
+
+        composable(Routes.NOTIFICATIONS) {
+            EcosystemNotificationsScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateToItem = { itemType, itemId -> navController.navigate(Routes.ecosystemItem(itemType, itemId)) },
+                onNavigateToUser = { userId -> navController.navigate(Routes.ecosystemUser(userId)) }
+            )
+        }
+
+
+        composable(
+            route = Routes.ECOSYSTEM_DETAIL,
+            arguments = listOf(
+                navArgument("itemType") { type = NavType.StringType },
+                navArgument("itemId") { type = NavType.IntType }
+            )
+        ) { backStackEntry ->
+            val itemType = backStackEntry.arguments?.getString("itemType") ?: "post"
+            val itemId = backStackEntry.arguments?.getInt("itemId") ?: 0
+            val screenContext = LocalContext.current
+            val downloadManager = remember { com.webtoapp.core.cloud.AppDownloadManager.getInstance(screenContext) }
+            EcosystemDetailScreen(
+                type = itemType,
+                id = itemId,
+                onBack = { navController.popBackStack() },
+                onNavigateToUser = { userId -> navController.navigate(Routes.ecosystemUser(userId)) },
+                onDownloadApp = { item, url ->
+                    downloadManager.startDownload(item.id, item.title, url)
+                },
+                onInstallModule = { shareCode ->
+                    com.webtoapp.core.extension.ExtensionManager.getInstance(screenContext)
+                        .importFromShareCode(shareCode)
+                        .map { Unit }
+                }
+            )
+        }
+
+    }
+    }
+    }
 }
 
 private data class AutoUpdateFailureReport(
@@ -1738,28 +1770,28 @@ fun PreviewScreen(appId: Long, onBack: () -> Unit) {
     val context = LocalContext.current
     val repository = remember { com.webtoapp.WebToAppApplication.repository }
     val webApp by repository.getWebAppById(appId).collectAsState(initial = null)
-    
-    // 使用标记防止重复启动
+
+
     var hasLaunched by remember { mutableStateOf(false) }
 
     LaunchedEffect(webApp) {
         val app = webApp
         if (app != null && !hasLaunched) {
             hasLaunched = true
-            
+
             when (app.appType) {
-                // Image/视频应用（单媒体）：启动 MediaAppActivity 预览
+
                 com.webtoapp.data.model.AppType.IMAGE,
                 com.webtoapp.data.model.AppType.VIDEO -> {
                     com.webtoapp.ui.media.MediaAppActivity.startForPreview(context, app)
                 }
-                // Media画廊应用（多媒体）：启动 GalleryPlayerActivity 预览
+
                 com.webtoapp.data.model.AppType.GALLERY -> {
                     app.galleryConfig?.let { config ->
                         com.webtoapp.ui.gallery.GalleryPlayerActivity.launch(context, config, 0)
                     }
                 }
-                // Web page应用和HTML应用：使用 WebViewActivity
+
                 else -> {
                     com.webtoapp.ui.webview.WebViewActivity.start(context, appId)
                 }
@@ -1768,6 +1800,6 @@ fun PreviewScreen(appId: Long, onBack: () -> Unit) {
         }
     }
 
-    // Load中显示空白或加载指示器
-    // 预览界面将在对应的Activity中实现
+
+
 }

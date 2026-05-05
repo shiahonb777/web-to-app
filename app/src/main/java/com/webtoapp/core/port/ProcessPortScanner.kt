@@ -10,81 +10,81 @@ import kotlinx.coroutines.withContext
 import java.net.HttpURLConnection
 import java.net.URL
 
-/**
- * 进程端口扫描器
- * 
- * 扫描系统中正在监听的端口，识别 WebToApp 相关的运行时进程。
- * 
- * 优化：
- * - 并行 HTTP 健康检查（coroutines），扫描 N 个端口耗时 ≈ 单次超时
- * - 响应时间测量，UI 可展示延迟
- * - 进程终止委托给 PortManager.release()，避免重复逻辑
- */
+
+
+
+
+
+
+
+
+
+
 object ProcessPortScanner {
-    
+
     private const val TAG = "ProcessPortScanner"
-    
-    /** HTTP 健康检查超时（毫秒） */
+
+
     private const val HEALTH_CHECK_TIMEOUT_MS = 800
-    
-    /**
-     * 运行中的服务信息
-     */
+
+
+
+
     data class RunningService(
         val port: Int,
         val pid: Long,
         val type: ServiceType,
-        val owner: String,           // 使用者标识（如项目名）
-        val url: String,             // 服务 URL
-        val isResponding: Boolean,   // 是否响应 HTTP 请求
-        val processName: String = "",// 进程名（如 node, php）
-        val allocatedAt: Long = 0,   // 分配时间戳
-        val responseTimeMs: Long = -1// HTTP 响应时间（毫秒），-1=未检测或无响应
+        val owner: String,
+        val url: String,
+        val isResponding: Boolean,
+        val processName: String = "",
+        val allocatedAt: Long = 0,
+        val responseTimeMs: Long = -1
     )
-    
-    /**
-     * 服务类型
-     */
+
+
+
+
     enum class ServiceType(val label: String, val color: Long) {
-        LOCAL_HTTP("静态服务", 0xFF4CAF50),   // 绿色
-        NODEJS("Node.js", 0xFF8BC34A),        // 浅绿
-        PHP("PHP", 0xFF9C27B0),               // 紫色
-        PYTHON("Python", 0xFF2196F3),         // 蓝色
-        GO("Go", 0xFF00BCD4),                 // 青色
-        UNKNOWN("未知", 0xFF9E9E9E)           // 灰色
+        LOCAL_HTTP("静态服务", 0xFF4CAF50),
+        NODEJS("Node.js", 0xFF8BC34A),
+        PHP("PHP", 0xFF9C27B0),
+        PYTHON("Python", 0xFF2196F3),
+        GO("Go", 0xFF00BCD4),
+        UNKNOWN("未知", 0xFF9E9E9E)
     }
-    
-    /**
-     * HTTP 健康检查结果
-     */
+
+
+
+
     private data class HealthCheckResult(
         val port: Int,
         val responding: Boolean,
-        val responseTimeMs: Long     // -1 如果无响应
+        val responseTimeMs: Long
     )
-    
-    /**
-     * 扫描所有 WebToApp 端口范围内的活跃服务
-     * 
-     * 所有端口的 HTTP 健康检查并行执行，总耗时 ≈ max(单次超时)
-     */
+
+
+
+
+
+
     suspend fun scanAllPorts(context: Context): List<RunningService> = withContext(Dispatchers.IO) {
         val allocations = PortManager.getAllAllocations()
         if (allocations.isEmpty()) return@withContext emptyList()
-        
-        // 并行执行所有端口的 HTTP 健康检查
+
+
         val healthResults: Map<Int, HealthCheckResult> = coroutineScope {
             allocations.keys.map { port ->
                 async { checkPortHealth(port) }
             }.awaitAll().associateBy { it.port }
         }
-        
+
         allocations.map { (port, allocation) ->
             val health = healthResults[port]
             val processAlive = PortManager.isProcessAlive(port)
             val type = inferServiceType(allocation.owner)
             val httpResponding = health?.responding == true
-            
+
             RunningService(
                 port = port,
                 pid = allocation.pid,
@@ -98,10 +98,10 @@ object ProcessPortScanner {
             )
         }.sortedBy { it.port }
     }
-    
-    /**
-     * 根据服务类型推断进程名
-     */
+
+
+
+
     private fun getProcessNameFromType(type: ServiceType): String {
         return when (type) {
             ServiceType.NODEJS -> "node"
@@ -112,10 +112,10 @@ object ProcessPortScanner {
             ServiceType.UNKNOWN -> ""
         }
     }
-    
-    /**
-     * 检查端口健康状态（HTTP 响应 + 响应时间测量）
-     */
+
+
+
+
     private fun checkPortHealth(port: Int): HealthCheckResult {
         var conn: HttpURLConnection? = null
         return try {
@@ -124,7 +124,7 @@ object ProcessPortScanner {
             conn = (url.openConnection() as HttpURLConnection).apply {
                 connectTimeout = HEALTH_CHECK_TIMEOUT_MS
                 readTimeout = HEALTH_CHECK_TIMEOUT_MS
-                requestMethod = "HEAD"  // HEAD 比 GET 更轻量
+                requestMethod = "HEAD"
                 instanceFollowRedirects = false
             }
             val code = conn.responseCode
@@ -136,10 +136,10 @@ object ProcessPortScanner {
             try { conn?.disconnect() } catch (_: Exception) {}
         }
     }
-    
-    /**
-     * 从 owner 字符串推断服务类型
-     */
+
+
+
+
     private fun inferServiceType(owner: String): ServiceType {
         return when {
             owner.startsWith("localhttp:") -> ServiceType.LOCAL_HTTP
@@ -150,19 +150,19 @@ object ProcessPortScanner {
             else -> ServiceType.UNKNOWN
         }
     }
-    
-    /**
-     * 提取 owner 名称（去掉前缀）
-     */
+
+
+
+
     private fun extractOwnerName(owner: String): String {
         return owner.substringAfter(":", owner)
     }
-    
-    /**
-     * 终止指定端口的进程
-     * 
-     * 委托给 PortManager.release()，它会处理进程终止和记录清理
-     */
+
+
+
+
+
+
     suspend fun killProcess(port: Int): Boolean = withContext(Dispatchers.IO) {
         try {
             PortManager.release(port)
@@ -173,17 +173,17 @@ object ProcessPortScanner {
             false
         }
     }
-    
-    /**
-     * 终止所有 WebToApp 相关进程
-     */
+
+
+
+
     suspend fun killAllProcesses(context: Context): Int = withContext(Dispatchers.IO) {
         val allocations = PortManager.getAllAllocations()
         val count = allocations.size
-        
-        // PortManager.releaseAll() 已处理进程终止 + 记录清理
+
+
         PortManager.releaseAll()
-        
+
         AppLogger.i(TAG, "已终止 $count 个服务")
         count
     }

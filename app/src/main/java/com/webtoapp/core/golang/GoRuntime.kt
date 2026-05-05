@@ -4,6 +4,7 @@ import android.content.Context
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.core.port.PortManager
 import com.webtoapp.core.shell.ShellLogger
+import com.webtoapp.util.destroyGracefullyCompat
 import com.webtoapp.util.destroyForciblyCompat
 import com.webtoapp.util.isAliveCompat
 import kotlinx.coroutines.Dispatchers
@@ -15,12 +16,12 @@ import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 
-/**
- * Go Web 应用运行时管理器
- *
- * Go 编译为静态链接的原生 ELF 二进制，不需要运行时解释器。
- * 用户提供预编译的 ARM/ARM64 二进制文件，通过 ProcessBuilder 直接执行。
- */
+
+
+
+
+
+
 class GoRuntime(private val context: Context) {
 
     companion object {
@@ -44,21 +45,21 @@ class GoRuntime(private val context: Context) {
     private val goOutputBuffer = StringBuffer()
     private val goStderrBuffer = StringBuffer()
 
-    // ==================== 公开 API ====================
+
 
     fun getProjectsDir(): File = File(context.filesDir, "go_projects").also { it.mkdirs() }
 
     fun getProjectDir(projectId: String): File = File(getProjectsDir(), projectId)
 
-    /**
-     * 启动 Go 服务器
-     *
-     * @param projectDir Go 项目根目录
-     * @param binaryName 预编译二进制文件名
-     * @param port 监听端口（0=自动分配）
-     * @param envVars 额外环境变量
-     * @return 实际使用的端口号，失败返回 -1
-     */
+
+
+
+
+
+
+
+
+
     suspend fun startServer(
         projectDir: String,
         binaryName: String,
@@ -71,14 +72,14 @@ class GoRuntime(private val context: Context) {
 
             val projDir = File(projectDir)
 
-            // 验证并准备二进制
+
             val binaryPath = GoDependencyManager.prepareBinary(context, projDir, binaryName)
             if (binaryPath == null) {
                 _serverState.value = ServerState.Error("Go 二进制无效或 ABI 不兼容")
                 return@withContext -1
             }
 
-            // 分配端口
+
             val projectId = projDir.name
             val serverPort = PortManager.allocateForGo(projectId, port)
             if (serverPort < 0) {
@@ -96,7 +97,7 @@ class GoRuntime(private val context: Context) {
             val processBuilder = ProcessBuilder(command)
             processBuilder.directory(projDir)
 
-            // 设置环境变量
+
             val env = processBuilder.environment()
             env["PORT"] = serverPort.toString()
             env["HOST"] = "127.0.0.1"
@@ -105,14 +106,14 @@ class GoRuntime(private val context: Context) {
             env["HOME"] = context.filesDir.absolutePath
             env["TMPDIR"] = context.cacheDir.absolutePath
 
-            // 用户自定义环境变量
+
             envVars.forEach { (k, v) -> env[k] = v }
 
             goOutputBuffer.setLength(0)
             goStderrBuffer.setLength(0)
             goProcess = processBuilder.start()
 
-            // stdout 日志线程
+
             goProcess?.inputStream?.let { stream ->
                 Thread {
                     try {
@@ -125,7 +126,7 @@ class GoRuntime(private val context: Context) {
                 }.apply { isDaemon = true; start() }
             }
 
-            // stderr 日志线程
+
             goProcess?.errorStream?.let { stream ->
                 Thread {
                     try {
@@ -138,7 +139,7 @@ class GoRuntime(private val context: Context) {
                 }.apply { isDaemon = true; start() }
             }
 
-            // 等待服务器就绪
+
             val ready = waitForServerReady(serverPort)
             if (ready) {
                 val pid = getProcessPid(goProcess)
@@ -163,9 +164,8 @@ class GoRuntime(private val context: Context) {
     fun stopServer() {
         try {
             goProcess?.let { process ->
-                process.destroy()
                 try {
-                    Thread.sleep(200)
+                    process.destroyGracefullyCompat(timeoutMs = 200L)
                     if (process.isAliveCompat()) process.destroyForciblyCompat()
                 } catch (e: Exception) { AppLogger.d(TAG, "Force kill Go process failed", e) }
                 AppLogger.i(TAG, "Go 服务器已停止")
@@ -191,12 +191,12 @@ class GoRuntime(private val context: Context) {
         return if (isServerRunning() && currentPort > 0) "http://127.0.0.1:$currentPort" else null
     }
 
-    // ==================== 项目检测 ====================
 
-    /**
-     * 在项目目录中检测可执行的 Go 二进制
-     * @return 二进制文件名，未找到返回 null
-     */
+
+
+
+
+
     fun detectBinary(projectDir: File): String? {
         val searchDirs = listOf(
             projectDir,
@@ -218,9 +218,9 @@ class GoRuntime(private val context: Context) {
         return null
     }
 
-    /**
-     * 检测 Go 框架类型
-     */
+
+
+
     fun detectFramework(projectDir: File): String {
         val goMod = File(projectDir, "go.mod")
         if (goMod.exists()) {
@@ -251,9 +251,9 @@ class GoRuntime(private val context: Context) {
         return "raw"
     }
 
-    /**
-     * 检测静态文件目录
-     */
+
+
+
     fun detectStaticDir(projectDir: File): String {
         val candidates = listOf("static", "public", "web", "dist", "assets", "www")
         for (dir in candidates) {
@@ -265,9 +265,9 @@ class GoRuntime(private val context: Context) {
         return ""
     }
 
-    /**
-     * 导入 Go 项目
-     */
+
+
+
     fun createProject(projectId: String, sourceDir: File): File {
         val projectDir = File(getProjectsDir(), projectId)
         projectDir.mkdirs()
@@ -289,9 +289,9 @@ class GoRuntime(private val context: Context) {
         return projectDir
     }
 
-    /**
-     * 生成 Go 项目预览 HTML
-     */
+
+
+
     fun generatePreviewHtml(projectDir: File, framework: String, binaryName: String): String {
         val goMod = File(projectDir, "go.mod")
         val goModContent = if (goMod.exists()) {
@@ -343,7 +343,7 @@ class GoRuntime(private val context: Context) {
 </body></html>"""
     }
 
-    // ==================== 内部方法 ====================
+
 
     private suspend fun waitForServerReady(port: Int): Boolean {
         repeat(MAX_HEALTH_CHECK_RETRIES) { attempt ->
@@ -368,7 +368,6 @@ class GoRuntime(private val context: Context) {
             goProcess?.let { process ->
                 if (!process.isAliveCompat()) {
                     val exitCode = try { process.exitValue() } catch (_: Exception) { -1 }
-                    Thread.sleep(200)
                     val stdout = goOutputBuffer.toString().trim().ifEmpty { "(no stdout)" }
                     val stderr = goStderrBuffer.toString().trim().ifEmpty { "(no stderr)" }
                     AppLogger.e(TAG, "Go 进程意外退出, exitCode=$exitCode\nstdout: $stdout\nstderr: $stderr")

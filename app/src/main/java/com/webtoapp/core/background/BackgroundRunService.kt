@@ -17,32 +17,32 @@ import androidx.core.app.NotificationCompat
 import com.webtoapp.R
 import com.webtoapp.core.i18n.Strings
 
-/**
- * 后台运行服务
- * 
- * 使用前台服务保持应用在后台持续运行，即使用户退出应用界面
- */
+
+
+
+
+
 class BackgroundRunService : Service() {
-    
+
     companion object {
         private const val TAG = "BackgroundRunService"
         private const val CHANNEL_ID = "background_run_channel"
         private const val NOTIFICATION_ID = 10001
-        private const val WAKELOCK_TIMEOUT_MS = 4 * 60 * 60 * 1000L // 4 hours per acquire
-        private const val WAKELOCK_RENEWAL_INTERVAL_MS = 3 * 60 * 60 * 1000L // renew every 3 hours
+        private const val WAKELOCK_TIMEOUT_MS = 4 * 60 * 60 * 1000L
+        private const val WAKELOCK_RENEWAL_INTERVAL_MS = 3 * 60 * 60 * 1000L
         private const val ACTION_STOP = "com.webtoapp.action.STOP_BACKGROUND_RUN"
-        
+
         private const val EXTRA_APP_NAME = "app_name"
         private const val EXTRA_NOTIFICATION_TITLE = "notification_title"
         private const val EXTRA_NOTIFICATION_CONTENT = "notification_content"
         private const val EXTRA_SHOW_NOTIFICATION = "show_notification"
         private const val EXTRA_KEEP_CPU_AWAKE = "keep_cpu_awake"
-        
+
         private var isRunning = false
-        
-        /**
-         * 启动后台运行服务
-         */
+
+
+
+
         fun start(
             context: Context,
             appName: String = "",
@@ -55,7 +55,7 @@ class BackgroundRunService : Service() {
                 AppLogger.w(TAG, "服务已在运行")
                 return
             }
-            
+
             val intent = Intent(context, BackgroundRunService::class.java).apply {
                 putExtra(EXTRA_APP_NAME, appName)
                 putExtra(EXTRA_NOTIFICATION_TITLE, notificationTitle)
@@ -63,7 +63,7 @@ class BackgroundRunService : Service() {
                 putExtra(EXTRA_SHOW_NOTIFICATION, showNotification)
                 putExtra(EXTRA_KEEP_CPU_AWAKE, keepCpuAwake)
             }
-            
+
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     context.startForegroundService(intent)
@@ -75,10 +75,10 @@ class BackgroundRunService : Service() {
                 AppLogger.e(TAG, "Failed to start background service", e)
             }
         }
-        
-        /**
-         * 停止后台运行服务
-         */
+
+
+
+
         fun stop(context: Context) {
             try {
                 context.stopService(Intent(context, BackgroundRunService::class.java))
@@ -87,16 +87,16 @@ class BackgroundRunService : Service() {
                 AppLogger.e(TAG, "停止后台运行服务失败", e)
             }
         }
-        
-        /**
-         * 检查服务是否正在运行
-         */
+
+
+
+
         fun isServiceRunning(): Boolean = isRunning
 
-        /**
-         * 请求忽略电池优化（Android 6+）
-         * 建议在开启后台运行时调用，引导用户将应用加入电池优化白名单
-         */
+
+
+
+
         fun requestIgnoreBatteryOptimizations(context: Context) {
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -119,7 +119,7 @@ class BackgroundRunService : Service() {
             }
         }
     }
-    
+
     private var wakeLock: PowerManager.WakeLock? = null
     private var appName: String = ""
     private var keepCpuAwake: Boolean = true
@@ -130,15 +130,15 @@ class BackgroundRunService : Service() {
             wakeLockRenewalHandler.postDelayed(this, WAKELOCK_RENEWAL_INTERVAL_MS)
         }
     }
-    
+
     override fun onCreate() {
         super.onCreate()
         AppLogger.w(TAG, "后台运行服务创建")
         createNotificationChannel()
     }
-    
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // 处理停止动作
+
         if (intent?.action == ACTION_STOP) {
             stopSelf()
             return START_NOT_STICKY
@@ -152,7 +152,7 @@ class BackgroundRunService : Service() {
         val showNotification = intent?.getBooleanExtra(EXTRA_SHOW_NOTIFICATION, true) ?: true
         keepCpuAwake = intent?.getBooleanExtra(EXTRA_KEEP_CPU_AWAKE, true) ?: true
 
-        // Start前台服务（try-catch 防止 Android 12+ 后台启动限制）
+
         try {
             val notification = createNotification(
                 title = notificationTitle ?: (if (appName.isNotEmpty()) appName else "App") + " ${Strings.appRunningInBackground}",
@@ -160,7 +160,7 @@ class BackgroundRunService : Service() {
             )
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                // Android 14+ 需要指定 foregroundServiceType
+
                 startForeground(NOTIFICATION_ID, notification,
                     android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
             } else {
@@ -173,10 +173,10 @@ class BackgroundRunService : Service() {
             return START_NOT_STICKY
         }
 
-        // Get WakeLock 保持 CPU 运行
+
         if (keepCpuAwake) {
             acquireWakeLock()
-            // 启动 WakeLock 续期机制
+
             wakeLockRenewalHandler.removeCallbacks(wakeLockRenewalRunnable)
             wakeLockRenewalHandler.postDelayed(wakeLockRenewalRunnable, WAKELOCK_RENEWAL_INTERVAL_MS)
         }
@@ -185,9 +185,9 @@ class BackgroundRunService : Service() {
 
         return START_STICKY
     }
-    
+
     override fun onBind(intent: Intent?): IBinder? = null
-    
+
     override fun onDestroy() {
         super.onDestroy()
         AppLogger.w(TAG, "后台运行服务销毁")
@@ -196,7 +196,7 @@ class BackgroundRunService : Service() {
         wakeLockRenewalHandler.removeCallbacks(wakeLockRenewalRunnable)
         releaseWakeLock()
     }
-    
+
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -209,12 +209,12 @@ class BackgroundRunService : Service() {
                 enableLights(false)
                 enableVibration(false)
             }
-            
+
             val notificationManager = getSystemService(NotificationManager::class.java)
             notificationManager.createNotificationChannel(channel)
         }
     }
-    
+
     private fun createNotification(title: String, content: String): Notification {
         val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
         val pendingIntent = if (launchIntent != null) {
@@ -226,7 +226,7 @@ class BackgroundRunService : Service() {
             )
         } else null
 
-        // 停止后台运行的 Action
+
         val stopIntent = Intent(this, BackgroundRunService::class.java).apply {
             action = ACTION_STOP
         }
@@ -258,7 +258,7 @@ class BackgroundRunService : Service() {
             )
             .build()
     }
-    
+
     private fun acquireWakeLock() {
         if (wakeLock == null) {
             val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
@@ -278,9 +278,9 @@ class BackgroundRunService : Service() {
         }
     }
 
-    /**
-     * 续期 WakeLock：先释放再重新获取，避免超时后自动释放导致后台运行中断
-     */
+
+
+
     private fun renewWakeLock() {
         try {
             releaseWakeLock()

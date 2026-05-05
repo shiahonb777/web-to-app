@@ -22,9 +22,9 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import com.webtoapp.core.i18n.Strings
 
-/**
- * 预设的 Base 颜色
- */
+
+
+
 data class PresetColor(
     val hex: String,
     val name: String
@@ -57,9 +57,9 @@ val baseColors = listOf(
     PresetColor("#00000000", Strings.colorTransparent)
 )
 
-/**
- * Color picker dialog
- */
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ColorPickerDialog(
@@ -69,7 +69,7 @@ fun ColorPickerDialog(
 ) {
     var customColorInput by remember { mutableStateOf(currentColor?.removePrefix("#") ?: "") }
     var selectedColor by remember { mutableStateOf(currentColor ?: "#2196F3") }
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(Strings.selectColor) },
@@ -77,7 +77,7 @@ fun ColorPickerDialog(
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // 当前选中颜色预览
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -102,16 +102,16 @@ fun ColorPickerDialog(
                         )
                     }
                 }
-                
+
                 HorizontalDivider()
-                
-                // 预设颜色网格
+
+
                 Text(
                     text = Strings.presetColors,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                
+
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(6),
                     modifier = Modifier.height(200.dp),
@@ -129,23 +129,23 @@ fun ColorPickerDialog(
                         )
                     }
                 }
-                
+
                 HorizontalDivider()
-                
-                // Custom颜色输入
+
+
                 Text(
                     text = Strings.customColor,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                
+
                 OutlinedTextField(
                     value = customColorInput,
                     onValueChange = { input ->
-                        // 只允许输入有效的十六进制字符
+
                         val filtered = input.filter { it in "0123456789ABCDEFabcdef" }.take(8)
                         customColorInput = filtered
-                        // If it is有效的颜色值，更新选中颜色
+
                         if (filtered.length == 6 || filtered.length == 8) {
                             selectedColor = "#$filtered"
                         }
@@ -182,9 +182,9 @@ fun ColorPickerDialog(
     )
 }
 
-/**
- * 单个颜色项
- */
+
+
+
 @Composable
 private fun ColorItem(
     color: String,
@@ -193,7 +193,7 @@ private fun ColorItem(
 ) {
     val parsedColor = parseColor(color)
     val isTransparent = color.equals("#00000000", ignoreCase = true)
-    
+
     Box(
         modifier = Modifier
             .size(40.dp)
@@ -228,9 +228,9 @@ private fun ColorItem(
     }
 }
 
-/**
- * 解析颜色字符串为 Color
- */
+
+
+
 fun parseColor(colorString: String): Color {
     return try {
         val hex = colorString.removePrefix("#")
@@ -244,9 +244,9 @@ fun parseColor(colorString: String): Color {
     }
 }
 
-/**
- * 判断颜色是否为浅色
- */
+
+
+
 fun isColorLight(color: Color): Boolean {
     val luminance = 0.299 * color.red + 0.587 * color.green + 0.114 * color.blue
     return luminance > 0.5

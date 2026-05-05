@@ -5,21 +5,21 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.ui.graphics.vector.ImageVector
 
-/**
- * SVG Icon Mapper — 将文本标识 / 旧版 emoji 映射到 Material Icons (Vector Drawable)
- *
- * 设计原则：Apple HIG 级别的图标规范，所有图标统一使用 Material Symbols，
- * 彻底杜绝 emoji 在 UI 层的使用。
- *
- * 兼容性：保留对旧版 emoji 字符串的反向映射，确保持久化数据无缝迁移。
- */
+
+
+
+
+
+
+
+
 object SvgIconMapper {
 
-    /**
-     * 获取 Outlined 风格图标（默认）
-     */
+
+
+
     fun getIcon(iconId: String): ImageVector = when (iconId) {
-        // ── 通用 ──
+
         "package", "📦"       -> Icons.Outlined.Inventory2
         "folder", "📁", "📂"  -> Icons.Outlined.FolderOpen
         "file"                -> Icons.Outlined.InsertDriveFile
@@ -27,7 +27,7 @@ object SvgIconMapper {
         "search", "🔍", "🔎"  -> Icons.Outlined.Search
         "settings"            -> Icons.Outlined.Settings
 
-        // ── 编辑 & 工具 ──
+
         "code", "📝"          -> Icons.Outlined.Code
         "book", "📖"          -> Icons.Outlined.MenuBook
         "wrench", "🔧"        -> Icons.Outlined.Build
@@ -38,21 +38,21 @@ object SvgIconMapper {
         "keyboard", "⌨️"     -> Icons.Outlined.Keyboard
         "mouse", "🖱️"        -> Icons.Outlined.Mouse
 
-        // ── 网络 & 语言 ──
+
         "globe", "🌐"         -> Icons.Outlined.Language
         "antenna", "📡"       -> Icons.Outlined.SettingsInputAntenna
         "wifi"                -> Icons.Outlined.Wifi
         "cloud"               -> Icons.Outlined.Cloud
         "link", "🔗"          -> Icons.Outlined.Link
 
-        // ── 安全 ──
+
         "shield", "🛡️"       -> Icons.Outlined.Shield
         "lock", "🔒"          -> Icons.Outlined.Lock
         "key"                 -> Icons.Outlined.Key
         "warning", "⚠️"      -> Icons.Outlined.Warning
         "block", "🚫"         -> Icons.Outlined.Block
 
-        // ── AI & 扩展 ──
+
         "robot", "🤖"         -> Icons.Outlined.SmartToy
         "smart_toy"           -> Icons.Outlined.SmartToy
         "extension", "🧩"    -> Icons.Outlined.Extension
@@ -66,14 +66,14 @@ object SvgIconMapper {
         "cat", "🐱"           -> Icons.Outlined.Pets
         "help", "❓"          -> Icons.Outlined.Help
 
-        // ── 状态 & 优先级 ──
+
         "priority_high", "🔴" -> Icons.Filled.Circle
         "priority_medium", "🟡" -> Icons.Filled.Circle
         "priority_low", "🟢"  -> Icons.Filled.Circle
         "error"               -> Icons.Outlined.Error
         "check", "✅"         -> Icons.Outlined.CheckCircle
 
-        // ── 媒体 ──
+
         "play", "▶"           -> Icons.Filled.PlayArrow
         "pause", "⏸"         -> Icons.Filled.Pause
         "music", "music_note", "🎵" -> Icons.Outlined.MusicNote
@@ -82,7 +82,7 @@ object SvgIconMapper {
         "image", "🖼️"        -> Icons.Outlined.Image
         "volume", "🔊"        -> Icons.Outlined.VolumeUp
 
-        // ── UI & 布局 ──
+
         "dark_mode", "🌙"     -> Icons.Outlined.DarkMode
         "font_download", "🔤" -> Icons.Outlined.FontDownload
         "theater_comedy", "🎭" -> Icons.Outlined.TheaterComedy
@@ -94,7 +94,7 @@ object SvgIconMapper {
         "notifications_off", "🔕" -> Icons.Outlined.NotificationsOff
         "cookie", "🍪"        -> Icons.Outlined.Cookie
 
-        // ── 品质 & 徽章 ──
+
         "star", "⭐"          -> Icons.Outlined.Star
         "heart", "❤️"         -> Icons.Outlined.Favorite
         "fire", "🔥"          -> Icons.Outlined.LocalFireDepartment
@@ -110,19 +110,19 @@ object SvgIconMapper {
         "eco", "🌿"           -> Icons.Outlined.Spa
         "cocktail", "🍸"      -> Icons.Outlined.LocalBar
 
-        // ── 编程语言 ──
+
         "python", "🐍"        -> Icons.Outlined.Code
         "php", "🐘"           -> Icons.Outlined.Storage
         "golang", "🔷"        -> Icons.Outlined.Hexagon
         "nodejs", "node"      -> Icons.Outlined.Javascript
         "html"                -> Icons.Outlined.Html
 
-        // ── 自然 & 装饰 ──
+
         "leaf", "🍃"          -> Icons.Outlined.Spa
         "flower", "🌸", "🌱"  -> Icons.Outlined.LocalFlorist
         "nature"              -> Icons.Outlined.Nature
 
-        // ── 其他 ──
+
         "chat", "💬"          -> Icons.Outlined.Chat
         "info"                -> Icons.Outlined.Info
         "download"            -> Icons.Outlined.Download
@@ -173,7 +173,7 @@ object SvgIconMapper {
         "edit_note", "📝"    -> Icons.Outlined.EditNote
         "build", "🩹"        -> Icons.Outlined.Build
 
-        // ── 新增映射 ──
+
         "tv", "📺"            -> Icons.Outlined.Tv
         "menu_book", "📕"     -> Icons.Outlined.MenuBook
         "check_circle"        -> Icons.Outlined.CheckCircle
@@ -195,13 +195,13 @@ object SvgIconMapper {
         "bolt"                -> Icons.Outlined.Bolt
         "package"             -> Icons.Outlined.Inventory2
 
-        // ── 默认 ──
+
         else                  -> Icons.Outlined.HelpOutline
     }
 
-    /**
-     * 获取 Filled 风格图标
-     */
+
+
+
     fun getFilledIcon(iconId: String): ImageVector = when (iconId) {
         "package", "📦"       -> Icons.Filled.Inventory2
         "folder", "📁", "📂"  -> Icons.Filled.FolderOpen
@@ -214,13 +214,13 @@ object SvgIconMapper {
         "warning", "⚠️"      -> Icons.Filled.Warning
         "play", "▶"           -> Icons.Filled.PlayArrow
         "pause", "⏸"         -> Icons.Filled.Pause
-        else                  -> getIcon(iconId) // fallback to outlined
+        else                  -> getIcon(iconId)
     }
 
-    /**
-     * 将旧版 emoji 字符串转换为规范化的 icon ID
-     * 用于数据迁移场景
-     */
+
+
+
+
     fun normalizeIconId(emojiOrId: String): String = when (emojiOrId) {
         "📦" -> "package"
         "📁", "📂" -> "folder"
@@ -301,12 +301,12 @@ object SvgIconMapper {
         "🧩" -> "extension"
         "🤖" -> "smart_toy"
         "📢" -> "campaign"
-        else -> emojiOrId // 已经是规范 ID 或无法识别的，原样返回
+        else -> emojiOrId
     }
 
-    /**
-     * 判断字符串是否为 emoji（非 ASCII）
-     */
+
+
+
     fun isEmoji(value: String): Boolean {
         return value.isNotBlank() && value.any { it.code > 127 }
     }

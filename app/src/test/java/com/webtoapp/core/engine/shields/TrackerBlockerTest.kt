@@ -50,8 +50,8 @@ class TrackerBlockerTest {
 
         assertThat(categorySum).isGreaterThan(0)
         assertThat(ruleCount).isGreaterThan(0)
-        // allTrackerDomains deduplicates across categories, PATH_PATTERNS adds extra
-        // so ruleCount may be less than or greater than categorySum
-        assertThat(ruleCount).isAtMost(categorySum + 100) // reasonable upper bound
+
+
+        assertThat(ruleCount).isAtMost(categorySum + 100)
     }
 }

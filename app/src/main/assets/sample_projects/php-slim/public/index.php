@@ -140,7 +140,7 @@ $doneCount = $pdo ? $pdo->query('SELECT COUNT(*) FROM tasks WHERE done=1')->fetc
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--primary:#22c55e;--primary-dark:#16a34a;--bg:#0a0a1a;--card:rgba(255,255,255,0.04);--border:rgba(255,255,255,0.07);--text:#f0f0ff;--text2:rgba(240,240,255,0.55);--text3:rgba(240,240,255,0.3);--radius:14px}
 body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
-body::before{content:'';position:fixed;top:-40%;left:-40%;width:180%;height:180%;background:radial-gradient(ellipse at 50% 30%,rgba(34,197,94,0.05) 0%,transparent 55%);pointer-events:none}
+body::before{content:"";position:fixed;top:-40%;left:-40%;width:180%;height:180%;background:radial-gradient(ellipse at 50% 30%,rgba(34,197,94,0.05) 0%,transparent 55%);pointer-events:none}
 .hero{background:transparent;color:#fff;padding:28px 20px 20px;text-align:center}
 .hero h1{font-size:1.8em;margin-bottom:6px;background:linear-gradient(135deg,#22c55e,#4ade80);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .hero p{color:var(--text2);font-size:.9em}

@@ -23,17 +23,17 @@ import com.webtoapp.data.model.AiProvider
 import com.webtoapp.data.model.SavedModel
 import androidx.compose.ui.graphics.Color
 
-/**
- * 模型选择器组件
- * 
- * 用于在 AI 模块开发界面选择要使用的 AI 模型
- * 
- * @param selectedModel 当前选中的模型
- * @param availableModels 可用的模型列表（已过滤支持 MODULE_DEVELOPMENT 的模型）
- * @param onModelSelected 模型选择回调
- * @param onConfigureClick 点击配置按钮的回调（跳转到 AI 设置）
- * @param modifier Modifier
- */
+
+
+
+
+
+
+
+
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ModelSelector(
@@ -44,18 +44,18 @@ fun ModelSelector(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
-    
-    // Filter支持 MODULE_DEVELOPMENT 的模型
+
+
     val filteredModels = remember(availableModels) {
         filterModelsForModuleDevelopment(availableModels)
     }
-    
+
     Box(modifier = modifier) {
-        // Select器按钮
+
         ModelSelectorButton(
             selectedModel = selectedModel,
             hasModels = filteredModels.isNotEmpty(),
-            onClick = { 
+            onClick = {
                 if (filteredModels.isNotEmpty()) {
                     expanded = true
                 } else {
@@ -63,8 +63,8 @@ fun ModelSelector(
                 }
             }
         )
-        
-        // 下拉菜单
+
+
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
@@ -73,7 +73,7 @@ fun ModelSelector(
                 .heightIn(max = 400.dp)
         ) {
             if (filteredModels.isEmpty()) {
-                // Empty状态
+
                 EmptyModelState(
                     onConfigureClick = {
                         expanded = false
@@ -81,14 +81,14 @@ fun ModelSelector(
                     }
                 )
             } else {
-                // 模型列表
+
                 Text(
                     Strings.selectModel,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
-                
+
                 filteredModels.forEach { model ->
                     ModelDropdownItem(
                         model = model,
@@ -99,10 +99,10 @@ fun ModelSelector(
                         }
                     )
                 }
-                
+
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                
-                // Configure更多模型
+
+
                 DropdownMenuItem(
                     text = {
                         Row(
@@ -131,9 +131,9 @@ fun ModelSelector(
     }
 }
 
-/**
- * 模型选择器按钮
- */
+
+
+
 @Composable
 private fun ModelSelectorButton(
     selectedModel: SavedModel?,
@@ -152,13 +152,13 @@ private fun ModelSelectorButton(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // 供应商图标
+
             ProviderIcon(
                 provider = selectedModel?.model?.provider,
                 modifier = Modifier.size(28.dp)
             )
-            
-            // 模型信息
+
+
             Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                 if (selectedModel != null) {
                     Text(
@@ -192,8 +192,8 @@ private fun ModelSelectorButton(
                     )
                 }
             }
-            
-            // 下拉箭头
+
+
             Icon(
                 Icons.Default.ArrowDropDown,
                 contentDescription = Strings.expand,
@@ -203,9 +203,9 @@ private fun ModelSelectorButton(
     }
 }
 
-/**
- * 模型下拉项
- */
+
+
+
 @Composable
 private fun ModelDropdownItem(
     model: SavedModel,
@@ -219,13 +219,13 @@ private fun ModelDropdownItem(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // 供应商图标
+
                 ProviderIcon(
                     provider = model.model.provider,
                     modifier = Modifier.size(24.dp)
                 )
-                
-                // 模型信息
+
+
                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                     Text(
                         model.alias ?: model.model.name,
@@ -258,8 +258,8 @@ private fun ModelDropdownItem(
                         }
                     }
                 }
-                
-                // 选中标记
+
+
                 if (isSelected) {
                     Icon(
                         Icons.Default.Check,
@@ -278,9 +278,9 @@ private fun ModelDropdownItem(
     )
 }
 
-/**
- * 空状态提示
- */
+
+
+
 @Composable
 private fun EmptyModelState(
     onConfigureClick: () -> Unit
@@ -298,20 +298,20 @@ private fun EmptyModelState(
             modifier = Modifier.size(48.dp),
             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
         )
-        
+
         Text(
             Strings.noAvailableModels,
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurface
         )
-        
+
         Text(
             Strings.configureModelHint,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
-        
+
         PremiumButton(
             onClick = onConfigureClick,
             modifier = Modifier.padding(top = 8.dp)
@@ -327,9 +327,9 @@ private fun EmptyModelState(
     }
 }
 
-/**
- * 供应商图标
- */
+
+
+
 @Composable
 fun ProviderIcon(
     provider: AiProvider?,
@@ -370,7 +370,7 @@ fun ProviderIcon(
         AiProvider.CUSTOM -> "C" to MaterialTheme.colorScheme.surfaceVariant
         null -> "?" to MaterialTheme.colorScheme.surfaceVariant
     }
-    
+
     Box(
         modifier = modifier
             .clip(CircleShape)
@@ -385,14 +385,14 @@ fun ProviderIcon(
     }
 }
 
-/**
- * 过滤支持模块开发功能的模型
- * 
- * 此函数用于筛选出支持 MODULE_DEVELOPMENT 功能的模型
- * 
- * @param models 所有已保存的模型列表
- * @return 支持模块开发功能的模型列表
- */
+
+
+
+
+
+
+
+
 fun filterModelsForModuleDevelopment(models: List<SavedModel>): List<SavedModel> {
     return models.filter { it.supportsFeature(AiFeature.MODULE_DEVELOPMENT) }
 }

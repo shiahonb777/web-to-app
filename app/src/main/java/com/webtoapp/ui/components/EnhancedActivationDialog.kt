@@ -32,9 +32,9 @@ import com.webtoapp.util.threadLocalCompat
 import java.text.SimpleDateFormat
 import java.util.*
 
-/**
- * 增强版激活码对话框 - 高级视觉设计，状态信息丰富
- */
+
+
+
 @Composable
 fun EnhancedActivationDialog(
     onDismiss: () -> Unit,
@@ -62,7 +62,7 @@ fun EnhancedActivationDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // ── Header with icon ──
+
                 ActivationDialogHeader(
                     title = customTitle.ifBlank { Strings.activateApp },
                     subtitle = customSubtitle.ifBlank { Strings.enterActivationCodeToContinue },
@@ -70,14 +70,14 @@ fun EnhancedActivationDialog(
                     result = activationResult
                 )
 
-                // ── Current activation status card ──
+
                 activationStatus?.let { status ->
                     if (status.isActivated) {
                         EnhancedActivationStatusCard(status = status)
                     }
                 }
 
-                // ── Input field ──
+
                 AnimatedVisibility(
                     visible = activationResult !is ActivationResult.Success,
                     enter = fadeIn() + expandVertically(),
@@ -108,7 +108,7 @@ fun EnhancedActivationDialog(
                     )
                 }
 
-                // ── Result feedback ──
+
                 activationResult?.let { result ->
                     ActivationResultCard(result = result)
                 }
@@ -161,7 +161,7 @@ fun EnhancedActivationDialog(
         }
     )
 
-    // Handle activation logic
+
     LaunchedEffect(isLoading) {
         if (isLoading && code.isNotBlank()) {
             val result = onActivate(code)
@@ -176,9 +176,9 @@ fun EnhancedActivationDialog(
     }
 }
 
-// ═══════════════════════════════════════════
-// Dialog Header
-// ═══════════════════════════════════════════
+
+
+
 
 @Composable
 private fun ActivationDialogHeader(
@@ -220,7 +220,7 @@ private fun ActivationDialogHeader(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Animated icon
+
         Box(
             modifier = Modifier
                 .size(64.dp)
@@ -254,7 +254,7 @@ private fun ActivationDialogHeader(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Title
+
         Text(
             text = when (result) {
                 is ActivationResult.Success -> Strings.activationSuccess
@@ -268,7 +268,7 @@ private fun ActivationDialogHeader(
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        // Subtitle
+
         Text(
             text = when (result) {
                 is ActivationResult.Success -> Strings.activationSuccessHint
@@ -283,9 +283,9 @@ private fun ActivationDialogHeader(
     }
 }
 
-// ═══════════════════════════════════════════
-// Result Feedback Card
-// ═══════════════════════════════════════════
+
+
+
 
 @Composable
 private fun ActivationResultCard(result: ActivationResult) {
@@ -381,7 +381,7 @@ private fun ActivationResultCard(result: ActivationResult) {
                     lineHeight = 18.sp
                 )
 
-                // Actionable suggestion
+
                 suggestion?.let { sug ->
                     HorizontalDivider(
                         color = contentColor.copy(alpha = 0.15f),
@@ -410,9 +410,9 @@ private fun ActivationResultCard(result: ActivationResult) {
     }
 }
 
-// ═══════════════════════════════════════════
-// Enhanced Activation Status Card
-// ═══════════════════════════════════════════
+
+
+
 
 @Composable
 private fun EnhancedActivationStatusCard(status: ActivationStatus) {
@@ -430,7 +430,7 @@ private fun EnhancedActivationStatusCard(status: ActivationStatus) {
             modifier = Modifier.padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // Status header
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -454,7 +454,7 @@ private fun EnhancedActivationStatusCard(status: ActivationStatus) {
                     )
                 }
 
-                // Type badge
+
                 status.codeType?.let { type ->
                     Surface(
                         shape = RoundedCornerShape(8.dp),
@@ -471,7 +471,7 @@ private fun EnhancedActivationStatusCard(status: ActivationStatus) {
                 }
             }
 
-            // Activation time
+
             status.activatedTime?.let { time ->
                 StatusInfoRow(
                     icon = Icons.Outlined.CalendarMonth,
@@ -481,7 +481,7 @@ private fun EnhancedActivationStatusCard(status: ActivationStatus) {
                 )
             }
 
-            // Time remaining with progress bar
+
             status.expireTime?.let {
                 val remaining = status.remainingTimeMs
                 if (remaining != null && remaining > 0) {
@@ -493,7 +493,7 @@ private fun EnhancedActivationStatusCard(status: ActivationStatus) {
                         value = "${days}${Strings.days} ${hours}${Strings.hours}",
                         color = primaryColor
                     )
-                    // Time progress bar
+
                     status.activatedTime?.let { activatedTime ->
                         val totalDuration = it - activatedTime
                         if (totalDuration > 0) {
@@ -520,7 +520,7 @@ private fun EnhancedActivationStatusCard(status: ActivationStatus) {
                 }
             }
 
-            // Usage count with progress bar
+
             status.usageLimit?.let { limit ->
                 val remaining = status.remainingUsage ?: 0
                 StatusInfoRow(
@@ -541,7 +541,7 @@ private fun EnhancedActivationStatusCard(status: ActivationStatus) {
                 )
             }
 
-            // Device binding
+
             status.deviceId?.let {
                 StatusInfoRow(
                     icon = Icons.Outlined.PhonelinkLock,
@@ -589,9 +589,9 @@ private fun StatusInfoRow(
     }
 }
 
-// ═══════════════════════════════════════════
-// Data classes & Utilities
-// ═══════════════════════════════════════════
+
+
+
 
 private data class ResultCardData(
     val icon: ImageVector,

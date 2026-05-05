@@ -24,9 +24,9 @@ import com.webtoapp.ui.components.ForcedRunCountdownOverlay
 import com.webtoapp.ui.components.VirtualNavigationBar
 import com.webtoapp.core.forcedrun.ForcedRunManager
 
-/**
- * BGM 歌词显示覆盖层
- */
+
+
+
 @Composable
 fun BoxScope.ShellLyricsOverlay(
     config: ShellConfig,
@@ -68,9 +68,9 @@ fun BoxScope.ShellLyricsOverlay(
     }
 }
 
-/**
- * 强制运行倒计时覆盖层
- */
+
+
+
 @Composable
 fun BoxScope.ShellForcedRunOverlay(
     config: ShellConfig,
@@ -94,9 +94,9 @@ fun BoxScope.ShellForcedRunOverlay(
     }
 }
 
-/**
- * 错误提示卡片
- */
+
+
+
 @Composable
 fun BoxScope.ShellErrorCard(
     errorMessage: String?,
@@ -132,9 +132,9 @@ fun BoxScope.ShellErrorCard(
     }
 }
 
-/**
- * 虚拟导航栏（强制运行模式下显示）
- */
+
+
+
 @Composable
 fun BoxScope.ShellVirtualNavBar(
     appType: String,
@@ -151,20 +151,14 @@ fun BoxScope.ShellVirtualNavBar(
         canGoBack = canGoBack,
         canGoForward = canGoForward,
         onBack = {
-            webViewRef?.let { wv ->
-                val list = wv.copyBackForwardList()
-                val prev = list.getItemAtIndex(list.currentIndex - 1)?.url
-                if (prev == "about:blank") {
-                    (context as? AppCompatActivity)?.finish()
-                } else {
-                    wv.goBack()
-                }
+            (context as? AppCompatActivity)?.let { activity ->
+                ShellWebViewNavigation.goBackOrFinish(activity, webViewRef)
             }
         },
         onForward = { webViewRef?.goForward() },
         onRefresh = { webViewRef?.reload() },
         onHome = {
-            // 返回主页
+
             val homeUrl = when {
                 appType == "HTML" || appType == "FRONTEND" -> "file:///android_asset/html/${config.htmlConfig.getValidEntryFile()}"
                 else -> config.targetUrl
@@ -175,9 +169,9 @@ fun BoxScope.ShellVirtualNavBar(
     )
 }
 
-/**
- * 广告拦截切换按钮
- */
+
+
+
 @Composable
 fun BoxScope.ShellAdBlockToggle(
     config: ShellConfig,

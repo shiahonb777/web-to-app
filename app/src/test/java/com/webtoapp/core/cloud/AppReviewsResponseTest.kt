@@ -4,16 +4,16 @@ import com.google.common.truth.Truth.assertThat
 import com.webtoapp.core.extension.ModuleVersion
 import org.junit.Test
 
-/**
- * AppReviewsResponse + 评分分布数据模型测试
- *
- * 覆盖：ratingDistribution 默认值、fallback 计算、AppReviewItem 数据类
- */
+
+
+
+
+
 class AppReviewsResponseTest {
 
-    // ═══════════════════════════════════════════
-    // AppReviewsResponse 默认值
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `default ratingDistribution is empty map`() {
@@ -55,9 +55,9 @@ class AppReviewsResponseTest {
         assertThat(response.ratingDistribution).doesNotContainKey(3)
     }
 
-    // ═══════════════════════════════════════════
-    // Fallback: 从评论列表计算分布
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `compute distribution from review items`() {
@@ -90,9 +90,9 @@ class AppReviewsResponseTest {
         assertThat(dist).containsExactly(4, 1)
     }
 
-    // ═══════════════════════════════════════════
-    // AppReviewItem 数据类
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `AppReviewItem default values`() {
@@ -126,9 +126,9 @@ class AppReviewsResponseTest {
         assertThat(item.authorId).isEqualTo(100)
     }
 
-    // ═══════════════════════════════════════════
-    // 版本比较逻辑（用于更新检测）
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `higher versionCode indicates update available`() {
@@ -162,9 +162,9 @@ class AppReviewsResponseTest {
         assertThat(remoteCode > localCode).isTrue()
     }
 
-    // ═══════════════════════════════════════════
-    // ModuleVersion 数据类
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `ModuleVersion default values`() {

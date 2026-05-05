@@ -25,19 +25,19 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-/**
- * 思考块组件
- * 
- * 用于显示 AI 的思考过程，具有独特的视觉样式，与普通消息区分开来
- * 
- * @param content 思考内容
- * @param isStreaming 是否正在流式输出
- * @param isExpanded 是否展开显示完整内容
- * @param onExpandToggle 展开/折叠切换回调
- * @param modifier Modifier
- * 
- * Requirements: 2.2
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
 @Composable
 fun ThinkingBlock(
     content: String,
@@ -47,14 +47,14 @@ fun ThinkingBlock(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(isExpanded) }
-    
-    // 思考块的渐变背景色
+
+
     val gradientColors = listOf(
         MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f),
         MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f)
     )
-    
-    // 边框颜色动画（流式输出时）
+
+
     val infiniteTransition = rememberInfiniteTransition(label = "thinking")
     val borderAlpha by infiniteTransition.animateFloat(
         initialValue = 0.3f,
@@ -65,13 +65,13 @@ fun ThinkingBlock(
         ),
         label = "borderAlpha"
     )
-    
+
     val borderColor = if (isStreaming) {
         MaterialTheme.colorScheme.tertiary.copy(alpha = borderAlpha)
     } else {
         MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
     }
-    
+
     Surface(
         modifier = modifier
             .fillMaxWidth()
@@ -83,7 +83,7 @@ fun ThinkingBlock(
             )
             .then(
                 if (onExpandToggle != null) {
-                    Modifier.clickable { 
+                    Modifier.clickable {
                         expanded = !expanded
                         onExpandToggle()
                     }
@@ -100,7 +100,7 @@ fun ThinkingBlock(
                 .padding(12.dp)
         ) {
             Column {
-                // 头部
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -110,22 +110,22 @@ fun ThinkingBlock(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        // 思考图标（带动画）
+
                         ThinkingIcon(isAnimating = isStreaming)
-                        
+
                         Text(
                             Strings.aiThinking,
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.tertiary
                         )
-                        
+
                         if (isStreaming) {
                             ThinkingDots()
                         }
                     }
-                    
-                    // Expand/折叠按钮
+
+
                     Icon(
                         imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                         contentDescription = if (expanded) Strings.cdCollapse else Strings.cdExpand,
@@ -133,8 +133,8 @@ fun ThinkingBlock(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
                 }
-                
-                // 内容区域
+
+
                 AnimatedVisibility(
                     visible = expanded,
                     enter = expandVertically() + fadeIn(),
@@ -142,18 +142,18 @@ fun ThinkingBlock(
                 ) {
                     Column {
                         Spacer(modifier = Modifier.height(8.dp))
-                        
-                        // 分隔线
+
+
                         HorizontalDivider(
                             color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
                             thickness = 0.5.dp
                         )
-                        
+
                         Spacer(modifier = Modifier.height(8.dp))
-                        
-                        // 思考内容
+
+
                         if (content.isBlank() && isStreaming) {
-                            // 等待内容时显示占位符
+
                             Text(
                                 Strings.analyzing,
                                 style = MaterialTheme.typography.bodySmall,
@@ -170,8 +170,8 @@ fun ThinkingBlock(
                                     lineHeight = 18.sp,
                                     modifier = Modifier.weight(weight = 1f, fill = false)
                                 )
-                                
-                                // 流式输出时显示光标
+
+
                                 if (isStreaming) {
                                     TypingCursor(
                                         modifier = Modifier.padding(start = 2.dp)
@@ -181,8 +181,8 @@ fun ThinkingBlock(
                         }
                     }
                 }
-                
-                // Collapse时显示预览
+
+
                 if (!expanded && content.isNotBlank()) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -199,9 +199,9 @@ fun ThinkingBlock(
     }
 }
 
-/**
- * 思考图标（带旋转动画）
- */
+
+
+
 @Composable
 private fun ThinkingIcon(
     isAnimating: Boolean,
@@ -217,7 +217,7 @@ private fun ThinkingIcon(
         ),
         label = "rotation"
     )
-    
+
     Surface(
         shape = CircleShape,
         color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f),
@@ -237,15 +237,15 @@ private fun ThinkingIcon(
     }
 }
 
-/**
- * 思考中的动态点
- */
+
+
+
 @Composable
 private fun ThinkingDots(
     modifier: Modifier = Modifier
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "dots")
-    
+
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(2.dp),
@@ -266,7 +266,7 @@ private fun ThinkingDots(
                 ),
                 label = "dot$index"
             )
-            
+
             Box(
                 modifier = Modifier
                     .size(4.dp)
@@ -277,10 +277,10 @@ private fun ThinkingDots(
     }
 }
 
-/**
- * 简化版思考块
- * 用于在消息列表中显示思考过程的简洁版本
- */
+
+
+
+
 @Composable
 fun CompactThinkingBlock(
     content: String,
@@ -304,7 +304,7 @@ fun CompactThinkingBlock(
             modifier = Modifier.size(16.dp),
             tint = MaterialTheme.colorScheme.tertiary
         )
-        
+
         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
             Text(
                 Strings.thinkingLabel,
@@ -312,9 +312,9 @@ fun CompactThinkingBlock(
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.tertiary
             )
-            
+
             Spacer(modifier = Modifier.height(2.dp))
-            
+
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(
                     text = content.ifBlank { Strings.analyzingDots },
@@ -324,7 +324,7 @@ fun CompactThinkingBlock(
                     lineHeight = 16.sp,
                     modifier = Modifier.weight(weight = 1f, fill = false)
                 )
-                
+
                 if (isStreaming) {
                     TypingCursor(modifier = Modifier.padding(start = 2.dp))
                 }
@@ -333,10 +333,10 @@ fun CompactThinkingBlock(
     }
 }
 
-/**
- * 思考步骤列表项
- * 用于显示多个思考步骤
- */
+
+
+
+
 @Composable
 fun ThinkingStepItem(
     step: Int,
@@ -353,7 +353,7 @@ fun ThinkingStepItem(
         verticalAlignment = Alignment.Top,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        // 步骤编号
+
         Surface(
             shape = CircleShape,
             color = when {
@@ -385,8 +385,8 @@ fun ThinkingStepItem(
                 }
             }
         }
-        
-        // 内容
+
+
         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
             Text(
                 title,
@@ -398,7 +398,7 @@ fun ThinkingStepItem(
                     else -> MaterialTheme.colorScheme.onSurface
                 }
             )
-            
+
             if (content.isNotBlank()) {
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
@@ -409,8 +409,8 @@ fun ThinkingStepItem(
                 )
             }
         }
-        
-        // 活动指示器
+
+
         if (isActive) {
             ThinkingDots()
         }

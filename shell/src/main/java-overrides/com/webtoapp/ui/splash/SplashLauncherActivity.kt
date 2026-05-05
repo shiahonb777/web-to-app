@@ -9,14 +9,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.webtoapp.ui.components.PremiumButton
 
-/**
- * Shell 专用版 — 仅包含 ActivationDialog
- * 原始 SplashLauncherActivity.kt 包含编辑器专用 Activity 类，Shell 不需要
- */
 
-/**
- * Activation code dialog
- */
+
+
+
+
+
+
+
 @Composable
 fun ActivationDialog(
     onDismiss: () -> Unit,

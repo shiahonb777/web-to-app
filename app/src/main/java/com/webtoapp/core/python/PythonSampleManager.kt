@@ -5,11 +5,11 @@ import com.webtoapp.core.i18n.Strings
 import com.webtoapp.core.sample.SampleProjectExtractor
 import com.webtoapp.core.sample.TypedSampleProject
 
-/**
- * Python 示例项目管理器
- */
+
+
+
 object PythonSampleManager {
-    
+
     fun getSampleProjects(): List<TypedSampleProject> {
         val suffix = SampleProjectExtractor.getLanguageSuffix()
         return listOf(
@@ -42,7 +42,7 @@ object PythonSampleManager {
             )
         )
     }
-    
+
     suspend fun extractSampleProject(
         context: Context,
         projectId: String

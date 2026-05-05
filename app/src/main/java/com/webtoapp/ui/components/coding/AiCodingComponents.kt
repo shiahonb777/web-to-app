@@ -48,7 +48,7 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
-// Theme-adaptive code block colors
+
 @Composable
 fun codeBlockColors(): CodeBlockColors {
     val isDark = !MaterialTheme.colorScheme.background.luminance().let { it > 0.5f }
@@ -100,7 +100,7 @@ data class CodeBlockColors(
     val operator: Color
 )
 
-// Simple Markdown text rendering - 对代码内容禁用Markdown
+
 @Composable
 fun MarkdownText(
     text: String,
@@ -108,9 +108,9 @@ fun MarkdownText(
     style: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.bodyMedium,
     color: Color = MaterialTheme.colorScheme.onSurface
 ) {
-    // 检测是否包含代码内容
-    val isCodeContent = text.contains("```") || 
-        text.contains("<!DOCTYPE") || 
+
+    val isCodeContent = text.contains("```") ||
+        text.contains("<!DOCTYPE") ||
         text.contains("<html") ||
         text.contains("<style>") ||
         text.contains("<script>") ||
@@ -118,13 +118,13 @@ fun MarkdownText(
         text.contains("const ") ||
         text.contains("let ") ||
         text.contains("var ")
-    
+
     SelectionContainer {
         if (isCodeContent) {
-            // 代码内容使用纯文本，保留所有字符
+
             Text(text = text, style = style, color = color, modifier = modifier)
         } else {
-            // 普通文本使用 Markdown 渲染
+
             val annotatedString = parseMarkdown(text, color)
             Text(text = annotatedString, style = style, modifier = modifier)
         }
@@ -185,7 +185,7 @@ private fun parseMarkdown(text: String, baseColor: Color): AnnotatedString {
 }
 
 
-// Message bubble component
+
 @Composable
 fun MessageBubble(
     message: AiCodingMessage,
@@ -267,7 +267,7 @@ fun MessageBubble(
 }
 
 
-// Code blocks tab container
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CodeBlocksTabContainer(
@@ -283,7 +283,7 @@ fun CodeBlocksTabContainer(
     val scope = rememberCoroutineScope()
     val clipboardManager = LocalClipboardManager.current
     var showMoreMenu by remember { mutableStateOf(false) }
-    
+
     Surface(modifier = modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), color = colors.background, shadowElevation = 4.dp) {
         Column {
             Surface(color = colors.headerBackground, shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)) {
@@ -352,7 +352,7 @@ fun CodeBlocksTabContainer(
 }
 
 
-// Code content view with syntax highlighting
+
 @Composable
 internal fun CodeContentView(code: String, language: String, colors: CodeBlockColors, modifier: Modifier = Modifier) {
     val horizontalScrollState = rememberScrollState()
@@ -528,7 +528,7 @@ private fun AnnotatedString.Builder.highlightJson(line: String, colors: CodeBloc
 }
 
 
-// Thinking block component
+
 @Composable
 fun ThinkingBlock(thinking: String, modifier: Modifier = Modifier, defaultExpanded: Boolean = true) {
     var expanded by remember { mutableStateOf(defaultExpanded) }
@@ -559,7 +559,7 @@ fun ThinkingBlock(thinking: String, modifier: Modifier = Modifier, defaultExpand
     }
 }
 
-// Streaming message bubble
+
 @Composable
 fun StreamingMessageBubble(thinking: String, content: String, modifier: Modifier = Modifier) {
     Row(modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.Start) {
@@ -625,7 +625,7 @@ private fun StreamingThinkingBlock(thinking: String, modifier: Modifier = Modifi
 }
 
 
-// Chat input area
+
 @Composable
 fun ChatInputArea(value: String, onValueChange: (String) -> Unit, images: List<String>, onAddImage: () -> Unit, onRemoveImage: (Int) -> Unit, onSend: () -> Unit, isLoading: Boolean, maxImages: Int = 3, modifier: Modifier = Modifier) {
     Surface(modifier = modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surface, shadowElevation = 8.dp) {
@@ -660,7 +660,7 @@ fun ChatInputArea(value: String, onValueChange: (String) -> Unit, images: List<S
     }
 }
 
-// Session list item
+
 @Composable
 fun SessionListItem(session: AiCodingSession, isSelected: Boolean, onClick: () -> Unit, onDelete: () -> Unit, modifier: Modifier = Modifier) {
     Surface(modifier = modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp).clickable(onClick = onClick), shape = RoundedCornerShape(12.dp), color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent) {
@@ -679,7 +679,7 @@ fun SessionListItem(session: AiCodingSession, isSelected: Boolean, onClick: () -
     }
 }
 
-// Checkpoint list item
+
 @Composable
 fun CheckpointListItem(checkpoint: ProjectCheckpoint, isCurrent: Boolean, onRestore: () -> Unit, onDelete: () -> Unit, modifier: Modifier = Modifier) {
     Surface(modifier = modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(12.dp), color = if (isCurrent) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surfaceVariant, border = if (isCurrent) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null) {
@@ -700,7 +700,7 @@ fun CheckpointListItem(checkpoint: ProjectCheckpoint, isCurrent: Boolean, onRest
 }
 
 
-// Style template card
+
 @Composable
 fun StyleTemplateCard(template: StyleTemplate, isSelected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val bgColor = template.colorScheme?.let { parseColor(it.background) } ?: MaterialTheme.colorScheme.surface
@@ -730,7 +730,7 @@ fun StyleTemplateCard(template: StyleTemplate, isSelected: Boolean, onClick: () 
     }
 }
 
-// Style reference card
+
 @Composable
 fun StyleReferenceCard(style: StyleReference, isSelected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Surface(modifier = modifier.fillMaxWidth().clickable(onClick = onClick), shape = RoundedCornerShape(16.dp), border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)), color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) else MaterialTheme.colorScheme.surface, shadowElevation = if (isSelected) 4.dp else 1.dp) {
@@ -753,26 +753,26 @@ fun StyleReferenceCard(style: StyleReference, isSelected: Boolean, onClick: () -
 }
 
 
-// Config panel
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConfigPanel(
-    config: SessionConfig, 
-    onConfigChange: (SessionConfig) -> Unit, 
-    textModels: List<com.webtoapp.data.model.SavedModel>, 
-    imageModels: List<com.webtoapp.data.model.SavedModel>, 
-    rulesTemplates: List<RulesTemplate>, 
+    config: SessionConfig,
+    onConfigChange: (SessionConfig) -> Unit,
+    textModels: List<com.webtoapp.data.model.SavedModel>,
+    imageModels: List<com.webtoapp.data.model.SavedModel>,
+    rulesTemplates: List<RulesTemplate>,
     onNavigateToAiSettings: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val isDark = com.webtoapp.ui.theme.LocalIsDarkTheme.current
-    
-    // 毛玻璃容器色
+
+
     val glassFill = if (isDark)
         Color.White.copy(alpha = 0.10f)
     else
         Color.White.copy(alpha = 0.72f)
-    
+
     val glassBorder = if (isDark)
         Color.White.copy(alpha = 0.10f)
     else
@@ -780,8 +780,8 @@ fun ConfigPanel(
 
     Column(modifier = modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text(Strings.sessionConfig, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        
-        // Text model - 毛玻璃卡片
+
+
         EnhancedElevatedCard {
             Column(Modifier.padding(16.dp)) {
                 Text(Strings.textModel, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
@@ -794,8 +794,8 @@ fun ConfigPanel(
                 )
             }
         }
-        
-        // Image model - 毛玻璃卡片
+
+
         EnhancedElevatedCard {
             Column(Modifier.padding(16.dp)) {
                 Text(Strings.imageModelOptional, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
@@ -808,8 +808,8 @@ fun ConfigPanel(
                 )
             }
         }
-        
-        // Temperature - 毛玻璃卡片
+
+
         EnhancedElevatedCard {
             Column(Modifier.padding(16.dp)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -821,10 +821,10 @@ fun ConfigPanel(
                 Text(Strings.temperatureHint, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
             }
         }
-        
+
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-        
-        // 工具包配置 - 毛玻璃卡片
+
+
         EnhancedElevatedCard {
             Column(Modifier.padding(16.dp)) {
                 Row(
@@ -846,15 +846,15 @@ fun ConfigPanel(
                     color = MaterialTheme.colorScheme.outline
                 )
                 Spacer(Modifier.height(12.dp))
-                
+
                 AiCodingToolType.entries.forEach { toolType ->
                     val isEnabled = toolType in config.enabledTools
                     val isRequired = toolType == AiCodingToolType.WRITE_HTML
-                    
+
                     Surface(
                         shape = RoundedCornerShape(10.dp),
-                        color = if (isEnabled) 
-                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (isDark) 0.2f else 0.35f) 
+                        color = if (isEnabled)
+                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (isDark) 0.2f else 0.35f)
                             else glassFill,
                         border = BorderStroke(0.5.dp, glassBorder),
                         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
@@ -889,7 +889,7 @@ fun ConfigPanel(
                                             )
                                         }
                                     }
-                                    // 需要图像模型的工具显示提示
+
                                     if (toolType.requiresImageModel && config.imageModelId.isNullOrBlank()) {
                                         Spacer(Modifier.width(8.dp))
                                         Surface(
@@ -911,7 +911,7 @@ fun ConfigPanel(
                                     color = MaterialTheme.colorScheme.outline
                                 )
                             }
-                            // 需要图像模型但未配置时禁用开关
+
                             val canEnable = !toolType.requiresImageModel || !config.imageModelId.isNullOrBlank()
                             PremiumSwitch(
                                 checked = isEnabled && canEnable,
@@ -932,10 +932,10 @@ fun ConfigPanel(
                 }
             }
         }
-        
+
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-        
-        // Rules - 毛玻璃卡片
+
+
         EnhancedElevatedCard {
             Column(Modifier.padding(16.dp)) {
                 Text(Strings.rules, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
@@ -951,7 +951,7 @@ fun ConfigPanel(
                 val effectiveRules = config.getEffectiveRules()
                 effectiveRules.forEachIndexed { index, rule ->
                     Surface(
-                        shape = RoundedCornerShape(8.dp), 
+                        shape = RoundedCornerShape(8.dp),
                         color = glassFill,
                         border = BorderStroke(0.5.dp, glassBorder),
                         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
@@ -960,8 +960,8 @@ fun ConfigPanel(
                             Text("${index + 1}.", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.width(8.dp))
                             Text(rule, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(weight = 1f, fill = true))
-                            IconButton(onClick = { 
-                                // If it is默认规则（空列表），则先转为实际列表再删除
+                            IconButton(onClick = {
+
                                 val newRules = if (config.rules.isEmpty()) {
                                     effectiveRules.toMutableList().apply { removeAt(index) }
                                 } else {
@@ -980,9 +980,9 @@ fun ConfigPanel(
     }
 }
 
-/**
- * 图像模型选择器（支持"不使用"选项）
- */
+
+
+
 @Composable
 private fun ImageModelSelector(
     selectedModel: com.webtoapp.data.model.SavedModel?,
@@ -992,9 +992,9 @@ private fun ImageModelSelector(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
-    
+
     Box(modifier = modifier) {
-        // Select器按钮
+
         Surface(
             onClick = { expanded = true },
             shape = RoundedCornerShape(12.dp),
@@ -1006,13 +1006,13 @@ private fun ImageModelSelector(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // 供应商图标
+
                 ProviderIcon(
                     provider = selectedModel?.model?.provider,
                     modifier = Modifier.size(28.dp)
                 )
-                
-                // 模型信息
+
+
                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                     if (selectedModel != null) {
                         Text(
@@ -1035,8 +1035,8 @@ private fun ImageModelSelector(
                         )
                     }
                 }
-                
-                // 下拉箭头
+
+
                 Icon(
                     Icons.Default.ArrowDropDown,
                     contentDescription = Strings.expand,
@@ -1044,14 +1044,14 @@ private fun ImageModelSelector(
                 )
             }
         }
-        
-        // 下拉菜单
+
+
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
             modifier = Modifier.widthIn(min = 280.dp, max = 360.dp).heightIn(max = 400.dp)
         ) {
-            // 不使用选项
+
             DropdownMenuItem(
                 text = {
                     Row(
@@ -1084,17 +1084,17 @@ private fun ImageModelSelector(
                     else MaterialTheme.colorScheme.surface
                 )
             )
-            
+
             if (availableModels.isNotEmpty()) {
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                
+
                 Text(
                     Strings.selectImageModel,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
-                
+
                 availableModels.forEach { model ->
                     DropdownMenuItem(
                         text = {
@@ -1142,10 +1142,10 @@ private fun ImageModelSelector(
                     )
                 }
             }
-            
+
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-            
-            // Configure更多模型
+
+
             DropdownMenuItem(
                 text = {
                     Row(
@@ -1174,11 +1174,15 @@ private fun ImageModelSelector(
 }
 
 
-// Helper functions
-private val TIME_FORMAT by lazy { SimpleDateFormat("HH:mm", Locale.getDefault()) }
-private val DATE_FORMAT by lazy { SimpleDateFormat("MM/dd HH:mm", Locale.getDefault()) }
-private fun formatTime(timestamp: Long): String = TIME_FORMAT.format(Date(timestamp))
-private fun formatDate(timestamp: Long): String = DATE_FORMAT.format(Date(timestamp))
+
+private val TIME_FORMAT = object : ThreadLocal<SimpleDateFormat>() {
+    override fun initialValue(): SimpleDateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+}
+private val DATE_FORMAT = object : ThreadLocal<SimpleDateFormat>() {
+    override fun initialValue(): SimpleDateFormat = SimpleDateFormat("MM/dd HH:mm", Locale.getDefault())
+}
+private fun formatTime(timestamp: Long): String = TIME_FORMAT.get()!!.format(Date(timestamp))
+private fun formatDate(timestamp: Long): String = DATE_FORMAT.get()!!.format(Date(timestamp))
 
 private fun getLanguageColor(language: String): Color = when (language.lowercase()) {
     "html", "htm" -> Color(0xFFE34C26)
@@ -1210,11 +1214,11 @@ private fun parseColor(colorString: String): Color = try {
 private fun Color.luminance(): Float = 0.299f * red + 0.587f * green + 0.114f * blue
 
 
-// ==================== 项目文件面板组件 ====================
 
-/**
- * 项目文件面板 - 显示会话的项目文件夹内容
- */
+
+
+
+
 @Composable
 fun ProjectFilesPanel(
     files: List<ProjectFileInfo>,
@@ -1233,7 +1237,7 @@ fun ProjectFilesPanel(
         shadowElevation = 8.dp
     ) {
         Column {
-            // 标题栏
+
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1288,8 +1292,8 @@ fun ProjectFilesPanel(
                     }
                 }
             }
-            
-            // File列表
+
+
             AnimatedVisibility(
                 visible = isExpanded,
                 enter = expandVertically() + fadeIn(),
@@ -1323,9 +1327,9 @@ fun ProjectFilesPanel(
                         }
                     }
                 } else {
-                    // 按基础文件名分组
+
                     val groupedFiles = files.groupBy { it.getBaseName() }
-                    
+
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -1336,7 +1340,7 @@ fun ProjectFilesPanel(
                         groupedFiles.forEach { (baseName, versions) ->
                             val sortedVersions = versions.sortedByDescending { it.version }
                             val latestVersion = sortedVersions.first()
-                            
+
                             item(key = baseName) {
                                 FileGroupItem(
                                     baseName = baseName,
@@ -1355,9 +1359,9 @@ fun ProjectFilesPanel(
     }
 }
 
-/**
- * 文件组项目 - 显示一个文件的所有版本
- */
+
+
+
 @Composable
 private fun FileGroupItem(
     baseName: String,
@@ -1368,9 +1372,9 @@ private fun FileGroupItem(
     onPreviewClick: (ProjectFileInfo) -> Unit
 ) {
     var showVersions by remember { mutableStateOf(false) }
-    
+
     Column {
-        // 主文件项（最新版本）
+
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1385,10 +1389,10 @@ private fun FileGroupItem(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // File图标
+
                 FileTypeIcon(type = latestFile.type, modifier = Modifier.size(32.dp))
-                
-                // File信息
+
+
                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
@@ -1419,8 +1423,8 @@ private fun FileGroupItem(
                         color = MaterialTheme.colorScheme.outline
                     )
                 }
-                
-                // Version历史按钮
+
+
                 if (versions.size > 1) {
                     IconButton(
                         onClick = { showVersions = !showVersions },
@@ -1434,8 +1438,8 @@ private fun FileGroupItem(
                         )
                     }
                 }
-                
-                // 预览按钮
+
+
                 if (latestFile.type == ProjectFileType.HTML) {
                     IconButton(
                         onClick = { onPreviewClick(latestFile) },
@@ -1451,8 +1455,8 @@ private fun FileGroupItem(
                 }
             }
         }
-        
-        // Version历史列表
+
+
         AnimatedVisibility(
             visible = showVersions && versions.size > 1,
             enter = expandVertically() + fadeIn(),
@@ -1513,9 +1517,9 @@ private fun FileGroupItem(
     }
 }
 
-/**
- * 文件类型图标
- */
+
+
+
 @Composable
 fun FileTypeIcon(type: ProjectFileType, modifier: Modifier = Modifier) {
     val (icon, color) = when (type) {
@@ -1527,7 +1531,7 @@ fun FileTypeIcon(type: ProjectFileType, modifier: Modifier = Modifier) {
         ProjectFileType.IMAGE -> Icons.Outlined.Image to AppColors.Success
         ProjectFileType.OTHER -> Icons.Outlined.InsertDriveFile to Color(0xFF6B7280)
     }
-    
+
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(8.dp),
@@ -1544,9 +1548,9 @@ fun FileTypeIcon(type: ProjectFileType, modifier: Modifier = Modifier) {
     }
 }
 
-/**
- * 文件预览面板
- */
+
+
+
 @Composable
 fun FilePreviewPanel(
     file: ProjectFileInfo?,
@@ -1556,7 +1560,7 @@ fun FilePreviewPanel(
     modifier: Modifier = Modifier
 ) {
     if (file == null || content == null) return
-    
+
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -1564,7 +1568,7 @@ fun FilePreviewPanel(
         shadowElevation = 4.dp
     ) {
         Column {
-            // 标题栏
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1611,8 +1615,8 @@ fun FilePreviewPanel(
                     }
                 }
             }
-            
-            // 代码内容
+
+
             val colors = codeBlockColors()
             Surface(
                 modifier = Modifier

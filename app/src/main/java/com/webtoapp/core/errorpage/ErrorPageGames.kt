@@ -2,10 +2,10 @@ package com.webtoapp.core.errorpage
 
 import com.webtoapp.core.i18n.Strings
 
-/**
- * 错误页内嵌小游戏生成器
- * 4 款精品触摸小游戏，质感优先
- */
+
+
+
+
 object ErrorPageGames {
 
     fun getGameJs(type: MiniGameType): String = when (type) {
@@ -21,7 +21,7 @@ object ErrorPageGames {
         return games[(Math.random() * games.size).toInt().coerceIn(0, games.size - 1)]
     }
 
-    // ===================== 弹球消消 BREAKOUT =====================
+
 
     private fun breakoutGame() = """
     (function(){
@@ -31,11 +31,11 @@ object ErrorPageGames {
         C.width=W*dpr;C.height=H*dpr;
         C.style.width=W+'px';C.style.height=H+'px';
         ctx.scale(dpr,dpr);
-        
+
         // 配色
         var colors=['#667eea','#764ba2','#f093fb','#4facfe','#43e97b','#fa709a'];
         var bgColor='rgba(0,0,0,0.85)';
-        
+
         // 挡板
         var pw=70,ph=10,px=W/2-pw/2,py=H-30;
         // 球
@@ -47,11 +47,11 @@ object ErrorPageGames {
             bricks.push({x:bp+c*(bw+bp),y:40+r*(bh+bp),w:bw,h:bh,alive:true,color:colors[(r*cols+c)%colors.length]});
         }
         var score=0,lives=3,running=true;
-        
+
         // 触摸
         C.addEventListener('touchmove',function(e){e.preventDefault();var t=e.touches[0];var r=C.getBoundingClientRect();px=t.clientX-r.left-pw/2;if(px<0)px=0;if(px>W-pw)px=W-pw;},{passive:false});
         C.addEventListener('mousemove',function(e){var r=C.getBoundingClientRect();px=e.clientX-r.left-pw/2;if(px<0)px=0;if(px>W-pw)px=W-pw;});
-        
+
         function draw(){
             ctx.fillStyle=bgColor;ctx.fillRect(0,0,W,H);
             // 砖块
@@ -78,7 +78,7 @@ object ErrorPageGames {
             ctx.fillText('${Strings.gameScore}: '+score,8,18);
             ctx.fillText('${Strings.gameLives}: '+lives,W-60,18);
         }
-        
+
         function update(){
             if(!running)return;
             bx+=bdx;by+=bdy;
@@ -107,7 +107,7 @@ object ErrorPageGames {
             // 胜利检查
             if(bricks.every(function(b){return !b.alive;})){running=false;}
         }
-        
+
         function loop(){draw();update();if(running)requestAnimationFrame(loop);else{
             ctx.fillStyle='rgba(0,0,0,0.7)';ctx.fillRect(0,0,W,H);
             ctx.fillStyle='#fff';ctx.font='bold 18px sans-serif';ctx.textAlign='center';
@@ -120,7 +120,7 @@ object ErrorPageGames {
     })();
     """.trimIndent()
 
-    // ===================== 迷宫行者 MAZE =====================
+
 
     private fun mazeGame() = """
     (function(){
@@ -130,10 +130,10 @@ object ErrorPageGames {
         C.width=W*dpr;C.height=H*dpr;
         C.style.width=W+'px';C.style.height=H+'px';
         ctx.scale(dpr,dpr);
-        
+
         var cols=11,rows=13,cw=Math.floor(W/cols),ch=Math.floor(H/rows);
         var grid=[],stack=[];
-        
+
         // 生成迷宫 (DFS)
         for(var r=0;r<rows;r++){grid[r]=[];for(var c=0;c<cols;c++)grid[r][c]={v:false,w:{t:true,r:true,b:true,l:true}};}
         function neighbors(r,c){
@@ -155,13 +155,13 @@ object ErrorPageGames {
                 stack.push([cr,cc]);cr=pick[0];cc=pick[1];
             }else{var p=stack.pop();cr=p[0];cc=p[1];}
         }
-        
+
         // 玩家
         var px=0,py=0,trail=[[0,0]];
         var goalR=rows-1,goalC=cols-1;
         var won=false;
         var accentColor='#667eea';
-        
+
         // 触摸滑动
         var sx=0,sy=0;
         C.addEventListener('touchstart',function(e){e.preventDefault();var t=e.touches[0];sx=t.clientX;sy=t.clientY;},{passive:false});
@@ -173,7 +173,7 @@ object ErrorPageGames {
             if(e.key==='ArrowUp')move(-1,0);if(e.key==='ArrowDown')move(1,0);
             if(e.key==='ArrowLeft')move(0,-1);if(e.key==='ArrowRight')move(0,1);
         });
-        
+
         function move(dr,dc){
             if(won)return;
             var nr=py+dr,nc=px+dc;
@@ -184,7 +184,7 @@ object ErrorPageGames {
             if(py===goalR&&px===goalC)won=true;
             draw();
         }
-        
+
         function draw(){
             ctx.fillStyle='rgba(0,0,0,0.9)';ctx.fillRect(0,0,W,H);
             // 迷宫墙壁
@@ -224,7 +224,7 @@ object ErrorPageGames {
     })();
     """.trimIndent()
 
-    // ===================== 星空收集 STAR CATCH =====================
+
 
     private fun starCatchGame() = """
     (function(){
@@ -234,16 +234,16 @@ object ErrorPageGames {
         C.width=W*dpr;C.height=H*dpr;
         C.style.width=W+'px';C.style.height=H+'px';
         ctx.scale(dpr,dpr);
-        
+
         var cx=W/2,score=0,missed=0,maxMissed=5,running=true;
         var stars=[],particles=[];
         var starColors=['#ffd700','#ff6b6b','#48dbfb','#ff9ff3','#54a0ff'];
         var spawnRate=60,frame=0;
-        
+
         // 触摸
         C.addEventListener('touchmove',function(e){e.preventDefault();var t=e.touches[0];var r=C.getBoundingClientRect();cx=t.clientX-r.left;},{passive:false});
         C.addEventListener('mousemove',function(e){var r=C.getBoundingClientRect();cx=e.clientX-r.left;});
-        
+
         function spawnStar(){
             stars.push({x:Math.random()*W,y:-10,vy:1+Math.random()*1.5+score*0.02,size:6+Math.random()*6,color:starColors[Math.floor(Math.random()*starColors.length)],rot:Math.random()*Math.PI*2,rv:0.02+Math.random()*0.03});
         }
@@ -269,7 +269,7 @@ object ErrorPageGames {
             ctx.fillStyle='rgba(255,255,255,0.3)';ctx.beginPath();ctx.arc(-r*0.2,-r*0.2,r*0.25,0,Math.PI*2);ctx.fill();
             ctx.restore();
         }
-        
+
         function loop(){
             ctx.fillStyle='rgba(0,0,10,0.85)';ctx.fillRect(0,0,W,H);
             // 背景星星
@@ -310,7 +310,7 @@ object ErrorPageGames {
             ctx.fillText('${Strings.gameCollected}: '+score,8,18);
             var hearts='';for(var i=0;i<maxMissed-missed;i++)hearts+='♥';
             ctx.fillStyle='#ff6b6b';ctx.fillText(hearts,W-70,18);
-            
+
             if(running)requestAnimationFrame(loop);else{
                 ctx.fillStyle='rgba(0,0,0,0.7)';ctx.fillRect(0,0,W,H);
                 ctx.fillStyle='#ffd700';ctx.font='bold 18px sans-serif';ctx.textAlign='center';
@@ -325,7 +325,7 @@ object ErrorPageGames {
     })();
     """.trimIndent()
 
-    // ===================== 水墨禅境 INK ZEN =====================
+
 
     private fun inkZenGame() = """
     (function(){
@@ -335,7 +335,7 @@ object ErrorPageGames {
         C.width=W*dpr;C.height=H*dpr;
         C.style.width=W+'px';C.style.height=H+'px';
         ctx.scale(dpr,dpr);
-        
+
         // 宣纸背景
         ctx.fillStyle='#f5f0e8';ctx.fillRect(0,0,W,H);
         // 纸纹理
@@ -343,16 +343,16 @@ object ErrorPageGames {
             ctx.fillStyle='rgba(0,0,0,'+Math.random()*0.015+')';
             ctx.fillRect(Math.random()*W,Math.random()*H,Math.random()*3,1);
         }
-        
+
         var painting=false,lastX,lastY;
         var inkDrops=[];
         var brushSize=4;
-        
+
         // 墨滴扩散
         function addInkDrop(x,y,size){
             inkDrops.push({x:x,y:y,r:size*0.5,maxR:size*3+Math.random()*8,opacity:0.15+Math.random()*0.1,growing:true});
         }
-        
+
         function drawBrush(x0,y0,x1,y1){
             var dx=x1-x0,dy=y1-y0,dist=Math.sqrt(dx*dx+dy*dy);
             var steps=Math.max(1,Math.floor(dist/2));
@@ -373,7 +373,7 @@ object ErrorPageGames {
             // 偶尔墨滴
             if(Math.random()<0.05)addInkDrop(x1,y1,brushSize);
         }
-        
+
         function updateDrops(){
             inkDrops.forEach(function(d){
                 if(!d.growing)return;
@@ -383,25 +383,25 @@ object ErrorPageGames {
                 ctx.beginPath();ctx.arc(d.x,d.y,d.r,0,Math.PI*2);ctx.fill();
             });
         }
-        
+
         function getPos(e){
             var r=C.getBoundingClientRect();
             var t=e.touches?e.touches[0]:e;
             return {x:t.clientX-r.left,y:t.clientY-r.top};
         }
-        
+
         C.addEventListener('touchstart',function(e){e.preventDefault();painting=true;var p=getPos(e);lastX=p.x;lastY=p.y;addInkDrop(p.x,p.y,brushSize*1.5);},{passive:false});
         C.addEventListener('touchmove',function(e){e.preventDefault();if(!painting)return;var p=getPos(e);drawBrush(lastX,lastY,p.x,p.y);lastX=p.x;lastY=p.y;},{passive:false});
         C.addEventListener('touchend',function(){painting=false;});
         C.addEventListener('mousedown',function(e){painting=true;var p=getPos(e);lastX=p.x;lastY=p.y;addInkDrop(p.x,p.y,brushSize*1.5);});
         C.addEventListener('mousemove',function(e){if(!painting)return;var p=getPos(e);drawBrush(lastX,lastY,p.x,p.y);lastX=p.x;lastY=p.y;});
         C.addEventListener('mouseup',function(){painting=false;});
-        
+
         // 提示文字
         ctx.fillStyle='rgba(0,0,0,0.12)';ctx.font='14px serif';ctx.textAlign='center';
         ctx.fillText('${Strings.gameTouchToPaint}',W/2,H/2);
         ctx.fillText('${Strings.gameZen}',W/2,H/2+25);ctx.textAlign='left';
-        
+
         // 墨滴动画
         function animate(){updateDrops();requestAnimationFrame(animate);}
         animate();

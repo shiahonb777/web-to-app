@@ -32,13 +32,13 @@ import com.webtoapp.util.BgmStorage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-// Composable 内 parseTime() 使用，避免重组时重建
+
 private val LRC_PARSE_TIME_REGEX = Regex("""(\d{1,2}):(\d{2})\.(\d{2})""")
 
-/**
- * LRC 编辑器对话框
- * 支持编辑歌词文本和时间戳，实时预览效果
- */
+
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LrcEditorDialog(
@@ -49,31 +49,31 @@ fun LrcEditorDialog(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    
-    // 编辑中的歌词行列表
-    var editingLines by remember { 
-        mutableStateOf(lrcData.lines.map { EditableLrcLine(it.startTime, it.text) }) 
+
+
+    var editingLines by remember {
+        mutableStateOf(lrcData.lines.map { EditableLrcLine(it.startTime, it.text) })
     }
-    
-    // 当前选中编辑的行
+
+
     var selectedLineIndex by remember { mutableIntStateOf(-1) }
-    
-    // Play器状态
+
+
     var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
     var isPlaying by remember { mutableStateOf(false) }
     var currentPosition by remember { mutableLongStateOf(0L) }
     var duration by remember { mutableLongStateOf(0L) }
-    
-    // 当前高亮行
+
+
     var currentLineIndex by remember { mutableIntStateOf(-1) }
-    
-    // List状态
+
+
     val listState = rememberLazyListState()
-    
-    // Yes否有未保存的修改
+
+
     var hasChanges by remember { mutableStateOf(false) }
-    
-    // Initialize播放器
+
+
     LaunchedEffect(bgm.path) {
         try {
             mediaPlayer = MediaPlayer().apply {
@@ -92,18 +92,18 @@ fun LrcEditorDialog(
             AppLogger.e("LrcEditor", "初始化播放器失败", e)
         }
     }
-    
-    // Update播放进度和高亮行
+
+
     LaunchedEffect(isPlaying) {
         while (isPlaying) {
             mediaPlayer?.let { mp ->
                 if (mp.isPlaying) {
                     currentPosition = mp.currentPosition.toLong()
-                    // Update高亮行
+
                     val newIndex = editingLines.indexOfLast { it.startTime <= currentPosition }
                     if (newIndex != currentLineIndex && newIndex >= 0) {
                         currentLineIndex = newIndex
-                        // Auto滚动
+
                         scope.launch {
                             listState.animateScrollToItem(maxOf(0, newIndex - 2))
                         }
@@ -113,16 +113,16 @@ fun LrcEditorDialog(
             delay(50)
         }
     }
-    
-    // Cleanup播放器
+
+
     DisposableEffect(Unit) {
         onDispose {
             mediaPlayer?.release()
             mediaPlayer = null
         }
     }
-    
-    // 格式化时间
+
+
     fun formatTime(ms: Long): String {
         val totalSeconds = ms / 1000
         val minutes = totalSeconds / 60
@@ -130,8 +130,8 @@ fun LrcEditorDialog(
         val millis = (ms % 1000) / 10
         return "%02d:%02d.%02d".format(minutes, seconds, millis)
     }
-    
-    // Parse时间字符串
+
+
     fun parseTime(timeStr: String): Long? {
         val match = LRC_PARSE_TIME_REGEX.find(timeStr) ?: return null
         val minutes = match.groupValues[1].toLongOrNull() ?: return null
@@ -139,8 +139,8 @@ fun LrcEditorDialog(
         val millis = match.groupValues[3].toLongOrNull() ?: return null
         return minutes * 60000 + seconds * 1000 + millis * 10
     }
-    
-    // Build LrcData
+
+
     fun buildLrcData(): LrcData {
         val sortedLines = editingLines.sortedBy { it.startTime }
         val lines = sortedLines.mapIndexed { index, line ->
@@ -149,7 +149,7 @@ fun LrcEditorDialog(
         }
         return LrcData(lines = lines)
     }
-    
+
     Dialog(
         onDismissRequest = {
             mediaPlayer?.release()
@@ -168,7 +168,7 @@ fun LrcEditorDialog(
             tonalElevation = 6.dp
         ) {
             Column(modifier = Modifier.fillMaxSize().systemBarsPadding()) {
-                // 标题栏
+
                 TopAppBar(
                     title = { Text(Strings.editLrc) },
                     navigationIcon = {
@@ -200,8 +200,8 @@ fun LrcEditorDialog(
                         }
                     }
                 )
-                
-                // 音乐信息
+
+
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -223,13 +223,13 @@ fun LrcEditorDialog(
                         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                             Text(bgm.name, style = MaterialTheme.typography.titleSmall)
                             Text(
-                                "${editingLines.size} 行歌词",
+                                Strings.lrcLineCount.format(editingLines.size),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        
-                        // 添加新行按钮
+
+
                         FilledTonalIconButton(
                             onClick = {
                                 val newLine = EditableLrcLine(currentPosition, "")
@@ -242,10 +242,10 @@ fun LrcEditorDialog(
                         }
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
-                // Lyrics编辑列表
+
+
                 LazyColumn(
                     state = listState,
                     modifier = Modifier
@@ -257,7 +257,7 @@ fun LrcEditorDialog(
                     itemsIndexed(editingLines) { index, line ->
                         val isCurrentPlaying = index == currentLineIndex && isPlaying
                         val isSelected = index == selectedLineIndex
-                        
+
                         LrcLineEditor(
                             index = index,
                             line = line,
@@ -326,19 +326,19 @@ fun LrcEditorDialog(
                             } else null
                         )
                     }
-                    
-                    // 底部留白
+
+
                     item { Spacer(modifier = Modifier.height(100.dp)) }
                 }
-                
-                // Play控制区
+
+
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shadowElevation = 8.dp,
                     tonalElevation = 2.dp
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        // 进度条
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
@@ -365,14 +365,14 @@ fun LrcEditorDialog(
                                 fontFamily = FontFamily.Monospace
                             )
                         }
-                        
-                        // 控制按钮
+
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // 后退5秒
+
                             IconButton(onClick = {
                                 mediaPlayer?.let { mp ->
                                     val newPos = maxOf(0, mp.currentPosition - 5000)
@@ -382,10 +382,10 @@ fun LrcEditorDialog(
                             }) {
                                 Icon(Icons.Default.Replay5, Strings.lrcBackward5s)
                             }
-                            
+
                             Spacer(modifier = Modifier.width(16.dp))
-                            
-                            // Play/暂停
+
+
                             FilledIconButton(
                                 onClick = {
                                     mediaPlayer?.let { mp ->
@@ -405,10 +405,10 @@ fun LrcEditorDialog(
                                     modifier = Modifier.size(32.dp)
                                 )
                             }
-                            
+
                             Spacer(modifier = Modifier.width(16.dp))
-                            
-                            // 前进5秒
+
+
                             IconButton(onClick = {
                                 mediaPlayer?.let { mp ->
                                     val newPos = minOf(mp.duration, mp.currentPosition + 5000)
@@ -426,17 +426,17 @@ fun LrcEditorDialog(
     }
 }
 
-/**
- * 可编辑的 LRC 行
- */
+
+
+
 data class EditableLrcLine(
     val startTime: Long,
     val text: String
 )
 
-/**
- * LRC 行编辑器
- */
+
+
+
 @Composable
 private fun LrcLineEditor(
     index: Int,
@@ -463,7 +463,7 @@ private fun LrcLineEditor(
         },
         label = "bg"
     )
-    
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -472,19 +472,19 @@ private fun LrcLineEditor(
         color = backgroundColor
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            // 基本信息行
+
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 行号
+
                 Text(
                     "${index + 1}",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.width(24.dp)
                 )
-                
-                // Time戳（可点击跳转）
+
+
                 Surface(
                     modifier = Modifier.clickable { onSeekTo() },
                     shape = RoundedCornerShape(4.dp),
@@ -498,10 +498,10 @@ private fun LrcLineEditor(
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.width(12.dp))
-                
-                // Lyrics文本（展开时可编辑）
+
+
                 if (isSelected) {
                     OutlinedTextField(
                         value = line.text,
@@ -514,17 +514,17 @@ private fun LrcLineEditor(
                     Text(
                         line.text.ifEmpty { "(空行)" },
                         style = MaterialTheme.typography.bodyMedium,
-                        color = if (line.text.isEmpty()) 
+                        color = if (line.text.isEmpty())
                             MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                        else 
+                        else
                             MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(weight = 1f, fill = true)
                     )
                 }
-                
-                // Play指示
+
+
                 if (isCurrentPlaying) {
                     Icon(
                         Icons.Default.GraphicEq,
@@ -534,12 +534,12 @@ private fun LrcLineEditor(
                     )
                 }
             }
-            
-            // Expand的编辑选项
+
+
             if (isSelected) {
                 Spacer(modifier = Modifier.height(12.dp))
-                
-                // Time调整区
+
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -550,42 +550,42 @@ private fun LrcLineEditor(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    
-                    // -1秒
+
+
                     FilledTonalIconButton(
                         onClick = { onAdjustTime(-1000) },
                         modifier = Modifier.size(32.dp)
                     ) {
                         Text("-1s", style = MaterialTheme.typography.labelSmall)
                     }
-                    
-                    // -0.1秒
+
+
                     FilledTonalIconButton(
                         onClick = { onAdjustTime(-100) },
                         modifier = Modifier.size(32.dp)
                     ) {
                         Text("-.1", style = MaterialTheme.typography.labelSmall)
                     }
-                    
-                    // +0.1秒
+
+
                     FilledTonalIconButton(
                         onClick = { onAdjustTime(100) },
                         modifier = Modifier.size(32.dp)
                     ) {
                         Text("+.1", style = MaterialTheme.typography.labelSmall)
                     }
-                    
-                    // +1秒
+
+
                     FilledTonalIconButton(
                         onClick = { onAdjustTime(1000) },
                         modifier = Modifier.size(32.dp)
                     ) {
                         Text("+1s", style = MaterialTheme.typography.labelSmall)
                     }
-                    
+
                     Spacer(modifier = Modifier.weight(weight = 1f, fill = true))
-                    
-                    // 设为当前时间
+
+
                     TextButton(
                         onClick = onSetCurrentTime,
                         contentPadding = PaddingValues(horizontal = 8.dp)
@@ -595,15 +595,15 @@ private fun LrcLineEditor(
                         Text(Strings.setAsCurrent, style = MaterialTheme.typography.labelSmall)
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
-                // 操作按钮
+
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // 上移
+
                     if (onMoveUp != null) {
                         OutlinedIconButton(
                             onClick = onMoveUp,
@@ -612,8 +612,8 @@ private fun LrcLineEditor(
                             Icon(Icons.Default.KeyboardArrowUp, Strings.lrcMoveUp, modifier = Modifier.size(18.dp))
                         }
                     }
-                    
-                    // 下移
+
+
                     if (onMoveDown != null) {
                         OutlinedIconButton(
                             onClick = onMoveDown,
@@ -622,10 +622,10 @@ private fun LrcLineEditor(
                             Icon(Icons.Default.KeyboardArrowDown, Strings.lrcMoveDown, modifier = Modifier.size(18.dp))
                         }
                     }
-                    
+
                     Spacer(modifier = Modifier.weight(weight = 1f, fill = true))
-                    
-                    // Delete
+
+
                     OutlinedIconButton(
                         onClick = onDelete,
                         modifier = Modifier.size(32.dp),

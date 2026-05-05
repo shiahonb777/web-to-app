@@ -45,11 +45,11 @@ fun StatusBarConfigCard(
     }
 
     val currentHeightDp = if (config.statusBarHeightDp > 0) config.statusBarHeightDp else systemStatusBarHeight
-    
+
     var pendingImageUri by remember { mutableStateOf<Uri?>(null) }
     var showCropper by remember { mutableStateOf(false) }
     var showColorPicker by remember { mutableStateOf(false) }
-    
+
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -58,7 +58,7 @@ fun StatusBarConfigCard(
             showCropper = true
         }
     }
-    
+
     if (showColorPicker) {
         ColorPickerDialog(
             currentColor = config.statusBarColor,
@@ -72,7 +72,7 @@ fun StatusBarConfigCard(
             onDismiss = { showColorPicker = false }
         )
     }
-    
+
     if (showCropper && pendingImageUri != null) {
         StatusBarImageCropper(
             imageUri = pendingImageUri!!,
@@ -91,7 +91,7 @@ fun StatusBarConfigCard(
             }
         )
     }
-    
+
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -103,17 +103,17 @@ fun StatusBarConfigCard(
             backgroundImage = config.statusBarBackgroundImage,
             alpha = config.statusBarBackgroundAlpha
         )
-        
+
         HeightSlider(
             currentHeight = currentHeightDp,
             systemDefaultHeight = systemStatusBarHeight,
             onHeightChange = { onConfigChange(config.copy(statusBarHeightDp = it)) }
         )
-        
+
         HorizontalDivider()
-        
+
         Text(Strings.backgroundType, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        
+
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             PremiumFilterChip(
                 selected = config.statusBarBackgroundType == StatusBarBackgroundType.COLOR,
@@ -145,9 +145,9 @@ fun StatusBarConfigCard(
                 )
             }
         }
-        
+
         HorizontalDivider()
-        
+
         AlphaSlider(alpha = config.statusBarBackgroundAlpha, onAlphaChange = { onConfigChange(config.copy(statusBarBackgroundAlpha = it)) })
     }
 }
@@ -160,10 +160,10 @@ private fun StatusBarPreviewBox(
     alpha: Float
 ) {
     val bgColor = remember(backgroundColor) { backgroundColor?.let { parseColor(it) } ?: Color.Black }
-    
+
     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(Strings.statusBarPreview, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        
+
         Box(
             modifier = Modifier.fillMaxWidth().height(heightDp.dp).clip(RoundedCornerShape(4.dp))
                 .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(4.dp))

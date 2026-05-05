@@ -30,10 +30,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/**
- * Gallery 画廊播放器（Shell 模式）
- * 从 APK 的 assets/gallery/ 目录加载媒体文件
- */
+
+
+
+
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun ShellGalleryPlayer(
@@ -43,8 +43,8 @@ fun ShellGalleryPlayer(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val assetDecryptor = remember { com.webtoapp.core.crypto.AssetDecryptor(context) }
-    
-    // 获取排序后的媒体列表
+
+
     val items = remember(galleryConfig) {
         when (galleryConfig.playMode) {
             "SHUFFLE" -> galleryConfig.items.shuffled()
@@ -52,8 +52,8 @@ fun ShellGalleryPlayer(
         }
     }
     var effectiveItems by remember { mutableStateOf(items) }
-    
-    // If config items are empty, try to derive from assets (for compatibility)
+
+
     LaunchedEffect(items) {
         effectiveItems = if (items.isNotEmpty()) {
             items
@@ -62,7 +62,7 @@ fun ShellGalleryPlayer(
             if (derived.isNotEmpty()) derived else items
         }
     }
-    
+
     if (effectiveItems.isEmpty()) {
         Box(
             modifier = Modifier.fillMaxSize().background(Color.Black),
@@ -72,22 +72,22 @@ fun ShellGalleryPlayer(
         }
         return
     }
-    
-    // Pager 状态
+
+
     val pagerState = androidx.compose.foundation.pager.rememberPagerState(
         initialPage = 0,
         pageCount = { effectiveItems.size }
     )
-    
-    // 当前项索引
+
+
     val currentIndex by remember { derivedStateOf { pagerState.settledPage } }
     val currentItem = effectiveItems.getOrNull(currentIndex)
-    
-    // 控制 UI 显示状态
+
+
     var showControls by remember { mutableStateOf(true) }
     var isPlaying by remember { mutableStateOf(galleryConfig.autoPlay) }
-    
-    // 图片自动播放计时器
+
+
     LaunchedEffect(currentIndex, isPlaying) {
         if (isPlaying && currentItem?.type == "IMAGE" && !pagerState.isScrollInProgress) {
             kotlinx.coroutines.delay(galleryConfig.imageInterval * 1000L)
@@ -100,16 +100,16 @@ fun ShellGalleryPlayer(
             }
         }
     }
-    
-    // 自动隐藏控制 UI
+
+
     LaunchedEffect(showControls) {
         if (showControls) {
             kotlinx.coroutines.delay(3000)
             showControls = false
         }
     }
-    
-    // 背景颜色
+
+
     val bgColor = remember(galleryConfig.backgroundColor) {
         try {
             Color(android.graphics.Color.parseColor(galleryConfig.backgroundColor))
@@ -117,7 +117,7 @@ fun ShellGalleryPlayer(
             Color.Black
         }
     }
-    
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -128,7 +128,7 @@ fun ShellGalleryPlayer(
                 )
             }
     ) {
-        // 主内容 - HorizontalPager
+
         androidx.compose.foundation.pager.HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxSize()
@@ -170,8 +170,8 @@ fun ShellGalleryPlayer(
                 }
             }
         }
-        
-        // 顶部信息栏
+
+
         AnimatedVisibility(
             visible = showControls && galleryConfig.showMediaInfo,
             enter = fadeIn() + slideInVertically(),
@@ -196,9 +196,9 @@ fun ShellGalleryPlayer(
                             tint = Color.White
                         )
                     }
-                    
+
                     Spacer(modifier = Modifier.width(8.dp))
-                    
+
                     Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                         currentItem?.let { item ->
                             Text(
@@ -215,11 +215,11 @@ fun ShellGalleryPlayer(
                             color = Color.White.copy(alpha = 0.7f)
                         )
                     }
-                    
-                    // 媒体类型图标
+
+
                     currentItem?.let { item ->
                         Icon(
-                            if (item.type == "VIDEO") Icons.Outlined.Videocam 
+                            if (item.type == "VIDEO") Icons.Outlined.Videocam
                             else Icons.Outlined.Image,
                             contentDescription = null,
                             tint = Color.White.copy(alpha = 0.7f),
@@ -229,8 +229,8 @@ fun ShellGalleryPlayer(
                 }
             }
         }
-        
-        // 播放/暂停按钮（仅图片模式）
+
+
         if (currentItem?.type == "IMAGE") {
             AnimatedVisibility(
                 visible = showControls,
@@ -256,8 +256,8 @@ fun ShellGalleryPlayer(
                 }
             }
         }
-        
-        // 左右导航箭头
+
+
         AnimatedVisibility(
             visible = showControls && currentIndex > 0,
             enter = fadeIn(),
@@ -284,7 +284,7 @@ fun ShellGalleryPlayer(
                 )
             }
         }
-        
+
         AnimatedVisibility(
             visible = showControls && currentIndex < effectiveItems.size - 1,
             enter = fadeIn(),
@@ -314,25 +314,25 @@ fun ShellGalleryPlayer(
     }
 }
 
-/**
- * Derive gallery items from embedded assets when config items are empty.
- * Looks for assets/gallery/item_*.{png|jpg|mp4|...} (and optional .enc).
- */
+
+
+
+
 private fun deriveGalleryItemsFromAssets(
     context: android.content.Context
 ): List<com.webtoapp.core.shell.GalleryShellItem> {
     return try {
         val assetEntries = context.assets.list("gallery")?.toList().orEmpty()
         if (assetEntries.isEmpty()) return emptyList()
-        
+
         val entrySet = assetEntries.toSet()
         val normalized = assetEntries.map { name ->
             if (name.endsWith(".enc")) name.removeSuffix(".enc") else name
         }.toSet()
-        
+
         val videoExts = setOf("mp4", "webm", "mkv", "avi", "mov", "3gp", "m4v")
         val imageExts = setOf("png", "jpg", "jpeg", "gif", "webp", "bmp", "heic", "heif")
-        
+
         normalized
             .filter { it.startsWith("item_") }
             .mapNotNull { name ->
@@ -342,14 +342,14 @@ private fun deriveGalleryItemsFromAssets(
                     ext in imageExts -> "IMAGE"
                     else -> null
                 } ?: return@mapNotNull null
-                
+
                 val index = name.substringAfter("item_").substringBefore(".").toIntOrNull()
                 val thumbName = index?.let { "thumb_$it.jpg" }
                 val thumbExists = thumbName?.let { tn -> tn in normalized || "${tn}.enc" in entrySet } == true
-                
+
                 val displayName = index?.let { "Media ${it + 1}" } ?: name
                 val sortKey = index ?: Int.MAX_VALUE
-                
+
                 com.webtoapp.core.shell.GalleryShellItem(
                     id = name,
                     assetPath = "gallery/$name",
@@ -367,9 +367,9 @@ private fun deriveGalleryItemsFromAssets(
     }
 }
 
-/**
- * Gallery 图片查看器（从 assets 加载）
- */
+
+
+
 @Composable
 fun ShellGalleryImageViewer(
     item: com.webtoapp.core.shell.GalleryShellItem,
@@ -379,16 +379,16 @@ fun ShellGalleryImageViewer(
     val context = LocalContext.current
     var bitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
     var isLoading by remember { mutableStateOf(true) }
-    
-    // 加载图片
+
+
     LaunchedEffect(item.assetPath) {
         isLoading = true
         try {
-            // 尝试加载加密版本
+
             val imageBytes = try {
                 assetDecryptor.loadAsset(item.assetPath)
             } catch (e: Exception) {
-                // 回退到非加密版本
+
                 context.assets.open(item.assetPath).use { it.readBytes() }
             }
             bitmap = android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
@@ -397,7 +397,7 @@ fun ShellGalleryImageViewer(
         }
         isLoading = false
     }
-    
+
     Box(
         modifier = modifier,
         contentAlignment = Alignment.Center
@@ -417,9 +417,9 @@ fun ShellGalleryImageViewer(
     }
 }
 
-/**
- * Gallery 视频播放器（从 assets 加载）
- */
+
+
+
 @Composable
 fun ShellGalleryVideoPlayer(
     item: com.webtoapp.core.shell.GalleryShellItem,
@@ -435,7 +435,7 @@ fun ShellGalleryVideoPlayer(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    
+
     var player by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
     var surfaceHolder by remember { mutableStateOf<android.view.SurfaceHolder?>(null) }
     var isPrepared by remember { mutableStateOf(false) }
@@ -443,15 +443,15 @@ fun ShellGalleryVideoPlayer(
     var currentPosition by remember { mutableLongStateOf(0L) }
     var duration by remember { mutableLongStateOf(0L) }
     val isEncrypted = remember(item.assetPath) { assetDecryptor.isEncrypted(item.assetPath) }
-    
-    // 创建和释放 MediaPlayer
+
+
     DisposableEffect(item.assetPath, isEncrypted) {
         val mediaPlayer = android.media.MediaPlayer()
         var assetFd: android.content.res.AssetFileDescriptor? = null
-        
+
         val job = scope.launch(Dispatchers.IO) {
             try {
-                // Set listeners on main thread
+
                 withContext(Dispatchers.Main) {
                     mediaPlayer.setOnPreparedListener { mp ->
                         isPrepared = true
@@ -464,9 +464,9 @@ fun ShellGalleryVideoPlayer(
                     }
                     mediaPlayer.setOnErrorListener { _, _, _ -> true }
                 }
-                
+
                 if (!isEncrypted) {
-                    // 优先使用 AssetFileDescriptor（避免大文件内存拷贝）
+
                     try {
                         assetFd = context.assets.openFd(item.assetPath)
                         withContext(Dispatchers.Main) {
@@ -481,8 +481,8 @@ fun ShellGalleryVideoPlayer(
                     } catch (e: Exception) {
                         AppLogger.w("ShellGallery", "openFd failed, fallback to stream copy: ${item.assetPath}", e)
                     }
-                    
-                    // 回退：非加密资源流式复制到临时文件
+
+
                     val ext = item.assetPath.substringAfterLast('.', "mp4")
                     val tempFile = java.io.File(context.cacheDir, "gallery_video_${System.currentTimeMillis()}.$ext")
                     context.assets.open(item.assetPath).use { input ->
@@ -494,7 +494,7 @@ fun ShellGalleryVideoPlayer(
                         mediaPlayer.prepareAsync()
                     }
                 } else {
-                    // 加密资源：解密到临时文件
+
                     val videoBytes = assetDecryptor.loadAsset(item.assetPath)
                     val ext = item.assetPath.substringAfterLast('.', "mp4")
                     val tempFile = java.io.File(context.cacheDir, "gallery_video_${System.currentTimeMillis()}.$ext")
@@ -509,31 +509,31 @@ fun ShellGalleryVideoPlayer(
                 AppLogger.e("ShellGallery", "Failed to load video: ${item.assetPath}", e)
             }
         }
-        
+
         player = mediaPlayer
-        
+
         onDispose {
             job.cancel()
             try {
                 assetFd?.close()
             } catch (e: Exception) {
-                // ignore
+
             }
             try {
                 mediaPlayer.stop()
                 mediaPlayer.release()
             } catch (e: Exception) {
-                // ignore
+
             }
             player = null
             isPrepared = false
-            // 清理临时文件
+
             tempVideoFile?.delete()
             tempVideoFile = null
         }
     }
-    
-    // 处理播放状态变化
+
+
     LaunchedEffect(isPlaying, isPrepared, isCurrentPage) {
         player?.let { mp ->
             if (isPrepared) {
@@ -545,8 +545,8 @@ fun ShellGalleryVideoPlayer(
             }
         }
     }
-    
-    // 处理音量
+
+
     LaunchedEffect(enableAudio, isPrepared) {
         player?.let { mp ->
             if (isPrepared) {
@@ -557,21 +557,21 @@ fun ShellGalleryVideoPlayer(
             }
         }
     }
-    
-    // 更新播放进度
+
+
     LaunchedEffect(isPlaying, isPrepared) {
         while (isPlaying && isPrepared) {
             player?.let { mp ->
                 try {
                     currentPosition = mp.currentPosition.toLong()
                 } catch (e: Exception) {
-                    // ignore
+
                 }
             }
             kotlinx.coroutines.delay(100)
         }
     }
-    
+
     Box(
         modifier = modifier
             .pointerInput(Unit) {
@@ -579,7 +579,7 @@ fun ShellGalleryVideoPlayer(
                     onTap = { onToggleControls() },
                     onDoubleTap = { offset ->
                         val width = size.width
-                        val seekAmount = 10000 // 10 seconds
+                        val seekAmount = 10000
                         player?.let { mp ->
                             if (isPrepared) {
                                 val newPosition = if (offset.x < width / 2) {
@@ -594,7 +594,7 @@ fun ShellGalleryVideoPlayer(
                 )
             }
     ) {
-        // SurfaceView for video
+
         AndroidView(
             factory = { ctx ->
                 android.view.SurfaceView(ctx).apply {
@@ -612,8 +612,8 @@ fun ShellGalleryVideoPlayer(
             },
             modifier = Modifier.fillMaxSize()
         )
-        
-        // 视频控制层
+
+
         AnimatedVisibility(
             visible = showControls,
             enter = fadeIn(),
@@ -630,7 +630,7 @@ fun ShellGalleryVideoPlayer(
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                         .navigationBarsPadding()
                 ) {
-                    // 进度条
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
@@ -640,10 +640,10 @@ fun ShellGalleryVideoPlayer(
                             style = MaterialTheme.typography.labelSmall,
                             color = Color.White
                         )
-                        
+
                         Slider(
                             value = if (duration > 0) currentPosition.toFloat() / duration else 0f,
-                            onValueChange = { 
+                            onValueChange = {
                                 player?.seekTo((it * duration).toInt())
                                 currentPosition = (it * duration).toLong()
                             },
@@ -656,22 +656,22 @@ fun ShellGalleryVideoPlayer(
                                 inactiveTrackColor = Color.White.copy(alpha = 0.3f)
                             )
                         )
-                        
+
                         Text(
                             text = formatTimeMs(duration),
                             style = MaterialTheme.typography.labelSmall,
                             color = Color.White
                         )
                     }
-                    
-                    // 控制按钮
+
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // 后退 10 秒
-                        IconButton(onClick = { 
+
+                        IconButton(onClick = {
                             player?.let { mp ->
                                 if (isPrepared) mp.seekTo((mp.currentPosition - 10000).coerceAtLeast(0))
                             }
@@ -682,8 +682,8 @@ fun ShellGalleryVideoPlayer(
                                 tint = Color.White
                             )
                         }
-                        
-                        // 播放/暂停
+
+
                         IconButton(
                             onClick = { onPlayStateChange(!isPlaying) },
                             modifier = Modifier.size(56.dp)
@@ -695,9 +695,9 @@ fun ShellGalleryVideoPlayer(
                                 tint = Color.White
                             )
                         }
-                        
-                        // 快进 10 秒
-                        IconButton(onClick = { 
+
+
+                        IconButton(onClick = {
                             player?.let { mp ->
                                 if (isPrepared) mp.seekTo((mp.currentPosition + 10000).coerceAtMost(mp.duration))
                             }

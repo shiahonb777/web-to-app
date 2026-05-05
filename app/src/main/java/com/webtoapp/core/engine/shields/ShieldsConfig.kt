@@ -2,11 +2,11 @@ package com.webtoapp.core.engine.shields
 
 import com.webtoapp.core.i18n.Strings
 
-/**
- * 第三方 Cookie 策略
- *
- * ★ displayName 改为使用 i18n 系统的动态 getter，而非硬编码中文
- */
+
+
+
+
+
 enum class ThirdPartyCookiePolicy {
     ALLOW_ALL,
     BLOCK_CROSS_SITE,
@@ -19,11 +19,11 @@ enum class ThirdPartyCookiePolicy {
     }
 }
 
-/**
- * Shields Referrer 策略
- *
- * ★ displayName 改为使用 i18n 系统的动态 getter
- */
+
+
+
+
+
 enum class ShieldsReferrerPolicy(val value: String) {
     NO_REFERRER("no-referrer"),
     ORIGIN("origin"),
@@ -40,11 +40,11 @@ enum class ShieldsReferrerPolicy(val value: String) {
     }
 }
 
-/**
- * 跟踪器分类
- *
- * ★ displayName 改为使用 i18n 系统的动态 getter
- */
+
+
+
+
+
 enum class TrackerCategory {
     ANALYTICS,
     SOCIAL,
@@ -61,17 +61,17 @@ enum class TrackerCategory {
     }
 }
 
-/**
- * SSL 错误处理策略
- *
- * 当遇到 SSL 证书错误（过期、无效、自签名等）时的行为
- */
+
+
+
+
+
 enum class SslErrorPolicy {
-    /** 自动回退到 HTTP — 最兼容，大多数网站都能正常访问 */
+
     AUTO_HTTP_FALLBACK,
-    /** 询问用户 — 显示对话框让用户选择是否继续 */
+
     ASK_USER,
-    /** 阻止连接 — 直接拒绝（最安全） */
+
     BLOCK;
 
     val displayName: String get() = when (this) {
@@ -87,46 +87,46 @@ enum class SslErrorPolicy {
     }
 }
 
-/**
- * Shields 统一配置
- * 管理所有浏览器隐私保护功能的开关
- */
+
+
+
+
 data class ShieldsConfig(
-    /** 总开关 */
+
     val enabled: Boolean = true,
-    
-    /** HTTPS 自动升级（默认关闭，因为会破坏很多只支持HTTP的网站） */
+
+
     val httpsUpgrade: Boolean = false,
 
-    /** SSL 错误处理策略（默认自动回退到 HTTP，最兼容） */
+
     val sslErrorPolicy: SslErrorPolicy = SslErrorPolicy.AUTO_HTTP_FALLBACK,
 
-    /** 跟踪器拦截 */
+
     val trackerBlocking: Boolean = true,
-    
-    /** Cookie 弹窗自动关闭（默认关闭 — 自动点击按钮可能误点合法对话框） */
+
+
     val cookieConsentBlock: Boolean = false,
-    
-    /** Global Privacy Control 信号（默认关闭 — 部分网站检测到 GPC 后拒绝服务或降级功能） */
+
+
     val gpcEnabled: Boolean = false,
-    
-    /** 第三方 Cookie 策略（默认允许 — web-to-app 工具不是隐私浏览器，OAuth/嵌入式小部件依赖第三方 Cookie） */
+
+
     val thirdPartyCookiePolicy: ThirdPartyCookiePolicy = ThirdPartyCookiePolicy.ALLOW_ALL,
-    
-    /** Referrer 策略（默认宽松 — 严格策略会破坏反盗链/CSRF 校验） */
+
+
     val referrerPolicy: ShieldsReferrerPolicy = ShieldsReferrerPolicy.ORIGIN,
-    
-    /** 阅读模式 */
+
+
     val readerModeEnabled: Boolean = true
 ) {
     companion object {
-        /** 默认配置（推荐） */
+
         val DEFAULT = ShieldsConfig()
-        
-        /** 关闭所有防护 */
+
+
         val DISABLED = ShieldsConfig(enabled = false)
-        
-        /** 最大防护（默认关闭 HTTPS 升级以避免破坏网站） */
+
+
         val MAXIMUM = ShieldsConfig(
             enabled = true,
             httpsUpgrade = false,

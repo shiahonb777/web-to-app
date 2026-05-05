@@ -13,12 +13,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 
-/**
- * 带缩放弹入动画的 AlertDialog
- * scale 0.85 → 1.0 + alpha 0 → 1 的弹簧效果
- * 
- * 参数与标准 AlertDialog 一致，直接替换使用
- */
+
+
+
+
+
+
 @Composable
 fun AnimatedAlertDialog(
     onDismissRequest: () -> Unit,
@@ -36,7 +36,7 @@ fun AnimatedAlertDialog(
     tonalElevation: Dp = AlertDialogDefaults.TonalElevation,
     properties: DialogProperties = DialogProperties(),
 ) {
-    // 入场动画
+
     var appeared by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { appeared = true }
 
@@ -49,7 +49,7 @@ fun AnimatedAlertDialog(
         label = "dialogScale"
     )
 
-    // ★ alpha 也用 spring — 打断时保留速度
+
     val alpha by animateFloatAsState(
         targetValue = if (appeared) 1f else 0f,
         animationSpec = spring(

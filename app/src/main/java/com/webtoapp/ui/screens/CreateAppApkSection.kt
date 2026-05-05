@@ -21,7 +21,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusEvent
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -31,30 +30,52 @@ import kotlinx.coroutines.launch
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.data.model.*
 import com.webtoapp.ui.components.*
+import com.webtoapp.ui.design.*
 import com.webtoapp.ui.animation.CardExpandTransition
 import com.webtoapp.ui.animation.CardCollapseTransition
 import com.webtoapp.util.AppConstants
+import com.webtoapp.util.ConfigPresetStorage
+import com.webtoapp.util.NetworkTrustStorage
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 
-// Pre-compiled regex for package name validation (avoid allocation during recomposition)
+
 private val PACKAGE_NAME_REGEX = AppConstants.PACKAGE_NAME_REGEX
 
-/**
- * APK 导出配置区域
- */
+
+
+
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ApkExportSection(
     config: ApkExportConfig,
     onConfigChange: (ApkExportConfig) -> Unit,
-    onOpenPermissionConfig: () -> Unit = {}
+    onOpenPermissionConfig: (() -> Unit)? = null
 ) {
     val coroutineScope = rememberCoroutineScope()
     val packageNameBringIntoViewRequester = remember { BringIntoViewRequester() }
     val versionNameBringIntoViewRequester = remember { BringIntoViewRequester() }
     val versionCodeBringIntoViewRequester = remember { BringIntoViewRequester() }
-    
+
+    val context = LocalContext.current
+    var caImportError by remember { mutableStateOf<String?>(null) }
+    val caPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        runCatching {
+            NetworkTrustStorage.importCertificate(context, uri)
+        }.onSuccess { cert ->
+            val next = config.networkTrustConfig.copy(
+                customCaCertificates = config.networkTrustConfig.customCaCertificates + cert
+            )
+            caImportError = null
+            onConfigChange(config.copy(networkTrustConfig = next))
+        }.onFailure { error ->
+            caImportError = error.message ?: Strings.invalidCertificate
+        }
+    }
+
     Column {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -72,26 +93,26 @@ fun ApkExportSection(
                 style = MaterialTheme.typography.titleSmall
             )
         }
-        
+
         Text(
             text = Strings.apkConfigNote,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
         )
-        
-        // Custom包名
+
+
         val packageName = config.customPackageName ?: ""
-        val isPackageNameInvalid = packageName.isNotBlank() && 
+        val isPackageNameInvalid = packageName.isNotBlank() &&
             !packageName.matches(PACKAGE_NAME_REGEX)
-        
+
         OutlinedTextField(
             value = packageName,
-            onValueChange = { 
+            onValueChange = {
                 onConfigChange(config.copy(customPackageName = it.ifBlank { null }))
             },
             label = { Text(Strings.customPackageName) },
-            placeholder = { Text("com.example.myapp") },
+            placeholder = { Text(Strings.apkPackageNamePlaceholder) },
             singleLine = true,
             modifier = Modifier
                 .fillMaxWidth()
@@ -104,7 +125,7 @@ fun ApkExportSection(
                     }
                 },
             isError = isPackageNameInvalid,
-            supportingText = { 
+            supportingText = {
                 if (isPackageNameInvalid) {
                     Text(
                         Strings.packageNameInvalidFormat,
@@ -115,21 +136,21 @@ fun ApkExportSection(
                 }
             }
         )
-        
+
         Spacer(modifier = Modifier.height(12.dp))
-        
-        // Version名和版本号
+
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             OutlinedTextField(
                 value = config.customVersionName ?: "",
-                onValueChange = { 
+                onValueChange = {
                     onConfigChange(config.copy(customVersionName = it.ifBlank { null }))
                 },
                 label = { Text(Strings.versionName) },
-                placeholder = { Text("1.0.0") },
+                placeholder = { Text(Strings.apkVersionNamePlaceholder) },
                 singleLine = true,
                 modifier = Modifier
                     .weight(weight = 1f, fill = true)
@@ -142,7 +163,7 @@ fun ApkExportSection(
                         }
                     }
             )
-            
+
             OutlinedTextField(
                 value = config.customVersionCode?.toString() ?: "",
                 onValueChange = { input ->
@@ -150,7 +171,7 @@ fun ApkExportSection(
                     onConfigChange(config.copy(customVersionCode = code))
                 },
                 label = { Text(Strings.versionCode) },
-                placeholder = { Text("1") },
+                placeholder = { Text(Strings.apkVersionCodePlaceholder) },
                 singleLine = true,
                 modifier = Modifier
                     .weight(weight = 1f, fill = true)
@@ -165,18 +186,18 @@ fun ApkExportSection(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
         }
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
-        // APK 架构选择
+
+
         Text(
             text = Strings.apkArchitecture,
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurface
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -191,7 +212,7 @@ fun ApkExportSection(
                 )
             }
         }
-        
+
         Text(
             text = config.architecture.description,
             style = MaterialTheme.typography.bodySmall,
@@ -227,76 +248,40 @@ fun ApkExportSection(
             modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
         )
 
-        // 权限配置导航按钮
-        val enabledPermCount = listOf(
-            config.runtimePermissions.camera,
-            config.runtimePermissions.microphone,
-            config.runtimePermissions.location,
-            config.runtimePermissions.notifications,
-            config.runtimePermissions.readExternalStorage,
-            config.runtimePermissions.writeExternalStorage,
-            config.runtimePermissions.readMediaImages,
-            config.runtimePermissions.readMediaVideo,
-            config.runtimePermissions.readMediaAudio,
-            config.runtimePermissions.bluetooth,
-            config.runtimePermissions.nfc,
-            config.runtimePermissions.wifiState,
-            config.runtimePermissions.bodySensors,
-            config.runtimePermissions.activityRecognition,
-            config.runtimePermissions.readPhoneState,
-            config.runtimePermissions.callPhone,
-            config.runtimePermissions.readContacts,
-            config.runtimePermissions.writeContacts,
-            config.runtimePermissions.readCalendar,
-            config.runtimePermissions.writeCalendar,
-            config.runtimePermissions.readSms,
-            config.runtimePermissions.sendSms,
-            config.runtimePermissions.receiveSms,
-            config.runtimePermissions.readCallLog,
-            config.runtimePermissions.writeCallLog,
-            config.runtimePermissions.processOutgoingCalls,
-            config.runtimePermissions.foregroundService,
-            config.runtimePermissions.wakeLock,
-            config.runtimePermissions.requestIgnoreBatteryOptimizations,
-            config.runtimePermissions.bootCompleted,
-            config.runtimePermissions.vibration,
-            config.runtimePermissions.installPackages,
-            config.runtimePermissions.requestDeletePackages,
-            config.runtimePermissions.systemAlertWindow
-        ).count { it }
 
-        OutlinedButton(
-            onClick = { onOpenPermissionConfig() },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Icon(
-                Icons.Outlined.Settings,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = if (enabledPermCount > 0)
-                    Strings.permissionConfigButton + " ($enabledPermCount)"
-                else
-                    Strings.permissionConfigButton,
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            Icon(
-                Icons.Outlined.ChevronRight,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-            )
-        }
-        
+        PermissionSummaryCard(
+            permissions = config.runtimePermissions,
+            onClick = onOpenPermissionConfig
+        )
+
         Spacer(modifier = Modifier.height(16.dp))
         HorizontalDivider()
         Spacer(modifier = Modifier.height(16.dp))
-        
-        // 性能优化
+
+        NetworkTrustConfigPanel(
+            config = config.networkTrustConfig,
+            importError = caImportError,
+            onConfigChange = { networkTrustConfig ->
+                onConfigChange(config.copy(networkTrustConfig = networkTrustConfig))
+            },
+            onImportCertificate = {
+                caPickerLauncher.launch(
+                    arrayOf(
+                        "application/x-x509-ca-cert",
+                        "application/x-pem-file",
+                        "application/octet-stream",
+                        "text/plain",
+                        "*/*"
+                    )
+                )
+            }
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+        HorizontalDivider()
+        Spacer(modifier = Modifier.height(16.dp))
+
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -313,28 +298,28 @@ fun ApkExportSection(
                 style = MaterialTheme.typography.titleSmall
             )
         }
-        
+
         Text(
             text = Strings.performanceOptimizationDesc,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
         )
-        
+
         SettingsSwitch(
             title = Strings.performanceOptimization,
             subtitle = if (config.performanceOptimization) Strings.perfEnabled else Strings.perfDisabled,
             checked = config.performanceOptimization,
             onCheckedChange = { onConfigChange(config.copy(performanceOptimization = it)) }
         )
-        
+
         AnimatedVisibility(
             visible = config.performanceOptimization,
             enter = CardExpandTransition,
             exit = CardCollapseTransition
         ) {
             Column(modifier = Modifier.padding(start = 16.dp, top = 8.dp)) {
-                // 资源优化
+
                 Text(
                     text = Strings.perfResourceOptimize,
                     style = MaterialTheme.typography.labelMedium,
@@ -345,7 +330,7 @@ fun ApkExportSection(
                     title = Strings.perfCompressImages,
                     subtitle = Strings.perfCompressImagesHint,
                     checked = config.performanceConfig.compressImages,
-                    onCheckedChange = { 
+                    onCheckedChange = {
                         onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(compressImages = it)))
                     }
                 )
@@ -373,14 +358,14 @@ fun ApkExportSection(
                         onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(removeUnusedResources = it)))
                     }
                 )
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
-                // 构建优化
+
+
                 Text(
                     text = Strings.perfBuildOptimize,
                     style = MaterialTheme.typography.labelMedium,
-                    color = Color(0xFF2196F3),
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
                 SettingsSwitch(
@@ -399,10 +384,10 @@ fun ApkExportSection(
                         onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(enableCache = it)))
                     }
                 )
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
-                // 加载优化
+
+
                 Text(
                     text = Strings.perfLoadOptimize,
                     style = MaterialTheme.typography.labelMedium,
@@ -433,14 +418,14 @@ fun ApkExportSection(
                         onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(optimizeScripts = it)))
                     }
                 )
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
-                // 运行时优化
+
+
                 Text(
                     text = Strings.perfRuntimeOptimize,
                     style = MaterialTheme.typography.labelMedium,
-                    color = Color(0xFF9C27B0),
+                    color = MaterialTheme.colorScheme.tertiary,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
                 SettingsSwitch(
@@ -453,31 +438,204 @@ fun ApkExportSection(
                 )
             }
         }
-        
+
         Spacer(modifier = Modifier.height(16.dp))
         HorizontalDivider()
         Spacer(modifier = Modifier.height(16.dp))
-        
-        // 自定义签名配置
+
+
         CustomSigningSection()
-        
+
     }
 }
 
 
-/**
- * 自定义签名配置区域
- */
+@Composable
+private fun NetworkTrustConfigPanel(
+    config: NetworkTrustConfig,
+    importError: String?,
+    onConfigChange: (NetworkTrustConfig) -> Unit,
+    onImportCertificate: () -> Unit
+) {
+    val context = LocalContext.current
+    var presets by remember { mutableStateOf(ConfigPresetStorage.loadNetworkTrust(context)) }
+    var showSavePresetDialog by remember { mutableStateOf(false) }
+    var presetName by remember { mutableStateOf("") }
+
+    Column(verticalArrangement = Arrangement.spacedBy(WtaSpacing.ContentGap)) {
+        WtaSettingRow(
+            title = Strings.networkTrustTitle,
+            subtitle = Strings.networkTrustHint,
+            icon = Icons.Outlined.GppGood,
+            contentPadding = PaddingValues(horizontal = 0.dp, vertical = WtaSpacing.ContentGap)
+        )
+
+        WtaSettingCard {
+            WtaToggleRow(
+                title = Strings.trustSystemCa,
+                subtitle = Strings.trustSystemCaHint,
+                icon = Icons.Outlined.Security,
+                checked = config.trustSystemCa,
+                onCheckedChange = { onConfigChange(config.copy(trustSystemCa = it)) }
+            )
+            WtaSectionDivider()
+            WtaToggleRow(
+                title = Strings.trustUserCa,
+                subtitle = Strings.trustUserCaHint,
+                icon = Icons.Outlined.AdminPanelSettings,
+                checked = config.trustUserCa,
+                onCheckedChange = { onConfigChange(config.copy(trustUserCa = it)) }
+            )
+            WtaSectionDivider()
+            WtaToggleRow(
+                title = Strings.cleartextTrafficAllowed,
+                subtitle = Strings.cleartextTrafficAllowedHint,
+                icon = Icons.Outlined.Http,
+                checked = config.cleartextTrafficPermitted,
+                onCheckedChange = { onConfigChange(config.copy(cleartextTrafficPermitted = it)) }
+            )
+            WtaSectionDivider()
+            WtaSettingRow(
+                title = Strings.importCustomCa,
+                subtitle = if (config.customCaCertificates.isEmpty()) {
+                    Strings.importCustomCaHint
+                } else {
+                    Strings.importedCertificatesCount.replace("%d", config.customCaCertificates.size.toString())
+                },
+                icon = Icons.Outlined.UploadFile,
+                onClick = onImportCertificate
+            ) {
+                Text(
+                    text = Strings.btnImport,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+            WtaSectionDivider()
+            WtaSettingRow(
+                title = Strings.saveNetworkPreset,
+                subtitle = Strings.saveNetworkPresetHint,
+                icon = Icons.Outlined.BookmarkAdd,
+                onClick = {
+                    presetName = ""
+                    showSavePresetDialog = true
+                }
+            ) {
+                Text(
+                    text = Strings.save,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+
+        if (!importError.isNullOrBlank()) {
+            WtaStatusBanner(
+                message = importError,
+                tone = WtaStatusTone.Error
+            )
+        }
+
+        config.customCaCertificates.forEach { cert ->
+            WtaSettingCard {
+                WtaSettingRow(
+                    title = cert.displayName,
+                    subtitle = "${Strings.sha256Prefix} ${cert.sha256.chunked(2).take(8).joinToString(":").uppercase()}...",
+                    icon = Icons.Outlined.Badge
+                ) {
+                    TextButton(
+                        onClick = {
+                            onConfigChange(
+                                config.copy(
+                                    customCaCertificates = config.customCaCertificates.filterNot { it.id == cert.id }
+                                )
+                            )
+                        }
+                    ) {
+                        Text(Strings.btnDelete)
+                    }
+                }
+            }
+        }
+
+        if (presets.isNotEmpty()) {
+            WtaSettingCard {
+                presets.forEachIndexed { index, preset ->
+                    WtaSettingRow(
+                        title = preset.name,
+                        subtitle = Strings.applySavedNetworkPreset,
+                        icon = Icons.Outlined.Inventory2,
+                        onClick = { onConfigChange(preset.config) }
+                    ) {
+                        TextButton(
+                            onClick = {
+                                presets = ConfigPresetStorage.deleteNetworkTrust(context, preset.id)
+                            }
+                        ) {
+                            Text(Strings.btnDelete)
+                        }
+                    }
+                    if (index != presets.lastIndex) {
+                        WtaSectionDivider()
+                    }
+                }
+            }
+        }
+
+        if (config.customCaCertificates.isNotEmpty()) {
+            WtaStatusBanner(
+                message = Strings.networkTrustTemplateLimitHint,
+                tone = WtaStatusTone.Info
+            )
+        }
+    }
+
+    if (showSavePresetDialog) {
+        AlertDialog(
+            onDismissRequest = { showSavePresetDialog = false },
+            title = { Text(Strings.saveNetworkPresetTitle) },
+            text = {
+                OutlinedTextField(
+                    value = presetName,
+                    onValueChange = { presetName = it },
+                    label = { Text(Strings.presetName) },
+                    singleLine = true
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        presets = ConfigPresetStorage.saveNetworkTrust(context, presetName, config)
+                        showSavePresetDialog = false
+                    },
+                    enabled = presetName.isNotBlank()
+                ) {
+                    Text(Strings.save)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSavePresetDialog = false }) {
+                    Text(Strings.btnCancel)
+                }
+            }
+        )
+    }
+}
+
+
+
+
+
 @Composable
 fun CustomSigningSection() {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val signer = remember { com.webtoapp.core.apkbuilder.JarSigner(context) }
-    
+
     var signerType by remember { mutableStateOf(signer.getSignerType()) }
     var certInfo by remember { mutableStateOf(signer.getCertificateInfo()) }
-    
-    // 密码输入对话框状态
+
+
     var showImportPasswordDialog by remember { mutableStateOf(false) }
     var showExportPasswordDialog by remember { mutableStateOf(false) }
     var showRemoveConfirmDialog by remember { mutableStateOf(false) }
@@ -486,8 +644,8 @@ fun CustomSigningSection() {
     var passwordVisible by remember { mutableStateOf(false) }
     var importError by remember { mutableStateOf<String?>(null) }
     var snackbarMessage by remember { mutableStateOf<String?>(null) }
-    
-    // 文件选择器
+
+
     val keystorePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
@@ -498,8 +656,8 @@ fun CustomSigningSection() {
             showImportPasswordDialog = true
         }
     }
-    
-    // 导出文件创建器
+
+
     val keystoreExportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/x-pkcs12")
     ) { uri: Uri? ->
@@ -509,9 +667,9 @@ fun CustomSigningSection() {
             showExportPasswordDialog = true
         }
     }
-    
+
     Column {
-        // 标题行
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -528,103 +686,73 @@ fun CustomSigningSection() {
                 style = MaterialTheme.typography.titleSmall
             )
         }
-        
+
         Text(
             text = Strings.customSigningDesc,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
         )
-        
-        // 当前签名状态
-        Surface(
-            color = if (com.webtoapp.ui.theme.LocalIsDarkTheme.current) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.72f),
-            shape = RoundedCornerShape(8.dp)
-        ) {
-            Column(modifier = Modifier.padding(12.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        if (signerType == com.webtoapp.core.apkbuilder.JarSigner.SignerType.PKCS12_CUSTOM)
-                            Icons.Outlined.VerifiedUser else Icons.Outlined.Shield,
-                        null,
-                        tint = if (signerType == com.webtoapp.core.apkbuilder.JarSigner.SignerType.PKCS12_CUSTOM)
-                            MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = Strings.currentSigningStatus,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+
+
+        WtaSettingCard(contentPadding = PaddingValues(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    if (signerType == com.webtoapp.core.apkbuilder.JarSigner.SignerType.PKCS12_CUSTOM)
+                        Icons.Outlined.VerifiedUser else Icons.Outlined.Shield,
+                    null,
+                    tint = if (signerType == com.webtoapp.core.apkbuilder.JarSigner.SignerType.PKCS12_CUSTOM)
+                        MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = Strings.currentSigningStatus,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = when (signerType) {
+                    com.webtoapp.core.apkbuilder.JarSigner.SignerType.PKCS12_CUSTOM -> Strings.signingTypeCustom
+                    com.webtoapp.core.apkbuilder.JarSigner.SignerType.PKCS12_AUTO -> Strings.signingTypeAutoGenerated
+                    com.webtoapp.core.apkbuilder.JarSigner.SignerType.ANDROID_KEYSTORE -> Strings.signingTypeAndroidKeyStore
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = if (signerType == com.webtoapp.core.apkbuilder.JarSigner.SignerType.PKCS12_CUSTOM)
+                    MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+            )
+            if (certInfo != null) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = when (signerType) {
-                        com.webtoapp.core.apkbuilder.JarSigner.SignerType.PKCS12_CUSTOM -> Strings.signingTypeCustom
-                        com.webtoapp.core.apkbuilder.JarSigner.SignerType.PKCS12_AUTO -> Strings.signingTypeAutoGenerated
-                        com.webtoapp.core.apkbuilder.JarSigner.SignerType.ANDROID_KEYSTORE -> Strings.signingTypeAndroidKeyStore
-                    },
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = if (signerType == com.webtoapp.core.apkbuilder.JarSigner.SignerType.PKCS12_CUSTOM)
-                        MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                    text = certInfo!!,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 5,
+                    overflow = TextOverflow.Ellipsis
                 )
-                if (certInfo != null) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = certInfo!!,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 5,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(12.dp))
-        
-        // 提示信息
-        Surface(
-            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
-            shape = RoundedCornerShape(8.dp)
-        ) {
-            Row(
-                modifier = Modifier.padding(10.dp),
-                verticalAlignment = Alignment.Top
-            ) {
-                Icon(
-                    Icons.Outlined.Info,
-                    null,
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                    modifier = Modifier.size(14.dp).padding(top = 2.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Column {
-                    Text(
-                        text = Strings.customSigningNote,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                    Text(
-                        text = Strings.supportedKeystoreFormats,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
-                        modifier = Modifier.padding(top = 2.dp)
-                    )
-                }
-            }
-        }
-        
+
+
+        WtaStatusBanner(
+            title = Strings.customSigningNote,
+            message = Strings.supportedKeystoreFormats,
+            tone = WtaStatusTone.Info
+        )
+
         Spacer(modifier = Modifier.height(12.dp))
-        
-        // 操作按钮
+
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // 导入按钮
+
             PremiumOutlinedButton(
                 onClick = {
                     keystorePickerLauncher.launch(arrayOf("*/*"))
@@ -640,8 +768,8 @@ fun CustomSigningSection() {
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(Strings.importKeystore, style = MaterialTheme.typography.labelMedium)
             }
-            
-            // 导出按钮
+
+
             PremiumOutlinedButton(
                 onClick = {
                     keystoreExportLauncher.launch("webtoapp_signing.p12")
@@ -658,8 +786,8 @@ fun CustomSigningSection() {
                 Text(Strings.exportKeystore, style = MaterialTheme.typography.labelMedium)
             }
         }
-        
-        // 删除自定义证书按钮（仅在使用自定义证书时显示）
+
+
         if (signerType == com.webtoapp.core.apkbuilder.JarSigner.SignerType.PKCS12_CUSTOM) {
             Spacer(modifier = Modifier.height(8.dp))
             TextButton(
@@ -678,32 +806,25 @@ fun CustomSigningSection() {
                 Text(Strings.removeCustomKeystore)
             }
         }
-        
-        // Snackbar 消息
+
+
         snackbarMessage?.let { msg ->
             Spacer(modifier = Modifier.height(8.dp))
-            Surface(
-                color = MaterialTheme.colorScheme.inverseSurface,
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Text(
-                    text = msg,
-                    modifier = Modifier.padding(12.dp),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.inverseOnSurface
-                )
-            }
+            WtaStatusBanner(
+                message = msg,
+                tone = WtaStatusTone.Success
+            )
             LaunchedEffect(msg) {
                 kotlinx.coroutines.delay(3000)
                 snackbarMessage = null
             }
         }
     }
-    
-    // 导入密码输入对话框
+
+
     if (showImportPasswordDialog) {
         AlertDialog(
-            onDismissRequest = { 
+            onDismissRequest = {
                 showImportPasswordDialog = false
                 pendingKeystoreUri = null
                 passwordInput = ""
@@ -721,15 +842,15 @@ fun CustomSigningSection() {
                     )
                     OutlinedTextField(
                         value = passwordInput,
-                        onValueChange = { 
+                        onValueChange = {
                             passwordInput = it
                             importError = null
                         },
                         label = { Text(Strings.keystorePassword) },
                         singleLine = true,
-                        visualTransformation = if (passwordVisible) 
-                            androidx.compose.ui.text.input.VisualTransformation.None 
-                        else 
+                        visualTransformation = if (passwordVisible)
+                            androidx.compose.ui.text.input.VisualTransformation.None
+                        else
                             androidx.compose.ui.text.input.PasswordVisualTransformation(),
                         trailingIcon = {
                             IconButton(onClick = { passwordVisible = !passwordVisible }) {
@@ -753,17 +874,17 @@ fun CustomSigningSection() {
                         val uri = pendingKeystoreUri ?: return@TextButton
                         coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
                             try {
-                                // 从 URI 复制到临时文件
+
                                 val tempFile = java.io.File(context.cacheDir, "import_keystore_temp")
                                 context.contentResolver.openInputStream(uri)?.use { input ->
                                     tempFile.outputStream().use { output ->
                                         input.copyTo(output)
                                     }
                                 }
-                                
+
                                 val success = signer.importKeystore(tempFile, passwordInput)
                                 tempFile.delete()
-                                
+
                                 kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
                                     if (success) {
                                         signerType = signer.getSignerType()
@@ -790,7 +911,7 @@ fun CustomSigningSection() {
                 }
             },
             dismissButton = {
-                TextButton(onClick = { 
+                TextButton(onClick = {
                     showImportPasswordDialog = false
                     pendingKeystoreUri = null
                     passwordInput = ""
@@ -801,11 +922,11 @@ fun CustomSigningSection() {
             }
         )
     }
-    
-    // 导出密码输入对话框
+
+
     if (showExportPasswordDialog) {
         AlertDialog(
-            onDismissRequest = { 
+            onDismissRequest = {
                 showExportPasswordDialog = false
                 pendingKeystoreUri = null
                 passwordInput = ""
@@ -825,9 +946,9 @@ fun CustomSigningSection() {
                         onValueChange = { passwordInput = it },
                         label = { Text(Strings.exportPassword) },
                         singleLine = true,
-                        visualTransformation = if (passwordVisible) 
-                            androidx.compose.ui.text.input.VisualTransformation.None 
-                        else 
+                        visualTransformation = if (passwordVisible)
+                            androidx.compose.ui.text.input.VisualTransformation.None
+                        else
                             androidx.compose.ui.text.input.PasswordVisualTransformation(),
                         trailingIcon = {
                             IconButton(onClick = { passwordVisible = !passwordVisible }) {
@@ -849,7 +970,7 @@ fun CustomSigningSection() {
                             try {
                                 val tempFile = java.io.File(context.cacheDir, "export_keystore_temp.p12")
                                 val success = signer.exportPkcs12(tempFile, passwordInput)
-                                
+
                                 if (success) {
                                     context.contentResolver.openOutputStream(uri)?.use { output ->
                                         tempFile.inputStream().use { input ->
@@ -858,7 +979,7 @@ fun CustomSigningSection() {
                                     }
                                     tempFile.delete()
                                 }
-                                
+
                                 kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
                                     showExportPasswordDialog = false
                                     pendingKeystoreUri = null
@@ -879,7 +1000,7 @@ fun CustomSigningSection() {
                 }
             },
             dismissButton = {
-                TextButton(onClick = { 
+                TextButton(onClick = {
                     showExportPasswordDialog = false
                     pendingKeystoreUri = null
                     passwordInput = ""
@@ -889,8 +1010,8 @@ fun CustomSigningSection() {
             }
         )
     }
-    
-    // 删除确认对话框
+
+
     if (showRemoveConfirmDialog) {
         AlertDialog(
             onDismissRequest = { showRemoveConfirmDialog = false },

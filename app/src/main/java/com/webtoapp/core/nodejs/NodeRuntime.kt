@@ -13,66 +13,66 @@ import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 
-/**
- * Node.js 运行时管理器
- * 
- * 通过 JNI 桥接层（NodeBridge）在进程内启动 nodejs-mobile。
- * libnode.so 是共享库，通过 dlopen + node::Start() 调用，不是独立可执行文件。
- *
- * 重要限制：
- * - node::Start() 每个进程只能调用一次（nodejs-mobile 限制）
- * - Node.js 在调用线程中阻塞运行，直到事件循环退出
- * - 退出后无法在同一进程中重启
- */
+
+
+
+
+
+
+
+
+
+
+
 class NodeRuntime(private val context: Context) {
-    
+
     companion object {
         private const val TAG = "NodeRuntime"
         private const val MAX_HEALTH_CHECK_RETRIES = 60
         private const val HEALTH_CHECK_INTERVAL_MS = 500L
         private val PROJECT_EXCLUDE_DIRS = setOf(".git", ".cache")
     }
-    
-    // ==================== 状态 ====================
-    
+
+
+
     sealed class ServerState {
         object Stopped : ServerState()
         object Starting : ServerState()
         data class Running(val port: Int) : ServerState()
         data class Error(val message: String) : ServerState()
     }
-    
+
     private val _serverState = MutableStateFlow<ServerState>(ServerState.Stopped)
     val serverState: StateFlow<ServerState> = _serverState
-    
-    /** Node.js 运行线程 */
+
+
     private var nodeThread: Thread? = null
-    
-    /** 当前服务器端口 */
+
+
     private var currentPort: Int = 0
-    
-    /** Node.js 是否正在运行 */
+
+
     @Volatile
     private var isRunning = false
-    
-    // ==================== 公开 API ====================
-    
-    /**
-     * 检查 Node.js 是否可用
-     */
+
+
+
+
+
+
     fun isNodeAvailable(): Boolean {
         return NodeDependencyManager.isNodeReady(context)
     }
-    
-    /**
-     * 启动 Node.js 服务器
-     * 
-     * @param projectDir Node.js 项目根目录
-     * @param entryFile 入口文件（如 server.js, index.js, app.js）
-     * @param port 监听端口（0=自动分配）
-     * @param envVars 环境变量
-     * @return 实际使用的端口号，失败返回 -1
-     */
+
+
+
+
+
+
+
+
+
+
     suspend fun startServer(
         projectDir: String,
         entryFile: String = "index.js",
@@ -84,11 +84,11 @@ class NodeRuntime(private val context: Context) {
                 _serverState.value = ServerState.Error("Node.js 运行时未就绪，请先下载依赖")
                 return@withContext -1
             }
-            
+
             stopServer()
             _serverState.value = ServerState.Starting
-            
-            // 分配端口
+
+
             val projectId = File(projectDir).name
             val serverPort = PortManager.allocateForNodeJs(projectId, port)
             if (serverPort < 0) {
@@ -96,8 +96,8 @@ class NodeRuntime(private val context: Context) {
                 return@withContext -1
             }
             currentPort = serverPort
-            
-            // 检查入口文件
+
+
             val entryFilePath = File(projectDir, entryFile).absolutePath
             val entryFileObj = File(entryFilePath)
             if (!entryFileObj.exists()) {
@@ -105,8 +105,8 @@ class NodeRuntime(private val context: Context) {
                 cleanupFailedStart()
                 return@withContext -1
             }
-            
-            // 加载 libnode.so
+
+
             AppLogger.i(TAG, "加载 libnode.so...")
             ShellLogger.i(TAG, "加载 libnode.so...")
             if (!NodeBridge.loadNode(context)) {
@@ -117,7 +117,7 @@ class NodeRuntime(private val context: Context) {
                 cleanupFailedStart()
                 return@withContext -1
             }
-            
+
             if (NodeBridge.isStarted()) {
                 val msg = "Node.js 已启动过（每个进程只能启动一次），请重启应用"
                 AppLogger.w(TAG, msg)
@@ -126,19 +126,19 @@ class NodeRuntime(private val context: Context) {
                 cleanupFailedStart()
                 return@withContext -1
             }
-            
-            // 设置环境变量（在启动 Node.js 之前设置，因为 node::Start 在同一进程中）
+
+
             setEnvironmentVars(projectDir, serverPort, envVars)
-            
-            // 构建 Node.js 参数
+
+
             val args = arrayOf("node", entryFilePath)
-            
+
             AppLogger.i(TAG, "启动 Node.js 服务器 (JNI): ${args.joinToString(" ")}")
             AppLogger.i(TAG, "工作目录: $projectDir, 端口: $serverPort")
             ShellLogger.i(TAG, "启动 Node.js 服务器 (JNI): ${args.joinToString(" ")}")
             ShellLogger.i(TAG, "工作目录: $projectDir, 端口: $serverPort")
-            
-            // 在后台线程中启动 Node.js（node::Start 是阻塞调用）
+
+
             isRunning = true
             val outputCallback = object : NodeBridge.OutputCallback {
                 override fun onOutput(line: String, isError: Boolean) {
@@ -151,7 +151,7 @@ class NodeRuntime(private val context: Context) {
                     }
                 }
             }
-            
+
             nodeThread = Thread({
                 try {
                     val exitCode = NodeBridge.startNode(args, outputCallback)
@@ -178,12 +178,12 @@ class NodeRuntime(private val context: Context) {
                 isDaemon = true
                 start()
             }
-            
-            // 等待服务器就绪
-            // 短暂等待让 Node.js 初始化
+
+
+
             delay(300)
-            
-            // 检查线程是否还活着（如果立即崩溃，线程会很快结束）
+
+
             if (nodeThread?.isAlive != true) {
                 val msg = "Node.js 启动后立即退出"
                 AppLogger.e(TAG, msg)
@@ -192,7 +192,7 @@ class NodeRuntime(private val context: Context) {
                 cleanupFailedStart()
                 return@withContext -1
             }
-            
+
             val ready = waitForServerReady(serverPort)
             if (ready) {
                 _serverState.value = ServerState.Running(serverPort)
@@ -212,7 +212,7 @@ class NodeRuntime(private val context: Context) {
             -1
         }
     }
-    
+
     private fun cleanupFailedStart() {
         nodeThread = null
         isRunning = false
@@ -221,24 +221,24 @@ class NodeRuntime(private val context: Context) {
             currentPort = 0
         }
     }
-    
-    /**
-     * 设置 Node.js 需要的环境变量
-     * 因为 Node.js 在同一进程中运行，直接设置系统属性
-     */
+
+
+
+
+
     private fun setEnvironmentVars(projectDir: String, port: Int, envVars: Map<String, String>) {
-        // Node.js 通过 process.env 读取环境变量
-        // 在同一进程中，我们需要在 node::Start 之前设置
-        // 使用 System properties 或直接设置 env（通过 JNI 不太方便）
-        // 更好的方式：通过 Node.js 脚本包装器注入环境变量
-        // 但最简单的方式是设置系统环境变量
-        
-        // 注意：Java 不支持直接修改 System.getenv()
-        // 我们通过在入口脚本前注入一个 wrapper 来设置环境变量
-        // 这在 startServer 的 args 构建中处理
-        
-        // 实际上 Node.js 的 process.env 会继承当前进程的环境变量
-        // 所以我们需要在 native 层设置 — 但 setenv 在 Android 上是进程级的
+
+
+
+
+
+
+
+
+
+
+
+
         try {
             val envMap = mutableMapOf(
                 "HOME" to context.filesDir.absolutePath,
@@ -249,8 +249,8 @@ class NodeRuntime(private val context: Context) {
                 "NODE_PATH" to File(projectDir, "node_modules").absolutePath
             )
             envMap.putAll(envVars)
-            
-            // 通过反射调用 Os.setenv（Android API）
+
+
             for ((key, value) in envMap) {
                 try {
                     android.system.Os.setenv(key, value, true)
@@ -263,12 +263,12 @@ class NodeRuntime(private val context: Context) {
             AppLogger.w(TAG, "设置环境变量异常", e)
         }
     }
-    
-    /**
-     * 停止 Node.js 服务器
-     * 注意：由于 node::Start 是阻塞调用，无法优雅停止。
-     * 只能中断线程（Node.js 会在下一个事件循环检查点退出）。
-     */
+
+
+
+
+
+
     fun stopServer() {
         try {
             nodeThread?.let { thread ->
@@ -290,51 +290,51 @@ class NodeRuntime(private val context: Context) {
             _serverState.value = ServerState.Stopped
         }
     }
-    
-    /**
-     * 检查服务器是否正在运行
-     */
+
+
+
+
     fun isServerRunning(): Boolean {
         return isRunning && nodeThread?.isAlive == true
     }
-    
-    /**
-     * 获取当前服务器端口
-     */
+
+
+
+
     fun getCurrentPort(): Int = currentPort
-    
-    /**
-     * 获取服务器 URL
-     */
+
+
+
+
     fun getServerUrl(): String? {
         return if (isServerRunning() && currentPort > 0) {
             "http://127.0.0.1:$currentPort"
         } else null
     }
-    
-    /**
-     * 为没有静态 HTML 的 Node.js 后端项目生成预览页面
-     */
+
+
+
+
     fun generatePreviewHtml(projectDir: File, framework: String, entryFile: String): String {
         val entryFileObj = File(projectDir, entryFile)
         val sourceCode = if (entryFileObj.exists()) {
             try { entryFileObj.readText().take(8000) } catch (_: Exception) { "// 无法读取文件内容" }
         } else { "// 文件不存在: $entryFile" }
-        
+
         val pkgFile = File(projectDir, "package.json")
         val packageJson = if (pkgFile.exists()) {
             try { pkgFile.readText().trim() } catch (_: Exception) { "" }
         } else ""
-        
+
         val fileList = projectDir.walkTopDown()
             .filter { it.isFile }.take(30)
             .map { it.relativeTo(projectDir).path }.toList()
-        
+
         val frameworkLabel = framework.replaceFirstChar { it.uppercase() }
         val escapedSource = sourceCode.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;")
         val escapedPkg = packageJson.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
         val filesHtml = fileList.joinToString("\n") { "  <li>$it</li>" }
-        
+
         return """<!DOCTYPE html>
 <html lang="zh"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>$frameworkLabel - 项目预览</title>
@@ -358,9 +358,9 @@ $filesHtml
 </body></html>"""
     }
 
-    /**
-     * 创建或覆盖同步 Node.js 项目目录
-     */
+
+
+
     suspend fun createProject(
         projectId: String,
         sourceDir: File,
@@ -399,17 +399,17 @@ $filesHtml
         val file = File(path)
         return file.takeIf { it.exists() && it.isDirectory }
     }
-    
-    /**
-     * 获取项目目录
-     */
+
+
+
+
     fun getProjectDir(projectId: String): File {
         return File(NodeDependencyManager.getNodeProjectsDir(context), projectId)
     }
-    
-    /**
-     * 检测 Node.js 项目的入口文件
-     */
+
+
+
+
     fun detectEntryFile(projectDir: File): String? {
         val packageJson = File(projectDir, "package.json")
         if (packageJson.exists()) {
@@ -417,11 +417,11 @@ $filesHtml
                 val content = packageJson.readText()
                 val gson = com.webtoapp.util.GsonProvider.gson
                 val json = gson.fromJson(content, com.google.gson.JsonObject::class.java)
-                
+
                 json.get("main")?.asString?.let { main ->
                     if (File(projectDir, main).exists()) return main
                 }
-                
+
                 json.getAsJsonObject("scripts")?.get("start")?.asString?.let { startCmd ->
                     val nodeFileRegex = Regex("""node\s+(\S+\.(?:js|mjs|cjs))""")
                     nodeFileRegex.find(startCmd)?.groupValues?.get(1)?.let { entryFile ->
@@ -432,7 +432,7 @@ $filesHtml
                 AppLogger.w(TAG, "解析 package.json 失败", e)
             }
         }
-        
+
         val candidates = listOf(
             "server.js", "server/index.js", "src/server.js",
             "app.js", "src/app.js",
@@ -440,19 +440,19 @@ $filesHtml
             "main.js", "src/main.js",
             "server.mjs", "index.mjs"
         )
-        
+
         for (candidate in candidates) {
             if (File(projectDir, candidate).exists()) return candidate
         }
-        
+
         return null
     }
-    
-    // ==================== 内部方法 ====================
-    
-    /**
-     * 等待 Node.js 服务器就绪
-     */
+
+
+
+
+
+
     private suspend fun waitForServerReady(port: Int): Boolean {
         repeat(MAX_HEALTH_CHECK_RETRIES) { attempt ->
             var conn: HttpURLConnection? = null
@@ -463,28 +463,28 @@ $filesHtml
                 conn.readTimeout = 500
                 conn.requestMethod = "GET"
                 val code = conn.responseCode
-                
+
                 if (code in 200..499) {
                     AppLogger.i(TAG, "Node.js 服务器就绪 (尝试 ${attempt + 1})")
                     return true
                 }
             } catch (e: Exception) {
-                // 服务器尚未就绪
+
                 AppLogger.d(TAG, "Health check attempt failed: ${e.message}")
             } finally {
                 try { conn?.disconnect() } catch (_: Exception) {}
             }
-            
-            // 检查 Node.js 线程是否还活着
+
+
             if (nodeThread?.isAlive != true) {
                 AppLogger.e(TAG, "Node.js 线程已退出")
                 ShellLogger.e(TAG, "Node.js 线程已退出")
                 return false
             }
-            
+
             delay(HEALTH_CHECK_INTERVAL_MS)
         }
-        
+
         AppLogger.e(TAG, "Node.js 服务器启动超时 (${MAX_HEALTH_CHECK_RETRIES * HEALTH_CHECK_INTERVAL_MS}ms)")
         return false
     }

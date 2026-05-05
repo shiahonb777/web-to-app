@@ -1,28 +1,28 @@
 package com.webtoapp.core.extension
 
-/**
- * Chrome Extension API Polyfill
- * 
- * 生成 JavaScript polyfill 代码，在 WebView 中模拟 Chrome Extension API，
- * 使依赖 chrome.* 和 browser.* API 的扩展能正常运行。
- * 
- * 支持的 API：
- * - chrome.runtime.id / getURL / sendMessage / onMessage / onInstalled / getManifest / lastError
- * - chrome.storage.local.get / set / remove / clear + onChanged
- * - chrome.storage.sync (映射到 local)
- * - chrome.tabs.create / query
- * - browser.* (自动映射到 chrome.* + Promise 包装)
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
 object ChromeExtensionPolyfill {
 
-    /**
-     * 生成 Chrome Extension API polyfill 脚本
-     * 
-     * @param extensionId 扩展唯一标识符（用于 storage 命名空间隔离和 runtime.id）
-     * @param manifestJson 扩展的 manifest.json 字符串（用于 runtime.getManifest）
-     * @param isBackground 是否为 background script 模式（影响消息路由方式）
-     * @return 完整的 JS polyfill 代码
-     */
+
+
+
+
+
+
+
+
     fun generatePolyfill(
         extensionId: String,
         manifestJson: String = "{}",
@@ -30,13 +30,13 @@ object ChromeExtensionPolyfill {
     ): String {
         val safeExtId = extensionId.replace("\\", "\\\\").replace("'", "\\\'")
         val safeManifest = manifestJson.replace("\\", "\\\\").replace("'", "\\'").replace("\n", " ")
-        
+
         return """
 (function() {
     'use strict';
-    
+
     var EXT_ID = '$safeExtId';
-    
+
     // ===== Prevent double-init (per extension) =====
     var POLYFILL_KEY = '__WTA_CHROME_POLYFILL_' + EXT_ID + '__';
     if (window[POLYFILL_KEY]) return;
@@ -45,11 +45,11 @@ object ChromeExtensionPolyfill {
     var STORAGE_PREFIX = '__wta_ext_' + EXT_ID + '_';
     var MANIFEST = {};
     try { MANIFEST = JSON.parse('$safeManifest'); } catch(e) { MANIFEST = {}; }
-    
+
     // ===== Native Bridge Messaging =====
     var _msgCounter = 0;
     var _pendingResponses = {};
-    
+
     // ===== Event System =====
     function ChromeEvent() {
         this._listeners = [];
@@ -76,13 +76,13 @@ object ChromeExtensionPolyfill {
             try { listeners[i].apply(null, args); } catch(e) { console.error('[ChromePolyfill] Event listener error:', e); }
         }
     };
-    
+
     // ===== Storage Implementation =====
     function StorageArea(areaName) {
         this._area = areaName;
         this._prefix = STORAGE_PREFIX + areaName + '_';
     }
-    
+
     StorageArea.prototype.get = function(keys, callback) {
         var self = this;
         var result = {};
@@ -114,12 +114,12 @@ object ChromeExtensionPolyfill {
         } catch(e) {
             console.error('[ChromePolyfill] storage.get error:', e);
         }
-        
+
         chrome.runtime.lastError = null;
         if (typeof callback === 'function') { callback(result); }
         return Promise.resolve(result);
     };
-    
+
     StorageArea.prototype.set = function(items, callback) {
         var self = this;
         var changes = {};
@@ -128,11 +128,11 @@ object ChromeExtensionPolyfill {
                 var oldVal = localStorage.getItem(self._prefix + key);
                 var oldParsed = undefined;
                 if (oldVal !== null) { try { oldParsed = JSON.parse(oldVal); } catch(e) { oldParsed = oldVal; } }
-                
+
                 localStorage.setItem(self._prefix + key, JSON.stringify(items[key]));
                 changes[key] = { oldValue: oldParsed, newValue: items[key] };
             });
-            
+
             // Fire onChanged event
             if (Object.keys(changes).length > 0 && chrome.storage.onChanged) {
                 chrome.storage.onChanged._fire(changes, self._area);
@@ -141,11 +141,11 @@ object ChromeExtensionPolyfill {
             console.error('[ChromePolyfill] storage.set error:', e);
             chrome.runtime.lastError = { message: e.message };
         }
-        
+
         if (typeof callback === 'function') { callback(); }
         return Promise.resolve();
     };
-    
+
     StorageArea.prototype.remove = function(keys, callback) {
         var self = this;
         var changes = {};
@@ -160,18 +160,18 @@ object ChromeExtensionPolyfill {
                     changes[key] = { oldValue: oldParsed };
                 }
             });
-            
+
             if (Object.keys(changes).length > 0 && chrome.storage.onChanged) {
                 chrome.storage.onChanged._fire(changes, self._area);
             }
         } catch(e) {
             console.error('[ChromePolyfill] storage.remove error:', e);
         }
-        
+
         if (typeof callback === 'function') { callback(); }
         return Promise.resolve();
     };
-    
+
     StorageArea.prototype.clear = function(callback) {
         var self = this;
         try {
@@ -184,31 +184,31 @@ object ChromeExtensionPolyfill {
         } catch(e) {
             console.error('[ChromePolyfill] storage.clear error:', e);
         }
-        
+
         if (typeof callback === 'function') { callback(); }
         return Promise.resolve();
     };
-    
+
     StorageArea.prototype.getBytesInUse = function(keys, callback) {
         var result = 0;
         if (typeof callback === 'function') { callback(result); }
         return Promise.resolve(result);
     };
-    
+
     // ===== Build chrome.* API =====
     var localArea = new StorageArea('local');
     var syncArea = new StorageArea('sync'); // sync maps to local in WebView
     var sessionArea = new StorageArea('session');
-    
+
     var onMessageEvent = new ChromeEvent();
     var onInstalledEvent = new ChromeEvent();
     var onChangedEvent = new ChromeEvent();
-    
+
     var _chrome = {
         runtime: {
             id: EXT_ID,
             lastError: null,
-            
+
             getURL: function(path) {
                 // Return an HTTPS localhost URL that WebView's shouldInterceptRequest
                 // can reliably intercept for <link>, <img>, fetch(), etc.
@@ -216,11 +216,11 @@ object ChromeExtensionPolyfill {
                 // trigger onload events on DOM elements in Android WebView.
                 return 'https://localhost/__ext__/' + EXT_ID + '/' + (path || '');
             },
-            
+
             getManifest: function() {
                 return MANIFEST;
             },
-            
+
             sendMessage: function(extensionId, message, options, responseCallback) {
                 // Normalize arguments (extensionId is optional)
                 if (typeof extensionId !== 'string' || extensionId === EXT_ID) {
@@ -228,7 +228,7 @@ object ChromeExtensionPolyfill {
                     message = (typeof extensionId === 'string') ? message : extensionId;
                 }
                 if (typeof responseCallback !== 'function') responseCallback = undefined;
-                
+
                 // Handle known message types internally
                 if (message && typeof message === 'object') {
                     var msgType = message.type || message.action;
@@ -241,7 +241,7 @@ object ChromeExtensionPolyfill {
                         return Promise.resolve({ success: true });
                     }
                 }
-                
+
                 // Content mode: route to background WebView via native bridge
                 if (!IS_BACKGROUND && typeof WtaExtBridge !== 'undefined' && typeof WtaExtBridge.postMessageToBackground === 'function') {
                     var msgId = '__msg_' + (++_msgCounter);
@@ -264,7 +264,7 @@ object ChromeExtensionPolyfill {
                     }
                     return promise;
                 }
-                
+
                 // Fallback: fire locally (no background runtime available)
                 var responded = false;
                 var sendResponse = function(response) {
@@ -285,10 +285,10 @@ object ChromeExtensionPolyfill {
                     };
                 });
             },
-            
+
             onMessage: onMessageEvent,
             onInstalled: onInstalledEvent,
-            
+
             connect: function() {
                 return {
                     onMessage: new ChromeEvent(),
@@ -298,31 +298,31 @@ object ChromeExtensionPolyfill {
                     name: ''
                 };
             },
-            
+
             onConnect: new ChromeEvent(),
-            
+
             getPlatformInfo: function(callback) {
                 var info = { os: 'android', arch: 'arm' };
                 if (typeof callback === 'function') callback(info);
                 return Promise.resolve(info);
             },
-            
+
             openOptionsPage: function(callback) {
                 if (typeof callback === 'function') callback();
                 return Promise.resolve();
             },
-            
+
             setUninstallURL: function(url, callback) {
                 if (typeof callback === 'function') callback();
                 return Promise.resolve();
             },
-            
+
             getBackgroundPage: function(callback) {
                 if (typeof callback === 'function') callback(null);
                 return Promise.resolve(null);
             }
         },
-        
+
         storage: {
             local: localArea,
             sync: syncArea,
@@ -330,7 +330,7 @@ object ChromeExtensionPolyfill {
             managed: new StorageArea('managed'),
             onChanged: onChangedEvent
         },
-        
+
         tabs: {
             create: function(createProperties, callback) {
                 var url = createProperties && createProperties.url;
@@ -341,17 +341,17 @@ object ChromeExtensionPolyfill {
                 if (typeof callback === 'function') callback(tab);
                 return Promise.resolve(tab);
             },
-            
+
             query: function(queryInfo, callback) {
                 var tabs = [{ id: 1, url: location.href, active: true, title: document.title }];
                 if (typeof callback === 'function') callback(tabs);
                 return Promise.resolve(tabs);
             },
-            
+
             sendMessage: function(tabId, message, options, responseCallback) {
                 if (typeof options === 'function') { responseCallback = options; options = undefined; }
                 if (typeof responseCallback !== 'function') responseCallback = undefined;
-                
+
                 // Background mode: route to content script via native bridge
                 if (IS_BACKGROUND && typeof WtaExtBridge !== 'undefined' && typeof WtaExtBridge.sendMessageToTab === 'function') {
                     var msgId = '__tabmsg_' + (++_msgCounter);
@@ -375,7 +375,7 @@ object ChromeExtensionPolyfill {
                     }
                     return promise;
                 }
-                
+
                 // Content mode fallback: fire onMessage locally
                 var responded = false;
                 var sendResponse = function(response) {
@@ -385,19 +385,19 @@ object ChromeExtensionPolyfill {
                 if (!responded && typeof responseCallback === 'function') responseCallback(undefined);
                 return Promise.resolve();
             },
-            
+
             get: function(tabId, callback) {
                 var tab = { id: tabId, url: location.href, active: true, title: document.title };
                 if (typeof callback === 'function') callback(tab);
                 return Promise.resolve(tab);
             },
-            
+
             getCurrent: function(callback) {
                 var tab = { id: 1, url: location.href, active: true, title: document.title };
                 if (typeof callback === 'function') callback(tab);
                 return Promise.resolve(tab);
             },
-            
+
             update: function(tabId, updateProperties, callback) {
                 if (typeof tabId === 'object') { updateProperties = tabId; tabId = 1; }
                 if (updateProperties && updateProperties.url) {
@@ -407,13 +407,13 @@ object ChromeExtensionPolyfill {
                 if (typeof callback === 'function') callback(tab);
                 return Promise.resolve(tab);
             },
-            
+
             onUpdated: new ChromeEvent(),
             onActivated: new ChromeEvent(),
             onRemoved: new ChromeEvent(),
             onCreated: new ChromeEvent()
         },
-        
+
         i18n: {
             getMessage: function(messageName, substitutions) {
                 return messageName || '';
@@ -427,7 +427,7 @@ object ChromeExtensionPolyfill {
                 return Promise.resolve(result);
             }
         },
-        
+
         notifications: {
             create: function(id, options, callback) {
                 if (typeof id === 'object') { options = id; id = 'notif_' + Date.now(); }
@@ -447,7 +447,7 @@ object ChromeExtensionPolyfill {
             onClicked: new ChromeEvent(),
             onClosed: new ChromeEvent()
         },
-        
+
         permissions: {
             contains: function(perms, callback) {
                 if (typeof callback === 'function') callback(true);
@@ -465,7 +465,7 @@ object ChromeExtensionPolyfill {
             onAdded: new ChromeEvent(),
             onRemoved: new ChromeEvent()
         },
-        
+
         alarms: {
             _alarms: {},
             create: function(name, alarmInfo) {
@@ -503,7 +503,7 @@ object ChromeExtensionPolyfill {
             },
             onAlarm: new ChromeEvent()
         },
-        
+
         webRequest: (function() {
             // Enhanced webRequest with native bridge registration
             var _onBeforeRequest = new ChromeEvent();
@@ -540,13 +540,13 @@ object ChromeExtensionPolyfill {
                 }
             };
         })(),
-        
+
         webNavigation: {
             onCompleted: new ChromeEvent(),
             onCommitted: new ChromeEvent(),
             onBeforeNavigate: new ChromeEvent()
         },
-        
+
         extension: {
             getURL: function(path) {
                 return _chrome.runtime.getURL(path);
@@ -556,7 +556,7 @@ object ChromeExtensionPolyfill {
                 return Promise.resolve(false);
             }
         },
-        
+
         contextMenus: {
             create: function(createProperties, callback) {
                 if (typeof callback === 'function') callback();
@@ -569,7 +569,7 @@ object ChromeExtensionPolyfill {
             },
             onClicked: new ChromeEvent()
         },
-        
+
         commands: {
             getAll: function(callback) {
                 if (typeof callback === 'function') callback([]);
@@ -577,7 +577,7 @@ object ChromeExtensionPolyfill {
             },
             onCommand: new ChromeEvent()
         },
-        
+
         declarativeNetRequest: {
             updateDynamicRules: function(options, callback) {
                 try {
@@ -633,7 +633,7 @@ object ChromeExtensionPolyfill {
             },
             onRuleMatchedDebug: new ChromeEvent()
         },
-        
+
         cookies: {
             getAll: function(details, callback) {
                 var domain = (details && details.domain) || '';
@@ -641,7 +641,7 @@ object ChromeExtensionPolyfill {
                 if (!url && domain) {
                     url = 'https://' + domain.replace(/^\./, '') + '/';
                 }
-                
+
                 var result = [];
                 try {
                     if (typeof WtaExtBridge !== 'undefined' && typeof WtaExtBridge.getCookies === 'function') {
@@ -671,12 +671,12 @@ object ChromeExtensionPolyfill {
                 } catch(e) {
                     console.error('[ChromePolyfill] cookies.getAll error:', e);
                 }
-                
+
                 chrome.runtime.lastError = null;
                 if (typeof callback === 'function') callback(result);
                 return Promise.resolve(result);
             },
-            
+
             get: function(details, callback) {
                 return _chrome.cookies.getAll(details).then(function(arr) {
                     var cookie = arr.length > 0 ? arr[0] : null;
@@ -684,7 +684,7 @@ object ChromeExtensionPolyfill {
                     return cookie;
                 });
             },
-            
+
             set: function(details, callback) {
                 try {
                     if (typeof WtaExtBridge !== 'undefined' && typeof WtaExtBridge.setCookieValue === 'function') {
@@ -706,7 +706,7 @@ object ChromeExtensionPolyfill {
                 if (typeof callback === 'function') callback(cookie);
                 return Promise.resolve(cookie);
             },
-            
+
             remove: function(details, callback) {
                 try {
                     if (typeof WtaExtBridge !== 'undefined' && typeof WtaExtBridge.setCookieValue === 'function') {
@@ -717,16 +717,16 @@ object ChromeExtensionPolyfill {
                 if (typeof callback === 'function') callback(details);
                 return Promise.resolve(details);
             },
-            
+
             getAllCookieStores: function(callback) {
                 var stores = [{ id: '0', tabIds: [1] }];
                 if (typeof callback === 'function') callback(stores);
                 return Promise.resolve(stores);
             },
-            
+
             onChanged: new ChromeEvent()
         },
-        
+
         scripting: {
             executeScript: function(injection, callback) {
                 // Stub: executeScript is handled natively by WebViewManager
@@ -755,7 +755,7 @@ object ChromeExtensionPolyfill {
                 return Promise.resolve([]);
             }
         },
-        
+
         action: {
             setIcon: function(details, callback) {
                 if (typeof callback === 'function') callback();
@@ -779,7 +779,7 @@ object ChromeExtensionPolyfill {
             },
             onClicked: new ChromeEvent()
         },
-        
+
         sidePanel: {
             setOptions: function(options, callback) {
                 if (typeof callback === 'function') callback();
@@ -790,7 +790,7 @@ object ChromeExtensionPolyfill {
                 return Promise.resolve();
             }
         },
-        
+
         // ===== Phase J: downloads =====
         downloads: {
             download: function(options, callback) {
@@ -848,7 +848,7 @@ object ChromeExtensionPolyfill {
             onChanged: new ChromeEvent(),
             onDeterminingFilename: new ChromeEvent()
         },
-        
+
         // ===== Phase J: identity =====
         identity: {
             getAuthToken: function(details, callback) {
@@ -881,7 +881,7 @@ object ChromeExtensionPolyfill {
             },
             onSignInChanged: new ChromeEvent()
         },
-        
+
         // ===== Phase J: history =====
         history: {
             search: function(query, callback) {
@@ -911,7 +911,7 @@ object ChromeExtensionPolyfill {
             onVisited: new ChromeEvent(),
             onVisitRemoved: new ChromeEvent()
         },
-        
+
         // ===== Phase J: proxy =====
         proxy: {
             settings: {
@@ -933,7 +933,7 @@ object ChromeExtensionPolyfill {
             },
             onProxyError: new ChromeEvent()
         },
-        
+
         // ===== Phase J: privacy =====
         privacy: (function() {
             function ChromeSettingType(defaultValue) {
@@ -983,7 +983,7 @@ object ChromeExtensionPolyfill {
                 }
             };
         })(),
-        
+
         // ===== Phase L: windows =====
         windows: {
             WINDOW_ID_NONE: -1,
@@ -1027,7 +1027,7 @@ object ChromeExtensionPolyfill {
             onFocusChanged: new ChromeEvent(),
             onBoundsChanged: new ChromeEvent()
         },
-        
+
         // ===== Phase L: management =====
         management: {
             getSelf: function(callback) {
@@ -1062,7 +1062,7 @@ object ChromeExtensionPolyfill {
             onInstalled: new ChromeEvent(),
             onUninstalled: new ChromeEvent()
         },
-        
+
         // ===== Phase L: topSites =====
         topSites: {
             get: function(callback) {
@@ -1070,7 +1070,7 @@ object ChromeExtensionPolyfill {
                 return Promise.resolve([]);
             }
         },
-        
+
         // ===== Phase L: fontSettings =====
         fontSettings: {
             getFont: function(details, callback) {
@@ -1100,7 +1100,7 @@ object ChromeExtensionPolyfill {
             onFontChanged: new ChromeEvent(),
             onDefaultFontSizeChanged: new ChromeEvent()
         },
-        
+
         // ===== Phase L: system =====
         system: {
             cpu: {
@@ -1136,7 +1136,7 @@ object ChromeExtensionPolyfill {
                 onDetached: new ChromeEvent()
             }
         },
-        
+
         // ===== Phase L: bookmarks (stub) =====
         bookmarks: {
             get: function(idOrList, callback) {
@@ -1164,7 +1164,7 @@ object ChromeExtensionPolyfill {
             onRemoved: new ChromeEvent(),
             onChanged: new ChromeEvent()
         },
-        
+
         // ===== Phase L: offscreen (MV3) =====
         offscreen: {
             createDocument: function(parameters, callback) {
@@ -1181,7 +1181,7 @@ object ChromeExtensionPolyfill {
             },
             Reason: { TESTING: 'TESTING', AUDIO_PLAYBACK: 'AUDIO_PLAYBACK', DOM_SCRAPING: 'DOM_SCRAPING', BLOBS: 'BLOBS', DOM_PARSER: 'DOM_PARSER', USER_MEDIA: 'USER_MEDIA', DISPLAY_MEDIA: 'DISPLAY_MEDIA', WEB_RTC: 'WEB_RTC', CLIPBOARD: 'CLIPBOARD', LOCAL_STORAGE: 'LOCAL_STORAGE', WORKERS: 'WORKERS', BATTERY_STATUS: 'BATTERY_STATUS', MATCH_MEDIA: 'MATCH_MEDIA', GEOLOCATION: 'GEOLOCATION' }
         },
-        
+
         // ===== Phase L: tts =====
         tts: {
             speak: function(utterance, options, callback) {
@@ -1212,7 +1212,7 @@ object ChromeExtensionPolyfill {
             },
             onEvent: new ChromeEvent()
         },
-        
+
         // ===== Phase L: browserAction (MV2 compat) =====
         browserAction: {
             setIcon: function(details, callback) { if (typeof callback === 'function') callback(); return Promise.resolve(); },
@@ -1224,7 +1224,7 @@ object ChromeExtensionPolyfill {
             getBadgeText: function(details, callback) { if (typeof callback === 'function') callback(''); return Promise.resolve(''); },
             onClicked: new ChromeEvent()
         },
-        
+
         // ===== Phase L: pageAction (MV2 compat) =====
         pageAction: {
             show: function(tabId, callback) { if (typeof callback === 'function') callback(); return Promise.resolve(); },
@@ -1235,7 +1235,7 @@ object ChromeExtensionPolyfill {
             onClicked: new ChromeEvent()
         }
     };
-    
+
     // ===== Assign to globalThis =====
     // Full overwrite: each extension gets its own chrome.* API with correct EXT_ID closures.
     // In a real browser, each extension has its own isolated world with its own chrome binding.
@@ -1245,7 +1245,7 @@ object ChromeExtensionPolyfill {
     Object.keys(_chrome).forEach(function(key) {
         globalThis.chrome[key] = _chrome[key];
     });
-    
+
     // ===== browser.* alias =====
     // Our chrome.* API implementations already return Promises for async methods
     // (storage.get, sendMessage, tabs.create, etc.) and direct values for sync methods
@@ -1262,25 +1262,25 @@ object ChromeExtensionPolyfill {
     if (!globalThis.browser) {
         globalThis.browser = globalThis.chrome;
     }
-    
+
     // Ensure browser.runtime.id is set (critical for webextension-polyfill guard check)
     if (globalThis.browser && (!globalThis.browser.runtime || !globalThis.browser.runtime.id)) {
         if (!globalThis.browser.runtime) globalThis.browser.runtime = {};
         globalThis.browser.runtime.id = EXT_ID;
     }
-    
+
     // ===== Fire onInstalled event (once per extension per page) =====
     var installedKey = STORAGE_PREFIX + '__installed__';
     var isFirstInstall = !localStorage.getItem(installedKey);
     localStorage.setItem(installedKey, '1');
-    
+
     setTimeout(function() {
         onInstalledEvent._fire({
             reason: isFirstInstall ? 'install' : 'update',
             previousVersion: MANIFEST.version || '0.0.0'
         });
     }, 0);
-    
+
     // ===== Native Bridge: Message Delivery Functions =====
     if (IS_BACKGROUND) {
         // Background mode: receive messages from content script via native bridge
@@ -1290,7 +1290,7 @@ object ChromeExtensionPolyfill {
                 var msgId = data.msgId;
                 var message = data.message;
                 var responded = false;
-                
+
                 var sendResponse = function(response) {
                     if (responded) return;
                     responded = true;
@@ -1305,7 +1305,7 @@ object ChromeExtensionPolyfill {
                         console.error('[ChromePolyfill BG] sendResponse error:', e);
                     }
                 };
-                
+
                 var listeners = chrome.runtime.onMessage._listeners.slice();
                 for (var i = 0; i < listeners.length; i++) {
                     try {
@@ -1361,7 +1361,7 @@ object ChromeExtensionPolyfill {
                 console.error('[ChromePolyfill] __WTA_DELIVER_RESPONSE__ error:', e);
             }
         };
-        
+
         // Content mode: receive messages from background via tabs.sendMessage
         window.__WTA_DELIVER_TO_CONTENT__ = function(jsonStr) {
             try {
@@ -1369,7 +1369,7 @@ object ChromeExtensionPolyfill {
                 var msgId = data.msgId;
                 var message = data.message;
                 var responded = false;
-                
+
                 var sendResponse = function(response) {
                     if (responded) return;
                     responded = true;
@@ -1382,7 +1382,7 @@ object ChromeExtensionPolyfill {
                         }
                     } catch(e) { console.warn('[ChromePolyfill] sendResponse to background error:', e); }
                 };
-                
+
                 var listeners = chrome.runtime.onMessage._listeners.slice();
                 for (var i = 0; i < listeners.length; i++) {
                     try {
@@ -1401,17 +1401,17 @@ object ChromeExtensionPolyfill {
             }
         };
     }
-    
+
     // ===== Phase H: Port Long-Lived Connections =====
     var _ports = {}; // portId -> Port object
-    
+
     // Override chrome.runtime.connect to create real Port objects
     _chrome.runtime.connect = function(extensionId, connectInfo) {
         if (typeof extensionId === 'object') { connectInfo = extensionId; extensionId = EXT_ID; }
         if (!extensionId) extensionId = EXT_ID;
         connectInfo = connectInfo || {};
         var name = connectInfo.name || '';
-        
+
         var portId = '';
         try {
             if (typeof WtaExtBridge !== 'undefined' && typeof WtaExtBridge.openPort === 'function') {
@@ -1419,17 +1419,17 @@ object ChromeExtensionPolyfill {
             }
         } catch(e) { console.warn('[ChromePolyfill] openPort error:', e); }
         if (!portId) portId = 'local_port_' + (++_msgCounter);
-        
+
         var port = _createPort(portId, name, IS_BACKGROUND ? 'toContent' : 'toBackground');
         _ports[portId] = port;
         return port;
     };
-    
+
     function _createPort(portId, name, direction) {
         var _onMessage = new ChromeEvent();
         var _onDisconnect = new ChromeEvent();
         var _disconnected = false;
-        
+
         var port = {
             name: name,
             sender: { id: EXT_ID },
@@ -1463,12 +1463,12 @@ object ChromeExtensionPolyfill {
         };
         return port;
     }
-    
+
     // Receive port messages from native bridge
     window.__WTA_PORT_MESSAGE__ = function(jsonStr) {
         try {
             var data = JSON.parse(jsonStr);
-            
+
             // New port connection (background receives)
             if (data.event === 'connect' && IS_BACKGROUND) {
                 var newPort = _createPort(data.portId, data.name || '', 'toContent');
@@ -1476,7 +1476,7 @@ object ChromeExtensionPolyfill {
                 chrome.runtime.onConnect._fire(newPort);
                 return;
             }
-            
+
             var portId = data.portId;
             var port = _ports[portId];
             if (port && data.message !== undefined) {
@@ -1486,7 +1486,7 @@ object ChromeExtensionPolyfill {
             console.error('[ChromePolyfill] __WTA_PORT_MESSAGE__ error:', e);
         }
     };
-    
+
     window.__WTA_PORT_DISCONNECT__ = function(jsonStr) {
         try {
             var portId = JSON.parse(jsonStr);
@@ -1497,7 +1497,7 @@ object ChromeExtensionPolyfill {
             }
         } catch(e) { console.warn('[ChromePolyfill] __WTA_PORT_DISCONNECT__ error:', e); }
     };
-    
+
     // ===== Phase I: Service Worker Environment Shim (Background mode) =====
     if (IS_BACKGROUND) {
         (function() {
@@ -1505,7 +1505,7 @@ object ChromeExtensionPolyfill {
             if (typeof self === 'undefined' || self !== window) {
                 try { Object.defineProperty(window, 'self', { value: window, writable: true, configurable: true }); } catch(e) { /* expected in some environments */ }
             }
-            
+
             // ExtendableEvent
             function ExtendableEvent(type) {
                 this.type = type;
@@ -1517,7 +1517,7 @@ object ChromeExtensionPolyfill {
             window.ExtendableEvent = ExtendableEvent;
             window.InstallEvent = ExtendableEvent;
             window.ActivateEvent = ExtendableEvent;
-            
+
             // FetchEvent stub
             function FetchEvent(type, init) {
                 ExtendableEvent.call(this, type);
@@ -1527,7 +1527,7 @@ object ChromeExtensionPolyfill {
             FetchEvent.prototype = Object.create(ExtendableEvent.prototype);
             FetchEvent.prototype.respondWith = function(response) { this._responded = true; };
             window.FetchEvent = FetchEvent;
-            
+
             // self.addEventListener shim for SW lifecycle events
             var _swListeners = { install: [], activate: [], fetch: [], message: [] };
             var _origAddEventListener = window.addEventListener;
@@ -1537,10 +1537,10 @@ object ChromeExtensionPolyfill {
                 }
                 return _origAddEventListener.apply(window, arguments);
             };
-            
+
             // self.skipWaiting
             window.skipWaiting = function() { return Promise.resolve(); };
-            
+
             // self.clients
             window.clients = {
                 matchAll: function(options) {
@@ -1568,7 +1568,7 @@ object ChromeExtensionPolyfill {
                     return Promise.resolve(null);
                 }
             };
-            
+
             // self.registration
             window.registration = {
                 scope: location.origin + '/',
@@ -1587,7 +1587,7 @@ object ChromeExtensionPolyfill {
                 unregister: function() { return Promise.resolve(true); },
                 onupdatefound: null
             };
-            
+
             // CacheStorage shim
             if (typeof caches === 'undefined') {
                 var _cacheStore = {};
@@ -1610,22 +1610,22 @@ object ChromeExtensionPolyfill {
                     match: function(req) { return Promise.resolve(undefined); }
                 };
             }
-            
+
             // Fire install + activate events shortly after script loads
             setTimeout(function() {
                 var installEvent = new ExtendableEvent('install');
                 _swListeners.install.forEach(function(fn) { try { fn(installEvent); } catch(e) { console.warn('[ChromePolyfill] SW install listener error:', e); } });
-                
+
                 setTimeout(function() {
                     var activateEvent = new ExtendableEvent('activate');
                     _swListeners.activate.forEach(function(fn) { try { fn(activateEvent); } catch(e) { console.warn('[ChromePolyfill] SW activate listener error:', e); } });
                 }, 10);
             }, 0);
-            
+
             console.log('[WebToApp ChromePolyfill] Service Worker shim initialized');
         })();
     }
-    
+
     // ===== Native Fetch Override (Background mode) =====
     // Override fetch() to use native HttpURLConnection, bypassing CORS entirely.
     // @JavascriptInterface methods block the calling JS thread, which is fine for background scripts.
@@ -1647,18 +1647,18 @@ object ChromeExtensionPolyfill {
                     }
                 } catch(e) { console.warn('[ChromePolyfill] fetch headers parse error:', e); }
                 var body = init.body ? String(init.body) : '';
-                
+
                 try {
                     var resultJson = WtaExtBridge.nativeFetch(url, method, JSON.stringify(headers), body);
                     var result = JSON.parse(resultJson);
-                    
+
                     var respHeaders = new Headers();
                     if (result.headers) {
                         Object.keys(result.headers).forEach(function(k) {
                             try { respHeaders.set(k, result.headers[k]); } catch(e) { /* ignore invalid header */ }
                         });
                     }
-                    
+
                     var response = new Response(result.body || '', {
                         status: result.status || 0,
                         statusText: result.statusText || '',
@@ -1677,7 +1677,7 @@ object ChromeExtensionPolyfill {
             console.log('[WebToApp ChromePolyfill] fetch() overridden with native bridge');
         })();
     }
-    
+
     console.log('[WebToApp ChromePolyfill] Initialized for extension: ' + EXT_ID + (IS_BACKGROUND ? ' (BACKGROUND)' : ' (CONTENT)'));
 })();
 """.trimIndent()

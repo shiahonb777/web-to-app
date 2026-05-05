@@ -35,11 +35,11 @@ import com.webtoapp.ui.animation.CardExpandTransition
 import com.webtoapp.ui.animation.CardCollapseTransition
 import kotlin.math.roundToInt
 
-/**
- * 悬浮小窗配置卡片 — 高级版
- * 分为三个区域：窗口尺寸、外观样式、行为控制
- * 包含可视预览、分组展开、边框样式选择器
- */
+
+
+
+
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun FloatingWindowConfigCard(
@@ -49,8 +49,8 @@ fun FloatingWindowConfigCard(
 ) {
     var showAdvanced by remember { mutableStateOf(false) }
     val primary = MaterialTheme.colorScheme.primary
-    
-    // 箭头旋转动画
+
+
     val arrowRotation by animateFloatAsState(
         targetValue = if (showAdvanced) 180f else 0f,
         animationSpec = tween(300),
@@ -63,7 +63,7 @@ fun FloatingWindowConfigCard(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // ── 头部：图标 + 标题 + 开关 ──
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -106,7 +106,7 @@ fun FloatingWindowConfigCard(
                 )
             }
 
-            // ── 展开面板（仅启用时显示）──
+
             AnimatedVisibility(
                 visible = config.enabled,
                 enter = CardExpandTransition,
@@ -114,15 +114,15 @@ fun FloatingWindowConfigCard(
             ) {
                 Column(modifier = Modifier.padding(top = 16.dp)) {
 
-                    // ════════════════════════════════════════
-                    // 区域 1: 窗口尺寸
-                    // ════════════════════════════════════════
+
+
+
                     SectionHeader(
                         icon = Icons.Outlined.Straighten,
                         title = Strings.fwSectionSize
                     )
 
-                    // 宽度滑块
+
                     SliderWithLabel(
                         label = Strings.fwWidthLabel,
                         value = config.widthPercent,
@@ -144,7 +144,7 @@ fun FloatingWindowConfigCard(
                         }
                     )
 
-                    // 高度滑块（仅非锁定比例时独立控制）
+
                     AnimatedVisibility(
                         visible = !config.lockAspectRatio,
                         enter = fadeIn(tween(200)) + expandVertically(tween(300)),
@@ -161,7 +161,7 @@ fun FloatingWindowConfigCard(
                         )
                     }
 
-                    // 锁定宽高比开关
+
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -186,7 +186,7 @@ fun FloatingWindowConfigCard(
                             checked = config.lockAspectRatio,
                             onCheckedChange = { locked ->
                                 if (locked) {
-                                    // 锁定时同步高度到宽度
+
                                     onConfigChange(config.copy(
                                         lockAspectRatio = true,
                                         heightPercent = config.widthPercent
@@ -202,15 +202,15 @@ fun FloatingWindowConfigCard(
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                     Spacer(Modifier.height(16.dp))
 
-                    // ════════════════════════════════════════
-                    // 区域 2: 外观样式
-                    // ════════════════════════════════════════
+
+
+
                     SectionHeader(
                         icon = Icons.Outlined.Palette,
                         title = Strings.fwSectionAppearance
                     )
 
-                    // 透明度滑块
+
                     SliderWithLabel(
                         label = Strings.floatingWindowOpacity,
                         value = config.opacity,
@@ -219,7 +219,7 @@ fun FloatingWindowConfigCard(
                         onValueChange = { onConfigChange(config.copy(opacity = it)) }
                     )
 
-                    // 圆角半径滑块
+
                     SliderWithLabel(
                         label = Strings.fwCornerRadius,
                         value = config.cornerRadius,
@@ -229,7 +229,7 @@ fun FloatingWindowConfigCard(
                         onValueChange = { onConfigChange(config.copy(cornerRadius = it)) }
                     )
 
-                    // 边框样式选择器
+
                     Spacer(Modifier.height(4.dp))
                     Text(
                         text = Strings.fwBorderStyle,
@@ -272,15 +272,15 @@ fun FloatingWindowConfigCard(
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                     Spacer(Modifier.height(16.dp))
 
-                    // ════════════════════════════════════════
-                    // 区域 3: 行为控制
-                    // ════════════════════════════════════════
+
+
+
                     SectionHeader(
                         icon = Icons.Outlined.Tune,
                         title = Strings.fwSectionBehavior
                     )
 
-                    // 显示标题栏
+
                     ToggleRow(
                         title = Strings.floatingWindowShowTitleBar,
                         subtitle = Strings.floatingWindowShowTitleBarDesc,
@@ -288,7 +288,7 @@ fun FloatingWindowConfigCard(
                         onCheckedChange = { onConfigChange(config.copy(showTitleBar = it)) }
                     )
 
-                    // 自动隐藏标题栏
+
                     AnimatedVisibility(
                         visible = config.showTitleBar,
                         enter = fadeIn(tween(200)) + expandVertically(tween(200)),
@@ -303,7 +303,7 @@ fun FloatingWindowConfigCard(
                         )
                     }
 
-                    // 边缘吸附
+
                     ToggleRow(
                         title = Strings.fwEdgeSnapping,
                         subtitle = Strings.fwEdgeSnappingDesc,
@@ -311,7 +311,7 @@ fun FloatingWindowConfigCard(
                         onCheckedChange = { onConfigChange(config.copy(edgeSnapping = it)) }
                     )
 
-                    // 缩放手柄
+
                     ToggleRow(
                         title = Strings.fwResizeHandle,
                         subtitle = Strings.fwResizeHandleDesc,
@@ -319,7 +319,7 @@ fun FloatingWindowConfigCard(
                         onCheckedChange = { onConfigChange(config.copy(showResizeHandle = it)) }
                     )
 
-                    // ── 展开更多 ──
+
                     Spacer(Modifier.height(8.dp))
                     Surface(
                         modifier = Modifier
@@ -352,7 +352,7 @@ fun FloatingWindowConfigCard(
                         }
                     }
 
-                    // 高级设置
+
                     AnimatedVisibility(
                         visible = showAdvanced,
                         enter = fadeIn(tween(200)) + expandVertically(tween(300)),
@@ -362,7 +362,7 @@ fun FloatingWindowConfigCard(
                             modifier = Modifier.padding(top = 12.dp),
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            // 启动时最小化
+
                             ToggleRow(
                                 title = Strings.floatingWindowStartMinimized,
                                 subtitle = Strings.floatingWindowStartMinimizedDesc,
@@ -370,7 +370,7 @@ fun FloatingWindowConfigCard(
                                 onCheckedChange = { onConfigChange(config.copy(startMinimized = it)) }
                             )
 
-                            // 记住位置
+
                             ToggleRow(
                                 title = Strings.floatingWindowRememberPosition,
                                 subtitle = Strings.floatingWindowRememberPositionDesc,
@@ -378,7 +378,7 @@ fun FloatingWindowConfigCard(
                                 onCheckedChange = { onConfigChange(config.copy(rememberPosition = it)) }
                             )
 
-                            // 锁定位置
+
                             ToggleRow(
                                 title = Strings.fwLockPosition,
                                 subtitle = Strings.fwLockPositionDesc,
@@ -393,13 +393,13 @@ fun FloatingWindowConfigCard(
     }
 }
 
-// ══════════════════════════════════════════
-// 内部辅助组件
-// ══════════════════════════════════════════
 
-/**
- * 带标签和数值显示的滑块
- */
+
+
+
+
+
+
 @Composable
 private fun SliderWithLabel(
     label: String,
@@ -443,9 +443,9 @@ private fun SliderWithLabel(
     }
 }
 
-/**
- * 开关行组件
- */
+
+
+
 @Composable
 private fun ToggleRow(
     title: String,
@@ -480,9 +480,9 @@ private fun ToggleRow(
     }
 }
 
-/**
- * 区域标题组件（图标 + 文字，纯色单色风格）
- */
+
+
+
 @Composable
 private fun SectionHeader(
     icon: ImageVector,

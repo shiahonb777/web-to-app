@@ -1,47 +1,30 @@
 package com.webtoapp.ui.screens
 
-import android.content.ClipboardManager
-import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -49,33 +32,21 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.data.model.MultiWebConfig
 import com.webtoapp.data.model.MultiWebSite
-import com.webtoapp.ui.components.PremiumSwitch
-import com.webtoapp.ui.components.ThemedBackgroundBox
+import com.webtoapp.data.model.HtmlFileType
 import com.webtoapp.ui.components.EnhancedElevatedCard
-import com.webtoapp.ui.components.RuntimeIconPickerCard
 import com.webtoapp.ui.components.PremiumTextField
-import com.webtoapp.ui.components.PremiumButton
-import com.webtoapp.util.UrlMetadataFetcher
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import com.webtoapp.ui.components.RuntimeIconPickerCard
+import com.webtoapp.ui.screens.create.WtaCreateFlowScaffold
+import com.webtoapp.ui.screens.create.WtaCreateFlowSection
 import java.util.UUID
 
-/**
- * 创建/编辑多站点聚合应用页面 — Multi-Site Hub
- *
- * 设计要点（对标 mockup）：
- * 1. 深紫渐变 Hero 卡片 — dramatic, full-bleed indigo→purple
- * 2. 水平 pill 模式选择器 — 独立排列，不包在卡片里
- * 3. 站点列表 — 每个站点独立玻璃态卡片，左侧彩色渐变条
- * 4. Quick-Add 栏 — 底部固定，暗色圆角输入 + "+" 按钮
- * 5. 配置区域折叠在底部 — 不占用主视觉
- */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+
+
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateMultiWebAppScreen(
     existingAppId: Long = 0L,
@@ -87,43 +58,37 @@ fun CreateMultiWebAppScreen(
         themeType: String
     ) -> Unit
 ) {
-    val scrollState = rememberScrollState()
     val isEdit = existingAppId > 0L
 
-    // App 信息
+
     var appName by remember { mutableStateOf("") }
     var appIcon by remember { mutableStateOf<Uri?>(null) }
     var landscapeMode by remember { mutableStateOf(false) }
 
-    // 站点列表
+
     var sites by remember { mutableStateOf<List<MultiWebSite>>(emptyList()) }
 
-    // 显示模式
+
     var displayMode by remember { mutableStateOf("TABS") }
 
-    // Feed 模式刷新间隔
+
+    var existingApps by remember { mutableStateOf<List<com.webtoapp.data.model.WebApp>>(emptyList()) }
+    LaunchedEffect(Unit) {
+        val repo = org.koin.java.KoinJavaComponent.get<com.webtoapp.data.repository.WebAppRepository>(
+            com.webtoapp.data.repository.WebAppRepository::class.java
+        )
+        repo.allWebApps.collect { existingApps = it }
+    }
+
+
     var refreshInterval by remember { mutableStateOf(30) }
 
-    // Dialog 状态
+
     var showAddSiteDialog by remember { mutableStateOf(false) }
     var editingSite by remember { mutableStateOf<MultiWebSite?>(null) }
-    var showBatchImport by remember { mutableStateOf(false) }
-    var showSettingsSection by remember { mutableStateOf(false) }
+    var pendingLocalSiteUri by remember { mutableStateOf<Uri?>(null) }
 
-    // Quick-Add URL
-    var quickAddUrl by remember { mutableStateOf("") }
 
-    // 用于 AddSiteDialog 自动填充
-    var prefilledUrl by remember { mutableStateOf("") }
-    var prefilledName by remember { mutableStateOf("") }
-    var prefilledFavicon by remember { mutableStateOf("") }
-    var prefilledColor by remember { mutableStateOf("") }
-
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val focusManager = LocalFocusManager.current
-
-    // 编辑模式：加载已有数据
     LaunchedEffect(existingAppId) {
         if (existingAppId > 0L) {
             val existingApp = org.koin.java.KoinJavaComponent
@@ -147,560 +112,253 @@ fun CreateMultiWebAppScreen(
         ActivityResultContracts.GetContent()
     ) { uri -> uri?.let { appIcon = it } }
 
+    val localSiteFilePickerLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri -> pendingLocalSiteUri = uri }
+
     val canCreate = sites.isNotEmpty()
-
-    // 品牌色系
     val brandIndigo = Color(0xFF6366F1)
-    val brandViolet = Color(0xFF8B5CF6)
-    val brandPurple = Color(0xFFA855F7)
 
-    // 站点卡片渐变配色
-    val siteCardColors = remember {
-        listOf(
-            Color(0xFF6366F1) to Color(0xFF818CF8), // Indigo
-            Color(0xFF14B8A6) to Color(0xFF2DD4BF), // Teal
-            Color(0xFFEC4899) to Color(0xFFF472B6), // Pink
-            Color(0xFFF59E0B) to Color(0xFFFBBF24), // Amber
-            Color(0xFF8B5CF6) to Color(0xFFA78BFA), // Violet
-            Color(0xFF06B6D4) to Color(0xFF22D3EE), // Cyan
-            Color(0xFFEF4444) to Color(0xFFF87171), // Red
-            Color(0xFF10B981) to Color(0xFF34D399), // Emerald
-        )
-    }
-
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            TopAppBar(
-                title = { },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
-                    }
+    WtaCreateFlowScaffold(
+        title = if (isEdit) Strings.editApp else Strings.createMultiWebApp,
+        onBack = onBack,
+        actions = {
+            TextButton(
+                onClick = {
+                    onCreated(
+                        appName.ifBlank { "Multi-Site App" },
+                        MultiWebConfig(
+                            sites = sites,
+                            displayMode = displayMode,
+                            refreshInterval = refreshInterval,
+                            showSiteIcons = true,
+                            landscapeMode = landscapeMode,
+                            projectId = ""
+                        ),
+                        appIcon,
+                        "AURORA"
+                    )
                 },
-                actions = {
-                    // 设置按钮
-                    IconButton(onClick = { showSettingsSection = !showSettingsSection }) {
-                        Icon(
-                            Icons.Outlined.Settings, null,
-                            tint = if (showSettingsSection) brandIndigo
-                            else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    // 批量导入
-                    IconButton(onClick = { showBatchImport = true }) {
-                        Icon(Icons.Outlined.PlaylistAdd, null)
-                    }
-                    // 创建/保存
-                    TextButton(
-                        onClick = {
-                            onCreated(
-                                appName.ifBlank { "Multi-Site App" },
-                                MultiWebConfig(
-                                    sites = sites,
-                                    displayMode = displayMode,
-                                    refreshInterval = refreshInterval,
-                                    showSiteIcons = true,
-                                    landscapeMode = landscapeMode
-                                ),
-                                appIcon, "AURORA"
-                            )
-                        },
-                        enabled = canCreate
-                    ) {
-                        Text(
-                            if (isEdit) Strings.btnSave else Strings.btnCreate,
-                            fontWeight = FontWeight.Bold,
-                            color = if (canCreate) brandIndigo else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
-                )
-            )
-        }
-    ) { padding ->
-        ThemedBackgroundBox(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            Column(
-                modifier = Modifier.fillMaxSize()
+                enabled = canCreate
             ) {
-                // 可滚动主内容
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .verticalScroll(scrollState)
-                        .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    // ═══════════════════════ 1. HERO CARD ═══════════════════════
-                    // 深紫色渐变 hero — dramatic, matching mockup
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(
-                                brush = Brush.horizontalGradient(
-                                    colors = listOf(
-                                        brandIndigo,
-                                        brandViolet,
-                                        brandPurple
-                                    )
-                                )
-                            )
-                            .padding(24.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth()
+                Text(
+                    if (isEdit) Strings.btnSave else Strings.btnCreate,
+                    fontWeight = FontWeight.Bold,
+                    color = if (canCreate) brandIndigo else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            WtaCreateFlowSection(title = Strings.labelBasicInfo) {
+                    EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    "Multi-Site Hub",
-                                    style = MaterialTheme.typography.headlineMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    Strings.multiWebHeroDesc,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Color.White.copy(alpha = 0.85f),
-                                    lineHeight = 18.sp
-                                )
-                                if (sites.isNotEmpty()) {
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Surface(
-                                        shape = RoundedCornerShape(20.dp),
-                                        color = Color.White.copy(alpha = 0.2f)
-                                    ) {
-                                        Text(
-                                            "${sites.size} sites",
-                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = Color.White
-                                        )
-                                    }
-                                }
-                            }
-                            Spacer(modifier = Modifier.width(16.dp))
-                            // 发光地球 icon
-                            Box(
-                                modifier = Modifier
-                                    .size(64.dp)
-                                    .clip(RoundedCornerShape(18.dp))
-                                    .background(Color.White.copy(alpha = 0.15f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("🌐", fontSize = 32.sp)
-                            }
+                            RuntimeIconPickerCard(
+                                appIcon = appIcon,
+                                onSelectIcon = { iconPickerLauncher.launch("image/*") }
+                            )
+                            PremiumTextField(
+                                value = appName,
+                                onValueChange = { appName = it },
+                                label = { Text(Strings.labelAppName) },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true
+                            )
                         }
                     }
+            }
 
-                    // ═══════════════════════ 2. MODE SELECTOR ═══════════════════════
-                    // 独立 pill 按钮 — 不包在卡片里，直接排列
-                    val modes = listOf(
-                        Triple("TABS", Strings.multiWebModeTabs, "📑"),
-                        Triple("CARDS", Strings.multiWebModeCards, "🃏"),
-                        Triple("FEED", Strings.multiWebModeFeed, "📰"),
-                        Triple("DRAWER", Strings.multiWebModeDrawer, "☰")
-                    )
-                    val modeDescriptions = mapOf(
-                        "TABS" to Strings.multiWebModeTabsDesc,
-                        "CARDS" to Strings.multiWebModeCardsDesc,
-                        "FEED" to Strings.multiWebModeFeedDesc,
-                        "DRAWER" to Strings.multiWebModeDrawerDesc
-                    )
 
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        modes.forEach { (mode, title, icon) ->
-                            val isSelected = displayMode == mode
-                            val bgColor by animateColorAsState(
-                                if (isSelected) brandIndigo else Color.Transparent,
-                                animationSpec = spring(stiffness = Spring.StiffnessMedium),
-                                label = "pillBg"
+            WtaCreateFlowSection(title = Strings.appConfig) {
+                EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            Strings.multiWebDisplayMode,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                            val modes = listOf("TABS", "CARDS", "FEED", "DRAWER")
+                            val modeLabels = listOf(
+                                Strings.multiWebModeTabs,
+                                Strings.multiWebModeCards,
+                                Strings.multiWebModeFeed,
+                                Strings.multiWebModeDrawer
                             )
-                            val borderAlpha by animateFloatAsState(
-                                if (isSelected) 0f else 1f,
-                                label = "borderAlpha"
-                            )
+                            modes.forEachIndexed { index, mode ->
+                                SegmentedButton(
+                                    shape = SegmentedButtonDefaults.itemShape(index, modes.size),
+                                    onClick = { displayMode = mode },
+                                    selected = displayMode == mode
+                                ) {
+                                    Text(modeLabels[index])
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            when (displayMode) {
+                                "TABS" -> Strings.multiWebModeTabsDesc
+                                "CARDS" -> Strings.multiWebModeCardsDesc
+                                "FEED" -> Strings.multiWebModeFeedDesc
+                                else -> Strings.multiWebModeDrawerDesc
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
 
+
+                        AnimatedVisibility(
+                            visible = displayMode == "FEED",
+                            enter = expandVertically() + fadeIn(),
+                            exit = shrinkVertically() + fadeOut()
+                        ) {
                             Surface(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(50))
-                                    .then(
-                                        if (!isSelected) Modifier.border(
-                                            width = 1.dp,
-                                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = borderAlpha),
-                                            shape = RoundedCornerShape(50)
-                                        ) else Modifier
-                                    )
-                                    .clickable { displayMode = mode },
-                                shape = RoundedCornerShape(50),
-                                color = bgColor,
-                                shadowElevation = if (isSelected) 4.dp else 0.dp
+                                    .fillMaxWidth()
+                                    .padding(top = 8.dp),
+                                shape = RoundedCornerShape(10.dp),
+                                color = brandIndigo.copy(alpha = 0.08f)
                             ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(icon, fontSize = 15.sp)
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        title,
-                                        style = MaterialTheme.typography.labelLarge,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (isSelected) Color.White
-                                        else MaterialTheme.colorScheme.onSurface
-                                    )
-                                }
+                                Text(
+                                    Strings.multiWebFeedTip,
+                                    modifier = Modifier.padding(12.dp),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = brandIndigo,
+                                    lineHeight = 18.sp
+                                )
                             }
                         }
                     }
+                }
+            }
 
-                    // 当前模式描述（小字）
-                    Text(
-                        modeDescriptions[displayMode] ?: "",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(start = 4.dp)
-                    )
 
-                    // Feed 模式提示
-                    AnimatedVisibility(
-                        visible = displayMode == "FEED",
-                        enter = expandVertically() + fadeIn(),
-                        exit = shrinkVertically() + fadeOut()
-                    ) {
-                        Surface(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            color = brandIndigo.copy(alpha = 0.08f)
-                        ) {
-                            Text(
-                                Strings.multiWebFeedTip,
-                                modifier = Modifier.padding(14.dp),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = brandIndigo,
-                                lineHeight = 20.sp
-                            )
-                        }
-                    }
+            WtaCreateFlowSection(title = Strings.preview) {
+                EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(16.dp)) {
 
-                    // ═══════════════════════ 3. SITE LIST ═══════════════════════
-                    // 标题行
-                    if (sites.isNotEmpty()) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 4.dp),
+                            modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
                                 Strings.multiWebSiteList,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
+                                style = MaterialTheme.typography.titleMedium
                             )
-                            Text(
-                                Strings.multiWebSiteCount.replace("%d", sites.size.toString()),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            if (sites.isNotEmpty()) {
+                                Text(
+                                    Strings.multiWebSiteCount.replace("%d", sites.size.toString()),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
-                    }
 
-                    // 站点卡片 — 每个独立的玻璃态卡片，左侧彩色渐变条
-                    if (sites.isEmpty()) {
-                        // 空状态 — 更优雅
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 32.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(72.dp)
-                                        .clip(RoundedCornerShape(20.dp))
-                                        .background(
-                                            brush = Brush.linearGradient(
-                                                colors = listOf(
-                                                    brandIndigo.copy(alpha = 0.1f),
-                                                    brandPurple.copy(alpha = 0.05f)
-                                                )
-                                            )
-                                        ),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        Icons.Outlined.Language, null,
-                                        modifier = Modifier.size(36.dp),
-                                        tint = brandIndigo.copy(alpha = 0.4f)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        if (sites.isEmpty()) {
+
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(
+                                    Icons.Outlined.Apps, null,
+                                    modifier = Modifier.size(48.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
                                 Text(
                                     Strings.multiWebNoSites,
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                 )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    Strings.multiWebQuickAddHint,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                                )
-                            }
-                        }
-                    } else {
-                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            sites.forEachIndexed { index, site ->
-                                val (colorStart, colorEnd) = siteCardColors[index % siteCardColors.size]
-                                SiteCard(
-                                    site = site,
-                                    accentColorStart = colorStart,
-                                    accentColorEnd = colorEnd,
-                                    showFeedConfig = displayMode == "FEED",
-                                    onEdit = {
-                                        editingSite = site
-                                        prefilledUrl = ""
-                                        prefilledName = ""
-                                        prefilledFavicon = ""
-                                        prefilledColor = ""
+                                Spacer(modifier = Modifier.height(12.dp))
+                                OutlinedButton(
+                                    onClick = {
+                                        editingSite = null
                                         showAddSiteDialog = true
                                     },
-                                    onDelete = {
-                                        sites = sites.toMutableList().also { it.removeAt(index) }
-                                    },
-                                    onToggleEnabled = { enabled ->
-                                        sites = sites.toMutableList().also {
-                                            it[index] = site.copy(enabled = enabled)
-                                        }
-                                    },
-                                    onMoveUp = if (index > 0) {
-                                        {
-                                            sites = sites.toMutableList().also {
-                                                val item = it.removeAt(index)
-                                                it.add(index - 1, item)
-                                            }
-                                        }
-                                    } else null,
-                                    onMoveDown = if (index < sites.size - 1) {
-                                        {
-                                            sites = sites.toMutableList().also {
-                                                val item = it.removeAt(index)
-                                                it.add(index + 1, item)
-                                            }
-                                        }
-                                    } else null
-                                )
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Icon(Icons.Outlined.Add, null, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(Strings.multiWebAddSite)
+                                }
                             }
-                        }
-                    }
+                        } else {
 
-                    // ═══════════════════════ 4. SETTINGS (collapsible) ═══════════════════════
-                    AnimatedVisibility(
-                        visible = showSettingsSection,
-                        enter = expandVertically() + fadeIn(),
-                        exit = shrinkVertically() + fadeOut()
-                    ) {
-                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            // App name + icon（仅新建时显示，编辑时在通用配置中设置）
-                            if (!isEdit) {
-                            EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
-                                Column(modifier = Modifier.padding(16.dp)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            Icons.Outlined.Settings, null,
-                                            tint = brandIndigo,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
-                                            Strings.njsBasicConfig,
-                                            style = MaterialTheme.typography.titleSmall,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.height(12.dp))
-                                    PremiumTextField(
-                                        value = appName,
-                                        onValueChange = { appName = it },
-                                        label = { Text(Strings.labelAppName) },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        singleLine = true
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                sites.forEachIndexed { index, site ->
+                                    SiteItem(
+                                        site = site,
+                                        showFeedConfig = displayMode == "FEED",
+                                        onEdit = {
+                                            editingSite = site
+                                            showAddSiteDialog = true
+                                        },
+                                        onDelete = {
+                                            sites = sites.toMutableList().also { it.removeAt(index) }
+                                        },
+                                        onToggleEnabled = { enabled ->
+                                            sites = sites.toMutableList().also {
+                                                it[index] = site.copy(enabled = enabled)
+                                            }
+                                        },
+                                        onMoveUp = if (index > 0) {
+                                            { sites = sites.toMutableList().also { val item = it.removeAt(index); it.add(index - 1, item) } }
+                                        } else null,
+                                        onMoveDown = if (index < sites.size - 1) {
+                                            { sites = sites.toMutableList().also { val item = it.removeAt(index); it.add(index + 1, item) } }
+                                        } else null
                                     )
                                 }
+
+
+                                OutlinedButton(
+                                    onClick = {
+                                        editingSite = null
+                                        showAddSiteDialog = true
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Icon(Icons.Outlined.Add, null, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(Strings.multiWebAddSite)
+                                }
                             }
-
-                            // Icon picker
-                            RuntimeIconPickerCard(
-                                appIcon = appIcon,
-                                onSelectIcon = { iconPickerLauncher.launch("image/*") }
-                            )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-
-                // ═══════════════════════ 5. BOTTOM QUICK-ADD BAR ═══════════════════════
-                // 固定底部 — 暗色圆角输入框 + "+" 按钮（matching mockup）
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    tonalElevation = 3.dp
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp)
-                            .navigationBarsPadding(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        // URL 输入框
-                        OutlinedTextField(
-                            value = quickAddUrl,
-                            onValueChange = { quickAddUrl = it },
-                            placeholder = {
-                                Text(
-                                    Strings.multiWebQuickAddHint,
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            },
-                            modifier = Modifier.weight(1f),
-                            singleLine = true,
-                            shape = RoundedCornerShape(14.dp),
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Outlined.Link, null,
-                                    modifier = Modifier.size(20.dp),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            },
-                            trailingIcon = {
-                                if (quickAddUrl.isBlank()) {
-                                    // 粘贴按钮
-                                    IconButton(
-                                        onClick = {
-                                            val clipText = getClipboardText(context)
-                                            if (clipText != null) quickAddUrl = clipText
-                                        },
-                                        modifier = Modifier.size(24.dp)
-                                    ) {
-                                        Icon(
-                                            Icons.Outlined.ContentPaste, null,
-                                            modifier = Modifier.size(18.dp),
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                } else {
-                                    IconButton(
-                                        onClick = { quickAddUrl = "" },
-                                        modifier = Modifier.size(24.dp)
-                                    ) {
-                                        Icon(
-                                            Icons.Outlined.Clear, null,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
-                                }
-                            },
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Uri,
-                                imeAction = ImeAction.Done
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
-                                    if (isValidUrl(quickAddUrl)) {
-                                        focusManager.clearFocus()
-                                        handleQuickAdd(quickAddUrl.trim()) { url, name, favicon, color ->
-                                            prefilledUrl = url
-                                            prefilledName = name
-                                            prefilledFavicon = favicon
-                                            prefilledColor = color
-                                            editingSite = null
-                                            showAddSiteDialog = true
-                                        }
-                                    }
-                                }
-                            ),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = brandIndigo,
-                                cursorColor = brandIndigo
-                            )
-                        )
-
-                        // "+" 添加按钮 — 发光 indigo
-                        FilledIconButton(
-                            onClick = {
-                                if (quickAddUrl.isNotBlank() && isValidUrl(quickAddUrl)) {
-                                    focusManager.clearFocus()
-                                    prefilledUrl = quickAddUrl.trim()
-                                    prefilledName = ""
-                                    prefilledFavicon = ""
-                                    prefilledColor = ""
-                                    editingSite = null
-                                    showAddSiteDialog = true
-                                } else {
-                                    // 空白时打开空白 dialog
-                                    prefilledUrl = ""
-                                    prefilledName = ""
-                                    prefilledFavicon = ""
-                                    prefilledColor = ""
-                                    editingSite = null
-                                    showAddSiteDialog = true
-                                }
-                            },
-                            modifier = Modifier.size(48.dp),
-                            colors = IconButtonDefaults.filledIconButtonColors(
-                                containerColor = brandIndigo
-                            ),
-                            shape = RoundedCornerShape(14.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.Add, null,
-                                modifier = Modifier.size(24.dp),
-                                tint = Color.White
-                            )
                         }
                     }
                 }
             }
-        }
-    }
 
-    // ═══════════════════════ DIALOGS ═══════════════════════
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+
     if (showAddSiteDialog) {
         AddSiteDialog(
             editingSite = editingSite,
             showFeedFields = displayMode == "FEED",
             newSortIndex = sites.size,
-            prefilledUrl = prefilledUrl,
-            prefilledName = prefilledName,
-            prefilledFavicon = prefilledFavicon,
-            prefilledColor = prefilledColor,
+            existingApps = existingApps,
+            pendingLocalSiteUri = pendingLocalSiteUri,
+            onPickLocalSiteFile = { localSiteFilePickerLauncher.launch("text/html") },
+            onConsumeLocalSiteFile = { pendingLocalSiteUri = null },
             onDismiss = {
                 showAddSiteDialog = false
                 editingSite = null
-                prefilledUrl = ""
-                prefilledName = ""
-                prefilledFavicon = ""
-                prefilledColor = ""
+                pendingLocalSiteUri = null
             },
             onSave = { site ->
                 if (editingSite != null) {
@@ -710,36 +368,25 @@ fun CreateMultiWebAppScreen(
                 }
                 showAddSiteDialog = false
                 editingSite = null
-                prefilledUrl = ""
-                prefilledName = ""
-                prefilledFavicon = ""
-                prefilledColor = ""
-                quickAddUrl = ""
-            }
-        )
-    }
-
-    if (showBatchImport) {
-        BatchImportDialog(
-            startSortIndex = sites.size,
-            onDismiss = { showBatchImport = false },
-            onImport = { importedSites ->
-                sites = sites + importedSites
-                showBatchImport = false
+                pendingLocalSiteUri = null
+            },
+            onBatchSave = { newSites ->
+                sites = sites + newSites
+                showAddSiteDialog = false
+                editingSite = null
+                pendingLocalSiteUri = null
             }
         )
     }
 }
 
-// ══════════════════════════════════════════════════════
-// SITE CARD — 独立玻璃态卡片，左侧彩色渐变条
-// ══════════════════════════════════════════════════════
+
+
+
 
 @Composable
-private fun SiteCard(
+private fun SiteItem(
     site: MultiWebSite,
-    accentColorStart: Color,
-    accentColorEnd: Color,
     showFeedConfig: Boolean,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
@@ -748,157 +395,79 @@ private fun SiteCard(
     onMoveDown: (() -> Unit)? = null
 ) {
     var showMenu by remember { mutableStateOf(false) }
-    val disabledAlpha by animateFloatAsState(
-        if (site.enabled) 1f else 0.5f,
-        label = "disabledAlpha"
-    )
 
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .graphicsLayer { alpha = disabledAlpha }
-            .clip(RoundedCornerShape(16.dp))
-            .clickable(onClick = onEdit),
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        tonalElevation = 1.dp
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        color = if (site.enabled)
+            MaterialTheme.colorScheme.surfaceContainerLow
+        else
+            MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.5f),
+        tonalElevation = 0.dp
     ) {
-        Row(modifier = Modifier.fillMaxWidth()) {
-            // ★ 左侧彩色渐变条 — 视觉亮点
-            Box(
-                modifier = Modifier
-                    .width(5.dp)
-                    .fillMaxHeight()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(accentColorStart, accentColorEnd)
-                        )
-                    )
-            )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
 
-            // 拖拽手柄
             Box(
                 modifier = Modifier
-                    .padding(start = 6.dp)
-                    .align(Alignment.CenterVertically)
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    Icons.Default.DragHandle, null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f),
+                    Icons.Outlined.Apps, null,
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(20.dp)
                 )
             }
 
-            // 主内容
-            Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 10.dp, vertical = 14.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Favicon / emoji 图标
-                Box(
-                    modifier = Modifier
-                        .size(42.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(
-                            brush = Brush.linearGradient(
-                                colors = listOf(
-                                    accentColorStart.copy(alpha = 0.15f),
-                                    accentColorEnd.copy(alpha = 0.08f)
-                                )
-                            )
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (site.faviconUrl.isNotBlank()) {
-                        val painter = rememberAsyncImagePainter(
-                            ImageRequest.Builder(LocalContext.current).apply {
-                                data(site.faviconUrl)
-                                crossfade(true)
-                            }.build()
-                        )
-                        Image(
-                            painter = painter,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .size(26.dp)
-                                .clip(RoundedCornerShape(6.dp))
-                        )
-                    } else if (site.iconEmoji.isNotBlank()) {
-                        Text(site.iconEmoji, fontSize = 22.sp)
-                    } else {
-                        Icon(
-                            Icons.Outlined.Language, null,
-                            tint = accentColorStart,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-                }
+            Spacer(modifier = Modifier.width(10.dp))
 
-                Spacer(modifier = Modifier.width(12.dp))
 
-                // 文本信息
-                Column(modifier = Modifier.weight(1f)) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    site.name.ifBlank { Strings.multiWebTypeExisting },
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    site.url.ifBlank { Strings.multiWebTypeExisting },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (showFeedConfig && site.cssSelector.isNotBlank()) {
                     Text(
-                        site.name.ifBlank { site.url },
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.SemiBold,
+                        "CSS: ${site.cssSelector}",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontFamily = FontFamily.Monospace,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Text(
-                        site.url,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-
-                    // Feed CSS selector
-                    if (showFeedConfig && site.cssSelector.isNotBlank()) {
-                        Text(
-                            "CSS: ${site.cssSelector}",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontFamily = FontFamily.Monospace,
-                            color = accentColorStart.copy(alpha = 0.7f),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-
-                    // 分类标签
-                    if (site.category.isNotBlank()) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = accentColorStart.copy(alpha = 0.1f)
-                        ) {
-                            Text(
-                                site.category,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Medium,
-                                color = accentColorStart
-                            )
-                        }
-                    }
                 }
             }
 
-            // 3-dot menu
-            Box(modifier = Modifier.align(Alignment.CenterVertically)) {
+
+            Box {
                 IconButton(
                     onClick = { showMenu = true },
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(32.dp)
                 ) {
                     Icon(
                         Icons.Default.MoreVert, null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                        modifier = Modifier.size(20.dp)
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp)
                     )
                 }
-
                 DropdownMenu(
                     expanded = showMenu,
                     onDismissRequest = { showMenu = false }
@@ -906,45 +475,39 @@ private fun SiteCard(
                     DropdownMenuItem(
                         text = { Text(Strings.multiWebEditSite) },
                         onClick = { showMenu = false; onEdit() },
-                        leadingIcon = { Icon(Icons.Default.Edit, null, modifier = Modifier.size(18.dp)) }
+                        leadingIcon = { Icon(Icons.Outlined.Edit, null, modifier = Modifier.size(18.dp)) }
                     )
                     DropdownMenuItem(
-                        text = {
-                            Text(if (site.enabled) Strings.multiWebDisableSite else Strings.multiWebEnableSite)
-                        },
+                        text = { Text(if (site.enabled) Strings.multiWebDisableSite else Strings.multiWebEnableSite) },
                         onClick = { showMenu = false; onToggleEnabled(!site.enabled) },
                         leadingIcon = {
                             Icon(
-                                if (site.enabled) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                if (site.enabled) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
                                 null, modifier = Modifier.size(18.dp)
                             )
                         }
                     )
                     if (onMoveUp != null || onMoveDown != null) {
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 2.dp))
+                        HorizontalDivider()
                         DropdownMenuItem(
                             text = { Text(Strings.multiWebMoveUp) },
                             onClick = { showMenu = false; onMoveUp?.invoke() },
-                            leadingIcon = { Icon(Icons.Default.KeyboardArrowUp, null, modifier = Modifier.size(18.dp)) },
+                            leadingIcon = { Icon(Icons.Outlined.KeyboardArrowUp, null, modifier = Modifier.size(18.dp)) },
                             enabled = onMoveUp != null
                         )
                         DropdownMenuItem(
                             text = { Text(Strings.multiWebMoveDown) },
                             onClick = { showMenu = false; onMoveDown?.invoke() },
-                            leadingIcon = { Icon(Icons.Default.KeyboardArrowDown, null, modifier = Modifier.size(18.dp)) },
+                            leadingIcon = { Icon(Icons.Outlined.KeyboardArrowDown, null, modifier = Modifier.size(18.dp)) },
                             enabled = onMoveDown != null
                         )
                     }
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 2.dp))
+                    HorizontalDivider()
                     DropdownMenuItem(
                         text = { Text(Strings.multiWebDeleteSite, color = MaterialTheme.colorScheme.error) },
                         onClick = { showMenu = false; onDelete() },
                         leadingIcon = {
-                            Icon(
-                                Icons.Default.Delete, null,
-                                tint = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.size(18.dp)
-                            )
+                            Icon(Icons.Outlined.Delete, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp))
                         }
                     )
                 }
@@ -953,9 +516,9 @@ private fun SiteCard(
     }
 }
 
-// ══════════════════════════════════════════════════════
-// ADD / EDIT SITE DIALOG
-// ══════════════════════════════════════════════════════
+
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -963,159 +526,669 @@ private fun AddSiteDialog(
     editingSite: MultiWebSite?,
     showFeedFields: Boolean,
     newSortIndex: Int = 0,
-    prefilledUrl: String = "",
-    prefilledName: String = "",
-    prefilledFavicon: String = "",
-    prefilledColor: String = "",
+    existingApps: List<com.webtoapp.data.model.WebApp> = emptyList(),
+    pendingLocalSiteUri: Uri? = null,
+    onPickLocalSiteFile: () -> Unit = {},
+    onConsumeLocalSiteFile: () -> Unit = {},
     onDismiss: () -> Unit,
-    onSave: (MultiWebSite) -> Unit
+    onSave: (MultiWebSite) -> Unit,
+    onBatchSave: (List<MultiWebSite>) -> Unit = {}
 ) {
-    var name by remember { mutableStateOf(editingSite?.name ?: prefilledName) }
-    var url by remember { mutableStateOf(editingSite?.url ?: prefilledUrl) }
-    var emoji by remember { mutableStateOf(editingSite?.iconEmoji ?: "") }
-    var category by remember { mutableStateOf(editingSite?.category ?: "") }
-    var cssSelector by remember { mutableStateOf(editingSite?.cssSelector ?: "") }
-    var linkSelector by remember { mutableStateOf(editingSite?.linkSelector ?: "") }
-    var faviconUrl by remember { mutableStateOf(editingSite?.faviconUrl ?: prefilledFavicon) }
-    var themeColor by remember { mutableStateOf(editingSite?.themeColor ?: prefilledColor) }
-
-    var isFetchingMetadata by remember { mutableStateOf(false) }
-    var hasAutoFilled by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
-
     val brandColor = Color(0xFF6366F1)
-    val isValid = url.isNotBlank() && (url.startsWith("http://") || url.startsWith("https://"))
 
-    // Auto-fetch when URL is valid (debounced)
-    LaunchedEffect(url) {
-        if (editingSite != null) return@LaunchedEffect
-        if (!isValid || hasAutoFilled) return@LaunchedEffect
-        if (prefilledName.isNotBlank()) { hasAutoFilled = true; return@LaunchedEffect }
 
-        delay(800)
-        if (!isValid || hasAutoFilled) return@LaunchedEffect
-
-        isFetchingMetadata = true
-        val metadata = UrlMetadataFetcher.fetch(url)
-        isFetchingMetadata = false
-
-        if (metadata.title.isNotBlank()) { name = metadata.title; hasAutoFilled = true }
-        if (metadata.faviconUrl.isNotBlank()) faviconUrl = metadata.faviconUrl
-        if (metadata.themeColor.isNotBlank()) themeColor = metadata.themeColor
+    if (editingSite != null) {
+        EditSiteDialog(
+            editingSite = editingSite,
+            showFeedFields = showFeedFields,
+            existingApps = existingApps,
+            pendingLocalSiteUri = pendingLocalSiteUri,
+            onPickLocalSiteFile = onPickLocalSiteFile,
+            onConsumeLocalSiteFile = onConsumeLocalSiteFile,
+            onDismiss = onDismiss,
+            onSave = onSave
+        )
+        return
     }
 
-    LaunchedEffect(editingSite) { hasAutoFilled = editingSite != null }
+
+    var sourceType by remember { mutableStateOf("URL") }
+    var siteName by remember { mutableStateOf("") }
+    var siteUrl by remember { mutableStateOf("") }
+    var localFileName by remember { mutableStateOf("") }
+    var localFileUri by remember { mutableStateOf("") }
+    var cssSelector by remember { mutableStateOf("") }
+    var selectedAppIds by remember { mutableStateOf<Set<Long>>(emptySet()) }
+    var filterType by remember { mutableStateOf<String?>(null) }
+    var filterCategoryId by remember { mutableStateOf<Long?>(null) }
+    LaunchedEffect(pendingLocalSiteUri) {
+        pendingLocalSiteUri?.let { uri ->
+            val pickedName = uri.lastPathSegment?.substringAfterLast('/')?.takeIf { it.isNotBlank() } ?: "index.html"
+            localFileName = pickedName
+            localFileUri = uri.toString()
+            if (siteName.isBlank()) siteName = pickedName.substringBeforeLast('.')
+            onConsumeLocalSiteFile()
+        }
+    }
+
+
+    val eligibleApps = existingApps.filter { it.appType != com.webtoapp.data.model.AppType.MULTI_WEB }
+
+
+    val availableTypes = remember(eligibleApps) {
+        eligibleApps.map { it.appType.name }.distinct()
+    }
+
+
+    var categories by remember { mutableStateOf<List<com.webtoapp.data.model.AppCategory>>(emptyList()) }
+    LaunchedEffect(Unit) {
+        val repo = org.koin.java.KoinJavaComponent.get<com.webtoapp.data.repository.AppCategoryRepository>(
+            com.webtoapp.data.repository.AppCategoryRepository::class.java
+        )
+        repo.allCategories.collect { categories = it }
+    }
+
+
+    val filteredApps = remember(eligibleApps, filterType, filterCategoryId) {
+        eligibleApps.filter { app ->
+            val typeMatch = filterType == null || app.appType.name == filterType
+            val categoryMatch = when {
+                filterCategoryId == null -> true
+                filterCategoryId == -1L -> app.categoryId == null
+                else -> app.categoryId == filterCategoryId
+            }
+            typeMatch && categoryMatch
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = {
-            Icon(
-                if (editingSite != null) Icons.Outlined.Edit else Icons.Outlined.AddCircleOutline,
-                null, tint = brandColor, modifier = Modifier.size(32.dp)
-            )
+            Icon(Icons.Outlined.AddCircleOutline, null, tint = brandColor, modifier = Modifier.size(32.dp))
         },
         title = {
-            Text(
-                if (editingSite != null) Strings.multiWebEditSite else Strings.multiWebAddSite,
-                fontWeight = FontWeight.Bold
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(Strings.multiWebAddSite, fontWeight = FontWeight.Bold)
+                if (sourceType == "EXISTING" && selectedAppIds.isNotEmpty()) {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = brandColor.copy(alpha = 0.12f)
+                    ) {
+                        Text(
+                            "${selectedAppIds.size}",
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = brandColor,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
         },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // URL with auto-fetch indicator
-                OutlinedTextField(
-                    value = url,
-                    onValueChange = { url = it; hasAutoFilled = false },
-                    label = { Text(Strings.multiWebSiteUrl) },
-                    placeholder = { Text("https://example.com") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    isError = url.isNotBlank() && !isValid,
-                    trailingIcon = {
-                        when {
-                            isFetchingMetadata -> CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp), strokeWidth = 2.dp
+                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                    val types = listOf("URL", "LOCAL", "EXISTING")
+                    val labels = listOf(Strings.multiWebTypeUrl, Strings.multiWebTypeLocal, Strings.multiWebTypeExisting)
+                    types.forEachIndexed { index, type ->
+                        SegmentedButton(
+                            selected = sourceType == type,
+                            onClick = { sourceType = type },
+                            shape = SegmentedButtonDefaults.itemShape(index, types.size)
+                        ) {
+                            Text(labels[index], maxLines = 1)
+                        }
+                    }
+                }
+
+                if (sourceType == "URL") {
+                    PremiumTextField(
+                        value = siteName,
+                        onValueChange = { siteName = it },
+                        label = { Text(Strings.multiWebSiteName) },
+                        leadingIcon = { Icon(Icons.Outlined.Label, null) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    PremiumTextField(
+                        value = siteUrl,
+                        onValueChange = {
+                            siteUrl = it
+                            if (siteName.isBlank()) siteName = guessSiteNameFromUrl(it)
+                        },
+                        label = { Text(Strings.multiWebSiteUrl) },
+                        placeholder = { Text("https://example.com") },
+                        leadingIcon = { Icon(Icons.Outlined.Link, null) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Uri,
+                            imeAction = ImeAction.Done
+                        )
+                    )
+                    if (showFeedFields) {
+                        PremiumTextField(
+                            value = cssSelector,
+                            onValueChange = { cssSelector = it },
+                            label = { Text(Strings.multiWebCssSelector) },
+                            placeholder = { Text(Strings.multiWebCssSelectorHint) },
+                            leadingIcon = { Icon(Icons.Outlined.FilterAlt, null) },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                } else if (sourceType == "LOCAL") {
+                    PremiumTextField(
+                        value = siteName,
+                        onValueChange = { siteName = it },
+                        label = { Text(Strings.multiWebSiteName) },
+                        leadingIcon = { Icon(Icons.Outlined.Label, null) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedButton(
+                        onClick = onPickLocalSiteFile,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Outlined.UploadFile, null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(localFileName.ifBlank { Strings.multiWebSelectFile })
+                    }
+                    if (showFeedFields) {
+                        PremiumTextField(
+                            value = cssSelector,
+                            onValueChange = { cssSelector = it },
+                            label = { Text(Strings.multiWebCssSelector) },
+                            placeholder = { Text(Strings.multiWebCssSelectorHint) },
+                            leadingIcon = { Icon(Icons.Outlined.FilterAlt, null) },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                } else {
+                    if (eligibleApps.isNotEmpty() && availableTypes.size > 1) {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        item {
+                            FilterChip(
+                                selected = filterType == null,
+                                onClick = { filterType = null },
+                                label = { Text(Strings.all, fontSize = 12.sp) }
                             )
-                            isValid && hasAutoFilled && name.isNotBlank() -> Icon(
-                                Icons.Outlined.CheckCircle, null,
-                                modifier = Modifier.size(20.dp), tint = Color(0xFF4CAF50)
+                        }
+                        items(availableTypes.size) { index ->
+                            val type = availableTypes[index]
+                            val (icon, label) = appTypeFilterInfo(type)
+                            FilterChip(
+                                selected = filterType == type,
+                                onClick = { filterType = if (filterType == type) null else type },
+                                label = { Text(label, fontSize = 12.sp) },
+                                leadingIcon = {
+                                    Icon(icon, null, modifier = Modifier.size(16.dp))
+                                }
                             )
-                            isValid && !hasAutoFilled -> IconButton(
-                                onClick = {
-                                    scope.launch {
-                                        isFetchingMetadata = true
-                                        val m = UrlMetadataFetcher.fetch(url)
-                                        isFetchingMetadata = false
-                                        if (m.title.isNotBlank()) { name = m.title; hasAutoFilled = true }
-                                        if (m.faviconUrl.isNotBlank()) faviconUrl = m.faviconUrl
-                                        if (m.themeColor.isNotBlank()) themeColor = m.themeColor
-                                    }
-                                },
-                                modifier = Modifier.size(20.dp)
+                        }
+                    }
+                    }
+
+
+                    if (eligibleApps.isNotEmpty()) {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        item {
+                            FilterChip(
+                                selected = filterCategoryId == null,
+                                onClick = { filterCategoryId = null },
+                                label = { Text(Strings.allApps, fontSize = 12.sp) }
+                            )
+                        }
+                        item {
+                            FilterChip(
+                                selected = filterCategoryId == -1L,
+                                onClick = { filterCategoryId = -1L },
+                                label = { Text(Strings.uncategorized, fontSize = 12.sp) }
+                            )
+                        }
+                        items(categories.size) { index ->
+                            val cat = categories[index]
+                            FilterChip(
+                                selected = filterCategoryId == cat.id,
+                                onClick = { filterCategoryId = if (filterCategoryId == cat.id) null else cat.id },
+                                label = { Text(cat.name, fontSize = 12.sp) },
+                                leadingIcon = {
+                                    Icon(
+                                        com.webtoapp.util.SvgIconMapper.getIcon(cat.icon),
+                                        null,
+                                        modifier = Modifier.size(16.dp),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            )
+                        }
+                    }
+                    }
+
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 2.dp))
+
+
+                    if (eligibleApps.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                Icons.Outlined.Apps, null,
+                                modifier = Modifier.size(40.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                Strings.multiWebNoApps,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                } else if (filteredApps.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            Strings.noSearchResult,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    } else {
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(
+                            onClick = {
+                                selectedAppIds = if (selectedAppIds.size == filteredApps.size) {
+                                    emptySet()
+                                } else {
+                                    filteredApps.map { it.id }.toSet()
+                                }
+                            }
+                        ) {
+                            Text(
+                                if (selectedAppIds.size == filteredApps.size) Strings.deselectAll else Strings.selectAll,
+                                fontSize = 12.sp,
+                                color = brandColor
+                            )
+                        }
+                    }
+
+                    filteredApps.forEach { app ->
+                        val isSelected = app.id in selectedAppIds
+                        Card(
+                            onClick = {
+                                selectedAppIds = if (isSelected) {
+                                    selectedAppIds - app.id
+                                } else {
+                                    selectedAppIds + app.id
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (isSelected)
+                                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+                                else
+                                    MaterialTheme.colorScheme.surface
+                            ),
+                            border = if (isSelected) CardDefaults.outlinedCardBorder(true) else null
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(10.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(Icons.Outlined.AutoAwesome, null, modifier = Modifier.size(18.dp), tint = brandColor)
+
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(MaterialTheme.shapes.small)
+                                        .background(MaterialTheme.colorScheme.primaryContainer),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        Icons.Outlined.Language, null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        app.name,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Text(
+                                        app.url.ifBlank { app.appType.name },
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                                Checkbox(
+                                    checked = isSelected,
+                                    onCheckedChange = {
+                                        selectedAppIds = if (isSelected) selectedAppIds - app.id else selectedAppIds + app.id
+                                    },
+                                    modifier = Modifier.size(24.dp),
+                                    colors = CheckboxDefaults.colors(checkedColor = brandColor)
+                                )
                             }
                         }
                     }
-                )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (sourceType == "URL") {
+                        onSave(
+                            MultiWebSite(
+                                id = UUID.randomUUID().toString(),
+                                name = siteName.trim().ifBlank { guessSiteNameFromUrl(siteUrl) },
+                                url = normalizeSiteUrl(siteUrl),
+                                type = "URL",
+                                cssSelector = cssSelector.trim(),
+                                enabled = true,
+                                sortIndex = newSortIndex
+                            )
+                        )
+                        return@Button
+                    }
+                    if (sourceType == "LOCAL") {
+                        onSave(
+                            MultiWebSite(
+                                id = UUID.randomUUID().toString(),
+                                name = siteName.trim().ifBlank { localFileName.substringBeforeLast('.').ifBlank { Strings.multiWebTypeLocal } },
+                                type = "LOCAL",
+                                localFilePath = localFileName.ifBlank { "index.html" },
+                                localFileUri = localFileUri,
+                                cssSelector = cssSelector.trim(),
+                                enabled = true,
+                                sortIndex = newSortIndex
+                            )
+                        )
+                        return@Button
+                    }
+                    val newSites = filteredApps.filter { it.id in selectedAppIds }.map { app ->
+                        var localFilePath = ""
+                        var sourceProjectId = ""
+                        if (app.htmlConfig != null && app.htmlConfig!!.projectId.isNotBlank()) {
+                            val entryFile = app.htmlConfig!!.files.firstOrNull { it.type == HtmlFileType.HTML }
+                            localFilePath = entryFile?.name ?: "index.html"
+                            sourceProjectId = app.htmlConfig!!.projectId
+                        }
+                        MultiWebSite(
+                            id = UUID.randomUUID().toString(),
+                            name = app.name,
+                            url = app.url,
+                            type = "EXISTING",
+                            localFilePath = localFilePath,
+                            sourceAppId = app.id,
+                            sourceProjectId = sourceProjectId,
+                            enabled = true,
+                            sortIndex = newSortIndex + selectedAppIds.indexOf(app.id)
+                        )
+                    }
+                    onBatchSave(newSites)
+                },
+                enabled = when (sourceType) {
+                    "URL" -> siteUrl.isNotBlank()
+                    "LOCAL" -> localFileName.isNotBlank()
+                    else -> selectedAppIds.isNotEmpty()
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = brandColor)
+            ) {
+                Text(if (sourceType == "EXISTING" && selectedAppIds.size > 1) "${Strings.btnSave} (${selectedAppIds.size})" else Strings.btnSave)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(Strings.cancel) }
+        }
+    )
+}
 
-                // Fetching hint
-                AnimatedVisibility(visible = isFetchingMetadata, enter = fadeIn(), exit = fadeOut()) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(start = 4.dp)
-                    ) {
-                        Icon(
-                            Icons.Outlined.CloudDownload, null,
-                            modifier = Modifier.size(14.dp),
-                            tint = brandColor.copy(alpha = 0.6f)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            Strings.multiWebFetchingTitle,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = brandColor.copy(alpha = 0.6f)
-                        )
+
+
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EditSiteDialog(
+    editingSite: MultiWebSite,
+    showFeedFields: Boolean,
+    existingApps: List<com.webtoapp.data.model.WebApp>,
+    pendingLocalSiteUri: Uri? = null,
+    onPickLocalSiteFile: () -> Unit = {},
+    onConsumeLocalSiteFile: () -> Unit = {},
+    onDismiss: () -> Unit,
+    onSave: (MultiWebSite) -> Unit
+) {
+    var sourceType by remember(editingSite.id) { mutableStateOf(editingSite.type.ifBlank { "URL" }) }
+    var name by remember { mutableStateOf(editingSite.name) }
+    var url by remember { mutableStateOf(editingSite.url) }
+    var localFilePath by remember { mutableStateOf(editingSite.localFilePath) }
+    var localFileUri by remember { mutableStateOf(editingSite.localFileUri) }
+    var sourceAppId by remember { mutableStateOf(editingSite.sourceAppId) }
+    var sourceProjectId by remember { mutableStateOf(editingSite.sourceProjectId) }
+    var cssSelector by remember { mutableStateOf(editingSite.cssSelector) }
+    var selectedAppId by remember { mutableStateOf(editingSite.sourceAppId) }
+    LaunchedEffect(pendingLocalSiteUri) {
+        pendingLocalSiteUri?.let { uri ->
+            val pickedName = uri.lastPathSegment?.substringAfterLast('/')?.takeIf { it.isNotBlank() } ?: "index.html"
+            localFilePath = pickedName
+            localFileUri = uri.toString()
+            if (name.isBlank()) name = pickedName.substringBeforeLast('.')
+            onConsumeLocalSiteFile()
+        }
+    }
+
+    val brandColor = Color(0xFF6366F1)
+    val eligibleApps = existingApps.filter { it.appType != com.webtoapp.data.model.AppType.MULTI_WEB }
+    val isValid = when (sourceType) {
+        "URL" -> url.isNotBlank()
+        "LOCAL" -> localFilePath.isNotBlank()
+        else -> selectedAppId > 0
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(Icons.Outlined.Edit, null, tint = brandColor, modifier = Modifier.size(32.dp))
+        },
+        title = {
+            Text(Strings.multiWebEditSite, fontWeight = FontWeight.Bold)
+        },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                    val types = listOf("URL", "LOCAL", "EXISTING")
+                    val labels = listOf(Strings.multiWebTypeUrl, Strings.multiWebTypeLocal, Strings.multiWebTypeExisting)
+                    types.forEachIndexed { index, type ->
+                        SegmentedButton(
+                            selected = sourceType == type,
+                            onClick = { sourceType = type },
+                            shape = SegmentedButtonDefaults.itemShape(index, types.size)
+                        ) {
+                            Text(labels[index], maxLines = 1)
+                        }
                     }
                 }
 
-                // Name
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text(Strings.multiWebSiteName) },
-                    placeholder = { Text("My Site") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-
-                // Emoji + Category
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedTextField(
-                        value = emoji,
-                        onValueChange = { if (it.length <= 2) emoji = it },
-                        label = { Text("Emoji") },
-                        placeholder = { Text("🌐") },
-                        modifier = Modifier.weight(0.4f),
-                        singleLine = true
+                if (sourceType == "URL") {
+                    PremiumTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = { Text(Strings.multiWebSiteName) },
+                        leadingIcon = { Icon(Icons.Outlined.Label, null) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
                     )
-                    OutlinedTextField(
-                        value = category,
-                        onValueChange = { category = it },
-                        label = { Text(Strings.multiWebSiteCategory) },
-                        placeholder = { Text("News") },
-                        modifier = Modifier.weight(0.6f),
-                        singleLine = true
+                    PremiumTextField(
+                        value = url,
+                        onValueChange = {
+                            url = it
+                            if (name.isBlank()) name = guessSiteNameFromUrl(it)
+                        },
+                        label = { Text(Strings.multiWebSiteUrl) },
+                        placeholder = { Text("https://example.com") },
+                        leadingIcon = { Icon(Icons.Outlined.Link, null) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Uri,
+                            imeAction = ImeAction.Done
+                        )
                     )
+                } else if (sourceType == "LOCAL") {
+                    PremiumTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = { Text(Strings.multiWebSiteName) },
+                        leadingIcon = { Icon(Icons.Outlined.Label, null) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedButton(
+                        onClick = onPickLocalSiteFile,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Outlined.UploadFile, null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(localFilePath.ifBlank { Strings.multiWebSelectFile })
+                    }
+                } else if (eligibleApps.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                Icons.Outlined.Apps, null,
+                                modifier = Modifier.size(40.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                Strings.multiWebNoApps,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                } else {
+                    eligibleApps.forEach { app ->
+                        val isSelected = selectedAppId == app.id
+                        Card(
+                            onClick = {
+                                selectedAppId = if (isSelected) 0L else app.id
+                                if (!isSelected) {
+                                    name = app.name
+                                    url = app.url
+                                    sourceAppId = app.id
+                                    sourceType = "EXISTING"
+                                    if (app.htmlConfig != null && app.htmlConfig!!.projectId.isNotBlank()) {
+                                        val entryFile = app.htmlConfig!!.files.firstOrNull { it.type == HtmlFileType.HTML }
+                                        localFilePath = entryFile?.name ?: "index.html"
+                                        sourceProjectId = app.htmlConfig!!.projectId
+                                    }
+                                } else {
+                                    sourceAppId = 0L
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (isSelected)
+                                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+                                else
+                                    MaterialTheme.colorScheme.surface
+                            ),
+                            border = if (isSelected) CardDefaults.outlinedCardBorder(true) else null
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(MaterialTheme.shapes.small)
+                                        .background(MaterialTheme.colorScheme.primaryContainer),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        Icons.Outlined.Language, null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        app.name,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Text(
+                                        app.url.ifBlank { app.appType.name },
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                                if (isSelected) {
+                                    Icon(
+                                        Icons.Outlined.CheckCircle, null,
+                                        tint = brandColor,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
 
-                // Feed mode fields
+
                 if (showFeedFields) {
                     HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                     Text(
@@ -1140,17 +1213,20 @@ private fun AddSiteDialog(
                 onClick = {
                     onSave(
                         MultiWebSite(
-                            id = editingSite?.id ?: UUID.randomUUID().toString(),
-                            name = name.trim(),
-                            url = url.trim(),
-                            iconEmoji = emoji.trim(),
-                            faviconUrl = faviconUrl.trim(),
-                            themeColor = themeColor.trim(),
-                            category = category.trim(),
+                            id = editingSite.id,
+                            name = name.trim().ifBlank {
+                                if (sourceType == "URL") guessSiteNameFromUrl(url)
+                                else localFilePath.substringBeforeLast('.').ifBlank { Strings.multiWebTypeLocal }
+                            },
+                            url = if (sourceType == "URL") normalizeSiteUrl(url) else if (sourceType == "EXISTING") url.trim() else "",
+                            type = sourceType,
+                            localFilePath = if (sourceType == "LOCAL" || sourceType == "EXISTING") localFilePath.trim() else "",
+                            localFileUri = if (sourceType == "LOCAL") localFileUri else "",
+                            sourceAppId = if (sourceType == "EXISTING") sourceAppId else 0L,
+                            sourceProjectId = if (sourceType == "EXISTING") sourceProjectId else "",
                             cssSelector = cssSelector.trim(),
-                            linkSelector = linkSelector.trim(),
-                            enabled = editingSite?.enabled ?: true,
-                            sortIndex = editingSite?.sortIndex ?: newSortIndex
+                            enabled = editingSite.enabled,
+                            sortIndex = editingSite.sortIndex
                         )
                     )
                 },
@@ -1164,203 +1240,36 @@ private fun AddSiteDialog(
     )
 }
 
-// ══════════════════════════════════════════════════════
-// BATCH IMPORT DIALOG
-// ══════════════════════════════════════════════════════
 
-@Composable
-private fun BatchImportDialog(
-    startSortIndex: Int = 0,
-    onDismiss: () -> Unit,
-    onImport: (List<MultiWebSite>) -> Unit
-) {
-    var text by remember { mutableStateOf("") }
-    var previewSites by remember { mutableStateOf<List<MultiWebSite>>(emptyList()) }
-    var showPreview by remember { mutableStateOf(false) }
 
-    val scope = rememberCoroutineScope()
-    val context = LocalContext.current
-    val brandColor = Color(0xFF6366F1)
 
-    fun parseTextToSites(input: String): List<MultiWebSite> {
-        return input.lineSequence()
-            .map { it.trim() }
-            .filter { it.isNotBlank() }
-            .mapNotNull { line ->
-                // 支持格式: URL、名称|URL、emoji|名称|URL
-                val parts = line.split("|").map { it.trim() }
-                val url: String
-                val name: String
-                val emoji: String
-
-                when {
-                    parts.size >= 3 && isValidUrl(parts.last()) -> {
-                        emoji = parts[0]
-                        name = parts[1]
-                        url = parts.last()
-                    }
-                    parts.size == 2 && isValidUrl(parts[1]) -> {
-                        emoji = ""
-                        name = parts[0]
-                        url = parts[1]
-                    }
-                    parts.size == 1 && isValidUrl(parts[0]) -> {
-                        emoji = ""
-                        url = parts[0]
-                        name = try {
-                            java.net.URI(url).host?.removePrefix("www.")
-                                ?.substringBefore(".")
-                                ?.replaceFirstChar { it.uppercase() }
-                                ?: url
-                        } catch (_: Exception) { url }
-                    }
-                    else -> return@mapNotNull null
-                }
-
-                MultiWebSite(
-                    id = UUID.randomUUID().toString(),
-                    name = name,
-                    url = url,
-                    iconEmoji = emoji,
-                    enabled = true,
-                    sortIndex = startSortIndex
-                )
-            }
-            .toList()
+private fun appTypeFilterInfo(typeName: String): Pair<androidx.compose.ui.graphics.vector.ImageVector, String> {
+    return when (typeName) {
+        "WEB" -> Icons.Outlined.Public to Strings.appTypeWeb
+        "IMAGE" -> Icons.Outlined.Image to Strings.appTypeImage
+        "VIDEO" -> Icons.Outlined.VideoLibrary to Strings.appTypeVideo
+        "HTML" -> Icons.Outlined.Html to Strings.appTypeHtml
+        "GALLERY" -> Icons.Outlined.PhotoLibrary to Strings.appTypeGallery
+        "FRONTEND" -> Icons.Outlined.Rocket to Strings.appTypeFrontend
+        "WORDPRESS" -> Icons.Outlined.Newspaper to Strings.appTypeWordPress
+        "NODEJS_APP" -> Icons.Outlined.Terminal to Strings.appTypeNodeJs
+        "PHP_APP" -> Icons.Outlined.DataObject to Strings.appTypePhp
+        "PYTHON_APP" -> Icons.Outlined.Psychology to Strings.appTypePython
+        "GO_APP" -> Icons.Outlined.Speed to Strings.appTypeGo
+        "MULTI_WEB" -> Icons.Outlined.Language to Strings.appTypeMultiWeb
+        else -> Icons.Outlined.Apps to typeName
     }
+}
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        icon = {
-            Icon(Icons.Outlined.PlaylistAdd, null, tint = brandColor, modifier = Modifier.size(32.dp))
-        },
-        title = { Text(Strings.multiWebBatchImport, fontWeight = FontWeight.Bold) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                if (!showPreview) {
-                    Text(
-                        Strings.multiWebBatchHint,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 18.sp
-                    )
-                    OutlinedTextField(
-                        value = text,
-                        onValueChange = { text = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(160.dp),
-                        placeholder = { Text("https://example.com\nNews|https://news.site.com") },
-                        maxLines = 10
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        TextButton(onClick = {
-                            val clip = getClipboardText(context)
-                            if (clip != null) text = clip
-                        }) {
-                            Icon(Icons.Outlined.ContentPaste, null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(Strings.multiWebPaste)
-                        }
-                    }
-                } else {
-                    Text(
-                        String.format(Strings.multiWebImportCount, previewSites.size),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = brandColor,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(160.dp)
-                            .verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        previewSites.forEach { site ->
-                            Surface(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(8.dp),
-                                color = MaterialTheme.colorScheme.surfaceContainerLow
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(10.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(site.iconEmoji.ifBlank { "🌐" }, fontSize = 16.sp)
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            site.name,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            fontWeight = FontWeight.Medium
-                                        )
-                                        Text(
-                                            site.url,
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    TextButton(onClick = { showPreview = false; previewSites = emptyList() }) {
-                        Text(Strings.multiWebEditList)
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            if (!showPreview) {
-                Button(
-                    onClick = {
-                        previewSites = parseTextToSites(text)
-                        showPreview = true
-                    },
-                    enabled = text.isNotBlank(),
-                    colors = ButtonDefaults.buttonColors(containerColor = brandColor)
-                ) { Text(Strings.multiWebPreview) }
-            } else {
-                Button(
-                    onClick = { onImport(previewSites) },
-                    enabled = previewSites.isNotEmpty(),
-                    colors = ButtonDefaults.buttonColors(containerColor = brandColor)
-                ) { Text(String.format(Strings.multiWebImportSites, previewSites.size)) }
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(Strings.cancel) }
+private fun normalizeSiteUrl(value: String): String {
+    val trimmed = value.trim()
+    return if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) trimmed else "https://$trimmed"
+}
+
+private fun guessSiteNameFromUrl(value: String): String {
+    return runCatching {
+        java.net.URL(normalizeSiteUrl(value)).host.removePrefix("www.").substringBeforeLast('.').replaceFirstChar {
+            if (it.isLowerCase()) it.titlecase() else it.toString()
         }
-    )
-}
-
-// ══════════════════════════════════════════════════════
-// Helper Functions
-// ══════════════════════════════════════════════════════
-
-private fun isValidUrl(url: String): Boolean {
-    return url.isNotBlank() && (url.startsWith("http://") || url.startsWith("https://"))
-}
-
-private fun getClipboardText(context: Context): String? {
-    return try {
-        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        val clip = clipboard.primaryClip
-        if (clip != null && clip.itemCount > 0) {
-            clip.getItemAt(0).text?.toString()?.trim()
-        } else null
-    } catch (_: Exception) { null }
-}
-
-private fun handleQuickAdd(
-    url: String, 
-    onReady: (url: String, name: String, favicon: String, color: String) -> Unit
-) {
-    onReady(url, "", "", "")
+    }.getOrNull()?.ifBlank { Strings.multiWebTypeUrl } ?: Strings.multiWebTypeUrl
 }

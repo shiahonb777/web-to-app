@@ -13,12 +13,13 @@ import com.webtoapp.core.shell.ShellConfig
 import com.webtoapp.core.forcedrun.ForcedRunManager
 import com.webtoapp.core.forcedrun.ForcedRunPermissionDialog
 import com.webtoapp.data.model.Announcement
+import com.webtoapp.ui.components.announcement.toUiTemplate
 import com.webtoapp.ui.splash.ActivationDialog
 import kotlinx.coroutines.launch
 
-/**
- * Shell 模式激活码对话框
- */
+
+
+
 @Composable
 fun ShellActivationDialog(
     config: ShellConfig,
@@ -54,9 +55,9 @@ fun ShellActivationDialog(
     )
 }
 
-/**
- * Shell 模式公告对话框
- */
+
+
+
 @Composable
 fun ShellAnnouncementDialog(
     config: ShellConfig,
@@ -65,16 +66,16 @@ fun ShellAnnouncementDialog(
     val context = LocalContext.current
     val announcement = WebToAppApplication.announcement
 
-    // Build Announcement 对象
+
     val shellAnnouncement = Announcement(
         title = config.announcementTitle,
         content = config.announcementContent,
         linkUrl = config.announcementLink.ifEmpty { null },
         linkText = config.announcementLinkText.ifEmpty { null },
         template = try {
-            com.webtoapp.data.model.AnnouncementTemplateType.valueOf(config.announcementTemplate)
+            com.webtoapp.data.model.AnnouncementTemplateType.valueOf(config.announcementTemplate).toUiTemplate().type
         } catch (e: Exception) {
-            com.webtoapp.data.model.AnnouncementTemplateType.XIAOHONGSHU
+            com.webtoapp.data.model.AnnouncementTemplateType.MINIMAL
         },
         showEmoji = config.announcementShowEmoji,
         animationEnabled = config.announcementAnimationEnabled,
@@ -85,9 +86,7 @@ fun ShellAnnouncementDialog(
     com.webtoapp.ui.components.announcement.AnnouncementDialog(
         config = com.webtoapp.ui.components.announcement.AnnouncementConfig(
             announcement = shellAnnouncement,
-            template = com.webtoapp.ui.components.announcement.AnnouncementTemplate.valueOf(
-                shellAnnouncement.template.name
-            ),
+            template = shellAnnouncement.template.toUiTemplate(),
             showEmoji = shellAnnouncement.showEmoji,
             animationEnabled = shellAnnouncement.animationEnabled
         ),
@@ -113,9 +112,9 @@ fun ShellAnnouncementDialog(
     )
 }
 
-/**
- * Shell 模式强制运行权限引导对话框
- */
+
+
+
 @Composable
 fun ShellForcedRunPermissionDialog(
     config: ShellConfig,
@@ -129,15 +128,15 @@ fun ShellForcedRunPermissionDialog(
         protectionLevel = config.forcedRunConfig!!.protectionLevel,
         onDismiss = onDismiss,
         onContinueAnyway = {
-            // User选择跳过，降级防护继续使用
+
             onDismiss()
             AppLogger.w("ShellActivity", "User skipped permission, forced run protection degraded")
         },
         onAllPermissionsGranted = {
-            // 所有权限已授权
+
             onDismiss()
             AppLogger.d("ShellActivity", "Forced run permissions all granted")
-            // 重新启动强制运行以应用新权限
+
             if (forcedRunActive) {
                 forcedRunManager.stopForcedRunMode()
                 config.forcedRunConfig?.let { cfg ->

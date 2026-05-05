@@ -23,40 +23,58 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.webtoapp.core.i18n.Strings
 
-/**
- * Shared Composable components for runtime Create*Screen pages
- * (Node.js, PHP, Python, Go, WordPress, Frontend).
- *
- * Eliminates ~30-line icon picker, ~40-line env-vars editor,
- * ~25-line status cards, ~60-line hero sections, and ~10-line section headers
- * duplicated across 6+ screens.
- */
 
-// ==================== Section Header ====================
 
-/**
- * Unified section header with icon box + title.
- * Replaces inline Row { Box+Icon + Text } patterns across all runtime screens.
- *
- * @param icon The icon to display in the header
- * @param title The section title text
- * @param brandColor Brand color for the icon box (defaults to primary)
- * @param trailing Optional trailing content (e.g. badge, count)
- */
+
+
+
+@Composable
+private fun runtimeAccentColor(): Color = MaterialTheme.colorScheme.onSurface
+
+@Composable
+private fun runtimeAccentContainer(alpha: Float = 0.08f): Color =
+    MaterialTheme.colorScheme.onSurface.copy(alpha = alpha)
+
+@Composable
+private fun runtimeMutedContainer(alpha: Float = 0.35f): Color =
+    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = alpha)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @Composable
 fun RuntimeSectionHeader(
     icon: ImageVector,
     title: String,
+    @Suppress("UNUSED_PARAMETER")
     brandColor: Color = MaterialTheme.colorScheme.primary,
     trailing: @Composable (RowScope.() -> Unit)? = null
 ) {
+    val accent = runtimeAccentColor()
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(
             modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                .background(brandColor.copy(alpha = 0.1f)),
+                .background(runtimeAccentContainer()),
             contentAlignment = Alignment.Center
         ) {
-            Icon(icon, null, tint = brandColor, modifier = Modifier.size(22.dp))
+            Icon(icon, null, tint = accent, modifier = Modifier.size(22.dp))
         }
         Spacer(modifier = Modifier.width(12.dp))
         Text(title, style = MaterialTheme.typography.titleMedium)
@@ -67,28 +85,30 @@ fun RuntimeSectionHeader(
     }
 }
 
-// ==================== Hero Section ====================
 
-/**
- * Unified brand-colored hero section for runtime screens.
- * Replaces PythonHeroSection, WpHeroSection, NodeJsHeroSection,
- * PhpHeroSection, GoHeroSection — all sharing the same layout pattern.
- *
- * @param icon The hero icon
- * @param title Main title (e.g. "Flask Web App")
- * @param subtitle Description text
- * @param brandColor Primary brand color for gradients and accents
- * @param tags Optional technology tags displayed in a FlowRow (e.g. "Python 3.11", "PHP")
- */
+
+
+
+
+
+
+
+
+
+
+
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun RuntimeHeroSection(
     icon: ImageVector,
     title: String,
     subtitle: String,
+    @Suppress("UNUSED_PARAMETER")
     brandColor: Color,
     tags: List<Pair<String, Color>> = emptyList()
 ) {
+    val accent = runtimeAccentColor()
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -99,7 +119,7 @@ fun RuntimeHeroSection(
                 .fillMaxWidth()
                 .background(
                     brush = Brush.horizontalGradient(
-                        colors = listOf(brandColor.copy(alpha = 0.15f), brandColor.copy(alpha = 0.05f))
+                        colors = listOf(runtimeAccentContainer(0.10f), runtimeMutedContainer(0.45f))
                     ),
                     shape = RoundedCornerShape(16.dp)
                 )
@@ -109,10 +129,10 @@ fun RuntimeHeroSection(
                 Surface(
                     modifier = Modifier.size(56.dp),
                     shape = RoundedCornerShape(14.dp),
-                    color = brandColor.copy(alpha = 0.15f)
+                    color = runtimeAccentContainer(0.10f)
                 ) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Icon(icon, null, modifier = Modifier.size(32.dp), tint = brandColor)
+                        Icon(icon, null, modifier = Modifier.size(32.dp), tint = accent)
                     }
                 }
                 Spacer(modifier = Modifier.width(16.dp))
@@ -121,7 +141,7 @@ fun RuntimeHeroSection(
                         text = title,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = brandColor
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = subtitle,
@@ -131,16 +151,16 @@ fun RuntimeHeroSection(
                     if (tags.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(6.dp))
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            tags.forEach { (label, tagColor) ->
+                            tags.forEach { (label, _) ->
                                 Surface(
                                     shape = RoundedCornerShape(4.dp),
-                                    color = tagColor.copy(alpha = 0.12f)
+                                    color = runtimeAccentContainer(0.08f)
                                 ) {
                                     Text(
                                         text = label,
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = tagColor,
+                                        color = accent,
                                         fontFamily = FontFamily.Monospace,
                                         fontWeight = FontWeight.Bold
                                     )
@@ -154,34 +174,36 @@ fun RuntimeHeroSection(
     }
 }
 
-// ==================== Success/Ready Card ====================
 
-/**
- * Unified project-ready success card.
- * Replaces inline success indicators in WordPress and other runtime screens.
- *
- * @param title Success title text
- * @param subtitle Optional detail line (e.g. project ID)
- * @param brandColor Brand color for the card accent
- */
+
+
+
+
+
+
+
+
+
 @Composable
 fun RuntimeSuccessCard(
     title: String,
     subtitle: String? = null,
+    @Suppress("UNUSED_PARAMETER")
     brandColor: Color = MaterialTheme.colorScheme.primary
 ) {
+    val accent = runtimeAccentColor()
     EnhancedElevatedCard(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = brandColor.copy(alpha = 0.08f))
+        colors = CardDefaults.cardColors(containerColor = runtimeAccentContainer(0.08f))
     ) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Outlined.CheckCircle, null, tint = brandColor)
+            Icon(Icons.Outlined.CheckCircle, null, tint = accent)
             Spacer(modifier = Modifier.width(12.dp))
             Column {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = brandColor,
+                    color = accent,
                     fontWeight = FontWeight.Bold
                 )
                 subtitle?.let {
@@ -197,34 +219,36 @@ fun RuntimeSuccessCard(
     }
 }
 
-// ==================== Branded Loading Card ====================
 
-/**
- * Loading card with brand color (for WordPress and other branded screens).
- * Falls back to RuntimeLoadingCard pattern but with custom brand color.
- */
+
+
+
+
+
 @Composable
 fun RuntimeBrandedLoadingCard(
     creationPhase: String,
+    @Suppress("UNUSED_PARAMETER")
     brandColor: Color
 ) {
+    val accent = runtimeAccentColor()
     EnhancedElevatedCard(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = brandColor.copy(alpha = 0.1f))
+        colors = CardDefaults.cardColors(containerColor = runtimeAccentContainer(0.08f))
     ) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp, color = brandColor)
+            CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp, color = accent)
             Spacer(modifier = Modifier.width(16.dp))
             Text(creationPhase, style = MaterialTheme.typography.bodyMedium)
         }
     }
 }
 
-// ==================== Branded Error Card ====================
 
-/**
- * Error card using EnhancedElevatedCard (consistent with branded screens).
- */
+
+
+
+
 @Composable
 fun RuntimeBrandedErrorCard(
     error: String,
@@ -232,23 +256,23 @@ fun RuntimeBrandedErrorCard(
 ) {
     EnhancedElevatedCard(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+        colors = CardDefaults.cardColors(containerColor = runtimeAccentContainer(0.08f))
     ) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Outlined.Warning, null, tint = MaterialTheme.colorScheme.error)
+            Icon(Icons.Outlined.Warning, null, tint = MaterialTheme.colorScheme.onSurface)
             Spacer(modifier = Modifier.width(12.dp))
-            Text(error, modifier = Modifier.weight(weight = 1f, fill = true), color = MaterialTheme.colorScheme.onErrorContainer)
+            Text(error, modifier = Modifier.weight(weight = 1f, fill = true), color = MaterialTheme.colorScheme.onSurface)
             TextButton(onClick = onDismiss) { Text(Strings.btnCancel) }
         }
     }
 }
 
-// ==================== Icon Picker Card ====================
 
-/**
- * Simple icon picker card used by runtime screens.
- * Shows a 64dp icon preview + an OutlinedButton to select from gallery.
- */
+
+
+
+
+
 @Composable
 fun RuntimeIconPickerCard(
     appIcon: Uri?,
@@ -292,12 +316,12 @@ fun RuntimeIconPickerCard(
     }
 }
 
-// ==================== Environment Variables Card ====================
 
-/**
- * Environment variables editor card.
- * Shows existing key-value pairs with delete buttons + input row to add new ones.
- */
+
+
+
+
+
 @Composable
 fun RuntimeEnvVarsCard(
     envVars: Map<String, String>,
@@ -344,28 +368,28 @@ fun RuntimeEnvVarsCard(
     }
 }
 
-// ==================== Status Cards ====================
 
-/**
- * Loading/progress card shown during project creation.
- */
+
+
+
+
 @Composable
 fun RuntimeLoadingCard(creationPhase: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
+        colors = CardDefaults.cardColors(containerColor = runtimeAccentContainer(0.08f))
     ) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            CircularProgressIndicator(modifier = Modifier.size(24.dp))
+            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onSurface)
             Spacer(modifier = Modifier.width(12.dp))
             Text(creationPhase)
         }
     }
 }
 
-/**
- * Error message card with dismiss button.
- */
+
+
+
 @Composable
 fun RuntimeErrorCard(
     error: String,
@@ -373,12 +397,12 @@ fun RuntimeErrorCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+        colors = CardDefaults.cardColors(containerColor = runtimeAccentContainer(0.08f))
     ) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.Error, null, tint = MaterialTheme.colorScheme.error)
+            Icon(Icons.Default.Error, null, tint = MaterialTheme.colorScheme.onSurface)
             Spacer(modifier = Modifier.width(12.dp))
-            Text(error, modifier = Modifier.weight(weight = 1f, fill = true))
+            Text(error, modifier = Modifier.weight(weight = 1f, fill = true), color = MaterialTheme.colorScheme.onSurface)
             TextButton(onClick = onDismiss) { Text(Strings.btnCancel) }
         }
     }

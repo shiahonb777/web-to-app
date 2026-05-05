@@ -3,11 +3,11 @@ package com.webtoapp.core.cloud
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
-/**
- * 评论排序逻辑测试
- *
- * 覆盖：按时间（最新/最早）、按评分排序
- */
+
+
+
+
+
 class CommentSortLogicTest {
 
     private val comments = listOf(
@@ -19,9 +19,9 @@ class CommentSortLogicTest {
             userAvatar = null, parentId = null, createdAt = "2026-02-01", updatedAt = null)
     )
 
-    // ═══════════════════════════════════════════
-    // 按时间排序
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `sort newest returns comments sorted by createdAt descending`() {
@@ -37,9 +37,9 @@ class CommentSortLogicTest {
         assertThat(sorted.map { it.id }).containsExactly(1, 3, 2).inOrder()
     }
 
-    // ═══════════════════════════════════════════
-    // 按评分排序
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `sort by rating high to low uses review data`() {
@@ -58,12 +58,12 @@ class CommentSortLogicTest {
     fun `sort by rating with missing review data defaults to zero`() {
         val reviewMap = mapOf(
             10 to AppReviewItem(id = 1, rating = 4, authorId = 10)
-            // userId 20 and 30 have no review
+
         )
 
         val sorted = comments.sortedByDescending { reviewMap[it.userId]?.rating ?: 0 }
 
-        // userId 10 has rating 4, others default to 0
+
         assertThat(sorted.first().id).isEqualTo(1)
     }
 
@@ -77,13 +77,13 @@ class CommentSortLogicTest {
 
         val sorted = comments.sortedByDescending { reviewMap[it.userId]?.rating ?: 0 }
 
-        // All same rating — stable sort preserves original order
+
         assertThat(sorted.map { it.id }).containsExactly(1, 2, 3).inOrder()
     }
 
-    // ═══════════════════════════════════════════
-    // 边界情况
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `sort empty list returns empty list`() {
@@ -110,7 +110,7 @@ class CommentSortLogicTest {
                 userAvatar = null, parentId = null, createdAt = "2026-01-01", updatedAt = null)
         )
 
-        // null sorts before non-null in ascending (null < "2026-01-01")
+
         val sorted = commentsWithNull.sortedBy { it.createdAt ?: "" }
 
         assertThat(sorted.map { it.id }).containsExactly(1, 2).inOrder()

@@ -4,15 +4,15 @@ import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
 import com.webtoapp.core.i18n.Strings
 
-/**
- * Agent 工具定义
- * 
- * 定义 AI Agent 可以调用的工具，用于代码检查、测试、修复等
- */
 
-/**
- * 工具类型
- */
+
+
+
+
+
+
+
+
 enum class AgentToolType(val icon: String) {
     SYNTAX_CHECK("search"),
     LINT_CODE("straighten"),
@@ -28,7 +28,7 @@ enum class AgentToolType(val icon: String) {
     CREATE_MODULE("add_circle"),
     UPDATE_MODULE("edit_note"),
     PREVIEW_MODULE("visibility");
-    
+
     val displayName: String get() = when (this) {
         SYNTAX_CHECK -> Strings.toolTypeSyntaxCheck
         LINT_CODE -> Strings.toolTypeLintCode
@@ -45,7 +45,7 @@ enum class AgentToolType(val icon: String) {
         UPDATE_MODULE -> Strings.toolTypeUpdateModule
         PREVIEW_MODULE -> Strings.toolTypePreviewModule
     }
-    
+
     val description: String get() = when (this) {
         SYNTAX_CHECK -> Strings.toolTypeSyntaxCheckDesc
         LINT_CODE -> Strings.toolTypeLintCodeDesc
@@ -64,14 +64,14 @@ enum class AgentToolType(val icon: String) {
     }
 }
 
-/**
- * 工具参数定义
- */
+
+
+
 data class ToolParameter(
     @SerializedName("name")
     val name: String,
     @SerializedName("type")
-    val type: String,  // string, number, boolean, array, object
+    val type: String,
     @SerializedName("description")
     val description: String,
     @SerializedName("required")
@@ -82,9 +82,9 @@ data class ToolParameter(
     val default: Any? = null
 )
 
-/**
- * 工具定义
- */
+
+
+
 data class AgentToolDefinition(
     @SerializedName("name")
     val name: String,
@@ -98,10 +98,10 @@ data class AgentToolDefinition(
     companion object {
         private val gson = com.webtoapp.util.GsonProvider.gson
     }
-    
-    /**
-     * 转换为 OpenAI Function Calling 格式
-     */
+
+
+
+
     fun toFunctionSchema(): JsonObject {
         return JsonObject().apply {
             addProperty("name", name)
@@ -125,9 +125,9 @@ data class AgentToolDefinition(
     }
 }
 
-/**
- * 工具调用请求
- */
+
+
+
 data class ToolCallRequest(
     @SerializedName("tool_name")
     val toolName: String,
@@ -137,9 +137,9 @@ data class ToolCallRequest(
     val callId: String = java.util.UUID.randomUUID().toString()
 )
 
-/**
- * 工具调用结果
- */
+
+
+
 data class ToolCallResult(
     @SerializedName("call_id")
     val callId: String,
@@ -155,9 +155,9 @@ data class ToolCallResult(
     val executionTimeMs: Long = 0
 )
 
-/**
- * 语法检查结果
- */
+
+
+
 data class SyntaxCheckResult(
     @SerializedName("valid")
     val valid: Boolean,
@@ -167,9 +167,9 @@ data class SyntaxCheckResult(
     val warnings: List<CodeWarning> = emptyList()
 )
 
-/**
- * 代码错误
- */
+
+
+
 data class CodeError(
     @SerializedName("line")
     val line: Int,
@@ -185,9 +185,9 @@ data class CodeError(
     val suggestion: String? = null
 )
 
-/**
- * 代码警告
- */
+
+
+
 data class CodeWarning(
     @SerializedName("line")
     val line: Int,
@@ -199,19 +199,19 @@ data class CodeWarning(
     val rule: String? = null
 )
 
-/**
- * 错误严重程度
- */
+
+
+
 enum class ErrorSeverity {
-    ERROR,      // Error，必须修复
-    WARNING,    // Warning，建议修复
-    INFO,       // Info，可选优化
-    HINT        // 提示
+    ERROR,
+    WARNING,
+    INFO,
+    HINT
 }
 
-/**
- * 安全扫描结果
- */
+
+
+
 data class SecurityScanResult(
     @SerializedName("safe")
     val safe: Boolean,
@@ -221,9 +221,9 @@ data class SecurityScanResult(
     val riskLevel: RiskLevel = RiskLevel.LOW
 )
 
-/**
- * 安全问题
- */
+
+
+
 data class SecurityIssue(
     @SerializedName("type")
     val type: String,
@@ -237,9 +237,9 @@ data class SecurityIssue(
     val recommendation: String
 )
 
-/**
- * 风险等级
- */
+
+
+
 enum class RiskLevel {
     LOW,
     MEDIUM,
@@ -247,9 +247,9 @@ enum class RiskLevel {
     CRITICAL
 }
 
-/**
- * 模块验证结果
- */
+
+
+
 data class ModuleValidationResult(
     @SerializedName("valid")
     val valid: Boolean,
@@ -257,9 +257,9 @@ data class ModuleValidationResult(
     val issues: List<ValidationIssue> = emptyList()
 )
 
-/**
- * 验证问题
- */
+
+
+
 data class ValidationIssue(
     @SerializedName("field")
     val field: String,
@@ -269,46 +269,46 @@ data class ValidationIssue(
     val severity: ErrorSeverity
 )
 
-/**
- * 工具链执行事件
- * 
- * 用于跟踪工具链执行过程中的各种事件
- * 
- * Requirements: 5.5
- */
+
+
+
+
+
+
+
 sealed class ToolChainEvent {
-    /**
-     * 工具链开始执行
-     * @param totalTools 工具链中的工具总数
-     */
+
+
+
+
     data class ChainStarted(val totalTools: Int) : ToolChainEvent()
-    
-    /**
-     * 单个工具开始执行
-     * @param toolIndex 工具在链中的索引
-     * @param request 工具调用请求
-     */
+
+
+
+
+
+
     data class ToolStarted(val toolIndex: Int, val request: ToolCallRequest) : ToolChainEvent()
-    
-    /**
-     * 单个工具执行完成
-     * @param toolIndex 工具在链中的索引
-     * @param result 工具执行结果
-     */
+
+
+
+
+
+
     data class ToolCompleted(val toolIndex: Int, val result: ToolCallResult) : ToolChainEvent()
-    
-    /**
-     * 工具链执行完成
-     * @param results 所有工具的执行结果
-     */
+
+
+
+
+
     data class ChainCompleted(val results: List<ToolCallResult>) : ToolChainEvent()
-    
-    /**
-     * 工具链执行失败
-     * @param failedToolIndex 失败的工具索引
-     * @param error 错误信息
-     * @param completedResults 已完成的工具结果
-     */
+
+
+
+
+
+
+
     data class ChainFailed(
         val failedToolIndex: Int,
         val error: String,
@@ -316,11 +316,11 @@ sealed class ToolChainEvent {
     ) : ToolChainEvent()
 }
 
-/**
- * 预定义的 Agent 工具集
- */
+
+
+
 object AgentTools {
-    
+
     val syntaxCheck = AgentToolDefinition(
         name = "syntax_check",
         type = AgentToolType.SYNTAX_CHECK,
@@ -330,7 +330,7 @@ object AgentTools {
             ToolParameter("language", "string", Strings.paramCodeLang, required = true, enumValues = listOf("javascript", "css"))
         )
     )
-    
+
     val lintCode = AgentToolDefinition(
         name = "lint_code",
         type = AgentToolType.LINT_CODE,
@@ -340,7 +340,7 @@ object AgentTools {
             ToolParameter("language", "string", Strings.paramCodeLang, required = true, enumValues = listOf("javascript", "css"))
         )
     )
-    
+
     val securityScan = AgentToolDefinition(
         name = "security_scan",
         type = AgentToolType.SECURITY_SCAN,
@@ -349,7 +349,7 @@ object AgentTools {
             ToolParameter("code", "string", Strings.paramCodeToScan, required = true)
         )
     )
-    
+
     val generateCode = AgentToolDefinition(
         name = "generate_code",
         type = AgentToolType.GENERATE_CODE,
@@ -360,7 +360,7 @@ object AgentTools {
             ToolParameter("context", "string", Strings.paramContext, required = false)
         )
     )
-    
+
     val fixError = AgentToolDefinition(
         name = "fix_error",
         type = AgentToolType.FIX_ERROR,
@@ -371,7 +371,7 @@ object AgentTools {
             ToolParameter("language", "string", Strings.paramCodeLang, required = true, enumValues = listOf("javascript", "css"))
         )
     )
-    
+
     val refactorCode = AgentToolDefinition(
         name = "refactor_code",
         type = AgentToolType.REFACTOR_CODE,
@@ -381,7 +381,7 @@ object AgentTools {
             ToolParameter("goals", "array", Strings.paramRefactorGoals, required = false, enumValues = listOf("readability", "performance", "maintainability", "security"))
         )
     )
-    
+
     val testModule = AgentToolDefinition(
         name = "test_module",
         type = AgentToolType.TEST_MODULE,
@@ -392,7 +392,7 @@ object AgentTools {
             ToolParameter("test_url", "string", Strings.paramTestUrl, required = false)
         )
     )
-    
+
     val validateConfig = AgentToolDefinition(
         name = "validate_config",
         type = AgentToolType.VALIDATE_CONFIG,
@@ -402,7 +402,7 @@ object AgentTools {
             ToolParameter("config_values", "object", Strings.paramConfigValues, required = false)
         )
     )
-    
+
     val getTemplates = AgentToolDefinition(
         name = "get_templates",
         type = AgentToolType.GET_TEMPLATES,
@@ -412,7 +412,7 @@ object AgentTools {
             ToolParameter("keywords", "array", Strings.paramKeywords, required = false)
         )
     )
-    
+
     val getSnippets = AgentToolDefinition(
         name = "get_snippets",
         type = AgentToolType.GET_SNIPPETS,
@@ -422,7 +422,7 @@ object AgentTools {
             ToolParameter("category", "string", Strings.paramSnippetCategory, required = false)
         )
     )
-    
+
     val createModule = AgentToolDefinition(
         name = "create_module",
         type = AgentToolType.CREATE_MODULE,
@@ -439,7 +439,7 @@ object AgentTools {
             ToolParameter("run_at", "string", Strings.paramRunAt, required = false, enumValues = listOf("DOCUMENT_START", "DOCUMENT_END", "DOCUMENT_IDLE"))
         )
     )
-    
+
     val previewModule = AgentToolDefinition(
         name = "preview_module",
         type = AgentToolType.PREVIEW_MODULE,
@@ -451,10 +451,10 @@ object AgentTools {
             ToolParameter("preview_url", "string", Strings.paramPreviewUrl, required = true)
         )
     )
-    
-    /**
-     * 获取所有工具定义
-     */
+
+
+
+
     fun getAllTools(): List<AgentToolDefinition> = listOf(
         syntaxCheck,
         lintCode,
@@ -469,10 +469,10 @@ object AgentTools {
         createModule,
         previewModule
     )
-    
-    /**
-     * 根据名称获取工具
-     */
+
+
+
+
     fun getToolByName(name: String): AgentToolDefinition? {
         return getAllTools().find { it.name == name }
     }

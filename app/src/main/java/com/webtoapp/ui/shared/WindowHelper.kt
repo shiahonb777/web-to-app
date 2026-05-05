@@ -63,11 +63,11 @@ object WindowHelper {
         return luminance > 0.5
     }
 
-    /**
-     * @param keyboardAdjustMode RESIZE = push content up, NOTHING = overlay content.
-     * If null, uses legacy behavior: NOTHING when enabled, RESIZE when disabled.
-     * Android 11+ deprecated ADJUST_RESIZE; this method uses WindowInsets IME listener instead.
-     */
+
+
+
+
+
     fun applyImmersiveFullscreen(
         activity: Activity,
         enabled: Boolean,
@@ -83,7 +83,7 @@ object WindowHelper {
         tag: String = "WindowHelper"
     ) {
         try {
-            // Support notch / punch-hole displays
+
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
                 activity.window.attributes.layoutInDisplayCutoutMode =
                     WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
@@ -159,10 +159,10 @@ object WindowHelper {
         }
     }
 
-    /**
-     * 仅更新键盘行为，不触发全屏模式变更。
-     * 可在配置加载后独立调用，无需重新走完整的 applyImmersiveFullscreen 流程。
-     */
+
+
+
+
     fun applyKeyboardModeOnly(
         activity: Activity,
         keyboardAdjustMode: KeyboardAdjustMode?,
@@ -175,12 +175,12 @@ object WindowHelper {
         }
     }
 
-    /**
-     * 配置键盘弹出时的内容调整行为。
-     * RESIZE: 监听 IME insets，给 contentView 设置 bottom padding 推内容上去。
-     * NOTHING: 不监听 IME，键盘直接覆盖内容。
-     * 使用 contentView 而非 decorView 设置 padding，避免影响系统 insets 处理。
-     */
+
+
+
+
+
+
     private fun applyKeyboardMode(
         activity: Activity,
         keyboardAdjustMode: KeyboardAdjustMode?,
@@ -190,39 +190,39 @@ object WindowHelper {
         val contentView = activity.findViewById<View>(android.R.id.content) ?: return
 
         val mode = keyboardAdjustMode ?: KeyboardAdjustMode.RESIZE
-        
+
         when (mode) {
             KeyboardAdjustMode.RESIZE -> {
-                // ADJUST_NOTHING + WindowInsets IME 监听，手动给 contentView 设置 bottom padding
+
                 @Suppress("DEPRECATION")
                 activity.window.setSoftInputMode(
                     WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING or
                     WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED
                 )
-                
+
                 ViewCompat.setOnApplyWindowInsetsListener(contentView) { view, windowInsets ->
                     val imeVisible = windowInsets.isVisible(WindowInsetsCompat.Type.ime())
                     val imeInsets = windowInsets.getInsets(WindowInsetsCompat.Type.ime())
-                    
+
                     if (imeVisible) {
-                        // 键盘弹出：设置 bottom padding = IME 高度
-                        // IME insets 已包含导航栏高度（IME bottom = 键盘高度 + 导航栏高度）
+
+
                         view.setPadding(
                             view.paddingLeft,
                             view.paddingTop,
                             view.paddingRight,
                             imeInsets.bottom
                         )
-                        
+
                         AppLogger.d(tag, "键盘弹出: IME bottom=${imeInsets.bottom}px")
-                        
-                        // 触发 WebView 滚动到焦点输入框
-                        // 使用延迟确保布局已更新
+
+
+
                         view.postDelayed({
                             scrollWebViewToFocusedInput(activity)
                         }, 100)
                     } else {
-                        // 键盘隐藏：重置 padding
+
                         view.setPadding(
                             view.paddingLeft,
                             view.paddingTop,
@@ -230,24 +230,24 @@ object WindowHelper {
                             0
                         )
                     }
-                    
+
                     windowInsets
                 }
-                
-                // 触发一次 insets 重新计算
+
+
                 ViewCompat.requestApplyInsets(contentView)
                 AppLogger.d(tag, "键盘模式: RESIZE (WindowInsets 监听)")
             }
-            
+
             KeyboardAdjustMode.NOTHING -> {
-                // NOTHING 模式：键盘覆盖内容，不调整布局
+
                 @Suppress("DEPRECATION")
                 activity.window.setSoftInputMode(
                     WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING or
                     WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED
                 )
-                
-                // 移除之前的 insets 监听器，重置 padding
+
+
                 ViewCompat.setOnApplyWindowInsetsListener(contentView, null)
                 contentView.setPadding(
                     contentView.paddingLeft,
@@ -255,21 +255,21 @@ object WindowHelper {
                     contentView.paddingRight,
                     0
                 )
-                
+
                 AppLogger.d(tag, "键盘模式: NOTHING (覆盖)")
             }
         }
     }
-    
-    /**
-     * 在 WebView 中滚动到当前焦点输入框
-     * 
-     * 当键盘弹出且内容区域被 padding 压缩后，WebView 内部的焦点输入框
-     * 可能仍然在可视区域之外。注入 JS 调用 scrollIntoView 确保可见。
-     */
+
+
+
+
+
+
+
     private fun scrollWebViewToFocusedInput(activity: Activity) {
         try {
-            // 在 View 树中寻找 WebView
+
             val webView = findWebViewInHierarchy(activity.window.decorView)
             webView?.evaluateJavascript("""
                 (function() {
@@ -283,10 +283,10 @@ object WindowHelper {
             AppLogger.w("WindowHelper", "scrollWebViewToFocusedInput failed", e)
         }
     }
-    
-    /**
-     * 在 View 层级中递归查找 WebView 实例
-     */
+
+
+
+
     private fun findWebViewInHierarchy(view: View): android.webkit.WebView? {
         if (view is android.webkit.WebView) return view
         if (view is ViewGroup) {
@@ -298,31 +298,31 @@ object WindowHelper {
         return null
     }
 
-    // ==================== Video Custom View ====================
 
-    /**
-     * Show a video custom view (enters landscape fullscreen).
-     *
-     * @return the original orientation before fullscreen (caller should store this)
-     */
+
+
+
+
+
+
     fun showCustomView(
         activity: Activity,
         view: View
     ): Int {
         val originalOrientation = activity.requestedOrientation
-        
-        // 仅当 custom view 是视频播放器时切换到横屏
-        // 游戏/Canvas 等全屏请求不应改变方向
-        // 视频播放器通常是 SurfaceView 或 TextureView
+
+
+
+
         val isVideoView = view is android.view.SurfaceView ||
                           view is android.view.TextureView ||
                           (view is ViewGroup && hasVideoChildView(view))
-        
+
         if (isVideoView) {
             activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
             AppLogger.d("WindowHelper", "Video fullscreen: switching to SENSOR_LANDSCAPE")
         } else {
-            // 非视频内容（游戏、Canvas 等）：保持当前方向
+
             AppLogger.d("WindowHelper", "Non-video fullscreen: keeping current orientation ($originalOrientation)")
         }
 
@@ -336,11 +336,11 @@ object WindowHelper {
         )
         return originalOrientation
     }
-    
-    /**
-     * 递归检查 ViewGroup 中是否包含视频播放 View (SurfaceView/TextureView)
-     * 用于判断 onShowCustomView 传入的是视频全屏还是其他全屏内容
-     */
+
+
+
+
+
     private fun hasVideoChildView(parent: ViewGroup): Boolean {
         for (i in 0 until parent.childCount) {
             val child = parent.getChildAt(i)
@@ -354,9 +354,9 @@ object WindowHelper {
         return false
     }
 
-    /**
-     * Hide the video custom view (restores previous orientation).
-     */
+
+
+
     fun hideCustomView(
         activity: Activity,
         view: View,

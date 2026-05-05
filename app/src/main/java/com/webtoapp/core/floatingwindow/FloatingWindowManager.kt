@@ -23,19 +23,19 @@ import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.data.model.FloatingBorderStyle
 import com.webtoapp.data.model.FloatingWindowConfig
 
-/**
- * 悬浮小窗管理器 V2
- * 管理悬浮窗的创建、拖拽、大小调整和透明度控制
- *
- * V2 新功能：
- * - 独立宽高控制（widthPercent / heightPercent）
- * - 边缘吸附（拖拽到屏幕边缘自动贴合）
- * - 右下角缩放手柄（手势拖拽调整窗口大小）
- * - 自定义圆角半径与边框样式
- * - 自动隐藏标题栏（3秒无操作后隐藏，触摸时恢复）
- * - 锁定位置模式
- * - 弹性动画（最小化/恢复时有 overshoot 弹跳效果）
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
 class FloatingWindowManager(private val context: Context) {
 
     companion object {
@@ -44,15 +44,15 @@ class FloatingWindowManager(private val context: Context) {
         private const val KEY_POS_X = "position_x"
         private const val KEY_POS_Y = "position_y"
 
-        // 标题栏高度 dp
+
         private const val TITLE_BAR_HEIGHT_DP = 40
-        // 最小化按钮大小 dp
+
         private const val MINI_BUTTON_SIZE_DP = 56
-        // 缩放手柄大小 dp
+
         private const val RESIZE_HANDLE_SIZE_DP = 28
-        // 边缘吸附阈值 px
+
         private const val EDGE_SNAP_THRESHOLD_PX = 60
-        // 自动隐藏标题栏延迟 ms
+
         private const val AUTO_HIDE_TITLE_DELAY_MS = 3000L
     }
 
@@ -67,31 +67,31 @@ class FloatingWindowManager(private val context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     private val handler = Handler(Looper.getMainLooper())
 
-    // 悬浮窗视图
+
     private var floatingView: View? = null
-    // 最小化按钮
+
     private var miniButton: View? = null
-    // 悬浮窗中的 WebView
+
     private var webView: WebView? = null
-    // 标题栏引用
+
     private var titleBarView: View? = null
     private var backButtonView: TextView? = null
     private var forwardButtonView: TextView? = null
     private var fullscreenButtonView: TextView? = null
     private var savedWindowBounds: WindowBounds? = null
     private var isFullscreen: Boolean = false
-    // 当前配置
+
     private var config: FloatingWindowConfig = FloatingWindowConfig()
-    // 窗口参数
+
     private var windowParams: WindowManager.LayoutParams? = null
-    // 最小化按钮参数
+
     private var miniParams: WindowManager.LayoutParams? = null
-    // 状态
+
     private var isMinimized: Boolean = false
     private var isShowing: Boolean = false
     private var isTitleBarHidden: Boolean = false
 
-    // 自动隐藏标题栏 Runnable
+
     private val autoHideTitleRunnable = Runnable {
         if (config.autoHideTitleBar && config.showTitleBar && !isTitleBarHidden) {
             titleBarView?.animate()?.alpha(0f)?.translationY(-titleBarView!!.height.toFloat())
@@ -101,14 +101,14 @@ class FloatingWindowManager(private val context: Context) {
         }
     }
 
-    // 回调
+
     var onWebViewCreated: ((WebView) -> Unit)? = null
     var onWebViewPageFinished: ((WebView, String?) -> Unit)? = null
     var onDismiss: (() -> Unit)? = null
 
-    /**
-     * 创建并显示悬浮窗
-     */
+
+
+
     @SuppressLint("ClickableViewAccessibility")
     fun show(config: FloatingWindowConfig, appName: String = "", url: String = "") {
         if (isShowing) return
@@ -117,7 +117,7 @@ class FloatingWindowManager(private val context: Context) {
         isFullscreen = false
         savedWindowBounds = null
 
-        // 计算窗口尺寸（使用独立宽高，向后兼容 windowSizePercent）
+
         val displayMetrics = context.resources.displayMetrics
         val screenWidth = displayMetrics.widthPixels
         val screenHeight = displayMetrics.heightPixels
@@ -126,7 +126,7 @@ class FloatingWindowManager(private val context: Context) {
         val width = (screenWidth * effectiveWidth / 100)
         val height = (screenHeight * effectiveHeight / 100)
 
-        // 创建窗口参数
+
         val overlayType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
         } else {
@@ -143,7 +143,7 @@ class FloatingWindowManager(private val context: Context) {
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
-            // 恢复上次位置或居中
+
             if (config.rememberPosition) {
                 x = prefs.getInt(KEY_POS_X, (screenWidth - width) / 2)
                 y = prefs.getInt(KEY_POS_Y, (screenHeight - height) / 2)
@@ -154,26 +154,26 @@ class FloatingWindowManager(private val context: Context) {
             alpha = config.opacity / 100f
         }
 
-        // 创建悬浮窗布局
+
         floatingView = createFloatingLayout(appName)
 
-        // 添加到 WindowManager
+
         try {
             windowManager.addView(floatingView, windowParams)
             isShowing = true
             isMinimized = false
 
-            // 加载 URL
+
             if (url.isNotBlank()) {
                 webView?.loadUrl(url)
             }
 
-            // 如果配置了启动时最小化
+
             if (config.startMinimized) {
                 minimize()
             }
 
-            // 启动自动隐藏标题栏计时
+
             scheduleAutoHideTitleBar()
 
             AppLogger.i(TAG, "悬浮窗已显示: width=${effectiveWidth}%, height=${effectiveHeight}%, opacity=${config.opacity}%")
@@ -182,33 +182,33 @@ class FloatingWindowManager(private val context: Context) {
         }
     }
 
-    /**
-     * 获取内部 WebView 实例
-     */
+
+
+
     fun getWebView(): WebView? = webView
 
-    /**
-     * 创建悬浮窗布局
-     */
+
+
+
     @SuppressLint("ClickableViewAccessibility", "SetJavaScriptEnabled")
     private fun createFloatingLayout(appName: String): View {
         val density = context.resources.displayMetrics.density
         val titleBarHeight = (TITLE_BAR_HEIGHT_DP * density).toInt()
         val cornerRadius = (config.cornerRadius * density)
 
-        // 根容器
+
         val rootLayout = FrameLayout(context).apply {
             background = createStyledBackground(cornerRadius)
             clipToOutline = true
             elevation = 8 * density
         }
 
-        // 内容容器（垂直排列标题栏 + WebView）
+
         val contentLayout = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
         }
 
-        // 标题栏（用于拖拽）
+
         if (config.showTitleBar) {
             val titleBar = createTitleBar(appName, titleBarHeight, density)
             titleBarView = titleBar
@@ -218,7 +218,7 @@ class FloatingWindowManager(private val context: Context) {
             ))
         }
 
-        // WebView 容器
+
         val webViewContainer = FrameLayout(context)
         webView = WebView(context).apply {
             settings.javaScriptEnabled = true
@@ -238,7 +238,7 @@ class FloatingWindowManager(private val context: Context) {
                     updateNavigationButtons()
                 }
             }
-            // 触摸时恢复标题栏
+
             setOnTouchListener { _, event ->
                 if (event.action == MotionEvent.ACTION_DOWN) {
                     restoreTitleBarIfHidden()
@@ -266,7 +266,7 @@ class FloatingWindowManager(private val context: Context) {
             FrameLayout.LayoutParams.MATCH_PARENT
         ))
 
-        // 缩放手柄（右下角）
+
         if (config.showResizeHandle) {
             val resizeHandle = createResizeHandle(density)
             val handleSize = (RESIZE_HANDLE_SIZE_DP * density).toInt()
@@ -277,32 +277,32 @@ class FloatingWindowManager(private val context: Context) {
             rootLayout.addView(resizeHandle, handleLp)
         }
 
-        // 通知回调
+
         webView?.let { onWebViewCreated?.invoke(it) }
 
         return rootLayout
     }
 
-    /**
-     * 创建标题栏
-     */
+
+
+
     @SuppressLint("ClickableViewAccessibility")
     private fun createTitleBar(appName: String, height: Int, density: Float): View {
         val titleBar = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
-            setBackgroundColor(0xFF1E1E2E.toInt()) // 深色标题栏
+            setBackgroundColor(0xFF1E1E2E.toInt())
             gravity = Gravity.CENTER_VERTICAL
             setPadding((12 * density).toInt(), 0, (4 * density).toInt(), 0)
         }
 
-        // Mac 风格交通灯按钮组（关闭/最小化/最大化）
+
         val trafficLightContainer = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             setPadding(0, 0, (10 * density).toInt(), 0)
         }
 
-        // 关闭按钮 (红色)
+
         val closeBtn = createTrafficLightButton("✕", 0xFFFF5F57.toInt(), 0x99000000.toInt(), density, Strings.close) {
             dismiss()
         }
@@ -310,7 +310,7 @@ class FloatingWindowManager(private val context: Context) {
             LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT
         ).apply { setMargins(0, 0, (8 * density).toInt(), 0) })
 
-        // 最小化按钮 (黄色)
+
         val minimizeBtn = createTrafficLightButton("─", 0xFFFFBD2E.toInt(), 0x99000000.toInt(), density, Strings.floatingWindowMinimize) {
             minimize()
         }
@@ -318,7 +318,7 @@ class FloatingWindowManager(private val context: Context) {
             LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT
         ).apply { setMargins(0, 0, (8 * density).toInt(), 0) })
 
-        // 最大化按钮 (绿色)
+
         fullscreenButtonView = createTrafficLightButton("↗", 0xFF28C840.toInt(), 0x99000000.toInt(), density, Strings.floatingWindowEnterFullscreen) {
             toggleFullscreen()
         }
@@ -328,7 +328,7 @@ class FloatingWindowManager(private val context: Context) {
 
         titleBar.addView(trafficLightContainer)
 
-        // 拖拽指示器
+
         val dragIndicator = TextView(context).apply {
             text = "⠿"
             setTextColor(0x99AAAACC.toInt())
@@ -337,7 +337,7 @@ class FloatingWindowManager(private val context: Context) {
         }
         titleBar.addView(dragIndicator)
 
-        // 标题文本
+
         val titleText = TextView(context).apply {
             text = appName.ifBlank { "WebToApp" }
             setTextColor(0xFFD0D0E0.toInt())
@@ -361,7 +361,7 @@ class FloatingWindowManager(private val context: Context) {
         updateNavigationButtons()
         updateFullscreenButton()
 
-        // 拖拽逻辑（仅非锁定时）
+
         if (!config.lockPosition) {
             setupDragHandler(titleBar)
         }
@@ -369,9 +369,9 @@ class FloatingWindowManager(private val context: Context) {
         return titleBar
     }
 
-    /**
-     * 创建标题栏按钮
-     */
+
+
+
     private fun createTitleButton(
         symbol: String,
         color: Int,
@@ -393,10 +393,10 @@ class FloatingWindowManager(private val context: Context) {
         }
     }
 
-    /**
-     * 创建 Mac 风格交通灯按钮（彩色圆点）
-     * 模仿 macOS 窗口标题栏的红/黄/绿三色圆点按钮
-     */
+
+
+
+
     @SuppressLint("ClickableViewAccessibility")
     private fun createTrafficLightButton(
         symbol: String,
@@ -427,9 +427,9 @@ class FloatingWindowManager(private val context: Context) {
         }
     }
 
-    /**
-     * 创建缩放手柄
-     */
+
+
+
     @SuppressLint("ClickableViewAccessibility")
     private fun createResizeHandle(density: Float): View {
         val handle = TextView(context).apply {
@@ -437,7 +437,7 @@ class FloatingWindowManager(private val context: Context) {
             textSize = 14f
             setTextColor(0x88AAAACC.toInt())
             gravity = Gravity.CENTER
-            // 圆角背景
+
             background = android.graphics.drawable.GradientDrawable().apply {
                 shape = android.graphics.drawable.GradientDrawable.RECTANGLE
                 setColor(0x44333355.toInt())
@@ -477,7 +477,7 @@ class FloatingWindowManager(private val context: Context) {
                     true
                 }
                 MotionEvent.ACTION_UP -> {
-                    // 更新 config 中的百分比
+
                     val dm = context.resources.displayMetrics
                     val wPercent = ((windowParams?.width ?: dm.widthPixels) * 100 / dm.widthPixels).coerceIn(30, 100)
                     val hPercent = ((windowParams?.height ?: dm.heightPixels) * 100 / dm.heightPixels).coerceIn(30, 100)
@@ -491,9 +491,9 @@ class FloatingWindowManager(private val context: Context) {
         return handle
     }
 
-    /**
-     * 设置拖拽处理（含边缘吸附）
-     */
+
+
+
     @SuppressLint("ClickableViewAccessibility")
     private fun setupDragHandler(dragView: View) {
         var initialX = 0
@@ -510,7 +510,7 @@ class FloatingWindowManager(private val context: Context) {
                     initialTouchX = event.rawX
                     initialTouchY = event.rawY
                     isDragging = false
-                    // 恢复标题栏
+
                     restoreTitleBarIfHidden()
                     scheduleAutoHideTitleBar()
                     true
@@ -519,7 +519,7 @@ class FloatingWindowManager(private val context: Context) {
                     val dx = event.rawX - initialTouchX
                     val dy = event.rawY - initialTouchY
 
-                    // 超过阈值才开始拖拽（避免误触）
+
                     if (!isDragging && (dx * dx + dy * dy > 100)) {
                         isDragging = true
                     }
@@ -537,11 +537,11 @@ class FloatingWindowManager(private val context: Context) {
                 }
                 MotionEvent.ACTION_UP -> {
                     if (isDragging) {
-                        // 边缘吸附
+
                         if (config.edgeSnapping) {
                             performEdgeSnap()
                         }
-                        // 保存位置
+
                         if (config.rememberPosition) {
                             savePosition()
                         }
@@ -553,9 +553,9 @@ class FloatingWindowManager(private val context: Context) {
         }
     }
 
-    /**
-     * 边缘吸附逻辑
-     */
+
+
+
     private fun performEdgeSnap() {
         val params = windowParams ?: return
         val dm = context.resources.displayMetrics
@@ -568,29 +568,29 @@ class FloatingWindowManager(private val context: Context) {
         var snapY = params.y
         var didSnap = false
 
-        // 左边缘吸附
+
         if (params.x < EDGE_SNAP_THRESHOLD_PX) {
             snapX = 0
             didSnap = true
         }
-        // 右边缘吸附
+
         if (params.x + winW > screenW - EDGE_SNAP_THRESHOLD_PX) {
             snapX = screenW - winW
             didSnap = true
         }
-        // 顶部吸附
+
         if (params.y < EDGE_SNAP_THRESHOLD_PX) {
             snapY = 0
             didSnap = true
         }
-        // 底部吸附
+
         if (params.y + winH > screenH - EDGE_SNAP_THRESHOLD_PX) {
             snapY = screenH - winH
             didSnap = true
         }
 
         if (didSnap) {
-            // 动画吸附到边缘
+
             val startX = params.x
             val startY = params.y
             val finalX = snapX
@@ -612,9 +612,9 @@ class FloatingWindowManager(private val context: Context) {
         }
     }
 
-    /**
-     * 保存窗口位置
-     */
+
+
+
     private fun savePosition() {
         prefs.edit()
             .putInt(KEY_POS_X, windowParams?.x ?: 0)
@@ -622,9 +622,9 @@ class FloatingWindowManager(private val context: Context) {
             .apply()
     }
 
-    /**
-     * 调度自动隐藏标题栏
-     */
+
+
+
     private fun scheduleAutoHideTitleBar() {
         handler.removeCallbacks(autoHideTitleRunnable)
         if (config.autoHideTitleBar && config.showTitleBar) {
@@ -632,9 +632,9 @@ class FloatingWindowManager(private val context: Context) {
         }
     }
 
-    /**
-     * 恢复被隐藏的标题栏
-     */
+
+
+
     private fun restoreTitleBarIfHidden() {
         if (isTitleBarHidden && titleBarView != null) {
             titleBarView!!.animate()
@@ -722,14 +722,14 @@ class FloatingWindowManager(private val context: Context) {
         }
     }
 
-    /**
-     * 最小化为悬浮按钮
-     */
+
+
+
     @SuppressLint("ClickableViewAccessibility")
     fun minimize() {
         if (isMinimized || !isShowing) return
 
-        // 隐藏悬浮窗（带缩放动画）
+
         floatingView?.animate()?.scaleX(0.1f)?.scaleY(0.1f)?.alpha(0f)
             ?.setDuration(200)?.withEndAction {
                 floatingView?.visibility = View.GONE
@@ -741,7 +741,7 @@ class FloatingWindowManager(private val context: Context) {
         val density = context.resources.displayMetrics.density
         val buttonSize = (MINI_BUTTON_SIZE_DP * density).toInt()
 
-        // 创建窗口参数
+
         val overlayType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
         } else {
@@ -768,7 +768,7 @@ class FloatingWindowManager(private val context: Context) {
             windowManager.addView(miniButton, miniParams)
             isMinimized = true
 
-            // 弹出动画
+
             miniButton?.scaleX = 0f
             miniButton?.scaleY = 0f
             miniButton?.animate()?.scaleX(1f)?.scaleY(1f)
@@ -781,9 +781,9 @@ class FloatingWindowManager(private val context: Context) {
         }
     }
 
-    /**
-     * 创建最小化按钮
-     */
+
+
+
     @SuppressLint("ClickableViewAccessibility")
     private fun createMiniButton(size: Int, density: Float): View {
         val button = FrameLayout(context).apply {
@@ -802,10 +802,10 @@ class FloatingWindowManager(private val context: Context) {
             FrameLayout.LayoutParams.MATCH_PARENT
         ))
 
-        // 点击恢复
+
         button.setOnClickListener { restore() }
 
-        // 拖拽最小化按钮
+
         var initialX = 0
         var initialY = 0
         var initialTouchX = 0f
@@ -820,7 +820,7 @@ class FloatingWindowManager(private val context: Context) {
                     initialTouchX = event.rawX
                     initialTouchY = event.rawY
                     isDragging = false
-                    false // 不消费，让 onClick 有机会触发
+                    false
                 }
                 MotionEvent.ACTION_MOVE -> {
                     val dx = event.rawX - initialTouchX
@@ -841,7 +841,7 @@ class FloatingWindowManager(private val context: Context) {
                 }
                 MotionEvent.ACTION_UP -> {
                     if (isDragging) {
-                        // 同步位置到窗口参数
+
                         windowParams?.x = miniParams?.x ?: 0
                         windowParams?.y = miniParams?.y ?: 0
                         if (config.rememberPosition) {
@@ -859,13 +859,13 @@ class FloatingWindowManager(private val context: Context) {
         return button
     }
 
-    /**
-     * 从最小化恢复
-     */
+
+
+
     fun restore() {
         if (!isMinimized || !isShowing) return
 
-        // 移除最小化按钮（带缩放动画）
+
         miniButton?.animate()?.scaleX(0f)?.scaleY(0f)?.alpha(0f)
             ?.setDuration(150)?.withEndAction {
                 try {
@@ -874,11 +874,11 @@ class FloatingWindowManager(private val context: Context) {
                 miniButton = null
             }?.start()
 
-        // 恢复悬浮窗位置到最小化按钮位置
+
         windowParams?.x = miniParams?.x ?: windowParams?.x ?: 0
         windowParams?.y = miniParams?.y ?: windowParams?.y ?: 0
 
-        // 显示悬浮窗（带弹出动画）
+
         floatingView?.visibility = View.VISIBLE
         floatingView?.scaleX = 0.1f
         floatingView?.scaleY = 0.1f
@@ -898,9 +898,9 @@ class FloatingWindowManager(private val context: Context) {
         AppLogger.d(TAG, "悬浮窗已恢复")
     }
 
-    /**
-     * 更新窗口大小
-     */
+
+
+
     fun updateSize(percent: Int) {
         val clamped = percent.coerceIn(30, 100)
         config = config.copy(widthPercent = clamped, heightPercent = clamped, windowSizePercent = clamped)
@@ -918,9 +918,9 @@ class FloatingWindowManager(private val context: Context) {
         }
     }
 
-    /**
-     * 更新透明度
-     */
+
+
+
     fun updateOpacity(opacity: Int) {
         val clamped = opacity.coerceIn(30, 100)
         config = config.copy(opacity = clamped)
@@ -936,22 +936,22 @@ class FloatingWindowManager(private val context: Context) {
         }
     }
 
-    /**
-     * 关闭悬浮窗
-     */
+
+
+
     fun dismiss() {
         if (!isShowing) return
 
-        // 取消自动隐藏定时器
+
         handler.removeCallbacks(autoHideTitleRunnable)
 
         try {
-            // 保存位置
+
             if (config.rememberPosition) {
                 savePosition()
             }
 
-            // 清理 WebView
+
             webView?.let { wv ->
                 wv.stopLoading()
                 wv.onPause()
@@ -968,11 +968,11 @@ class FloatingWindowManager(private val context: Context) {
             savedWindowBounds = null
             isFullscreen = false
 
-            // 移除最小化按钮
+
             miniButton?.let { windowManager.removeView(it) }
             miniButton = null
 
-            // 移除悬浮窗
+
             floatingView?.let { windowManager.removeView(it) }
             floatingView = null
 
@@ -987,29 +987,29 @@ class FloatingWindowManager(private val context: Context) {
         }
     }
 
-    /**
-     * 是否正在显示
-     */
+
+
+
     fun isShowing(): Boolean = isShowing
 
-    /**
-     * 是否已最小化
-     */
+
+
+
     fun isMinimized(): Boolean = isMinimized
 
-    // ==================== 辅助方法 ====================
 
-    /**
-     * 创建带样式的圆角矩形背景（根据 borderStyle 配置）
-     */
+
+
+
+
     private fun createStyledBackground(cornerRadius: Float): android.graphics.drawable.Drawable {
         return android.graphics.drawable.GradientDrawable().apply {
             shape = android.graphics.drawable.GradientDrawable.RECTANGLE
-            setColor(0xFF1A1A2E.toInt()) // 深色背景
+            setColor(0xFF1A1A2E.toInt())
             this.cornerRadius = cornerRadius
-            // 根据边框样式设置
+
             when (config.borderStyle) {
-                FloatingBorderStyle.NONE -> { /* 不设置边框 */ }
+                FloatingBorderStyle.NONE -> {  }
                 FloatingBorderStyle.SUBTLE -> {
                     setStroke(2, 0xFF333355.toInt())
                 }
@@ -1023,9 +1023,9 @@ class FloatingWindowManager(private val context: Context) {
         }
     }
 
-    /**
-     * 创建圆形背景
-     */
+
+
+
     private fun createCircleBackground(): android.graphics.drawable.Drawable {
         return android.graphics.drawable.GradientDrawable().apply {
             shape = android.graphics.drawable.GradientDrawable.OVAL

@@ -46,3 +46,18 @@ fun Process.waitForCompat(timeoutMs: Long): Boolean {
     }
     return false
 }
+
+fun Process.destroyGracefullyCompat(timeoutMs: Long = 200L): Boolean {
+    destroy()
+    return try {
+        if (waitForCompat(timeoutMs)) {
+            true
+        } else {
+            destroyForciblyCompat()
+            waitForCompat(timeoutMs)
+            false
+        }
+    } catch (_: Exception) {
+        false
+    }
+}

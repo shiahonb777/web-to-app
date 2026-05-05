@@ -11,50 +11,50 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import java.util.UUID
 
-/**
- * HTML 编程 AI 工具系统
- * 
- * 实现完整的 Agent 工具链：
- * 1. 工具定义与注册
- * 2. 提示词工程（系统提示词 + 工具描述）
- * 3. 上下文工程（对话历史 + 代码状态 + 工具结果）
- * 4. ReAct 循环（推理 -> 行动 -> 观察）
- * 5. 流式工具调用解析
- * 
- * 修复：
- * - 添加超时保护
- * - 改进 ReAct 循环的终止条件
- * - 优化工具结果消息格式
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class AiCodingToolSystem(private val context: Context) {
-    
+
     private val gson = com.webtoapp.util.GsonProvider.gson
     private val aiConfigManager = AiConfigManager(context)
     private val aiClient = AiApiClient(context)
-    
+
     companion object {
         private const val TAG = "AiCodingToolSystem"
-        private const val MAX_TOOL_ITERATIONS = 5  // Max工具调用轮次
-        private const val STREAM_TIMEOUT_MS = 90_000L  // 90秒超时
+        private const val MAX_TOOL_ITERATIONS = 5
+        private const val STREAM_TIMEOUT_MS = 90_000L
         private val TAG_PATTERN_REGEX = Regex("<(/?)([a-zA-Z][a-zA-Z0-9]*)([^>]*)>")
         private val TOOL_CALL_BLOCK_REGEX = Regex("""```tool_call\s*([\s\S]*?)```""")
-        
-        // extractSection 预编译 Regex
+
+
         private val SECTION_REGEX_MAP: Map<String, Regex> = listOf("head", "body", "style", "script")
             .associateWith { tag -> Regex("<$tag[^>]*>([\\s\\S]*?)</$tag>", RegexOption.IGNORE_CASE) }
-        
-        // checkSyntax 自闭合标签集合
+
+
         private val SELF_CLOSING_TAGS = setOf(
             "br", "hr", "img", "input", "meta", "link",
             "area", "base", "col", "embed", "param", "source", "track", "wbr"
         )
     }
-    
-    // ==================== 工具定义 ====================
-    
-    /**
-     * 所有可用工具
-     */
+
+
+
+
+
+
     private val tools = listOf(
         ToolDefinition(
             name = "write_html",
@@ -141,12 +141,12 @@ class AiCodingToolSystem(private val context: Context) {
             )
         )
     )
-    
-    // ==================== 上下文管理 ====================
-    
-    /**
-     * Agent 上下文
-     */
+
+
+
+
+
+
     data class AgentContext(
         var currentHtml: String = "",
         val conversationHistory: MutableList<ConversationMessage> = mutableListOf(),
@@ -157,19 +157,19 @@ class AiCodingToolSystem(private val context: Context) {
         fun addUserMessage(content: String) {
             conversationHistory.add(ConversationMessage("user", content))
         }
-        
+
         fun addAssistantMessage(content: String, toolCalls: List<ToolCall>? = null) {
             conversationHistory.add(ConversationMessage("assistant", content, toolCalls))
         }
-        
+
         fun addToolResult(toolCallId: String, result: String) {
             conversationHistory.add(ConversationMessage("tool", result, toolCallId = toolCallId))
         }
-        
+
         fun recordToolCall(call: ToolCall, result: ToolExecutionResult) {
             toolCallHistory.add(ToolCallRecord(call, result))
         }
-        
+
         fun reset() {
             currentHtml = ""
             conversationHistory.clear()
@@ -178,31 +178,31 @@ class AiCodingToolSystem(private val context: Context) {
             iterationCount = 0
         }
     }
-    
+
     data class ConversationMessage(
         val role: String,
         val content: String,
         val toolCalls: List<ToolCall>? = null,
         val toolCallId: String? = null
     )
-    
+
     data class ToolCall(
         val id: String = UUID.randomUUID().toString(),
         val name: String,
         val arguments: String
     )
-    
+
     data class ToolCallRecord(
         val call: ToolCall,
         val result: ToolExecutionResult,
         val timestamp: Long = System.currentTimeMillis()
     )
-    
-    // ==================== 提示词工程 ====================
-    
-    /**
-     * 构建系统提示词（包含工具描述）
-     */
+
+
+
+
+
+
     private fun buildSystemPrompt(config: SessionConfig): String {
         val toolsDescription = tools.joinToString("\n\n") { tool ->
             """
@@ -215,7 +215,7 @@ ${gson.toJson(tool.parameters)}
 ```
             """.trimIndent()
         }
-        
+
         return """
 # 角色
 
@@ -286,20 +286,20 @@ $toolsDescription
 ${config.getEffectiveRules().joinToString("\n") { "- $it" }.ifEmpty { "（无）" }}
         """.trimIndent()
     }
-    
-    /**
-     * 构建消息列表（包含上下文）
-     */
+
+
+
+
     private fun buildMessages(
         agentContext: AgentContext,
         config: SessionConfig
     ): List<Map<String, Any>> {
         val messages = mutableListOf<Map<String, Any>>()
-        
-        // System消息
+
+
         messages.add(mapOf("role" to "system", "content" to buildSystemPrompt(config)))
-        
-        // 如果有当前代码，添加上下文
+
+
         if (agentContext.currentHtml.isNotBlank()) {
             messages.add(mapOf(
                 "role" to "system",
@@ -311,14 +311,14 @@ ${agentContext.currentHtml}
                 """.trimIndent()
             ))
         }
-        
-        // 添加对话历史
+
+
         agentContext.conversationHistory.forEach { msg ->
             when (msg.role) {
                 "user" -> messages.add(mapOf("role" to "user", "content" to msg.content))
                 "assistant" -> {
                     if (msg.toolCalls != null && msg.toolCalls.isNotEmpty()) {
-                        // 带工具调用的助手消息
+
                         messages.add(mapOf(
                             "role" to "assistant",
                             "content" to msg.content,
@@ -346,16 +346,16 @@ ${agentContext.currentHtml}
                 }
             }
         }
-        
+
         return messages
     }
-    
-    // ==================== 工具执行 ====================
-    
-    /**
-     * 执行工具调用
-     * 返回 AiCodingAgent 中定义的 ToolExecutionResult
-     */
+
+
+
+
+
+
+
     fun executeToolCall(
         toolName: String,
         arguments: Map<String, Any?>,
@@ -374,12 +374,12 @@ ${agentContext.currentHtml}
                         isHtml = true
                     )
                 }
-                
+
                 "edit_html" -> {
                     val operation = arguments["operation"] as? String ?: "replace"
                     val target = arguments["target"] as? String ?: ""
                     val content = arguments["content"] as? String ?: ""
-                    
+
                     if (agentContext.currentHtml.isBlank()) {
                         return ToolExecutionResult(
                             success = false,
@@ -387,7 +387,7 @@ ${agentContext.currentHtml}
                             result = "❌ 当前没有 HTML 代码，请先使用 write_html 创建"
                         )
                     }
-                    
+
                     if (!agentContext.currentHtml.contains(target)) {
                         return ToolExecutionResult(
                             success = false,
@@ -395,7 +395,7 @@ ${agentContext.currentHtml}
                             result = "❌ 找不到目标代码片段，请确保 target 与现有代码完全匹配"
                         )
                     }
-                    
+
                     val newHtml = when (operation) {
                         "replace" -> agentContext.currentHtml.replace(target, content)
                         "insert_before" -> agentContext.currentHtml.replace(target, content + target)
@@ -407,7 +407,7 @@ ${agentContext.currentHtml}
                             result = "❌ 未知操作类型: $operation"
                         )
                     }
-                    
+
                     ToolExecutionResult(
                         success = true,
                         toolName = toolName,
@@ -416,7 +416,7 @@ ${agentContext.currentHtml}
                         isEdit = true
                     )
                 }
-                
+
                 "read_current_code" -> {
                     val section = arguments["section"] as? String ?: "all"
                     val code = when (section) {
@@ -426,14 +426,14 @@ ${agentContext.currentHtml}
                         "script" -> extractSection(agentContext.currentHtml, "script")
                         else -> agentContext.currentHtml
                     }
-                    
+
                     ToolExecutionResult(
                         success = true,
                         toolName = toolName,
                         result = if (code.isBlank()) "当前没有代码" else code
                     )
                 }
-                
+
                 "check_syntax" -> {
                     val errors = checkSyntax(agentContext.currentHtml)
                     val resultMsg = if (errors.isEmpty()) {
@@ -447,7 +447,7 @@ ${agentContext.currentHtml}
                         result = resultMsg
                     )
                 }
-                
+
                 "preview" -> {
                     ToolExecutionResult(
                         success = true,
@@ -455,7 +455,7 @@ ${agentContext.currentHtml}
                         result = "🔍 预览已触发"
                     )
                 }
-                
+
                 else -> ToolExecutionResult(
                     success = false,
                     toolName = toolName,
@@ -471,27 +471,27 @@ ${agentContext.currentHtml}
             )
         }
     }
-    
-    /**
-     * 检查工具结果是否触发预览
-     */
+
+
+
+
     fun shouldTriggerPreview(toolName: String): Boolean = toolName == "preview"
-    
+
     private fun extractSection(html: String, tag: String): String {
         val pattern = SECTION_REGEX_MAP[tag] ?: return ""
         return pattern.find(html)?.groupValues?.get(1)?.trim() ?: ""
     }
-    
+
     private fun checkSyntax(html: String): List<String> {
         val errors = mutableListOf<String>()
-        // 简单的语法检查
+
         val tagStack = mutableListOf<String>()
-        
+
         TAG_PATTERN_REGEX.findAll(html).forEach { match ->
             val isClosing = match.groupValues[1] == "/"
             val tagName = match.groupValues[2].lowercase()
             val isSelfClosing = match.groupValues[3].endsWith("/") || tagName in SELF_CLOSING_TAGS
-            
+
             if (!isSelfClosing) {
                 if (isClosing) {
                     if (tagStack.isNotEmpty() && tagStack.last() == tagName) {
@@ -506,24 +506,24 @@ ${agentContext.currentHtml}
                 }
             }
         }
-        
+
         tagStack.forEach { tag ->
             errors.add("标签 <$tag> 未闭合")
         }
-        
+
         return errors
     }
-    
-    // ==================== ReAct 循环 ====================
-    
-    /**
-     * 执行 Agent 对话（带工具调用的 ReAct 循环）
-     * 
-     * 修复：
-     * - 添加超时保护
-     * - 改进循环终止条件
-     * - 优化错误处理
-     */
+
+
+
+
+
+
+
+
+
+
+
     fun chat(
         userMessage: String,
         agentContext: AgentContext,
@@ -533,37 +533,37 @@ ${agentContext.currentHtml}
     ): Flow<AgentEvent> = flow {
         agentContext.addUserMessage(userMessage)
         agentContext.iterationCount = 0
-        
+
         emit(AgentEvent.Started)
-        
-        // ReAct 循环
+
+
         while (agentContext.iterationCount < MAX_TOOL_ITERATIONS) {
             agentContext.iterationCount++
             AppLogger.d(TAG, "ReAct iteration ${agentContext.iterationCount}/$MAX_TOOL_ITERATIONS")
-            
+
             val messages = buildMessages(agentContext, config)
             val contentBuilder = StringBuilder()
             val toolCalls = mutableListOf<ToolCall>()
             var currentToolName = ""
             val currentToolArgs = StringBuilder()
-            
-            // 调用 AI
+
+
             emit(AgentEvent.Thinking("正在思考..."))
-            
+
             try {
-                // 带超时的 AI 调用
+
                 withTimeout(STREAM_TIMEOUT_MS) {
                     aiClient.chatStreamWithTools(
                         apiKey = apiKey,
                         model = model.model,
-                        messages = messages.map { 
+                        messages = messages.map {
                             mapOf("role" to (it["role"] as String), "content" to (it["content"] as String))
                         },
                         tools = tools.map { it.toOpenAIFormat() }
                     ).collect { event ->
                         when (event) {
                             is ApiToolStreamEvent.Started -> {
-                                // 流开始
+
                             }
                             is ApiToolStreamEvent.TextDelta -> {
                                 contentBuilder.clear()
@@ -581,7 +581,7 @@ ${agentContext.currentHtml}
                             is ApiToolStreamEvent.ToolArgumentsDelta -> {
                                 currentToolArgs.clear()
                                 currentToolArgs.append(event.accumulated)
-                                // 实时显示工具参数（如 HTML 代码）
+
                                 emit(AgentEvent.ToolArgumentsStreaming(
                                     currentToolName,
                                     event.toolCallId,
@@ -598,10 +598,10 @@ ${agentContext.currentHtml}
                                 emit(AgentEvent.ToolCallComplete(event.toolName, event.toolCallId, event.arguments))
                             }
                             is ApiToolStreamEvent.Done -> {
-                                // stream completed
+
                             }
                             is ApiToolStreamEvent.Error -> {
-                                // 如果原生工具调用失败，尝试从文本中解析
+
                                 val textToolCalls = parseToolCallsFromText(contentBuilder.toString())
                                 if (textToolCalls.isNotEmpty()) {
                                     toolCalls.addAll(textToolCalls)
@@ -620,7 +620,7 @@ ${agentContext.currentHtml}
                 throw e
             } catch (e: Exception) {
                 AppLogger.e(TAG, "AI call failed", e)
-                // 尝试从已收到的文本中解析工具调用
+
                 val textToolCalls = parseToolCallsFromText(contentBuilder.toString())
                 if (textToolCalls.isNotEmpty()) {
                     toolCalls.addAll(textToolCalls)
@@ -629,25 +629,25 @@ ${agentContext.currentHtml}
                     break
                 }
             }
-            
-            // 记录助手消息
+
+
             agentContext.addAssistantMessage(
                 contentBuilder.toString(),
                 if (toolCalls.isNotEmpty()) toolCalls else null
             )
-            
-            // 如果没有工具调用，结束循环
+
+
             if (toolCalls.isEmpty()) {
                 AppLogger.d(TAG, "No tool calls, ending ReAct loop")
                 emit(AgentEvent.Completed(contentBuilder.toString(), agentContext.currentHtml))
                 break
             }
-            
-            // Execute工具调用
+
+
             var hasHtmlUpdate = false
             for (call in toolCalls) {
                 emit(AgentEvent.ToolExecuting(call.name, call.id))
-                
+
                 val arguments = try {
                     @Suppress("UNCHECKED_CAST")
                     gson.fromJson(call.arguments, Map::class.java) as Map<String, Any?>
@@ -655,29 +655,29 @@ ${agentContext.currentHtml}
                     AppLogger.w(TAG, "Failed to parse tool arguments: ${e.message}")
                     mapOf<String, Any?>()
                 }
-                
+
                 val result = executeToolCall(call.name, arguments, agentContext)
                 agentContext.recordToolCall(call, result)
-                
-                // Update HTML 状态
+
+
                 if (result.isHtml && result.result is String) {
                     agentContext.currentHtml = result.result
                     hasHtmlUpdate = true
                 }
-                
-                // 添加工具结果到上下文
+
+
                 val resultMessage = buildToolResultMessage(result)
                 agentContext.addToolResult(call.id, resultMessage)
-                
+
                 emit(AgentEvent.ToolResult(call.name, call.id, result))
-                
-                // 如果触发预览
+
+
                 if (shouldTriggerPreview(call.name)) {
                     emit(AgentEvent.PreviewRequested(agentContext.currentHtml))
                 }
             }
-            
-            // 如果有 HTML 更新且是 write_html 工具，可能不需要继续循环
+
+
             if (hasHtmlUpdate && toolCalls.any { it.name == "write_html" }) {
                 AppLogger.d(TAG, "HTML updated via write_html, completing")
                 emit(AgentEvent.HtmlUpdated(agentContext.currentHtml, "HTML 已更新"))
@@ -685,20 +685,20 @@ ${agentContext.currentHtml}
                 break
             }
         }
-        
+
         if (agentContext.iterationCount >= MAX_TOOL_ITERATIONS) {
             emit(AgentEvent.Warning("达到最大工具调用次数限制"))
             emit(AgentEvent.Completed("", agentContext.currentHtml))
         }
-        
+
     }.flowOn(Dispatchers.IO)
-    
-    /**
-     * 从文本中解析工具调用（用于不支持原生工具调用的模型）
-     */
+
+
+
+
     private fun parseToolCallsFromText(text: String): List<ToolCall> {
         val calls = mutableListOf<ToolCall>()
-        
+
         TOOL_CALL_BLOCK_REGEX.findAll(text).forEach { match ->
             try {
                 val json = JsonParser.parseString(match.groupValues[1]).asJsonObject
@@ -709,16 +709,16 @@ ${agentContext.currentHtml}
                 AppLogger.w(TAG, "Failed to parse tool call: ${e.message}")
             }
         }
-        
+
         return calls
     }
-    
+
     private fun buildToolResultMessage(result: ToolExecutionResult): String {
         return result.result
     }
 }
 
-// ==================== 数据类 ====================
+
 
 data class ToolDefinition(
     val name: String,

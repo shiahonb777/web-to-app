@@ -22,9 +22,9 @@ import androidx.compose.ui.unit.sp
 import com.webtoapp.core.cloud.SubscriptionTier
 import com.webtoapp.core.i18n.Strings
 
-// ═══════════════════════════════════════════
-// Developer Badge
-// ═══════════════════════════════════════════
+
+
+
 
 @Composable
 fun DeveloperBadge(modifier: Modifier = Modifier) {
@@ -67,11 +67,11 @@ fun DeveloperBadge(modifier: Modifier = Modifier) {
     }
 }
 
-// ═══════════════════════════════════════════
-// Hand-drawn Badge Icons
-// ═══════════════════════════════════════════
 
-/** Diamond icon — hand-drawn for Pro badge */
+
+
+
+
 @Composable
 private fun DiamondIcon(modifier: Modifier = Modifier) {
     Canvas(modifier = modifier) {
@@ -90,7 +90,7 @@ private fun DiamondIcon(modifier: Modifier = Modifier) {
     }
 }
 
-/** Lightning bolt icon — hand-drawn for Ultra badge */
+
 @Composable
 private fun LightningIcon(modifier: Modifier = Modifier) {
     Canvas(modifier = modifier) {
@@ -109,27 +109,27 @@ private fun LightningIcon(modifier: Modifier = Modifier) {
     }
 }
 
-/** Infinity icon — hand-drawn for Lifetime badge */
+
 @Composable
 private fun InfinityIcon(modifier: Modifier = Modifier) {
     Canvas(modifier = modifier) {
         val w = size.width
         val h = size.height
         val cy = h / 2f
-        val rx = w * 0.3f   // horizontal radius of each loop
-        val ry = h * 0.4f   // vertical radius of each loop
-        val cx1 = w * 0.3f  // center of left loop
-        val cx2 = w * 0.7f  // center of right loop
+        val rx = w * 0.3f
+        val ry = h * 0.4f
+        val cx1 = w * 0.3f
+        val cx2 = w * 0.7f
         val path = Path().apply {
-            // Start at center crossing point, top
+
             moveTo(w * 0.5f, cy - ry * 0.15f)
-            // Right loop: top-right curve
+
             cubicTo(cx2 + rx * 0.6f, cy - ry * 1.3f, cx2 + rx * 1.1f, cy + ry * 0.5f, cx2, cy + ry * 0.7f)
-            // Right loop: bottom-right curve back to center
+
             cubicTo(cx2 - rx * 0.5f, cy + ry * 1.1f, w * 0.5f, cy + ry * 0.5f, w * 0.5f, cy + ry * 0.15f)
-            // Left loop: bottom-left curve
+
             cubicTo(cx1 - rx * 0.6f, cy + ry * 1.3f, cx1 - rx * 1.1f, cy - ry * 0.5f, cx1, cy - ry * 0.7f)
-            // Left loop: top-left curve back to center
+
             cubicTo(cx1 + rx * 0.5f, cy - ry * 1.1f, w * 0.5f, cy - ry * 0.5f, w * 0.5f, cy - ry * 0.15f)
             close()
         }
@@ -137,11 +137,11 @@ private fun InfinityIcon(modifier: Modifier = Modifier) {
     }
 }
 
-// ═══════════════════════════════════════════
-// Subscription Badges
-// ═══════════════════════════════════════════
 
-/** Pro badge — blue gradient + hand-drawn diamond */
+
+
+
+
 @Composable
 fun ProBadge(modifier: Modifier = Modifier) {
     Surface(
@@ -171,7 +171,7 @@ fun ProBadge(modifier: Modifier = Modifier) {
     }
 }
 
-/** Ultra badge — gold gradient + hand-drawn lightning bolt */
+
 @Composable
 fun UltraBadge(modifier: Modifier = Modifier) {
     Surface(
@@ -201,7 +201,7 @@ fun UltraBadge(modifier: Modifier = Modifier) {
     }
 }
 
-/** Lifetime badge — rainbow gradient + hand-drawn infinity */
+
 @Composable
 fun LifetimeBadge(modifier: Modifier = Modifier) {
     Surface(
@@ -238,17 +238,17 @@ fun LifetimeBadge(modifier: Modifier = Modifier) {
 }
 
 
-// ═══════════════════════════════════════════
-// Combined Title Badges Row
-// ═══════════════════════════════════════════
 
-/**
- * Displays all applicable badges inline.
- * Use this next to any username display.
- *
- * @param isDeveloper Whether the user has published ≥1 module
- * @param subscriptionTier "free"|"pro"|"ultra"|"lifetime"
- */
+
+
+
+
+
+
+
+
+
+
 @Composable
 fun UserTitleBadges(
     isDeveloper: Boolean = false,
@@ -262,7 +262,7 @@ fun UserTitleBadges(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Subscription badge takes priority: lifetime > ultra > pro
+
         when (subscriptionTier) {
             SubscriptionTier.LIFETIME -> LifetimeBadge()
             SubscriptionTier.ULTRA -> UltraBadge()

@@ -1,14 +1,14 @@
 package com.webtoapp.core.extension
 
-/**
- * 统一扩展模块面板脚本
- * 
- * Provide unified UI panel，与应用主题风格一致
- * 采用毛玻璃效果、渐变色、圆角等现代设计元素
- */
+
+
+
+
+
+
 object ExtensionPanelScript {
-    
-    // 预设图标 SVG 映射表（id → SVG HTML）
+
+
     private val ICON_SVG_MAP = mapOf(
         "star" to """<svg width="20" height="20" viewBox="0 0 24 24" fill="white"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21 12,17.77 5.82,21 7,14.14 2,9.27 8.91,8.26"/></svg>""",
         "bolt" to """<svg width="20" height="20" viewBox="0 0 24 24" fill="white"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10"/></svg>""",
@@ -31,44 +31,44 @@ object ExtensionPanelScript {
         "camera" to """<svg width="20" height="20" viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="3.2"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>""",
         "puzzle" to """<svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5C13 2.12 11.88 1 10.5 1S8 2.12 8 3.5V5H4c-1.1 0-2 .9-2 2v3.8h1.5c1.49 0 2.7 1.21 2.7 2.7s-1.21 2.7-2.7 2.7H2V20c0 1.1.9 2 2 2h3.8v-1.5c0-1.49 1.21-2.7 2.7-2.7 1.49 0 2.7 1.21 2.7 2.7V22H17c1.1 0 2-.9 2-2v-4h1.5c1.38 0 2.5-1.12 2.5-2.5S21.88 11 20.5 11z"/></svg>"""
     )
-    
+
     private val DEFAULT_SVG = """<svg width="20" height="20" viewBox="0 0 20 20" fill="white"><rect x="1" y="1" width="7.5" height="7.5" rx="2"/><rect x="11.5" y="1" width="7.5" height="7.5" rx="2"/><rect x="1" y="11.5" width="7.5" height="7.5" rx="2"/><rect x="11.5" y="11.5" width="7.5" height="7.5" rx="2"/></svg>"""
-    
-    /**
-     * 获取面板初始化脚本
-     * 应在页面加载时注入
-     * @param fabIcon 自定义 FAB 图标 ID（如 "star"/"bolt"）、"custom:base64" 或旧版 emoji，空则使用默认图标
-     */
+
+
+
+
+
+
     fun getPanelInitScript(fabIcon: String = ""): String {
         val icon = convertFabIconToHtml(fabIcon)
         return getScript(icon)
     }
-    
-    /**
-     * 将 FAB 图标值转换为 HTML（SVG / img 标签 / emoji）
-     */
+
+
+
+
     private fun convertFabIconToHtml(fabIcon: String): String {
         if (fabIcon.isBlank()) return DEFAULT_SVG
-        // 自定义相册图片：custom:base64data
+
         if (fabIcon.startsWith("custom:")) {
             val base64 = fabIcon.removePrefix("custom:")
             return """<img src="data:image/png;base64,$base64" width="28" height="28" style="border-radius:50%;object-fit:cover;box-shadow:0 1px 4px rgba(0,0,0,0.15)">"""
         }
-        // 预设图标 ID
+
         ICON_SVG_MAP[fabIcon]?.let { return it }
-        // 向后兼容旧版 emoji 值
+
         return fabIcon
     }
-    
+
     private fun getScript(fabIcon: String): String = """
 (function() {
     'use strict';
-    
+
     // 防止重复初始化
     if (window.__WTA_PANEL__) return;
-    
+
     // ==================== 多语言支持 ====================
-    const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' : 
+    const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' :
                  (navigator.language || 'zh').toLowerCase().startsWith('zh') ? 'zh' : 'en';
     const I18N = {
         zh: {
@@ -217,7 +217,7 @@ object ExtensionPanelScript {
         }
     };
     const T = I18N[LANG] || I18N.en;
-    
+
     // 权限/注入时机/执行环境 翻译映射
     const PERM_MAP = {
         DOM_ACCESS: T.permDomAccess, STORAGE: T.permStorage, CSS_INJECT: T.permCssInject,
@@ -229,7 +229,7 @@ object ExtensionPanelScript {
     const WORLD_MAP = {
         ISOLATED: T.worldIsolated, MAIN: T.worldMain
     };
-    
+
     // ==================== 样式定义 ====================
     const PANEL_STYLES = `
         /* CSS 变量 - 主题色 */
@@ -253,7 +253,7 @@ object ExtensionPanelScript {
             --wta-warning: #F59E0B;
             --wta-danger: #EF4444;
         }
-        
+
         @media (prefers-color-scheme: dark) {
             :root {
                 --wta-surface: rgba(24, 24, 27, 0.95);
@@ -289,7 +289,7 @@ object ExtensionPanelScript {
             visibility: visible !important;
             overflow: visible !important;
         }
-        
+
         /* 悬浮触发按钮 - 毛玻璃效果，最高层级 */
         #wta-ext-fab {
             position: fixed !important;
@@ -315,27 +315,27 @@ object ExtensionPanelScript {
             touch-action: none;
             isolation: isolate !important;
         }
-        
+
         #wta-ext-fab:not(.dragging):hover {
             transform: scale(1.05);
             box-shadow: 0 6px 24px rgba(59, 130, 246, 0.45);
         }
-        
+
         #wta-ext-fab:active:not(.dragging) {
             transform: scale(0.95);
             transition-duration: 0.1s;
         }
-        
+
         #wta-ext-fab.dragging {
             opacity: 0.85;
             cursor: grabbing;
             transition: none;
         }
-        
+
         #wta-ext-fab.hidden {
             display: none !important;
         }
-        
+
         /* 显示按钮 - 当FAB隐藏时显示，更明显的半圆手柄 */
         #wta-ext-show-btn {
             position: fixed !important;
@@ -359,26 +359,26 @@ object ExtensionPanelScript {
             opacity: 0.6;
             animation: wta-pulse 2s ease-in-out infinite;
         }
-        
+
         @keyframes wta-pulse {
             0%, 100% { opacity: 0.6; }
             50% { opacity: 0.85; }
         }
-        
+
         #wta-ext-show-btn:hover {
             width: 28px;
             opacity: 1;
             animation: none;
         }
-        
+
         #wta-ext-show-btn:active {
             width: 24px;
         }
-        
+
         #wta-ext-show-btn.visible {
             display: flex;
         }
-        
+
         /* 边缘隐藏区域提示 */
         #wta-ext-hide-zone {
             position: fixed;
@@ -390,25 +390,25 @@ object ExtensionPanelScript {
             opacity: 0;
             transition: opacity 0.2s ease;
         }
-        
+
         #wta-ext-hide-zone.left {
             left: 0;
             background: linear-gradient(to right, rgba(59, 130, 246, 0.3), transparent);
         }
-        
+
         #wta-ext-hide-zone.right {
             right: 0;
             background: linear-gradient(to left, rgba(59, 130, 246, 0.3), transparent);
         }
-        
+
         #wta-ext-hide-zone.active {
             opacity: 1;
         }
-        
+
         /* FAB 吸附动画 */
         #wta-ext-fab.snapping {
-            transition: left 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), 
-                        top 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), 
+            transition: left 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+                        top 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
                         right 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
                         bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
@@ -432,7 +432,7 @@ object ExtensionPanelScript {
             box-shadow: 0 2px 8px rgba(238, 90, 90, 0.4);
             border: 2px solid var(--wta-surface);
         }
-        
+
         /* 遮罩层 - 毛玻璃 */
         #wta-ext-overlay {
             position: fixed !important;
@@ -449,7 +449,7 @@ object ExtensionPanelScript {
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
         }
-        
+
         #wta-ext-overlay.visible {
             opacity: 1;
             visibility: visible;
@@ -475,7 +475,7 @@ object ExtensionPanelScript {
             border: 1px solid var(--wta-outline);
             border-bottom: none;
         }
-        
+
         #wta-ext-main-panel.visible {
             transform: translateY(0);
         }
@@ -489,7 +489,7 @@ object ExtensionPanelScript {
             margin: 12px auto 6px;
             opacity: 0.25;
         }
-        
+
         /* 面板头部 */
         .wta-panel-header {
             display: flex;
@@ -498,14 +498,14 @@ object ExtensionPanelScript {
             padding: 8px 20px 18px;
             border-bottom: 1px solid var(--wta-outline);
         }
-        
+
         .wta-panel-title {
             font-size: 17px;
             font-weight: 700;
             color: var(--wta-on-surface);
             letter-spacing: -0.2px;
         }
-        
+
         .wta-panel-close {
             width: 36px;
             height: 36px;
@@ -519,13 +519,13 @@ object ExtensionPanelScript {
             color: var(--wta-on-surface-variant);
             border: 1px solid var(--wta-outline);
         }
-        
+
         .wta-panel-close:hover {
             background: var(--wta-primary);
             color: white;
             transform: rotate(90deg);
         }
-        
+
         .wta-panel-close:active {
             transform: scale(0.9) rotate(90deg);
         }
@@ -537,7 +537,7 @@ object ExtensionPanelScript {
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
         }
-        
+
         /* 自定义滚动条 */
         .wta-module-list::-webkit-scrollbar {
             width: 6px;
@@ -555,7 +555,7 @@ object ExtensionPanelScript {
             display: block;
             padding: 4px 4px;
         }
-        
+
         /* 模块详情面板 */
         .wta-module-detail {
             position: absolute;
@@ -573,15 +573,15 @@ object ExtensionPanelScript {
             -webkit-backdrop-filter: blur(20px);
             z-index: 10;
         }
-        
+
         .wta-module-detail:not(.visible) {
             pointer-events: none;
         }
-        
+
         .wta-module-detail.visible {
             transform: translateX(0);
         }
-        
+
         .wta-detail-header {
             display: flex;
             align-items: center;
@@ -589,7 +589,7 @@ object ExtensionPanelScript {
             border-bottom: 1px solid var(--wta-outline);
             gap: 14px;
         }
-        
+
         .wta-detail-back {
             width: 40px;
             height: 40px;
@@ -604,13 +604,13 @@ object ExtensionPanelScript {
             color: var(--wta-on-surface-variant);
             border: 1px solid var(--wta-outline);
         }
-        
+
         .wta-detail-back:hover {
             background: var(--wta-primary);
             color: white;
             transform: translateX(-3px);
         }
-        
+
         .wta-detail-title {
             flex: 1;
             font-size: 18px;
@@ -618,7 +618,7 @@ object ExtensionPanelScript {
             color: var(--wta-on-surface);
             letter-spacing: -0.3px;
         }
-        
+
         .wta-detail-content {
             flex: 1;
             overflow-y: auto;
@@ -650,13 +650,13 @@ object ExtensionPanelScript {
             -webkit-backdrop-filter: blur(10px);
             letter-spacing: -0.2px;
         }
-        
+
         #wta-toast.visible {
             opacity: 1;
             visibility: visible;
             transform: translate(-50%, -50%) scale(1);
         }
-        
+
         /* 空状态 */
         .wta-empty-state {
             display: flex;
@@ -666,13 +666,13 @@ object ExtensionPanelScript {
             padding: 48px 24px;
             color: var(--wta-on-surface-variant);
         }
-        
+
         .wta-empty-icon {
             font-size: 56px;
             margin-bottom: 16px;
             opacity: 0.6;
         }
-        
+
         .wta-empty-text {
             font-size: 15px;
             text-align: center;
@@ -695,34 +695,34 @@ object ExtensionPanelScript {
             -webkit-tap-highlight-color: transparent;
             letter-spacing: -0.2px;
         }
-        
+
         .wta-btn-primary {
             background: var(--wta-gradient);
             color: white;
             box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
         }
-        
+
         .wta-btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
         }
-        
+
         .wta-btn-primary:active {
             transform: scale(0.97);
         }
-        
+
         .wta-btn-secondary {
             background: var(--wta-surface-dim);
             color: var(--wta-on-surface);
             border: 1px solid var(--wta-outline);
         }
-        
+
         .wta-btn-secondary:hover {
             background: var(--wta-primary);
             color: white;
             border-color: var(--wta-primary);
         }
-        
+
         /* 输入框样式 */
         .wta-input {
             width: 100%;
@@ -735,16 +735,16 @@ object ExtensionPanelScript {
             outline: none;
             transition: all 0.25s ease;
         }
-        
+
         .wta-input:focus {
             border-color: var(--wta-primary);
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
         }
-        
+
         .wta-input::placeholder {
             color: var(--wta-on-surface-variant);
         }
-        
+
         /* 开关样式 */
         .wta-switch {
             position: relative;
@@ -756,12 +756,12 @@ object ExtensionPanelScript {
             transition: all 0.3s ease;
             border: 1px solid var(--wta-outline);
         }
-        
+
         .wta-switch.active {
             background: var(--wta-gradient);
             border-color: transparent;
         }
-        
+
         .wta-switch::after {
             content: '';
             position: absolute;
@@ -774,11 +774,11 @@ object ExtensionPanelScript {
             transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             box-shadow: 0 2px 6px rgba(0,0,0,0.15);
         }
-        
+
         .wta-switch.active::after {
             transform: translateX(24px);
         }
-        
+
         /* ==================== 搜索栏 ==================== */
         .wta-search-wrap {
             display: flex;
@@ -1109,7 +1109,7 @@ object ExtensionPanelScript {
     const UI_TYPE = {
         FLOATING_BUTTON: 'FLOATING_BUTTON'  // 统一 FAB 面板按钮（默认）
     };
-    
+
     const RUN_MODE = {
         INTERACTIVE: 'INTERACTIVE',
         AUTO: 'AUTO'
@@ -1123,7 +1123,7 @@ object ExtensionPanelScript {
         activeTab: 'all',
         searchQuery: '',
         _initialized: false,
-        
+
         // Initialize
         init() {
             this.injectStyles();
@@ -1149,7 +1149,7 @@ object ExtensionPanelScript {
                 self.updateBadge();
             }, 2000);
         },
-        
+
         // Inject样式
         injectStyles() {
             if (document.getElementById('wta-panel-styles')) return;
@@ -1158,46 +1158,46 @@ object ExtensionPanelScript {
             style.textContent = PANEL_STYLES;
             (document.head || document.documentElement).appendChild(style);
         },
-        
+
         // Create DOM 结构
         createDOM() {
             // 容器
             const container = document.createElement('div');
             container.id = 'wta-ext-panel-container';
-            
+
             // FAB 按钮
             const fab = document.createElement('div');
             fab.id = 'wta-ext-fab';
             fab.innerHTML = '$fabIcon<span class="badge" style="display:none">0</span>';
-            
+
             // 显示按钮（当FAB隐藏时）
             const showBtn = document.createElement('div');
             showBtn.id = 'wta-ext-show-btn';
             showBtn.innerHTML = '❮';
             showBtn.title = T.showModules;
-            
+
             // 边缘隐藏区域提示
             const hideZoneLeft = document.createElement('div');
             hideZoneLeft.id = 'wta-ext-hide-zone';
             hideZoneLeft.className = 'left';
-            
+
             const hideZoneRight = document.createElement('div');
             hideZoneRight.id = 'wta-ext-hide-zone';
             hideZoneRight.className = 'right';
-            
+
             // 遮罩
             const overlay = document.createElement('div');
             overlay.id = 'wta-ext-overlay';
-            
+
             // 主面板
             const panel = document.createElement('div');
             panel.id = 'wta-ext-main-panel';
             panel.innerHTML = this.getPanelHTML();
-            
+
             // Toast
             const toast = document.createElement('div');
             toast.id = 'wta-toast';
-            
+
             container.appendChild(fab);
             container.appendChild(showBtn);
             container.appendChild(hideZoneLeft);
@@ -1205,21 +1205,21 @@ object ExtensionPanelScript {
             container.appendChild(overlay);
             container.appendChild(panel);
             container.appendChild(toast);
-            
+
             // 挂载到 <html> 而非 <body>，避免 body 上的 transform/will-change 影响 fixed 定位
             (document.documentElement || document.body).appendChild(container);
-            
+
             // 恢复保存的位置和隐藏状态
             this.restoreFabState();
-            
+
             // 启动层级保护：确保 FAB 容器始终在最顶层
             this.startElevationGuard();
         },
-        
+
         // 层级保护：确保容器始终在 DOM 最顶层，不被页面动态元素遮挡
         startElevationGuard() {
             const self = this;
-            
+
             // 提升容器到最顶层
             function elevate() {
                 const container = document.getElementById('wta-ext-panel-container');
@@ -1233,10 +1233,10 @@ object ExtensionPanelScript {
                 container.style.setProperty('position', 'fixed', 'important');
                 container.style.setProperty('pointer-events', 'none', 'important');
             }
-            
+
             // 定期检查（每2秒）
             setInterval(elevate, 2000);
-            
+
             // MutationObserver：当 DOM 变化时检查是否需要提升
             try {
                 const observer = new MutationObserver(function(mutations) {
@@ -1248,8 +1248,10 @@ object ExtensionPanelScript {
                     }
                 });
                 const target = document.documentElement || document.body;
-                observer.observe(target, { childList: true });
-                if (target !== document.body && document.body) {
+                if (target instanceof Node) {
+                    observer.observe(target, { childList: true });
+                }
+                if (target !== document.body && document.body instanceof Node) {
                     observer.observe(document.body, { childList: true });
                 }
             } catch(e) { /* DOM observer setup failed */ }
@@ -1303,15 +1305,15 @@ object ExtensionPanelScript {
             const overlay = document.getElementById('wta-ext-overlay');
             const detail = document.getElementById('wta-module-detail');
             const showBtn = document.getElementById('wta-ext-show-btn');
-            
+
             // FAB拖动功能
             this.initFabDrag(fab);
-            
+
             // 显示按钮点击
             showBtn.addEventListener('click', () => this.showFab());
-            
+
             overlay.addEventListener('click', () => this.hidePanel());
-            
+
             // 详情面板点击事件拦截，防止事件穿透到下层模块列表
             if (detail) {
                 detail.addEventListener('click', (e) => {
@@ -1319,7 +1321,7 @@ object ExtensionPanelScript {
                 });
             }
         },
-        
+
         // 初始化FAB拖动功能
         initFabDrag(fab) {
             let isPressed = false;
@@ -1329,23 +1331,23 @@ object ExtensionPanelScript {
             let thresholdPassed = false;
             const DRAG_THRESHOLD = 8;
             const HIDE_ZONE_WIDTH = 50;
-            
+
             const showHideZone = (side) => {
                 document.querySelectorAll('#wta-ext-hide-zone').forEach(el => {
                     el.classList.toggle('active', el.classList.contains(side));
                 });
             };
-            
+
             const hideAllZones = () => {
                 document.querySelectorAll('#wta-ext-hide-zone').forEach(el => {
                     el.classList.remove('active');
                 });
             };
-            
+
             const onStart = (e) => {
                 // 确保是在 FAB 上开始
                 if (!fab.contains(e.target)) return;
-                
+
                 isPressed = true;
                 thresholdPassed = false;
                 const touch = e.touches ? e.touches[0] : e;
@@ -1355,20 +1357,20 @@ object ExtensionPanelScript {
                 startLeft = rect.left;
                 startTop = rect.top;
                 hasMoved = false;
-                
+
                 // 移除吸附动画类
                 fab.classList.remove('snapping');
-                
+
                 e.preventDefault();
             };
-            
+
             const onMove = (e) => {
                 if (!isPressed) return;
-                
+
                 const touch = e.touches ? e.touches[0] : e;
                 let dx = touch.clientX - startX;
                 let dy = touch.clientY - startY;
-                
+
                 // 检查是否超过拖动阈值
                 if (!thresholdPassed) {
                     if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) {
@@ -1385,21 +1387,21 @@ object ExtensionPanelScript {
                         return;
                     }
                 }
-                
+
                 let newLeft = startLeft + dx;
                 let newTop = startTop + dy;
-                
+
                 // 边界限制
                 const maxX = window.innerWidth - fab.offsetWidth;
                 const maxY = window.innerHeight - fab.offsetHeight;
                 newLeft = Math.max(0, Math.min(newLeft, maxX));
                 newTop = Math.max(0, Math.min(newTop, maxY));
-                
+
                 fab.style.left = newLeft + 'px';
                 fab.style.top = newTop + 'px';
                 fab.style.right = 'auto';
                 fab.style.bottom = 'auto';
-                
+
                 // 检查是否进入隐藏区域
                 if (newLeft < HIDE_ZONE_WIDTH) {
                     showHideZone('left');
@@ -1408,29 +1410,29 @@ object ExtensionPanelScript {
                 } else {
                     hideAllZones();
                 }
-                
+
                 e.preventDefault();
             };
-            
+
             const onEnd = (e) => {
                 if (!isPressed) return;
                 isPressed = false;
                 hideAllZones();
-                
+
                 if (isDragging) {
                     isDragging = false;
                     fab.classList.remove('dragging');
-                    
+
                     const rect = fab.getBoundingClientRect();
                     const fabCenterX = rect.left + rect.width / 2;
                     const maxX = window.innerWidth - fab.offsetWidth;
-                    
+
                     // 检查是否在隐藏区域内松手
                     if (rect.left < HIDE_ZONE_WIDTH || rect.left > maxX - HIDE_ZONE_WIDTH) {
                         this.hideFab();
                         return;
                     }
-                    
+
                     // 边缘吸附
                     fab.classList.add('snapping');
                     if (fabCenterX < window.innerWidth / 2) {
@@ -1442,7 +1444,7 @@ object ExtensionPanelScript {
                         fab.style.left = 'auto';
                         fab.style.right = '16px';
                     }
-                    
+
                     // 动画结束后移除类名并保存
                     setTimeout(() => {
                         fab.classList.remove('snapping');
@@ -1453,7 +1455,7 @@ object ExtensionPanelScript {
                     this.togglePanel();
                 }
             };
-            
+
             fab.addEventListener('mousedown', onStart);
             fab.addEventListener('touchstart', onStart, { passive: false });
             document.addEventListener('mousemove', onMove);
@@ -1461,7 +1463,7 @@ object ExtensionPanelScript {
             document.addEventListener('mouseup', onEnd);
             document.addEventListener('touchend', onEnd);
         },
-        
+
         // 隐藏FAB
         hideFab() {
             const fab = document.getElementById('wta-ext-fab');
@@ -1473,7 +1475,7 @@ object ExtensionPanelScript {
                 this.saveFabState();
             }
         },
-        
+
         // 显示FAB
         showFab() {
             const fab = document.getElementById('wta-ext-fab');
@@ -1484,7 +1486,7 @@ object ExtensionPanelScript {
                 this.saveFabState();
             }
         },
-        
+
         // 保存FAB状态
         saveFabState() {
             const fab = document.getElementById('wta-ext-fab');
@@ -1500,7 +1502,7 @@ object ExtensionPanelScript {
                 localStorage.setItem('wta_fab_state', JSON.stringify(state));
             } catch (e) { /* localStorage unavailable */ }
         },
-        
+
         // 恢复FAB状态
         restoreFabState() {
             try {
@@ -1510,12 +1512,12 @@ object ExtensionPanelScript {
                 const fab = document.getElementById('wta-ext-fab');
                 const showBtn = document.getElementById('wta-ext-show-btn');
                 if (!fab || !showBtn) return;
-                
+
                 if (state.hidden) {
                     fab.classList.add('hidden');
                     showBtn.classList.add('visible');
                 }
-                
+
                 if (state.left && state.left !== 'auto') {
                     fab.style.left = state.left;
                     fab.style.right = 'auto';
@@ -1536,20 +1538,20 @@ object ExtensionPanelScript {
             } else {
                 this.modules.push(moduleInfo);
             }
-            
+
             // 所有模块统一注册到 FAB 列表
             this.updateModules();
             this.updateBadge();
         },
-        
+
         // ==================== 启动独立窗口 ====================
         launchModuleWindow(moduleId) {
             const module = this.modules.find(m => m.id === moduleId);
             if (!module) return;
-            
+
             // 关闭 FAB 面板
             this.hidePanel();
-            
+
             // 检查是否已有独立窗口
             const existingWin = document.getElementById(`wta-modwin-${"$"}{moduleId}`);
             if (existingWin) {
@@ -1557,12 +1559,12 @@ object ExtensionPanelScript {
                 sessionStorage.setItem(`wta-modwin-visible-${"$"}{moduleId}`, '1');
                 return;
             }
-            
+
             // 创建独立窗口
             const win = document.createElement('div');
             win.id = `wta-modwin-${"$"}{moduleId}`;
             win.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:380px;height:500px;z-index:2147483644;display:flex;flex-direction:column;overflow:hidden;pointer-events:auto;background:var(--wta-surface);border-radius:var(--wta-radius);box-shadow:var(--wta-shadow-lg);border:1px solid var(--wta-outline);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)';
-            
+
             win.innerHTML = `
                 <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--wta-outline);cursor:move;user-select:none">
                     <span style="font-size:15px;font-weight:700;color:var(--wta-on-surface)">${"$"}{module.icon || '📦'} ${"$"}{module.name || T.unnamed}</span>
@@ -1574,9 +1576,9 @@ object ExtensionPanelScript {
                 <div id="wta-modwin-content-${"$"}{moduleId}" style="flex:1;overflow-y:auto;padding:16px;-webkit-overflow-scrolling:touch">
                 </div>
             `;
-            
+
             document.body.appendChild(win);
-            
+
             // 填充内容
             const contentEl = document.getElementById(`wta-modwin-content-${"$"}{moduleId}`);
             if (contentEl && module.onAction) {
@@ -1584,10 +1586,10 @@ object ExtensionPanelScript {
             } else if (contentEl && module.panelHtml) {
                 contentEl.innerHTML = module.panelHtml;
             }
-            
+
             sessionStorage.setItem(`wta-modwin-visible-${"$"}{moduleId}`, '1');
         },
-        
+
         closeModuleWindow(moduleId) {
             const win = document.getElementById(`wta-modwin-${"$"}{moduleId}`);
             if (win) {
@@ -1596,7 +1598,7 @@ object ExtensionPanelScript {
                 setTimeout(() => win.remove(), 300);
             }
         },
-        
+
         minimizeModuleWindow(moduleId) {
             const win = document.getElementById(`wta-modwin-${"$"}{moduleId}`);
             if (win) {
@@ -1605,9 +1607,9 @@ object ExtensionPanelScript {
             }
             this.showToast(T.panelMinimized);
         },
-        
+
         // ==================== 通用方法 ====================
-        
+
         // 获取过滤后的模块列表
         getFilteredModules() {
             var all = this.modules.slice(); // Show all registered modules in management panel
@@ -1621,7 +1623,7 @@ object ExtensionPanelScript {
             }
             return all;
         },
-        
+
         // 获取模块图标HTML
         getModuleIcon(m) {
             if (m.iconHtml) return m.iconHtml;
@@ -1652,7 +1654,7 @@ object ExtensionPanelScript {
             }
             return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 3v18"/><path d="M3 9h6"/></svg>';
         },
-        
+
         // 获取类型标签HTML
         getTypeBadge(m) {
             var isChromeExt = m.sourceType === 'CHROME_EXTENSION';
@@ -1660,7 +1662,7 @@ object ExtensionPanelScript {
             if (m.sourceType === 'GREASEMONKEY') return '<span class="wta-type-badge userscript">' + T.typeUserScript + '</span>';
             return '<span class="wta-type-badge module">' + T.tabModules + '</span>';
         },
-        
+
         // 渲染单个模块行
         renderModuleItem(m) {
             var icon = this.getModuleIcon(m);
@@ -1680,7 +1682,7 @@ object ExtensionPanelScript {
                 '<svg class="wta-ext-row-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>' +
             '</div>';
         },
-        
+
         // 切换标签页
         switchTab(tab) {
             this.activeTab = tab;
@@ -1690,57 +1692,57 @@ object ExtensionPanelScript {
             });
             this.updateModules();
         },
-        
+
         // 搜索模块
         searchModules(query) {
             this.searchQuery = query || '';
             this.updateModules();
         },
-        
+
         // Update模块列表（分类列表视图）
         updateModules() {
             var container = document.getElementById('wta-module-grid');
             if (!container) return;
-            
+
             var filtered = this.getFilteredModules();
             var chromeExts = filtered.filter(function(m) { return m.sourceType === 'CHROME_EXTENSION'; });
             var customModules = filtered.filter(function(m) { return m.sourceType !== 'CHROME_EXTENSION'; });
-            
+
             // 更新标签页计数
             this.updateTabCounts(customModules.length, chromeExts.length);
-            
+
             if (filtered.length === 0) {
                 container.innerHTML = '<div class="wta-empty-state-v2">' +
                     '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>' +
                     '<p>' + T.noModulesAvailable + '</p></div>';
                 return;
             }
-            
+
             var html = '';
             var self = this;
             var showModules = (this.activeTab === 'all' || this.activeTab === 'modules');
             var showExts = (this.activeTab === 'all' || this.activeTab === 'extensions');
-            
+
             if (showModules && customModules.length > 0) {
                 html += '<div class="wta-section-header"><span class="wta-section-title">' + T.tabModules + '</span><span class="wta-section-count">' + customModules.length + '</span></div>';
                 customModules.forEach(function(m) { html += self.renderModuleItem(m); });
             }
-            
+
             if (showExts && chromeExts.length > 0) {
                 html += '<div class="wta-section-header"><span class="wta-section-title">' + T.tabExtensions + '</span><span class="wta-section-count">' + chromeExts.length + '</span></div>';
                 chromeExts.forEach(function(m) { html += self.renderModuleItem(m); });
             }
-            
+
             if (!html) {
                 container.innerHTML = '<div class="wta-empty-state-v2">' +
                     '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>' +
                     '<p>' + T.noModulesAvailable + '</p></div>';
                 return;
             }
-            
+
             container.innerHTML = html;
         },
-        
+
         // 更新标签页计数
         updateTabCounts(moduleCount, extCount) {
             var total = moduleCount + extCount;
@@ -1751,7 +1753,7 @@ object ExtensionPanelScript {
             if (elMod) elMod.textContent = moduleCount;
             if (elExt) elExt.textContent = extCount;
         },
-        
+
         // Update徽章
         updateBadge() {
             var badge = document.querySelector('#wta-ext-fab .badge');
@@ -1760,7 +1762,7 @@ object ExtensionPanelScript {
                 badge.textContent = count;
                 badge.style.display = count > 0 ? 'flex' : 'none';
             }
-            
+
             var fab = document.getElementById('wta-ext-fab');
             if (fab && !this.isOpen) {
                 fab.style.display = count > 0 ? 'flex' : 'none';
@@ -1775,39 +1777,39 @@ object ExtensionPanelScript {
                 this.showPanel();
             }
         },
-        
+
         // Show面板
         showPanel() {
             const panel = document.getElementById('wta-ext-main-panel');
             const overlay = document.getElementById('wta-ext-overlay');
             const fab = document.getElementById('wta-ext-fab');
-            
+
             panel.classList.add('visible');
             overlay.classList.add('visible');
             fab.style.display = 'none';
             this.isOpen = true;
-            
+
             // Hide模块详情
             this.hideModuleDetail();
         },
-        
+
         // Hide面板
         hidePanel() {
             var panel = document.getElementById('wta-ext-main-panel');
             var overlay = document.getElementById('wta-ext-overlay');
             var fab = document.getElementById('wta-ext-fab');
-            
+
             panel.classList.remove('visible');
             overlay.classList.remove('visible');
-            
+
             fab.style.display = this.modules.length > 0 ? 'flex' : 'none';
-            
+
             this.isOpen = false;
             this.activeModuleId = null;
             this.searchQuery = '';
             var searchInput = document.getElementById('wta-search-input');
             if (searchInput) searchInput.value = '';
-            
+
             // Hide模块详情
             this.hideModuleDetail();
         },
@@ -1824,7 +1826,7 @@ object ExtensionPanelScript {
             var icon = this.getModuleIcon(module);
             var badge = this.getTypeBadge(module);
             var isChromeExt = module.sourceType === 'CHROME_EXTENSION';
-            
+
             var html = '<div class="wta-detail-hero">' +
                 '<div class="wta-detail-hero-icon">' + icon + '</div>' +
                 '<div class="wta-detail-hero-info">' +
@@ -1832,11 +1834,11 @@ object ExtensionPanelScript {
                     '<div class="wta-detail-hero-type">' + badge + '</div>' +
                 '</div>' +
             '</div>';
-            
+
             // 基本信息
             html += '<div class="wta-detail-section">' +
                 '<div class="wta-detail-section-title">' + T.details + '</div>';
-            
+
             if (module.description) {
                 html += '<div class="wta-detail-row"><span class="wta-detail-value" style="text-align:left;width:100%">' + module.description + '</span></div>';
             }
@@ -1852,20 +1854,20 @@ object ExtensionPanelScript {
             if (module.world) {
                 html += '<div class="wta-detail-row"><span class="wta-detail-label">' + T.world + '</span><span class="wta-detail-value">' + (WORLD_MAP[module.world] || module.world) + '</span></div>';
             }
-            
+
             // 运行方式
             var moduleRunMode = module.runMode || RUN_MODE.INTERACTIVE;
             var runModeText = moduleRunMode === RUN_MODE.AUTO ? ('⚡ ' + T.runModeAuto) : ('🖥️ ' + T.runModeInteractive);
             var runModeColor = moduleRunMode === RUN_MODE.AUTO ? '#92400e' : '#1e40af';
             html += '<div class="wta-detail-row"><span class="wta-detail-label">' + T.runModeInteractive.replace(T.runModeInteractive, (LANG === 'zh' ? '运行方式' : LANG === 'ar' ? 'وضع التشغيل' : 'Run Mode')) + '</span><span class="wta-detail-value" style="color:' + runModeColor + '">' + runModeText + '</span></div>';
-            
+
             // 状态
             var statusText = module.active ? T.active : T.inactive;
             var statusColor = module.active ? 'var(--wta-success)' : 'var(--wta-on-surface-variant)';
             html += '<div class="wta-detail-row"><span class="wta-detail-label">' + (module.active ? T.matchesCurrentPage : T.notMatchCurrentPage) + '</span><span class="wta-detail-value" style="color:' + statusColor + '">' + statusText + '</span></div>';
-            
+
             html += '</div>';
-            
+
             // URL规则
             if (module.urlMatches && module.urlMatches.length > 0) {
                 html += '<div class="wta-detail-section">' +
@@ -1876,7 +1878,7 @@ object ExtensionPanelScript {
                 });
                 html += '</div>';
             }
-            
+
             // 权限
             if (module.permissions && module.permissions.length > 0) {
                 html += '<div class="wta-detail-section">' +
@@ -1889,7 +1891,7 @@ object ExtensionPanelScript {
                 });
                 html += '</div></div>';
             }
-            
+
             return html;
         },
 
@@ -1897,19 +1899,19 @@ object ExtensionPanelScript {
         showModulePanel(moduleId) {
             var module = this.modules.find(function(m) { return m.id === moduleId; });
             if (!module) return;
-            
+
             this.activeModuleId = moduleId;
-            
+
             var detail = document.getElementById('wta-module-detail');
             var title = document.getElementById('wta-detail-title');
             var content = document.getElementById('wta-detail-content');
-            
+
             title.textContent = module.name || T.unnamed;
-            
+
             // 构建详情HTML
             var detailHTML = this.buildModuleDetailHTML(module);
             var moduleRunMode = module.runMode || RUN_MODE.INTERACTIVE;
-            
+
             if (moduleRunMode === RUN_MODE.AUTO) {
                 // AUTO 模式：显示自动运行状态，无操作界面
                 var autoStatusHtml = '<div class="wta-detail-section">' +
@@ -1926,7 +1928,7 @@ object ExtensionPanelScript {
                     'style="width:100%;padding:14px;border-radius:12px;border:none;font-size:15px;font-weight:500;cursor:pointer;' +
                     'background:linear-gradient(135deg,var(--wta-primary),#8b5cf6);color:white;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px">' +
                     '<span style="font-size:18px">\ud83d\udda5\ufe0f</span> ' + T.launchWindow + '</button></div>';
-                
+
                 // 简单 UI 操作界面（内联在管理面板中）
                 if (module.panelHtml) {
                     content.innerHTML = detailHTML + launchBtnHtml + '<div class="wta-detail-section">' +
@@ -1942,10 +1944,10 @@ object ExtensionPanelScript {
                     content.innerHTML = detailHTML + launchBtnHtml;
                 }
             }
-            
+
             detail.classList.add('visible');
         },
-        
+
         // Hide模块详情
         hideModuleDetail() {
             const detail = document.getElementById('wta-module-detail');
@@ -1954,7 +1956,7 @@ object ExtensionPanelScript {
             }
             this.activeModuleId = null;
         },
-        
+
         // Update模块面板内容（支持所有UI类型）
         updateModulePanelContent(moduleId, html) {
             // FLOATING_BUTTON 类型：主面板内容
@@ -1976,16 +1978,16 @@ object ExtensionPanelScript {
         showToast(message, duration = 2000) {
             const toast = document.getElementById('wta-toast');
             if (!toast) return;
-            
+
             toast.textContent = message;
             toast.classList.add('visible');
-            
+
             clearTimeout(this._toastTimer);
             this._toastTimer = setTimeout(() => {
                 toast.classList.remove('visible');
             }, duration);
         },
-        
+
         // Set FAB 可见性
         setFabVisible(visible) {
             const fab = document.getElementById('wta-ext-fab');
@@ -1993,7 +1995,7 @@ object ExtensionPanelScript {
                 fab.style.display = visible ? 'flex' : 'none';
             }
         },
-        
+
         // Set FAB 位置
         setFabPosition(bottom, right) {
             const fab = document.getElementById('wta-ext-fab');
@@ -2002,21 +2004,21 @@ object ExtensionPanelScript {
                 fab.style.right = right + 'px';
             }
         },
-        
+
         // GetUI类型常量
         getUITypes() {
             return UI_TYPE;
         },
-        
+
         // Get位置常量
         getPositions() {
             return UI_POSITION;
         }
     };
-    
+
     // 暴露全局接口
     window.__WTA_PANEL__ = WTA_PANEL;
-    
+
     // Initialize
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => WTA_PANEL.init());
@@ -2028,14 +2030,14 @@ object ExtensionPanelScript {
 
 
 
-    /**
-     * 获取模块注册辅助脚本
-     * 模块可以使用这些辅助函数来注册自己的 UI
-     */
+
+
+
+
     fun getModuleHelperScript(): String = """
 (function() {
     'use strict';
-    
+
     // 等待面板初始化完成（DOM 已创建）
     function waitForPanel(callback, maxWait = 10000) {
         const start = Date.now();
@@ -2051,24 +2053,24 @@ object ExtensionPanelScript {
         };
         check();
     }
-    
+
     // UI 类型常量
     const UI_TYPE = {
         FLOATING_BUTTON: 'FLOATING_BUTTON'  // 统一 FAB 面板按钮（默认）
     };
-    
+
     // 运行模式常量
     const RUN_MODE = {
         INTERACTIVE: 'INTERACTIVE',  // 交互模式
         AUTO: 'AUTO'                 // 自动模式
     };
-    
+
     // Module UI 辅助对象
     window.__WTA_MODULE_UI__ = {
         // Export常量
         UI_TYPE: UI_TYPE,
         RUN_MODE: RUN_MODE,
-        
+
         /**
          * 注册模块
          * @param {Object} config 模块配置
@@ -2085,7 +2087,7 @@ object ExtensionPanelScript {
                 panel.registerModule(config);
             });
         },
-        
+
         /**
          * 更新模块面板内容
          */
@@ -2094,7 +2096,7 @@ object ExtensionPanelScript {
                 window.__WTA_PANEL__.updateModulePanelContent(moduleId, html);
             }
         },
-        
+
         /**
          * 显示 Toast 提示
          */
@@ -2103,7 +2105,7 @@ object ExtensionPanelScript {
                 window.__WTA_PANEL__.showToast(message, duration);
             }
         },
-        
+
         /**
          * 关闭主面板
          */
@@ -2112,7 +2114,7 @@ object ExtensionPanelScript {
                 window.__WTA_PANEL__.hidePanel();
             }
         },
-        
+
         /**
          * 显示主面板
          */
@@ -2121,7 +2123,7 @@ object ExtensionPanelScript {
                 window.__WTA_PANEL__.showPanel();
             }
         },
-        
+
         /**
          * 返回模块列表
          */
@@ -2130,7 +2132,7 @@ object ExtensionPanelScript {
                 window.__WTA_PANEL__.hideModuleDetail();
             }
         },
-        
+
         /**
          * 设置FAB可见性
          */
@@ -2139,7 +2141,7 @@ object ExtensionPanelScript {
                 window.__WTA_PANEL__.setFabVisible(visible);
             }
         },
-        
+
         /**
          * 设置FAB位置
          */

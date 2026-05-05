@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 """
 Flask Analytics Dashboard — تطبيق ويب بايثون جميل
 لوحة تحليلات حديثة تعرض قدرات Flask

@@ -3,14 +3,14 @@ package com.webtoapp.core.cloud
 import android.content.Context
 import android.content.SharedPreferences
 
-/**
- * 追踪已安装的商店模块/应用，持久化到 SharedPreferences。
- *
- * 使用方式:
- *   tracker.markInstalled(moduleId)
- *   tracker.isInstalled(moduleId)  // true
- *   tracker.getInstalledIds()      // setOf(moduleId)
- */
+
+
+
+
+
+
+
+
 class InstalledItemsTracker(context: Context) {
 
     companion object {
@@ -23,7 +23,7 @@ class InstalledItemsTracker(context: Context) {
     private val prefs: SharedPreferences =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-    /** 标记某个 module/app 已安装（带版本信息） */
+
     fun markInstalled(itemId: Int, versionCode: Int = 0, versionName: String = "") {
         val ids = getInstalledIds().toMutableSet()
         ids.add(itemId.toString())
@@ -44,11 +44,11 @@ class InstalledItemsTracker(context: Context) {
             .apply()
     }
 
-    /** 获取已安装模块的 versionCode */
+
     fun getInstalledVersionCode(itemId: Int): Int =
         getVersionCodes()[itemId.toString()] ?: 0
 
-    /** 获取已安装模块的 versionName */
+
     fun getInstalledVersionName(itemId: Int): String =
         getVersionNames()[itemId.toString()] ?: ""
 
@@ -60,18 +60,18 @@ class InstalledItemsTracker(context: Context) {
         (prefs.getStringSet(KEY_VERSION_NAMES, null) ?: emptySet())
             .associate { val p = it.split("=", limit = 2); p[0] to (p.getOrNull(1) ?: "") }
 
-    /** 取消安装标记 (卸载时) */
+
     fun markUninstalled(itemId: Int) {
         val ids = getInstalledIds().toMutableSet()
         ids.remove(itemId.toString())
         prefs.edit().putStringSet(KEY_INSTALLED_IDS, ids).apply()
     }
 
-    /** 检查是否已安装 */
+
     fun isInstalled(itemId: Int): Boolean =
         getInstalledIds().contains(itemId.toString())
 
-    /** 获取所有已安装的 ID 集合 */
+
     fun getInstalledIds(): Set<String> =
         prefs.getStringSet(KEY_INSTALLED_IDS, emptySet()) ?: emptySet()
 }

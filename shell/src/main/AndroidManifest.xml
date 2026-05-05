@@ -2,14 +2,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- ===== 网络权限 ===== -->
+    
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
 
-    <!-- ===== 存储权限 ===== -->
+    
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
@@ -19,27 +19,27 @@
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 
-    <!-- ===== 下载管理 ===== -->
+    
     <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
 
-    <!-- ===== 通知权限（Android 13+） ===== -->
+    
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
-    <!-- ===== 摄像头权限（网页拍照/录像） ===== -->
+    
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
 
-    <!-- ===== 麦克风权限（网页录音/语音输入） ===== -->
+    
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 
-    <!-- ===== 位置权限（网页定位） ===== -->
+    
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
-    <!-- ===== 蓝牙权限 ===== -->
+    
     <uses-permission android:name="android.permission.BLUETOOTH"
         android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"
@@ -48,30 +48,30 @@
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
 
-    <!-- ===== NFC 权限 ===== -->
+    
     <uses-permission android:name="android.permission.NFC" />
 
-    <!-- ===== 附近 WiFi 设备权限 ===== -->
+    
     <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES" />
 
-    <!-- ===== 传感器权限 ===== -->
+    
     <uses-permission android:name="android.permission.BODY_SENSORS" />
     <uses-permission android:name="android.permission.BODY_SENSORS_BACKGROUND" />
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
     <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS" />
 
-    <!-- ===== 电话权限 ===== -->
+    
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
 
-    <!-- ===== 生物识别权限 ===== -->
+    
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.USE_FINGERPRINT" />
 
-    <!-- ===== 悬浮窗权限 ===== -->
+    
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
-    <!-- ===== 前台服务权限 ===== -->
+    
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
@@ -82,26 +82,26 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
-    <!-- ===== 黑科技功能权限 ===== -->
+    
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.FLASHLIGHT" />
     <uses-permission android:name="android.permission.WRITE_SETTINGS"
         tools:ignore="ProtectedPermissions" />
 
-    <!-- ===== WakeLock 权限 ===== -->
+    
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
-    <!-- ===== 电池优化白名单 ===== -->
+    
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
-    <!-- ===== 开机自启动权限 ===== -->
+    
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
-    <!-- ===== 精确闹钟权限（Android 12+） ===== -->
+    
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
 
-    <!-- ===== 硬件特性声明（全部 required=false） ===== -->
+    
     <uses-feature android:name="android.hardware.bluetooth" android:required="false" />
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
     <uses-feature android:name="android.hardware.nfc" android:required="false" />
@@ -114,7 +114,7 @@
     <uses-feature android:name="android.hardware.usb.host" android:required="false" />
     <uses-feature android:name="android.hardware.fingerprint" android:required="false" />
 
-    <!-- ===== 包可见性声明（Android 11+） ===== -->
+    
     <queries>
         <intent>
             <action android:name="android.intent.action.VIEW" />
@@ -162,12 +162,12 @@
         android:usesCleartextTraffic="false"
         tools:targetApi="31">
 
-        <!-- ★ 16KB 页面大小兼容性声明 (Android 15+) -->
+        
         <property
             android:name="android.app.property.PAGE_SIZE_COMPATIBILITY"
             android:value="16" />
 
-        <!-- ===== Shell 模式主 Activity ===== -->
+        
         <activity
             android:name=".ui.shell.ShellActivity"
             android:configChanges="orientation|screenSize|keyboardHidden|screenLayout|smallestScreenSize"
@@ -182,7 +182,7 @@
             </intent-filter>
         </activity>
 
-        <!-- ===== 后台运行服务 ===== -->
+        
         <service
             android:name=".core.background.BackgroundRunService"
             android:enabled="true"
@@ -193,7 +193,7 @@
                 android:value="background_run" />
         </service>
 
-        <!-- ===== 轮询通知服务 ===== -->
+        
         <service
             android:name=".core.notification.NotificationPollingService"
             android:enabled="true"
@@ -204,7 +204,7 @@
                 android:value="notification_polling" />
         </service>
 
-        <!-- ===== 悬浮小窗前台服务 ===== -->
+        
         <service
             android:name=".core.floatingwindow.FloatingWindowService"
             android:enabled="true"
@@ -215,7 +215,7 @@
                 android:value="floating_window" />
         </service>
 
-        <!-- ===== 强制运行守护服务 ===== -->
+        
         <service
             android:name=".core.forcedrun.ForcedRunGuardService"
             android:enabled="true"
@@ -226,7 +226,7 @@
                 android:value="forced_run_guard" />
         </service>
 
-        <!-- ===== 强制运行辅助功能服务 ===== -->
+        
         <service
             android:name=".core.forcedrun.ForcedRunAccessibilityService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
@@ -239,7 +239,7 @@
                 android:resource="@xml/accessibility_service_config" />
         </service>
 
-        <!-- ===== 开机 / 时间变更 / 应用更新 广播接收器 ===== -->
+        
         <receiver
             android:name=".core.autostart.BootReceiver"
             android:enabled="true"
@@ -254,7 +254,7 @@
             </intent-filter>
         </receiver>
 
-        <!-- ===== 定时启动广播接收器 ===== -->
+        
         <receiver
             android:name=".core.autostart.ScheduledStartReceiver"
             android:enabled="true"
@@ -264,7 +264,7 @@
             </intent-filter>
         </receiver>
 
-        <!-- ===== 强制运行广播接收器 ===== -->
+        
         <receiver
             android:name=".core.forcedrun.ForcedRunReceiver"
             android:enabled="true"
@@ -276,7 +276,7 @@
             </intent-filter>
         </receiver>
 
-        <!-- ===== FileProvider ===== -->
+        
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

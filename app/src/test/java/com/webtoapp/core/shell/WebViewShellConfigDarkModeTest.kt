@@ -5,9 +5,9 @@ import org.junit.Test
 
 class WebViewShellConfigDarkModeTest {
 
-    // ═══════════════════════════════════════════
-    // Dark mode status bar defaults
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `WebViewShellConfig dark mode status bar fields have correct defaults`() {

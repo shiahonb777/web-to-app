@@ -1,34 +1,34 @@
 package com.webtoapp.core.frontend
 
-/**
- * 前端项目类型
- */
+
+
+
 enum class FrontendFramework {
-    VUE,        // Vue.js 项目
-    REACT,      // React 项目
-    NEXT,       // Next.js 项目
-    NUXT,       // Nuxt.js 项目
-    ANGULAR,    // Angular 项目
-    SVELTE,     // Svelte 项目
-    VITE,       // Vite 项目（通用）
-    UNKNOWN     // 未知类型
+    VUE,
+    REACT,
+    NEXT,
+    NUXT,
+    ANGULAR,
+    SVELTE,
+    VITE,
+    UNKNOWN
 }
 
-/**
- * 数据库类型
- */
+
+
+
 enum class DatabaseType {
-    SQLITE,     // SQLite
-    MYSQL,      // MySQL
-    POSTGRESQL, // PostgreSQL
-    MONGODB,    // MongoDB
-    REDIS,      // Redis
-    NONE        // 无数据库
+    SQLITE,
+    MYSQL,
+    POSTGRESQL,
+    MONGODB,
+    REDIS,
+    NONE
 }
 
-/**
- * 项目检测结果
- */
+
+
+
 data class ProjectDetectionResult(
     val framework: FrontendFramework,
     val frameworkVersion: String?,
@@ -47,9 +47,9 @@ data class ProjectDetectionResult(
 )
 
 
-/**
- * 依赖信息
- */
+
+
+
 data class DependencyInfo(
     val name: String,
     val version: String,
@@ -57,24 +57,24 @@ data class DependencyInfo(
     val category: DependencyCategory = DependencyCategory.OTHER
 )
 
-/**
- * 依赖分类
- */
+
+
+
 enum class DependencyCategory {
-    FRAMEWORK,      // 框架核心
-    UI_LIBRARY,     // UI 库
-    STATE_MANAGEMENT, // 状态管理
-    ROUTER,         // 路由
-    HTTP_CLIENT,    // HTTP 客户端
-    DATABASE,       // Database
-    BUILD_TOOL,     // Build工具
-    TESTING,        // 测试
-    OTHER           // 其他
+    FRAMEWORK,
+    UI_LIBRARY,
+    STATE_MANAGEMENT,
+    ROUTER,
+    HTTP_CLIENT,
+    DATABASE,
+    BUILD_TOOL,
+    TESTING,
+    OTHER
 }
 
-/**
- * 包管理器
- */
+
+
+
 enum class PackageManager {
     NPM,
     YARN,
@@ -82,9 +82,9 @@ enum class PackageManager {
     BUN
 }
 
-/**
- * 项目问题
- */
+
+
+
 data class ProjectIssue(
     val severity: IssueSeverity,
     val type: IssueType,
@@ -108,21 +108,21 @@ enum class IssueType {
     NO_DIST_FOLDER
 }
 
-/**
- * 后端框架类型
- */
+
+
+
 enum class BackendFramework {
-    EXPRESS,        // Express.js
-    FASTIFY,        // Fastify
-    KOA,            // Koa.js
-    NESTJS,         // Nest.js
-    HAPI,           // Hapi.js
-    NONE            // 无后端
+    EXPRESS,
+    FASTIFY,
+    KOA,
+    NESTJS,
+    HAPI,
+    NONE
 }
 
-/**
- * 前端项目配置
- */
+
+
+
 data class FrontendProjectConfig(
     val projectPath: String,
     val framework: FrontendFramework,
@@ -130,30 +130,30 @@ data class FrontendProjectConfig(
     val hasDistFolder: Boolean = false
 )
 
-/**
- * 项目运行时需求
- */
+
+
+
 data class ProjectRuntimeRequirement(
-    val needsNodeRuntime: Boolean = false,       // 是否需要 Node.js 运行时
-    val backendFramework: BackendFramework = BackendFramework.NONE,  // 后端框架
-    val backendEntryFile: String? = null,         // 后端入口文件
-    val isSSR: Boolean = false,                  // 是否 SSR 框架
-    val canStaticExport: Boolean = false,         // 是否可以静态导出
-    val envVars: Map<String, String> = emptyMap(), // 环境变量需求
-    val envVarHints: Map<String, String> = emptyMap() // 环境变量提示（key=变量名, value=说明）
+    val needsNodeRuntime: Boolean = false,
+    val backendFramework: BackendFramework = BackendFramework.NONE,
+    val backendEntryFile: String? = null,
+    val isSSR: Boolean = false,
+    val canStaticExport: Boolean = false,
+    val envVars: Map<String, String> = emptyMap(),
+    val envVarHints: Map<String, String> = emptyMap()
 )
 
-/**
- * 构建状态
- */
+
+
+
 sealed class BuildState {
     object Idle : BuildState()
     object Scanning : BuildState()
     data class Importing(val progress: Float, val message: String) : BuildState()
     data class Success(val outputPath: String, val fileCount: Int) : BuildState()
     data class Error(val message: String) : BuildState()
-    
-    // 完整构建状态
+
+
     object CheckingEnvironment : BuildState()
     object InitializingEnvironment : BuildState()
     data class DownloadingEnvironment(val component: String, val progress: Float) : BuildState()
@@ -163,17 +163,17 @@ sealed class BuildState {
     object ProcessingOutput : BuildState()
 }
 
-/**
- * 构建模式
- */
+
+
+
 enum class BuildMode {
-    IMPORT_DIST,    // Import已构建的 dist 目录
-    FULL_BUILD      // 完整构建（使用 Linux 环境）
+    IMPORT_DIST,
+    FULL_BUILD
 }
 
-/**
- * 构建日志条目
- */
+
+
+
 data class BuildLogEntry(
     val timestamp: Long,
     val level: LogLevel,

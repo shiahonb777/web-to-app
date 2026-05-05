@@ -15,65 +15,37 @@ class EncryptionConfigTest {
     }
 
     @Test
-    fun `shouldEncrypt follows configured categories when enabled`() {
-        val config = EncryptionConfig(
-            enabled = true,
-            encryptConfig = true,
-            encryptHtml = true,
-            encryptMedia = false,
-            encryptSplash = true,
-            encryptBgm = false
-        )
+    fun `shouldEncrypt returns true for every asset when encryption enabled`() {
+        val config = EncryptionConfig(enabled = true)
 
         assertThat(config.shouldEncrypt(CryptoConstants.CONFIG_FILE)).isTrue()
         assertThat(config.shouldEncrypt("html/index.html")).isTrue()
         assertThat(config.shouldEncrypt("styles/app.css")).isTrue()
         assertThat(config.shouldEncrypt("scripts/app.js")).isTrue()
         assertThat(config.shouldEncrypt("splash_media.mp4")).isTrue()
-        assertThat(config.shouldEncrypt("bgm/theme.mp3")).isFalse()
-        assertThat(config.shouldEncrypt("media_content.mp4")).isFalse()
+        assertThat(config.shouldEncrypt("bgm/theme.mp3")).isTrue()
+        assertThat(config.shouldEncrypt("media_content.mp4")).isTrue()
     }
 
     @Test
-    fun `media detection works for standalone media extensions`() {
-        val config = EncryptionConfig(
-            enabled = true,
-            encryptConfig = false,
-            encryptHtml = false,
-            encryptMedia = true,
-            encryptSplash = false,
-            encryptBgm = false
-        )
+    fun `shouldEncrypt does not special case media extensions`() {
+        val config = EncryptionConfig(enabled = true)
 
         assertThat(config.shouldEncrypt("cover.png")).isTrue()
-        assertThat(config.shouldEncrypt("video.webm")).isFalse()
+        assertThat(config.shouldEncrypt("video.webm")).isTrue()
         assertThat(config.shouldEncrypt("audio.mp3")).isTrue()
     }
 
     @Test
-    fun `key derivation iterations follow selected level`() {
-        val fast = EncryptionConfig(enabled = true, encryptionLevel = EncryptionLevel.FAST)
-        val paranoid = EncryptionConfig(enabled = true, encryptionLevel = EncryptionLevel.PARANOID)
+    fun `key derivation uses maximum fixed iterations`() {
+        val config = EncryptionConfig(enabled = true)
 
-        assertThat(fast.getKeyDerivationIterations()).isEqualTo(EncryptionLevel.FAST.iterations)
-        assertThat(paranoid.getKeyDerivationIterations()).isEqualTo(EncryptionLevel.PARANOID.iterations)
+        assertThat(config.getKeyDerivationIterations()).isEqualTo(100000)
     }
 
     @Test
-    fun `hasSecurityProtection checks all security toggles`() {
-        val none = EncryptionConfig(
-            enabled = true,
-            enableIntegrityCheck = false,
-            enableAntiDebug = false,
-            enableAntiTamper = false,
-            enableRootDetection = false,
-            enableEmulatorDetection = false,
-            enableRuntimeProtection = false
-        )
-        val oneEnabled = none.copy(enableAntiDebug = true)
-
-        assertThat(none.hasSecurityProtection()).isFalse()
-        assertThat(oneEnabled.hasSecurityProtection()).isTrue()
+    fun `hasSecurityProtection follows enabled state`() {
+        assertThat(EncryptionConfig(enabled = false).hasSecurityProtection()).isFalse()
+        assertThat(EncryptionConfig(enabled = true).hasSecurityProtection()).isTrue()
     }
 }
-

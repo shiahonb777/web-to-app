@@ -81,5 +81,38 @@ class AdBlockerTest {
         assertThat(adBlocker.getStats()["networkBlock"]).isEqualTo(1)
         assertThat(adBlocker.shouldBlock("https://example.com/adunit.js")).isTrue()
     }
+
+    @Test
+    fun `aliexpress and alicdn parent domains protect all subdomains from custom rules`() {
+        adBlocker.initialize(useDefaultRules = true)
+        adBlocker.setEnabled(true)
+
+
+        adBlocker.addRule("||alicdn.com^")
+        adBlocker.addRule("||aliexpress-media.com^")
+        adBlocker.addRule("||aliexpress.com^")
+
+
+        assertThat(adBlocker.shouldBlock("https://ae01.alicdn.com/kf/product.jpg", resourceType = "image")).isFalse()
+        assertThat(adBlocker.shouldBlock("https://ae02.alicdn.com/kf/product.jpg", resourceType = "image")).isFalse()
+        assertThat(adBlocker.shouldBlock("https://ae03.alicdn.com/kf/product.jpg", resourceType = "image")).isFalse()
+        assertThat(adBlocker.shouldBlock("https://ae04.alicdn.com/kf/product.jpg", resourceType = "image")).isFalse()
+        assertThat(adBlocker.shouldBlock("https://ae05.alicdn.com/kf/product.jpg", resourceType = "image")).isFalse()
+        assertThat(adBlocker.shouldBlock("https://img.alicdn.com/imgextra/i1/x.jpg", resourceType = "image")).isFalse()
+        assertThat(adBlocker.shouldBlock("https://gw.alicdn.com/tps/i4/x.png", resourceType = "image")).isFalse()
+        assertThat(adBlocker.shouldBlock("https://g.alicdn.com/code/lib/x.js", resourceType = "script")).isFalse()
+        assertThat(adBlocker.shouldBlock("https://at.alicdn.com/t/font.woff2", resourceType = "font")).isFalse()
+
+
+        assertThat(adBlocker.shouldBlock("https://ae-pic-a1.aliexpress-media.com/kf/x.jpg", resourceType = "image")).isFalse()
+        assertThat(adBlocker.shouldBlock("https://ae-pic-a2.aliexpress-media.com/kf/x.jpg", resourceType = "image")).isFalse()
+
+
+        assertThat(adBlocker.shouldBlock("https://aliexpress.ru/item/1.html", resourceType = "main_frame")).isFalse()
+        assertThat(adBlocker.shouldBlock("https://m.aliexpress.ru/store/x", resourceType = "xmlhttprequest")).isFalse()
+        assertThat(adBlocker.shouldBlock("https://www.aliexpress.com/item/x", resourceType = "main_frame")).isFalse()
+        assertThat(adBlocker.shouldBlock("https://s.click.aliexpress.com/e/abc", resourceType = "xmlhttprequest")).isFalse()
+    }
+
 }
 

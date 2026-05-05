@@ -31,11 +31,11 @@ import com.webtoapp.core.extension.CodeSnippetCategory
 import com.webtoapp.core.extension.CodeSnippets
 import androidx.compose.ui.graphics.Color
 
-/**
- * 代码块选择器对话框
- * 
- * 提供分类浏览、搜索、预览和插入代码块的功能
- */
+
+
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CodeSnippetSelectorDialog(
@@ -45,23 +45,23 @@ fun CodeSnippetSelectorDialog(
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf<CodeSnippetCategory?>(null) }
     var previewSnippet by remember { mutableStateOf<CodeSnippet?>(null) }
-    
+
     val allCategories = remember { CodeSnippets.getAll() }
     val popularSnippets = remember { CodeSnippets.getPopular() }
-    
-    // Search结果
+
+
     val searchResults = remember(searchQuery) {
         if (searchQuery.isBlank()) emptyList()
         else CodeSnippets.search(searchQuery)
     }
-    
-    // 当前显示的代码块
+
+
     val displaySnippets = when {
         searchQuery.isNotBlank() -> searchResults
         selectedCategory != null -> selectedCategory!!.snippets
         else -> popularSnippets
     }
-    
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -74,7 +74,7 @@ fun CodeSnippetSelectorDialog(
             color = MaterialTheme.colorScheme.surface
         ) {
             Column {
-                // 标题栏
+
                 TopAppBar(
                     title = { Text(com.webtoapp.core.i18n.Strings.codeBlockLibraryTitle) },
                     navigationIcon = {
@@ -83,7 +83,7 @@ fun CodeSnippetSelectorDialog(
                         }
                     },
                     actions = {
-                        // 统计信息
+
                         Text(
                             "${allCategories.size} ${com.webtoapp.core.i18n.Strings.categoriesAndBlocks.split("·")[0].trim()} · ${allCategories.sumOf { it.snippets.size }} ${com.webtoapp.core.i18n.Strings.categoriesAndBlocks.split("·")[1].trim()}",
                             style = MaterialTheme.typography.labelMedium,
@@ -92,16 +92,16 @@ fun CodeSnippetSelectorDialog(
                         )
                     }
                 )
-                
+
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 16.dp)
                 ) {
-                    // Search框
+
                     OutlinedTextField(
                         value = searchQuery,
-                        onValueChange = { 
+                        onValueChange = {
                             searchQuery = it
                             if (it.isNotBlank()) selectedCategory = null
                         },
@@ -118,20 +118,20 @@ fun CodeSnippetSelectorDialog(
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp)
                     )
-                    
+
                     Spacer(modifier = Modifier.height(12.dp))
-                    
-                    // 分类标签
+
+
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        // 热门
+
                         PremiumFilterChip(
                             selected = selectedCategory == null && searchQuery.isBlank(),
-                            onClick = { 
+                            onClick = {
                                 selectedCategory = null
                                 searchQuery = ""
                             },
@@ -140,12 +140,12 @@ fun CodeSnippetSelectorDialog(
                                 { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
                             } else null
                         )
-                        
-                        // 分类
+
+
                         allCategories.forEach { category ->
                             PremiumFilterChip(
                                 selected = selectedCategory == category,
-                                onClick = { 
+                                onClick = {
                                     selectedCategory = if (selectedCategory == category) null else category
                                     searchQuery = ""
                                 },
@@ -156,10 +156,10 @@ fun CodeSnippetSelectorDialog(
                             )
                         }
                     }
-                    
+
                     Spacer(modifier = Modifier.height(12.dp))
-                    
-                    // 当前分类描述
+
+
                     selectedCategory?.let { category ->
                         Surface(
                             shape = RoundedCornerShape(8.dp),
@@ -189,8 +189,8 @@ fun CodeSnippetSelectorDialog(
                         }
                         Spacer(modifier = Modifier.height(12.dp))
                     }
-                    
-                    // Search结果提示
+
+
                     if (searchQuery.isNotBlank()) {
                         Text(
                             com.webtoapp.core.i18n.Strings.foundResults.format(searchResults.size),
@@ -199,8 +199,8 @@ fun CodeSnippetSelectorDialog(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                     }
-                    
-                    // 代码块列表
+
+
                     LazyColumn(
                         modifier = Modifier.weight(weight = 1f, fill = true),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -215,7 +215,7 @@ fun CodeSnippetSelectorDialog(
                                 }
                             )
                         }
-                        
+
                         if (displaySnippets.isEmpty()) {
                             item {
                                 Box(
@@ -241,15 +241,15 @@ fun CodeSnippetSelectorDialog(
                                 }
                             }
                         }
-                        
+
                         item { Spacer(modifier = Modifier.height(16.dp)) }
                     }
                 }
             }
         }
     }
-    
-    // 代码预览对话框
+
+
     previewSnippet?.let { snippet ->
         CodeSnippetPreviewDialog(
             snippet = snippet,
@@ -262,9 +262,9 @@ fun CodeSnippetSelectorDialog(
     }
 }
 
-/**
- * 代码块列表项
- */
+
+
+
 @Composable
 private fun CodeSnippetItem(
     snippet: CodeSnippet,
@@ -295,8 +295,8 @@ private fun CodeSnippetItem(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                
-                // 标签
+
+
                 if (snippet.tags.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -316,8 +316,8 @@ private fun CodeSnippetItem(
                     }
                 }
             }
-            
-            // 插入按钮
+
+
             FilledTonalIconButton(
                 onClick = onInsert,
                 modifier = Modifier.size(36.dp)
@@ -333,9 +333,9 @@ private fun CodeSnippetItem(
 }
 
 
-/**
- * 代码块预览对话框
- */
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CodeSnippetPreviewDialog(
@@ -345,7 +345,7 @@ fun CodeSnippetPreviewDialog(
 ) {
     var copied by remember { mutableStateOf(false) }
     val clipboardManager = LocalClipboardManager.current
-    
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -358,9 +358,9 @@ fun CodeSnippetPreviewDialog(
             color = MaterialTheme.colorScheme.surface
         ) {
             Column {
-                // 标题栏
+
                 TopAppBar(
-                    title = { 
+                    title = {
                         Column {
                             Text(snippet.name)
                             Text(
@@ -376,13 +376,13 @@ fun CodeSnippetPreviewDialog(
                         }
                     }
                 )
-                
+
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(16.dp)
                 ) {
-                    // 标签
+
                     if (snippet.tags.isNotEmpty()) {
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -403,8 +403,8 @@ fun CodeSnippetPreviewDialog(
                             }
                         }
                     }
-                    
-                    // 代码预览
+
+
                     Surface(
                         modifier = Modifier
                             .weight(weight = 1f, fill = true)
@@ -413,7 +413,7 @@ fun CodeSnippetPreviewDialog(
                         color = MaterialTheme.colorScheme.surfaceVariant
                     ) {
                         Column {
-                            // 代码头部
+
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -427,9 +427,9 @@ fun CodeSnippetPreviewDialog(
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
-                                
+
                                 TextButton(
-                                    onClick = { 
+                                    onClick = {
                                         clipboardManager.setText(AnnotatedString(snippet.code))
                                         copied = true
                                     }
@@ -443,10 +443,10 @@ fun CodeSnippetPreviewDialog(
                                     Text(if (copied) com.webtoapp.core.i18n.Strings.copied else com.webtoapp.core.i18n.Strings.copy)
                                 }
                             }
-                            
+
                             HorizontalDivider()
-                            
-                            // 代码内容
+
+
                             LazyColumn(
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -465,10 +465,10 @@ fun CodeSnippetPreviewDialog(
                             }
                         }
                     }
-                    
+
                     Spacer(modifier = Modifier.height(16.dp))
-                    
-                    // 操作按钮
+
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -479,7 +479,7 @@ fun CodeSnippetPreviewDialog(
                         ) {
                             Text(com.webtoapp.core.i18n.Strings.btnCancel)
                         }
-                        
+
                         PremiumButton(
                             onClick = onInsert,
                             modifier = Modifier.weight(weight = 1f, fill = true)
@@ -495,10 +495,10 @@ fun CodeSnippetPreviewDialog(
     }
 }
 
-/**
- * 代码块快速选择卡片
- * 用于模块编辑器中快速插入代码
- */
+
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CodeSnippetQuickPicker(
@@ -507,7 +507,7 @@ fun CodeSnippetQuickPicker(
 ) {
     var showFullSelector by remember { mutableStateOf(false) }
     val popularSnippets = remember { CodeSnippets.getPopular() }
-    
+
     EnhancedElevatedCard(modifier = modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -539,7 +539,7 @@ fun CodeSnippetQuickPicker(
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
-                
+
                 TextButton(onClick = { showFullSelector = true }) {
                     Text(com.webtoapp.core.i18n.Strings.browseAll)
                     Icon(
@@ -549,14 +549,14 @@ fun CodeSnippetQuickPicker(
                     )
                 }
             }
-            
+
             Text(
                 com.webtoapp.core.i18n.Strings.quickInsertCodeSnippets,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            
-            // 热门代码块
+
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -579,8 +579,8 @@ fun CodeSnippetQuickPicker(
             }
         }
     }
-    
-    // 完整选择器对话框
+
+
     if (showFullSelector) {
         CodeSnippetSelectorDialog(
             onDismiss = { showFullSelector = false },
@@ -589,10 +589,10 @@ fun CodeSnippetQuickPicker(
     }
 }
 
-/**
- * 分类代码块网格
- * 按分类展示代码块
- */
+
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CodeSnippetCategoryGrid(
@@ -601,16 +601,16 @@ fun CodeSnippetCategoryGrid(
 ) {
     val categories = remember { CodeSnippets.getAll() }
     var expandedCategory by remember { mutableStateOf<String?>(null) }
-    
+
     LazyColumn(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(categories) { category ->
             val isExpanded = expandedCategory == category.id
-            
+
             EnhancedElevatedCard(
-                onClick = { 
+                onClick = {
                     expandedCategory = if (isExpanded) null else category.id
                 }
             ) {
@@ -636,13 +636,13 @@ fun CodeSnippetCategoryGrid(
                                 )
                             }
                         }
-                        
+
                         Icon(
                             if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                             contentDescription = null
                         )
                     }
-                    
+
                     AnimatedVisibility(visible = isExpanded) {
                         Column(
                             modifier = Modifier.padding(top = 12.dp),
@@ -653,9 +653,9 @@ fun CodeSnippetCategoryGrid(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            
+
                             HorizontalDivider()
-                            
+
                             category.snippets.forEach { snippet ->
                                 Surface(
                                     onClick = { onSelect(snippet) },
@@ -683,7 +683,7 @@ fun CodeSnippetCategoryGrid(
                                                 overflow = TextOverflow.Ellipsis
                                             )
                                         }
-                                        
+
                                         Icon(
                                             Icons.Default.Add,
                                             contentDescription = com.webtoapp.core.i18n.Strings.insert,

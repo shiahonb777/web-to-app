@@ -1,41 +1,41 @@
 package com.webtoapp.ui.shell
 
-/**
- * 多引擎网页自动翻译脚本
- *
- * 使用 Native 桥接调用多翻译引擎 API，避免 CORS 限制。
- * 支持的翻译引擎会根据可用性自动降级。
- *
- * 核心特性：
- * - 多引擎自动降级（Google → MyMemory → LibreTranslate → Lingva）
- * - MutationObserver 监听 DOM 变化，自动翻译动态加载内容
- * - 翻译缓存（避免同一文本重复翻译）
- * - 翻译/还原切换（双击悬浮按钮还原原文）
- * - 高性能节点收集：跳过不可见元素、表单控件、代码块
- * - 智能语言检测：自动跳过已是目标语言的文本
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 internal fun injectTranslateScript(webView: android.webkit.WebView, targetLanguage: String, showButton: Boolean) {
     val translateScript = """
         (function() {
             if (window._translateInjected) return;
             window._translateInjected = true;
-            
+
             var targetLang = '$targetLanguage';
             var showBtn = $showButton;
             var pendingCallbacks = {};
             var callbackIdCounter = 0;
-            
+
             // ═════════════════════════════════════════
             // 翻译缓存 — 避免同一文本重复翻译
             // ═════════════════════════════════════════
             var translateCache = {};
-            
+
             // 翻译状态
             var isTranslated = false;
             var originalTexts = new WeakMap();
             var translatedNodes = [];
             var isTranslating = false;
-            
+
             // ═════════════════════════════════════════
             // Native 翻译回调处理
             // ═════════════════════════════════════════
@@ -54,7 +54,7 @@ internal fun injectTranslateScript(webView: android.webkit.WebView, targetLangua
                     }
                 }
             };
-            
+
             // ═════════════════════════════════════════
             // 调用 Native 翻译
             // ═════════════════════════════════════════
@@ -62,7 +62,7 @@ internal fun injectTranslateScript(webView: android.webkit.WebView, targetLangua
                 return new Promise(function(resolve, reject) {
                     var callbackId = 'cb_' + (++callbackIdCounter);
                     pendingCallbacks[callbackId] = { resolve: resolve, reject: reject };
-                    
+
                     // 设置超时保护（30 秒超时）
                     setTimeout(function() {
                         if (pendingCallbacks[callbackId]) {
@@ -70,7 +70,7 @@ internal fun injectTranslateScript(webView: android.webkit.WebView, targetLangua
                             reject('Translation timeout');
                         }
                     }, 30000);
-                    
+
                     if (window._nativeTranslate && window._nativeTranslate.translate) {
                         window._nativeTranslate.translate(JSON.stringify(texts), targetLang, callbackId);
                     } else {
@@ -79,13 +79,13 @@ internal fun injectTranslateScript(webView: android.webkit.WebView, targetLangua
                     }
                 });
             }
-            
+
             // ═════════════════════════════════════════
             // 降级翻译方案（多引擎）
             // ═════════════════════════════════════════
             function fallbackTranslate(texts, callbackId) {
                 var combined = texts.join('\n');
-                
+
                 // 引擎列表（按优先级）
                 var engines = [
                     function() {
@@ -129,7 +129,7 @@ internal fun injectTranslateScript(webView: android.webkit.WebView, targetLangua
                         });
                     }
                 ];
-                
+
                 // 依次尝试引擎
                 function tryEngine(index) {
                     if (index >= engines.length) {
@@ -146,23 +146,23 @@ internal fun injectTranslateScript(webView: android.webkit.WebView, targetLangua
                 }
                 tryEngine(0);
             }
-            
+
             // ═════════════════════════════════════════
             // 智能文本节点收集
             // ═════════════════════════════════════════
             var SKIP_TAGS = { SCRIPT:1, STYLE:1, NOSCRIPT:1, IFRAME:1, TEXTAREA:1, INPUT:1, SELECT:1, CODE:1, PRE:1, SVG:1, MATH:1, CANVAS:1 };
-            
+
             function isVisible(el) {
                 if (!el || !el.offsetParent && el.style && el.style.position !== 'fixed' && el.style.position !== 'sticky') return false;
                 var style = window.getComputedStyle(el);
                 return style.display !== 'none' && style.visibility !== 'hidden' && parseFloat(style.opacity) > 0;
             }
-            
+
             function collectTextNodes() {
                 var texts = [];
                 var elements = [];
                 var seen = new Set();
-                
+
                 var walker = document.createTreeWalker(
                     document.body,
                     NodeFilter.SHOW_TEXT,
@@ -184,7 +184,7 @@ internal fun injectTranslateScript(webView: android.webkit.WebView, targetLangua
                         return NodeFilter.FILTER_ACCEPT;
                     }}
                 );
-                
+
                 while (walker.nextNode()) {
                     var text = walker.currentNode.textContent.trim();
                     if (text && !seen.has(text)) {
@@ -193,10 +193,10 @@ internal fun injectTranslateScript(webView: android.webkit.WebView, targetLangua
                         elements.push(walker.currentNode);
                     }
                 }
-                
+
                 return { texts: texts, elements: elements };
             }
-            
+
             // ═════════════════════════════════════════
             // 翻译悬浮按钮 (FAB)
             // ═════════════════════════════════════════
@@ -227,7 +227,7 @@ internal fun injectTranslateScript(webView: android.webkit.WebView, targetLangua
                     'touch-action:manipulation',
                     'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif'
                 ].join(';');
-                
+
                 // Hover / Active 效果
                 fab.addEventListener('mouseenter', function() {
                     this.style.transform = 'scale(1.08)';
@@ -237,7 +237,7 @@ internal fun injectTranslateScript(webView: android.webkit.WebView, targetLangua
                     this.style.transform = 'scale(1)';
                     this.style.boxShadow = '0 8px 32px rgba(99,102,241,0.4),0 2px 8px rgba(0,0,0,0.15)';
                 });
-                
+
                 // 点击翻译/还原
                 fab.onclick = function(e) {
                     e.preventDefault();
@@ -249,7 +249,7 @@ internal fun injectTranslateScript(webView: android.webkit.WebView, targetLangua
                         translatePage();
                     }
                 };
-                
+
                 // 拖拽支持
                 var isDragging = false, dragStartX = 0, dragStartY = 0, fabStartX = 0, fabStartY = 0, moved = false;
                 fab.addEventListener('touchstart', function(e) {
@@ -293,10 +293,10 @@ internal fun injectTranslateScript(webView: android.webkit.WebView, targetLangua
                     }
                     isDragging = false;
                 });
-                
+
                 document.body.appendChild(fab);
             }
-            
+
             // ═════════════════════════════════════════
             // 翻译状态 UI 反馈
             // ═════════════════════════════════════════
@@ -330,7 +330,7 @@ internal fun injectTranslateScript(webView: android.webkit.WebView, targetLangua
                         break;
                 }
             }
-            
+
             // ═════════════════════════════════════════
             // 还原原文
             // ═════════════════════════════════════════
@@ -344,7 +344,7 @@ internal fun injectTranslateScript(webView: android.webkit.WebView, targetLangua
                 isTranslated = false;
                 setFabState('idle');
             }
-            
+
             // ═════════════════════════════════════════
             // 翻译页面
             // ═════════════════════════════════════════
@@ -352,22 +352,22 @@ internal fun injectTranslateScript(webView: android.webkit.WebView, targetLangua
                 if (isTranslating) return;
                 isTranslating = true;
                 setFabState('translating');
-                
+
                 var collected = collectTextNodes();
                 var texts = collected.texts;
                 var elements = collected.elements;
-                
+
                 if (texts.length === 0) {
                     isTranslating = false;
                     setFabState('idle');
                     return;
                 }
-                
+
                 // 查找缓存命中
                 var uncachedTexts = [];
                 var uncachedIndices = [];
                 var cachedResults = new Array(texts.length);
-                
+
                 for (var i = 0; i < texts.length; i++) {
                     var cacheKey = texts[i] + '|' + targetLang;
                     if (translateCache[cacheKey]) {
@@ -377,13 +377,13 @@ internal fun injectTranslateScript(webView: android.webkit.WebView, targetLangua
                         uncachedIndices.push(i);
                     }
                 }
-                
+
                 // 翻译未缓存的文本
                 if (uncachedTexts.length > 0) {
                     var batchSize = 20;
                     var batchResults = [];
                     var hasError = false;
-                    
+
                     for (var b = 0; b < uncachedTexts.length; b += batchSize) {
                         var batch = uncachedTexts.slice(b, b + batchSize);
                         try {
@@ -396,7 +396,7 @@ internal fun injectTranslateScript(webView: android.webkit.WebView, targetLangua
                             hasError = true;
                         }
                     }
-                    
+
                     // 写入缓存并填充 cachedResults
                     for (var r = 0; r < uncachedIndices.length && r < batchResults.length; r++) {
                         var origIdx = uncachedIndices[r];
@@ -406,14 +406,14 @@ internal fun injectTranslateScript(webView: android.webkit.WebView, targetLangua
                             translateCache[ck] = batchResults[r];
                         }
                     }
-                    
+
                     if (hasError && batchResults.every(function(r) { return !r || !r.trim(); })) {
                         isTranslating = false;
                         setFabState('error');
                         return;
                     }
                 }
-                
+
                 // 应用翻译结果到 DOM
                 for (var k = 0; k < elements.length && k < cachedResults.length; k++) {
                     var translated = cachedResults[k];
@@ -423,24 +423,24 @@ internal fun injectTranslateScript(webView: android.webkit.WebView, targetLangua
                         translatedNodes.push(elements[k]);
                     }
                 }
-                
+
                 isTranslated = true;
                 isTranslating = false;
                 setFabState('translated');
             }
-            
+
             // ═════════════════════════════════════════
             // MutationObserver — 自动翻译动态内容
             // ═════════════════════════════════════════
             var dynamicObserver = null;
             var dynamicTranslateTimer = null;
-            
+
             function startDynamicObserver() {
                 if (dynamicObserver || !isTranslated) return;
-                
+
                 dynamicObserver = new MutationObserver(function(mutations) {
                     if (!isTranslated || isTranslating) return;
-                    
+
                     var hasNewText = false;
                     for (var m = 0; m < mutations.length; m++) {
                         var nodes = mutations[m].addedNodes;
@@ -453,7 +453,7 @@ internal fun injectTranslateScript(webView: android.webkit.WebView, targetLangua
                         }
                         if (hasNewText) break;
                     }
-                    
+
                     if (hasNewText) {
                         clearTimeout(dynamicTranslateTimer);
                         dynamicTranslateTimer = setTimeout(function() {
@@ -461,9 +461,12 @@ internal fun injectTranslateScript(webView: android.webkit.WebView, targetLangua
                         }, 800);
                     }
                 });
-                
-                dynamicObserver.observe(document.body, { childList: true, subtree: true });
-                
+
+                var dynamicObserverTarget = document.body || document.documentElement;
+                if (dynamicObserverTarget instanceof Node) {
+                    dynamicObserver.observe(dynamicObserverTarget, { childList: true, subtree: true });
+                }
+
                 // 30 秒后停止监听
                 setTimeout(function() {
                     if (dynamicObserver) {
@@ -472,7 +475,7 @@ internal fun injectTranslateScript(webView: android.webkit.WebView, targetLangua
                     }
                 }, 30000);
             }
-            
+
             // ═════════════════════════════════════════
             // 自动翻译 & 动态内容监听
             // ═════════════════════════════════════════
@@ -483,6 +486,6 @@ internal fun injectTranslateScript(webView: android.webkit.WebView, targetLangua
             }, 1500);
         })();
     """.trimIndent()
-    
+
     webView.evaluateJavascript(translateScript, null)
 }

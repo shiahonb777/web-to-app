@@ -8,9 +8,9 @@ import com.webtoapp.WebToAppApplication
 import com.webtoapp.core.logging.AppLogger
 import java.util.Calendar
 
-/**
- * Shell 专用定时启动广播接收器 — 不引用 WebViewActivity
- */
+
+
+
 class ScheduledStartReceiver : BroadcastReceiver() {
 
     companion object {

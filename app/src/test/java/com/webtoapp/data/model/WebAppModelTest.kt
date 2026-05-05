@@ -105,28 +105,14 @@ class WebAppModelTest {
     fun `apk encryption config maps to crypto config correctly`() {
         val config = ApkEncryptionConfig(
             enabled = true,
-            encryptConfig = false,
-            encryptHtml = true,
-            encryptMedia = true,
-            encryptSplash = true,
-            encryptBgm = false,
-            enableIntegrityCheck = false,
-            enableAntiDebug = true,
-            enableAntiTamper = false,
-            encryptionLevel = ApkEncryptionConfig.EncryptionLevel.HIGH
+            customPassword = "vault-key"
         )
 
         val mapped = config.toEncryptionConfig()
 
         assertThat(mapped.enabled).isTrue()
-        assertThat(mapped.encryptConfig).isFalse()
-        assertThat(mapped.encryptHtml).isTrue()
-        assertThat(mapped.encryptMedia).isTrue()
-        assertThat(mapped.encryptSplash).isTrue()
-        assertThat(mapped.encryptBgm).isFalse()
-        assertThat(mapped.enableIntegrityCheck).isFalse()
-        assertThat(mapped.enableAntiDebug).isTrue()
-        assertThat(mapped.enableAntiTamper).isFalse()
-        assertThat(mapped.encryptionLevel).isEqualTo(com.webtoapp.core.crypto.EncryptionLevel.HIGH)
+        assertThat(mapped.customPassword).isEqualTo("vault-key")
+        assertThat(mapped.shouldEncrypt("app_config.json")).isTrue()
+        assertThat(mapped.getKeyDerivationIterations()).isEqualTo(100000)
     }
 }

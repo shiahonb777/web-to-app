@@ -13,23 +13,23 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
-/**
- * 通用保存应用 UseCase
- * 抽取 MainViewModel 中所有 save*App / update*App 的公共逻辑：
- * 1. 保存图标
- * 2. 获取当前主题
- * 3. 构造 WebApp 实体
- * 4. 持久化到数据库
- */
+
+
+
+
+
+
+
+
 class SaveAppUseCase(private val repository: WebAppRepository) {
 
     companion object {
         private const val TAG = "SaveAppUseCase"
     }
 
-    /**
-     * 保存图标到本地存储
-     */
+
+
+
     suspend fun saveIcon(context: Context, iconUri: Uri?): String? {
         return iconUri?.let { uri ->
             withContext(Dispatchers.IO) {
@@ -38,9 +38,9 @@ class SaveAppUseCase(private val repository: WebAppRepository) {
         }
     }
 
-    /**
-     * 获取当前主题类型名称
-     */
+
+
+
     suspend fun getCurrentThemeType(context: Context): String {
         return try {
             val themeManager = ThemeManager.getInstance(context)
@@ -50,9 +50,9 @@ class SaveAppUseCase(private val repository: WebAppRepository) {
         }
     }
 
-    /**
-     * 创建新应用
-     */
+
+
+
     suspend fun createApp(
         context: Context,
         name: String,
@@ -66,7 +66,7 @@ class SaveAppUseCase(private val repository: WebAppRepository) {
     ) {
         val savedIconPath = saveIcon(context, iconUri)
         val currentThemeType = getCurrentThemeType(context)
-        
+
         val webApp = WebApp(
             name = name.ifBlank { defaultName },
             url = "",
@@ -75,15 +75,15 @@ class SaveAppUseCase(private val repository: WebAppRepository) {
             themeType = currentThemeType,
             categoryId = categoryId?.takeIf { it > 0 }
         ).configure()
-        
+
         withContext(Dispatchers.IO) {
             repository.createWebApp(webApp)
         }
     }
 
-    /**
-     * 更新已有应用
-     */
+
+
+
     suspend fun updateApp(
         context: Context,
         appId: Long,
@@ -96,23 +96,23 @@ class SaveAppUseCase(private val repository: WebAppRepository) {
         val existingApp = withContext(Dispatchers.IO) {
             repository.getWebApp(appId)
         } ?: throw Exception("App not found")
-        
+
         val savedIconPath = saveIcon(context, iconUri) ?: existingApp.iconPath
-        
+
         val updatedApp = existingApp.copy(
             name = name.ifBlank { existingApp.name },
             iconPath = savedIconPath,
             updatedAt = System.currentTimeMillis()
         ).configure()
-        
+
         withContext(Dispatchers.IO) {
             repository.updateWebApp(updatedApp)
         }
     }
 
-    /**
-     * 处理并保存 HTML 文件，返回保存后的文件列表
-     */
+
+
+
     suspend fun processHtmlFiles(
         context: Context,
         files: List<HtmlFile>,
@@ -122,12 +122,12 @@ class SaveAppUseCase(private val repository: WebAppRepository) {
         errorMessage = Strings.saveFailedCannotProcessHtml
     ) {
         val savedFiles = processor(context, files, projectId)
-        
+
         if (savedFiles.none { it.type == HtmlFileType.HTML || it.name.endsWith(".html", ignoreCase = true) }) {
             withContext(Dispatchers.IO) { HtmlStorage.deleteProject(context, projectId) }
             throw Exception(Strings.saveFailedCannotProcessHtml)
         }
-        
+
         withContext(Dispatchers.IO) { HtmlStorage.clearTempFiles(context) }
         savedFiles
     }

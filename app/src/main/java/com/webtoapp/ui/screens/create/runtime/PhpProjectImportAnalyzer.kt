@@ -2,6 +2,7 @@ package com.webtoapp.ui.screens.create.runtime
 
 import com.google.gson.JsonObject
 import com.webtoapp.ui.screens.create.common.ProjectImportAnalysis
+import com.webtoapp.core.i18n.Strings
 import com.webtoapp.ui.screens.create.common.ProjectImportException
 import com.webtoapp.ui.screens.create.common.formatProjectName
 import com.webtoapp.ui.screens.create.common.parseEnvFile
@@ -29,7 +30,7 @@ class PhpProjectImportAnalyzer {
     fun analyze(inputDir: File): PhpProjectImportAnalysis {
         val projectDir = resolveProjectRoot(inputDir)
         if (!projectDir.exists() || !projectDir.isDirectory) {
-            throw ProjectImportException("PHP 项目目录不存在")
+            throw ProjectImportException(Strings.importPhpDirNotFound)
         }
 
         val framework = detectFramework(projectDir)

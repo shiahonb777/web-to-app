@@ -4,11 +4,11 @@ import com.webtoapp.core.auth.AuthResult
 import com.webtoapp.core.auth.TokenManager
 import com.webtoapp.core.logging.AppLogger
 
-/**
- * 云服务仓库
- *
- * 封装 CloudApiClient，提供业务逻辑和缓存。
- */
+
+
+
+
+
 class CloudRepository(
     private val cloudApi: CloudApiClient,
     private val tokenManager: TokenManager
@@ -17,7 +17,7 @@ class CloudRepository(
         private const val TAG = "CloudRepository"
     }
 
-    // ─── 激活码 ───
+
 
     suspend fun redeemCode(code: String): AuthResult<RedeemResult> {
         val trimmed = code.trim().uppercase()
@@ -35,27 +35,27 @@ class CloudRepository(
 
     suspend fun getActivationHistory() = cloudApi.getActivationHistory()
 
-    // ─── 设备管理 ───
+
 
     suspend fun getDevices() = cloudApi.getDevices()
 
     suspend fun removeDevice(deviceId: Int) = cloudApi.removeDevice(deviceId)
 
-    // ─── 公告 ───
+
 
     suspend fun getAnnouncements(appVersion: String? = null) =
         cloudApi.getAnnouncements(appVersion)
 
-    // ─── 更新检测 ───
+
 
     suspend fun checkAppUpdate(currentVersionCode: Int) =
         cloudApi.checkAppUpdate(currentVersionCode)
 
-    // ─── 远程配置 ───
+
 
     suspend fun getRemoteConfig() = cloudApi.getRemoteConfig()
 
-    // ─── 项目管理 ───
+
 
     suspend fun listProjects() = cloudApi.listProjects()
 
@@ -79,7 +79,7 @@ class CloudRepository(
 
     suspend fun listVersions(projectId: Int) = cloudApi.listVersions(projectId)
 
-    // ─── Direct Upload (Client → GitHub) ───
+
 
     suspend fun requestUploadToken(projectId: Int, versionCode: Int, versionName: String,
                                     title: String?, changelog: String?, fileName: String) =
@@ -97,7 +97,7 @@ class CloudRepository(
     suspend fun getAnalytics(projectId: Int, days: Int = 7) =
         cloudApi.getAnalytics(projectId, days)
 
-    // ─── 项目激活码 ───
+
 
     suspend fun generateProjectCodes(projectId: Int, count: Int = 10, maxUses: Int = 1, prefix: String = "") =
         cloudApi.generateProjectCodes(projectId, count, maxUses, prefix)
@@ -105,7 +105,7 @@ class CloudRepository(
     suspend fun listProjectCodes(projectId: Int, status: String? = null, page: Int = 1) =
         cloudApi.listProjectCodes(projectId, status, page)
 
-    // ─── 项目公告 ───
+
 
     suspend fun createProjectAnnouncement(projectId: Int, title: String, content: String, priority: Int = 0) =
         cloudApi.createProjectAnnouncement(projectId, title, content, priority)
@@ -120,7 +120,7 @@ class CloudRepository(
     suspend fun deleteProjectAnnouncement(projectId: Int, annId: Int) =
         cloudApi.deleteProjectAnnouncement(projectId, annId)
 
-    // ─── 项目远程配置 ───
+
 
     suspend fun createProjectConfig(projectId: Int, key: String, value: String, description: String? = null) =
         cloudApi.createProjectConfig(projectId, key, value, description)
@@ -135,7 +135,7 @@ class CloudRepository(
     suspend fun deleteProjectConfig(projectId: Int, cfgId: Int) =
         cloudApi.deleteProjectConfig(projectId, cfgId)
 
-    // ─── Webhooks ───
+
 
     suspend fun createWebhook(projectId: Int, url: String, events: List<String>, secret: String? = null) =
         cloudApi.createWebhook(projectId, url, events, secret)
@@ -146,7 +146,7 @@ class CloudRepository(
     suspend fun deleteWebhook(projectId: Int, webhookId: Int) =
         cloudApi.deleteWebhook(projectId, webhookId)
 
-    // ─── Manifest 同步 ───
+
 
     suspend fun uploadManifest(projectId: Int, manifestJson: String, manifestVersion: Int) =
         cloudApi.uploadManifest(projectId, manifestJson, manifestVersion)
@@ -154,7 +154,7 @@ class CloudRepository(
     suspend fun downloadManifest(projectId: Int) =
         cloudApi.downloadManifest(projectId)
 
-    // ─── 模块市场 ───
+
 
     suspend fun listStoreModules(category: String? = null, search: String? = null,
                                   sort: String = "downloads", order: String = "desc",
@@ -169,7 +169,7 @@ class CloudRepository(
     suspend fun downloadStoreModule(moduleId: Int) =
         cloudApi.downloadStoreModule(moduleId)
 
-    // ─── 模块互动（统一 API，市场+社区共用） ───
+
 
     suspend fun toggleModuleLike(moduleId: Int) = cloudApi.toggleModuleLike(moduleId)
 
@@ -202,7 +202,7 @@ class CloudRepository(
     suspend fun getModuleReviews(moduleId: Int, page: Int = 1, size: Int = 20) =
         cloudApi.getModuleReviews(moduleId, page, size)
 
-    // ─── 远程脚本 ───
+
 
     suspend fun listRemoteScripts(projectId: Int) =
         cloudApi.listRemoteScripts(projectId)
@@ -218,7 +218,7 @@ class CloudRepository(
     suspend fun deleteRemoteScript(projectId: Int, scriptId: Int) =
         cloudApi.deleteRemoteScript(projectId, scriptId)
 
-    // ─── 备份 ───
+
 
     suspend fun listBackups(projectId: Int) =
         cloudApi.listBackups(projectId)
@@ -229,20 +229,20 @@ class CloudRepository(
     suspend fun downloadBackup(projectId: Int, backupId: Int) =
         cloudApi.downloadBackup(projectId, backupId)
 
-    // ─── 项目更新 ───
+
 
     suspend fun updateProject(projectId: Int, name: String? = null, description: String? = null,
                               githubRepo: String? = null, giteeRepo: String? = null) =
         cloudApi.updateProject(projectId, name, description, githubRepo, giteeRepo)
 
-    // ─── R2 云存储发布 ───
+
 
     suspend fun publishVersionR2(projectId: Int, apkFile: java.io.File, versionCode: Int,
                                   versionName: String, title: String? = null,
                                   changelog: String? = null) =
         cloudApi.publishVersionR2(projectId, apkFile, versionCode, versionName, title, changelog)
 
-    // ─── FCM 推送 ───
+
 
     suspend fun registerPushToken(projectId: Int, fcmToken: String, deviceId: String) =
         cloudApi.registerPushToken(projectId, fcmToken, deviceId)
@@ -254,7 +254,7 @@ class CloudRepository(
     suspend fun getPushHistory(projectId: Int, page: Int = 1) =
         cloudApi.getPushHistory(projectId, page)
 
-    // ─── 细化分析 ───
+
 
     suspend fun getAnalyticsOverview(projectId: Int) =
         cloudApi.getAnalyticsOverview(projectId)
@@ -271,7 +271,7 @@ class CloudRepository(
     suspend fun getAnalyticsVersions(projectId: Int) =
         cloudApi.getAnalyticsVersions(projectId)
 
-    // ─── 状态 ───
+
 
     fun isLoggedIn(): Boolean = tokenManager.getAccessToken() != null
 }

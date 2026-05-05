@@ -45,32 +45,32 @@ import com.webtoapp.ui.theme.LocalThemeRevealState
 import com.webtoapp.ui.theme.WebToAppTheme
 import com.webtoapp.ui.theme.rememberThemeRevealState
 
-/**
- * 主Activity - 应用入口
- */
+
+
+
 class MainActivity : ComponentActivity() {
 
-    // 首次启动语言选择状态
+
     private var showLanguageSelection by mutableStateOf(true)
-    
-    // 快捷方式权限对话框状态
+
+
     private var showShortcutPermissionDialog by mutableStateOf(false)
     private var shortcutPermissionMessage by mutableStateOf("")
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { _ ->
-        // Permission结果目前无需特殊处理，失败时相关功能会在使用时再报错
+
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         AppLogger.lifecycle("MainActivity", "onCreate", "savedInstanceState=${savedInstanceState != null}")
-        
-        // 处理 Google OAuth 回调（冷启动时）
+
+
         handleGoogleOAuthIfNeeded(intent)
-        
-        // Check是否为 Shell 模式（添加异常保护）
+
+
         val isShell = try {
             val shellManager = WebToAppApplication.shellMode
             val result = shellManager.isShellMode()
@@ -83,9 +83,9 @@ class MainActivity : ComponentActivity() {
             AppLogger.e("MainActivity", "Shell mode check critical error", Error(e))
             false
         }
-        
+
         if (isShell) {
-            // Shell 模式：直接跳转到 ShellActivity
+
             AppLogger.i("MainActivity", "Entering shell mode, redirecting to ShellActivity")
             try {
                 startActivity(Intent(this, ShellActivity::class.java))
@@ -93,12 +93,12 @@ class MainActivity : ComponentActivity() {
                 return
             } catch (e: Exception) {
                 AppLogger.e("MainActivity", "Failed to start ShellActivity", e)
-                // Resume显示主界面
+
             }
         }
         AppLogger.i("MainActivity", "Normal mode, showing main UI")
 
-        // Enable边到边显示（Android 15+ 兼容）
+
         try {
             enableEdgeToEdge()
         } catch (e: Exception) {
@@ -106,46 +106,46 @@ class MainActivity : ComponentActivity() {
         }
 
         requestNecessaryPermissions()
-        
-        // Check快捷方式权限
+
+
         checkShortcutPermission()
 
-        // Set窗口装饰以支持边到边显示
+
         try {
             WindowCompat.setDecorFitsSystemWindows(window, false)
         } catch (e: Exception) {
             AppLogger.w("MainActivity", "setDecorFitsSystemWindows failed", e)
         }
-        
+
         setContent {
-            // 圆形揭示动画状态（在主题之外创建，以便截图包含当前主题）
+
             val themeRevealState = rememberThemeRevealState()
-            
+
             WebToAppTheme { isDarkTheme ->
-                // 根据主题设置状态栏颜色（跟随主题色）
+
                 val themeColors = MaterialTheme.colorScheme
                 LaunchedEffect(isDarkTheme, themeColors.background) {
                     val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
-                    
-                    // 状态栏透明 — 沉浸式
+
+
                     window.statusBarColor = android.graphics.Color.TRANSPARENT
                     windowInsetsController.isAppearanceLightStatusBars = !isDarkTheme
-                    
-                    // 导航栏保持透明
+
+
                     window.navigationBarColor = android.graphics.Color.TRANSPARENT
                     windowInsetsController.isAppearanceLightNavigationBars = !isDarkTheme
                 }
-                
+
                 val context = LocalContext.current
                 val languageManager = remember { LanguageManager.getInstance(context) }
                 val hasSelectedLanguage by languageManager.hasSelectedLanguageFlow.collectAsState(initial = true)
-                
-                // 提供 ThemeRevealState 给子组件（HomeScreen 的切换按钮）
+
+
                 CompositionLocalProvider(
                     LocalThemeRevealState provides themeRevealState
                 ) {
                     Box(modifier = Modifier.fillMaxSize()) {
-                        // 主内容
+
                         Surface(
                             modifier = Modifier.fillMaxSize(),
                             color = MaterialTheme.colorScheme.background
@@ -160,13 +160,13 @@ class MainActivity : ComponentActivity() {
                                 AppNavigation()
                             }
                         }
-                        
-                        // 圆形揭示动画叠层（在所有内容之上）
+
+
                         CircularRevealOverlay(revealState = themeRevealState)
                     }
                 }
-                
-                // 快捷方式权限提示对话框
+
+
                 if (showShortcutPermissionDialog) {
                     AlertDialog(
                         onDismissRequest = { showShortcutPermissionDialog = false },
@@ -195,27 +195,27 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    /**
-     * 检查快捷方式权限
-     */
+
+
+
     private fun checkShortcutPermission() {
-        // 只在 Android 8.0+ 检查
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            // Check是否支持固定快捷方式
+
             if (!ShortcutManagerCompat.isRequestPinShortcutSupported(this)) {
-                // Get厂商特定的提示信息
+
                 shortcutPermissionMessage = buildShortcutPermissionMessage()
                 showShortcutPermissionDialog = true
             }
         }
     }
 
-    /**
-     * 构建厂商特定的快捷方式权限提示
-     */
+
+
+
     private fun buildShortcutPermissionMessage(): String {
         val manufacturer = Build.MANUFACTURER.lowercase()
-        
+
         return when {
             manufacturer.contains("xiaomi") || manufacturer.contains("redmi") -> {
                 Strings.shortcutPermissionXiaomi
@@ -241,9 +241,9 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    /**
-     * 打开应用设置页面
-     */
+
+
+
     private fun openAppSettings() {
         try {
             val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
@@ -252,11 +252,11 @@ class MainActivity : ComponentActivity() {
             }
             startActivity(intent)
         } catch (e: Exception) {
-            // 如果无法打开应用设置，尝试打开通用设置
+
             try {
                 startActivity(Intent(Settings.ACTION_SETTINGS))
             } catch (e2: Exception) {
-                // 忽略
+
             }
         }
     }
@@ -283,35 +283,35 @@ class MainActivity : ComponentActivity() {
             permissionLauncher.launch(needRequest.toTypedArray())
         }
     }
-    
+
     override fun onStart() {
         super.onStart()
         AppLogger.lifecycle("MainActivity", "onStart")
     }
-    
+
     override fun onResume() {
         super.onResume()
         AppLogger.lifecycle("MainActivity", "onResume")
     }
-    
+
     override fun onPause() {
         AppLogger.lifecycle("MainActivity", "onPause")
         super.onPause()
     }
-    
+
     override fun onStop() {
         AppLogger.lifecycle("MainActivity", "onStop")
         super.onStop()
     }
-    
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         AppLogger.lifecycle("MainActivity", "onNewIntent")
         setIntent(intent)
 
-        // 导出后的独立 APK 可能仍然通过 launcher alias / MainActivity 接收新的启动 Intent。
-        // 如果当前处于 Shell 模式，则必须再次转发到 ShellActivity，否则从桌面重新点图标时
-        // 会回到 MainActivity 并触发整条启动链重建，用户体感就是“切后台回来网页重新加载”。
+
+
+
         val isShell = try {
             WebToAppApplication.shellMode.isShellMode()
         } catch (e: Exception) {
@@ -338,13 +338,13 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // 处理 Google OAuth 回调（从浏览器返回时）
+
         handleGoogleOAuthIfNeeded(intent)
     }
-    
-    /**
-     * 检查并处理 Google OAuth 回调
-     */
+
+
+
+
     private fun handleGoogleOAuthIfNeeded(intent: Intent?) {
         if (GoogleSignInHelper.isOAuthCallback(intent)) {
             val uri = intent?.data ?: return
@@ -354,12 +354,12 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-    
+
     override fun onDestroy() {
         AppLogger.lifecycle("MainActivity", "onDestroy")
         super.onDestroy()
     }
-    
+
     override fun onSaveInstanceState(outState: Bundle) {
         AppLogger.lifecycle("MainActivity", "onSaveInstanceState")
         super.onSaveInstanceState(outState)

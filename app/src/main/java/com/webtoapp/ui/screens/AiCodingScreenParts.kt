@@ -29,7 +29,7 @@ import com.webtoapp.core.i18n.Strings
 import com.webtoapp.ui.components.coding.*
 
 
-// ==================== 子组件 ====================
+
 
 @Composable
 internal fun WelcomeContent(
@@ -47,8 +47,8 @@ internal fun WelcomeContent(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.height(48.dp))
-        
-        // Logo区域
+
+
         Surface(
             modifier = Modifier.size(80.dp),
             shape = RoundedCornerShape(20.dp),
@@ -61,26 +61,26 @@ internal fun WelcomeContent(
                 tint = MaterialTheme.colorScheme.onPrimaryContainer
             )
         }
-        
+
         Spacer(modifier = Modifier.height(24.dp))
-        
+
         Text(
             Strings.htmlCodingAssistant,
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         Text(
             Strings.aiHelpsGenerateWebpage,
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        
+
         Spacer(modifier = Modifier.height(40.dp))
-        
-        // 主操作按钮
+
+
         PremiumButton(
             onClick = onNewChat,
             modifier = Modifier
@@ -92,10 +92,10 @@ internal fun WelcomeContent(
             Spacer(modifier = Modifier.width(8.dp))
             Text(Strings.startNewConversation, style = MaterialTheme.typography.titleMedium)
         }
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
-        // 辅助操作按钮
+
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -111,7 +111,7 @@ internal fun WelcomeContent(
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(Strings.templates)
             }
-            
+
             PremiumOutlinedButton(
                 onClick = onOpenTutorial,
                 modifier = Modifier
@@ -124,10 +124,10 @@ internal fun WelcomeContent(
                 Text(Strings.tutorial)
             }
         }
-        
+
         Spacer(modifier = Modifier.height(40.dp))
-        
-        // 快速提示词标题
+
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -153,10 +153,10 @@ internal fun WelcomeContent(
                 fontWeight = FontWeight.Medium
             )
         }
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
-        // 快速提示词卡片 - 两列网格布局
+
+
         Column(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -194,14 +194,14 @@ internal fun WelcomeContent(
                             }
                         }
                     }
-                    // 如果只有一个元素，添加空白占位
+
                     if (rowPrompts.size == 1) {
                         Spacer(modifier = Modifier.weight(weight = 1f, fill = true))
                     }
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(32.dp))
     }
 }
@@ -268,7 +268,7 @@ internal fun SessionDrawerContent(
     onDismiss: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxHeight()) {
-        // 头部
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -281,8 +281,8 @@ internal fun SessionDrawerContent(
                 Icon(Icons.Default.Close, Strings.close)
             }
         }
-        
-        // 新建按钮
+
+
         FilledTonalButton(
             onClick = onNewSession,
             modifier = Modifier
@@ -293,11 +293,11 @@ internal fun SessionDrawerContent(
             Spacer(modifier = Modifier.width(8.dp))
             Text(Strings.newConversation)
         }
-        
+
         Spacer(modifier = Modifier.height(8.dp))
         HorizontalDivider()
-        
-        // Session列表
+
+
         LazyColumn(modifier = Modifier.weight(weight = 1f, fill = true)) {
             items(sessions, key = { it.id }) { session ->
                 SessionListItem(
@@ -307,7 +307,7 @@ internal fun SessionDrawerContent(
                     onDelete = { onDeleteSession(session.id) }
                 )
             }
-            
+
             if (sessions.isEmpty()) {
                 item {
                     Text(
@@ -332,24 +332,24 @@ internal fun TemplatesSheetContent(
     onDismiss: () -> Unit
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
-    
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
     ) {
-        // 标题栏
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                Strings.selectStyleTemplate, 
+                Strings.selectStyleTemplate,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
-            // 当前选中提示
+
             if (selectedTemplateId != null || selectedStyleId != null) {
                 Surface(
                     shape = RoundedCornerShape(16.dp),
@@ -364,18 +364,18 @@ internal fun TemplatesSheetContent(
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         Text(
             Strings.selectTemplateHint,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
-        // 分类标签
+
+
         TabRow(
             selectedTabIndex = selectedTab,
             containerColor = Color.Transparent,
@@ -394,19 +394,19 @@ internal fun TemplatesSheetContent(
                 icon = { Icon(Icons.Outlined.Style, null, modifier = Modifier.size(18.dp)) }
             )
         }
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         when (selectedTab) {
             0 -> {
-                // 模板网格 - 使用 LazyVerticalGrid 更好展示
+
                 Text(
                     Strings.totalTemplates.replace("%d", "${templates.size}"),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.outline
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -427,14 +427,14 @@ internal fun TemplatesSheetContent(
                 }
             }
             1 -> {
-                // 风格参考列表
+
                 Text(
                     Strings.totalStyleReferences.replace("%d", "${styles.size}"),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.outline
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.heightIn(max = 400.dp)
@@ -453,7 +453,7 @@ internal fun TemplatesSheetContent(
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(24.dp))
     }
 }
@@ -465,21 +465,21 @@ internal fun TutorialSheetContent(
 ) {
     var selectedChapterId by remember { mutableStateOf<String?>(null) }
     var selectedSectionIndex by remember { mutableIntStateOf(0) }
-    
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight(0.85f)
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-        // 标题栏
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                Strings.usageTutorial, 
+                Strings.usageTutorial,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -489,13 +489,13 @@ internal fun TutorialSheetContent(
                 color = MaterialTheme.colorScheme.outline
             )
         }
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         if (selectedChapterId == null) {
-            // 章节列表
+
             if (chapters.isEmpty()) {
-                // Empty状态提示
+
                 Box(
                     modifier = Modifier.fillMaxWidth().weight(weight = 1f, fill = true),
                     contentAlignment = Alignment.Center
@@ -530,7 +530,7 @@ internal fun TutorialSheetContent(
                                     color = MaterialTheme.colorScheme.primaryContainer
                                 ) {
                                     Icon(
-                                        Icons.Outlined.MenuBook, 
+                                        Icons.Outlined.MenuBook,
                                         null,
                                         modifier = Modifier.padding(8.dp),
                                         tint = MaterialTheme.colorScheme.onPrimaryContainer
@@ -559,10 +559,10 @@ internal fun TutorialSheetContent(
                 }
             }
         } else {
-            // 章节内容
+
             val chapter = chapters.find { it.id == selectedChapterId }
             chapter?.let {
-                // 返回按钮
+
                 Surface(
                     modifier = Modifier
                         .clickable { selectedChapterId = null },
@@ -574,22 +574,22 @@ internal fun TutorialSheetContent(
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
                     ) {
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack, 
+                            Icons.AutoMirrored.Filled.ArrowBack,
                             null,
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            it.title, 
+                            it.title,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Medium
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(12.dp))
-                
-                // 小节标签
+
+
                 ScrollableTabRow(
                     selectedTabIndex = selectedSectionIndex,
                     edgePadding = 0.dp
@@ -602,10 +602,10 @@ internal fun TutorialSheetContent(
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
-                // 内容
+
+
                 val section = it.sections.getOrNull(selectedSectionIndex)
                 section?.let { sec ->
                     Column(
@@ -613,7 +613,7 @@ internal fun TutorialSheetContent(
                             .weight(weight = 1f, fill = true)
                             .verticalScroll(rememberScrollState())
                     ) {
-                        // 内容文本
+
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
@@ -627,8 +627,8 @@ internal fun TutorialSheetContent(
                                 lineHeight = 24.sp
                             )
                         }
-                        
-                        // 代码示例
+
+
                         sec.codeExample?.let { code ->
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
@@ -650,8 +650,8 @@ internal fun TutorialSheetContent(
                                 )
                             }
                         }
-                        
-                        // 提示
+
+
                         if (sec.tips.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(16.dp))
                             Surface(
@@ -686,7 +686,7 @@ internal fun TutorialSheetContent(
                                 }
                             }
                         }
-                        
+
                         Spacer(modifier = Modifier.height(16.dp))
                     }
                 }
@@ -730,9 +730,9 @@ internal fun CheckpointsSheetContent(
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         if (checkpoints.isEmpty()) {
             Text(
                 Strings.noSavedVersions,
@@ -754,7 +754,7 @@ internal fun CheckpointsSheetContent(
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(32.dp))
     }
 }
@@ -767,7 +767,7 @@ internal fun EditMessageDialog(
 ) {
     var editedContent by remember { mutableStateOf(message.content) }
     var editedImages by remember { mutableStateOf(message.images) }
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(Strings.editMessage) },
@@ -781,7 +781,7 @@ internal fun EditMessageDialog(
                         .heightIn(min = 100.dp),
                     maxLines = 10
                 )
-                
+
                 if (editedImages.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
@@ -790,7 +790,7 @@ internal fun EditMessageDialog(
                         color = MaterialTheme.colorScheme.outline
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     Strings.editWarning,
@@ -825,9 +825,9 @@ internal fun SaveProjectDialog(
     var projectName by remember { mutableStateOf("my-html-project") }
     var selectedDirIndex by remember { mutableIntStateOf(0) }
     var createFolder by remember { mutableStateOf(true) }
-    
+
     val availableDirs = remember { storage.getAvailableSaveDirectories() }
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(Strings.saveProject) },
@@ -840,9 +840,9 @@ internal fun SaveProjectDialog(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
-                
+
                 Text(Strings.saveLocation, style = MaterialTheme.typography.labelMedium)
-                
+
                 availableDirs.forEachIndexed { index, (name, _) ->
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -857,7 +857,7 @@ internal fun SaveProjectDialog(
                         Text(name)
                     }
                 }
-                
+
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -867,7 +867,7 @@ internal fun SaveProjectDialog(
                     )
                     Text(Strings.createProjectFolder)
                 }
-                
+
                 Text(
                     Strings.willSaveFiles.replace("%d", "${files.size}"),
                     style = MaterialTheme.typography.labelSmall,
@@ -889,7 +889,7 @@ internal fun SaveProjectDialog(
                     result.onSuccess { savedDir ->
                         onSaved(savedDir.absolutePath)
                     }.onFailure { e ->
-                        // Error handling在调用处
+
                     }
                 },
                 enabled = projectName.isNotBlank() && files.isNotEmpty()
@@ -905,9 +905,9 @@ internal fun SaveProjectDialog(
     )
 }
 
-/**
- * 代码库面板内容
- */
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun CodeLibrarySheetContent(
@@ -921,13 +921,13 @@ internal fun CodeLibrarySheetContent(
 ) {
     var filterFavorites by remember { mutableStateOf(false) }
     val filteredItems = if (filterFavorites) items.filter { it.isFavorite } else items
-    
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
     ) {
-        // 标题栏
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -949,17 +949,17 @@ internal fun CodeLibrarySheetContent(
                 )
             }
         }
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         Text(
             Strings.aiCodeAutoSaved,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         if (filteredItems.isEmpty()) {
             Box(
                 modifier = Modifier
@@ -998,14 +998,14 @@ internal fun CodeLibrarySheetContent(
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(24.dp))
     }
 }
 
-/**
- * 代码库项目卡片
- */
+
+
+
 @Composable
 private fun CodeLibraryItemCard(
     item: CodeLibraryItem,
@@ -1017,7 +1017,7 @@ private fun CodeLibraryItemCard(
 ) {
     var showMenu by remember { mutableStateOf(false) }
     val dateFormat = remember { java.text.SimpleDateFormat("MM-dd HH:mm", java.util.Locale.getDefault()) }
-    
+
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -1054,9 +1054,9 @@ private fun CodeLibraryItemCard(
                     color = MaterialTheme.colorScheme.outline
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(4.dp))
-            
+
             Text(
                 item.userPrompt,
                 style = MaterialTheme.typography.bodySmall,
@@ -1064,10 +1064,10 @@ private fun CodeLibraryItemCard(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
-            // File标签
+
+
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 item.files.take(3).forEach { file ->
                     Surface(
@@ -1090,10 +1090,10 @@ private fun CodeLibraryItemCard(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
-            // 操作按钮
+
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1116,7 +1116,7 @@ private fun CodeLibraryItemCard(
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(Strings.use, style = MaterialTheme.typography.labelMedium)
                 }
-                
+
                 Box {
                     IconButton(onClick = { showMenu = true }) {
                         Icon(Icons.Default.MoreVert, null)
@@ -1152,9 +1152,9 @@ private fun CodeLibraryItemCard(
     }
 }
 
-/**
- * 对话检查点面板内容
- */
+
+
+
 @Composable
 internal fun ConversationCheckpointsSheetContent(
     checkpoints: List<ConversationCheckpoint>,
@@ -1163,7 +1163,7 @@ internal fun ConversationCheckpointsSheetContent(
     onDismiss: () -> Unit
 ) {
     val dateFormat = remember { java.text.SimpleDateFormat("MM-dd HH:mm:ss", java.util.Locale.getDefault()) }
-    
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -1174,17 +1174,17 @@ internal fun ConversationCheckpointsSheetContent(
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         Text(
             Strings.rollbackHint,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         if (checkpoints.isEmpty()) {
             Box(
                 modifier = Modifier
@@ -1267,7 +1267,7 @@ internal fun ConversationCheckpointsSheetContent(
                                     }
                                 }
                             }
-                            
+
                             Row {
                                 IconButton(onClick = { onRollback(checkpoint) }) {
                                     Icon(
@@ -1289,7 +1289,7 @@ internal fun ConversationCheckpointsSheetContent(
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(24.dp))
     }
 }

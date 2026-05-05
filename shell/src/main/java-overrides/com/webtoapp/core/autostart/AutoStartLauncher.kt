@@ -8,9 +8,9 @@ import com.webtoapp.WebToAppApplication
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.ui.shell.ShellActivity
 
-/**
- * Shell 专用自启动启动器 — 仅启动 ShellActivity，不引用 WebViewActivity
- */
+
+
+
 object AutoStartLauncher {
 
     private const val TAG = "AutoStartLauncher"

@@ -5,7 +5,9 @@ import com.webtoapp.core.port.PortManager
 import com.webtoapp.core.shell.ShellRuntimeServices
 import com.webtoapp.data.database.AppDatabase
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 class AppStartupManager(
     private val loggingStartup: LoggingStartup,
@@ -20,9 +22,14 @@ class AppStartupManager(
     fun initialize(appScope: CoroutineScope) {
         loggingStartup.initialize()
         shellRuntimeStartup.initialize()
-        securityStartup.initialize()
+
+
+
+        appScope.launch(Dispatchers.Default) {
+            securityStartup.initialize()
+        }
         legacyHttpUrlMigrationStartup.initialize(appScope)
-        runtimeWarmupStartup.initialize()
+        runtimeWarmupStartup.initialize(appScope)
         backgroundServicesStartup.initialize(appScope)
         AppLogger.system("Application", "onCreate completed")
     }

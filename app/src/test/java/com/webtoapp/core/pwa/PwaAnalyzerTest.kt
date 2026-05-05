@@ -5,9 +5,9 @@ import org.junit.Test
 
 class PwaAnalyzerTest {
 
-    // ═══════════════════════════════════════════
-    // extractHost
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `extractHost returns host from https URL`() {
@@ -26,7 +26,7 @@ class PwaAnalyzerTest {
 
     @Test
     fun `extractHost returns host for bare domain via auto-prepend`() {
-        // extractHost auto-prepends https://, so bare domains become valid
+
         assertThat(PwaAnalyzer.extractHost("not-a-url")).isEqualTo("not-a-url")
     }
 
@@ -35,9 +35,9 @@ class PwaAnalyzerTest {
         assertThat(PwaAnalyzer.extractHost("example.com")).isEqualTo("example.com")
     }
 
-    // ═══════════════════════════════════════════
-    // suggestDeepLinkHosts
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `suggestDeepLinkHosts includes original URL host`() {
@@ -101,7 +101,7 @@ class PwaAnalyzerTest {
             source = PwaDataSource.MANIFEST
         )
         val hosts = PwaAnalyzer.suggestDeepLinkHosts(result, "https://www.example.com")
-        // www.example.com should appear only once (plus example.com variant)
+
         val wwwCount = hosts.count { it == "www.example.com" }
         assertThat(wwwCount).isEqualTo(1)
     }

@@ -13,15 +13,15 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.concurrent.TimeUnit
 
-/**
- * 云服务 Auth API 客户端
- * 
- * 对接服务器端 /api/v1/auth/ 和 /api/v1/user/ 接口
- */
+
+
+
+
+
 class AuthApiClient(private val tokenManager: TokenManager) {
 
     companion object {
-        // 服务器 API 基础 URL
+
         const val BASE_URL = "https://api.shiaho.sbs"
         private const val TAG = "AuthApiClient"
     }
@@ -35,11 +35,11 @@ class AuthApiClient(private val tokenManager: TokenManager) {
         .writeTimeout(15, TimeUnit.SECONDS)
         .build()
 
-    // ─── Auth API ───
 
-    /**
-     * 发送邮箱验证码
-     */
+
+
+
+
     suspend fun sendVerificationCode(email: String): AuthResult<String> = withContext(Dispatchers.IO) {
         try {
             val body = JsonObject().apply {
@@ -66,9 +66,9 @@ class AuthApiClient(private val tokenManager: TokenManager) {
         }
     }
 
-    /**
-     * 用户注册
-     */
+
+
+
     suspend fun register(
         email: String,
         username: String,
@@ -112,9 +112,9 @@ class AuthApiClient(private val tokenManager: TokenManager) {
         }
     }
 
-    /**
-     * 用户登录（支持用户名或邮箱）
-     */
+
+
+
     suspend fun login(
         account: String,
         password: String
@@ -159,9 +159,9 @@ class AuthApiClient(private val tokenManager: TokenManager) {
         }
     }
 
-    /**
-     * 刷新 Token
-     */
+
+
+
     suspend fun refreshToken(refreshToken: String): AuthResult<TokenPair> = withContext(Dispatchers.IO) {
         try {
             val body = JsonObject().apply {
@@ -193,11 +193,11 @@ class AuthApiClient(private val tokenManager: TokenManager) {
         }
     }
 
-    // ─── User API ───
 
-    /**
-     * 获取用户资料（需要 Token）
-     */
+
+
+
+
     suspend fun getProfile(): AuthResult<UserProfile> = withContext(Dispatchers.IO) {
         try {
             val token = tokenManager.getAccessToken() ?: return@withContext AuthResult.Error("未登录")
@@ -217,7 +217,7 @@ class AuthApiClient(private val tokenManager: TokenManager) {
                 val profile = parseUserProfile(data)
                 AuthResult.Success(profile)
             } else if (response.code == 401) {
-                // Token 过期，尝试刷新
+
                 val refreshResult = tryRefreshAndRetry { getProfile() }
                 refreshResult
             } else {
@@ -229,9 +229,9 @@ class AuthApiClient(private val tokenManager: TokenManager) {
         }
     }
 
-    /**
-     * 更新用户资料
-     */
+
+
+
     suspend fun updateProfile(
         username: String? = null,
         avatarUrl: String? = null
@@ -267,9 +267,9 @@ class AuthApiClient(private val tokenManager: TokenManager) {
         }
     }
 
-    /**
-     * 获取 Pro 会员状态
-     */
+
+
+
     suspend fun getProStatus(): AuthResult<ProStatus> = withContext(Dispatchers.IO) {
         try {
             val token = tokenManager.getAccessToken() ?: return@withContext AuthResult.Error("未登录")
@@ -302,11 +302,11 @@ class AuthApiClient(private val tokenManager: TokenManager) {
         }
     }
 
-    // ─── Logout (Server-side) ───
 
-    /**
-     * 登出（通知服务器使 Token 失效）
-     */
+
+
+
+
     suspend fun logout(deviceId: String? = null): AuthResult<String> = withContext(Dispatchers.IO) {
         try {
             val token = tokenManager.getAccessToken()
@@ -319,7 +319,7 @@ class AuthApiClient(private val tokenManager: TokenManager) {
             token?.let { reqBuilder.header("Authorization", "Bearer $it") }
 
             val response = client.newCall(reqBuilder.build()).execute()
-            // Always clear local tokens regardless of server response
+
             tokenManager.clearTokens()
             AuthResult.Success("已退出登录")
         } catch (e: Exception) {
@@ -328,9 +328,9 @@ class AuthApiClient(private val tokenManager: TokenManager) {
         }
     }
 
-    /**
-     * 登出所有设备
-     */
+
+
+
     suspend fun logoutAll(): AuthResult<String> = withContext(Dispatchers.IO) {
         try {
             val token = tokenManager.getAccessToken()
@@ -348,11 +348,11 @@ class AuthApiClient(private val tokenManager: TokenManager) {
         }
     }
 
-    // ─── Password Management ───
 
-    /**
-     * 修改密码
-     */
+
+
+
+
     suspend fun changePassword(
         currentPassword: String,
         newPassword: String
@@ -374,7 +374,7 @@ class AuthApiClient(private val tokenManager: TokenManager) {
             val responseBody = response.body?.string() ?: ""
 
             if (response.isSuccessful) {
-                // Password changed → tokens invalidated, need re-login
+
                 tokenManager.clearTokens()
                 AuthResult.Success("密码修改成功，请重新登录")
             } else {
@@ -386,9 +386,9 @@ class AuthApiClient(private val tokenManager: TokenManager) {
         }
     }
 
-    /**
-     * 忘记密码 — 请求重置验证码
-     */
+
+
+
     suspend fun forgotPassword(email: String): AuthResult<String> = withContext(Dispatchers.IO) {
         try {
             val body = JsonObject().apply {
@@ -414,9 +414,9 @@ class AuthApiClient(private val tokenManager: TokenManager) {
         }
     }
 
-    /**
-     * 重置密码 — 使用验证码
-     */
+
+
+
     suspend fun resetPassword(
         email: String,
         code: String,
@@ -457,11 +457,11 @@ class AuthApiClient(private val tokenManager: TokenManager) {
         }
     }
 
-    // ─── Account Deletion (Google Play Compliance) ───
 
-    /**
-     * 永久删除账号
-     */
+
+
+
+
     suspend fun deleteAccount(
         password: String,
         reason: String = ""
@@ -495,11 +495,11 @@ class AuthApiClient(private val tokenManager: TokenManager) {
         }
     }
 
-    // ─── Google OAuth ───
 
-    /**
-     * Google 登录
-     */
+
+
+
+
     suspend fun googleLogin(
         idToken: String,
         deviceId: String? = null,
@@ -545,11 +545,11 @@ class AuthApiClient(private val tokenManager: TokenManager) {
         }
     }
 
-    // ─── Avatar Upload ───
 
-    /**
-     * 上传头像
-     */
+
+
+
+
     suspend fun uploadAvatar(imageBytes: ByteArray, mimeType: String = "image/jpeg"): AuthResult<AvatarUploadResult> = withContext(Dispatchers.IO) {
         try {
             val token = tokenManager.getAccessToken() ?: return@withContext AuthResult.Error("未登录")
@@ -594,7 +594,7 @@ class AuthApiClient(private val tokenManager: TokenManager) {
         }
     }
 
-    // ─── Helper ───
+
 
     private suspend fun <T> tryRefreshAndRetry(retry: suspend () -> AuthResult<T>): AuthResult<T> {
         val refresh = tokenManager.getRefreshToken() ?: return AuthResult.Error("登录已过期，请重新登录")
@@ -610,7 +610,7 @@ class AuthApiClient(private val tokenManager: TokenManager) {
         }
     }
 
-    // ── Safe JSON accessors (JsonNull is NOT Kotlin null, so ?. doesn't help) ──
+
 
     private fun JsonObject.safeString(key: String): String? {
         val el = get(key) ?: return null
@@ -649,8 +649,8 @@ class AuthApiClient(private val tokenManager: TokenManager) {
     private fun parseErrorMessage(responseBody: String): String {
         return try {
             val json = JsonParser.parseString(responseBody).asJsonObject
-            // Check detail first, then message — must verify isJsonPrimitive
-            // because json.get() can return JsonNull which is non-null but not a string
+
+
             val detail = json.get("detail")
             if (detail != null && detail.isJsonPrimitive) return detail.asString
             val message = json.get("message")
@@ -665,9 +665,9 @@ class AuthApiClient(private val tokenManager: TokenManager) {
         return "1.9.5"
     }
 
-    /**
-     * 心跳 — 每 60 秒调用一次，用于统计在线时长
-     */
+
+
+
     suspend fun heartbeat(): Unit = withContext(Dispatchers.IO) {
         try {
             val request = Request.Builder()
@@ -677,13 +677,13 @@ class AuthApiClient(private val tokenManager: TokenManager) {
                 .build()
             client.newCall(request).execute().close()
         } catch (_: Exception) {
-            // Heartbeat failures are non-critical
+
         }
     }
 
-    /**
-     * 绑定邮箱（Google 登录用户后续绑定）
-     */
+
+
+
     suspend fun bindEmail(email: String, verificationCode: String): AuthResult<String> = withContext(Dispatchers.IO) {
         try {
             val token = tokenManager.getAccessToken() ?: return@withContext AuthResult.Error("未登录")
@@ -714,7 +714,7 @@ class AuthApiClient(private val tokenManager: TokenManager) {
     }
 }
 
-// ─── Data Classes ───
+
 
 sealed class AuthResult<out T> {
     data class Success<T>(val data: T) : AuthResult<T>()

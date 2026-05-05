@@ -5,11 +5,12 @@ import android.content.Context
 import android.content.Intent
 import android.os.PowerManager
 import com.webtoapp.WebToAppApplication
+import com.webtoapp.core.forcedrun.ForcedRunReceiver
 import com.webtoapp.core.logging.AppLogger
 
-/**
- * Shell 专用开机广播接收器 — 不引用 WebViewActivity
- */
+
+
+
 class BootReceiver : BroadcastReceiver() {
 
     companion object {
@@ -60,6 +61,9 @@ class BootReceiver : BroadcastReceiver() {
                 )
             }
             autoStartManager.rescheduleAlarmIfNeeded()
+            context.sendBroadcast(Intent(context, ForcedRunReceiver::class.java).apply {
+                action = Intent.ACTION_BOOT_COMPLETED
+            })
         } catch (e: Exception) {
             AppLogger.e(TAG, "开机自启动处理异常", e)
         } finally {

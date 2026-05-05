@@ -7,12 +7,12 @@ import java.io.IOException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 
-/**
- * AppResult 统一错误处理模型 单元测试
- */
+
+
+
 class AppResultTest {
 
-    // ==================== Success ====================
+
 
     @Test
     fun `Success wraps data correctly`() {
@@ -40,7 +40,7 @@ class AppResultTest {
         assertThat(result.getOrThrow()).isEqualTo("ok")
     }
 
-    // ==================== Error ====================
+
 
     @Test
     fun `Error wraps message and cause`() {
@@ -70,7 +70,7 @@ class AppResultTest {
         result.getOrThrow()
     }
 
-    // ==================== map / onSuccess / onError ====================
+
 
     @Test
     fun `map transforms success data`() {
@@ -115,7 +115,7 @@ class AppResultTest {
         assertThat(invoked).isFalse()
     }
 
-    // ==================== runCatching ====================
+
 
     @Test
     fun `runCatching returns Success on normal execution`() {
@@ -135,7 +135,7 @@ class AppResultTest {
         assertThat(error.errorCode).isEqualTo(ErrorCode.IO_ERROR)
     }
 
-    // ==================== suspendRunCatching ====================
+
 
     @Test
     fun `suspendRunCatching returns Success`() = runTest {
@@ -152,7 +152,7 @@ class AppResultTest {
         assertThat((result as AppResult.Error).errorCode).isEqualTo(ErrorCode.NETWORK_ERROR)
     }
 
-    // ==================== ErrorCode mapping ====================
+
 
     @Test
     fun `ErrorCode maps SocketTimeoutException to NETWORK_TIMEOUT`() {
@@ -189,7 +189,7 @@ class AppResultTest {
         assertThat(ErrorCode.fromException(NullPointerException())).isEqualTo(ErrorCode.UNKNOWN)
     }
 
-    // ==================== Chaining ====================
+
 
     @Test
     fun `chaining onSuccess and onError works`() {

@@ -2,16 +2,16 @@ package com.webtoapp.core.extension
 
 import com.webtoapp.core.i18n.Strings
 
-/**
- * 内置扩展模块
- * 
- * 所有模块都使用统一面板系统，UI 整齐美观不重叠
- */
+
+
+
+
+
 object BuiltInModules {
-    
-    /**
-     * 获取所有内置模块
-     */
+
+
+
+
     fun getAll(): List<ExtensionModule> = listOf(
         videoDownloader(),
         bilibiliVideoExtractor(),
@@ -19,14 +19,15 @@ object BuiltInModules {
         xiaohongshuExtractor(),
         videoEnhancer(),
         webAnalyzer(),
+        findInPage(),
         advancedDarkMode(),
         privacyProtection(),
         contentEnhancer(),
         elementBlocker()
     )
-    
-    // ==================== 通用视频下载器 ====================
-    
+
+
+
     private fun videoDownloader() = ExtensionModule(
         id = "builtin-video-downloader",
         name = Strings.builtinVideoDownloader,
@@ -44,8 +45,8 @@ object BuiltInModules {
         runMode = ModuleRunMode.INTERACTIVE,
     )
 
-    // ==================== B站视频提取 ====================
-    
+
+
     private fun bilibiliVideoExtractor() = ExtensionModule(
         id = "builtin-bilibili-extractor",
         name = Strings.builtinBilibiliExtractor,
@@ -63,9 +64,9 @@ object BuiltInModules {
         code = BILIBILI_EXTRACTOR_CODE,
         runMode = ModuleRunMode.INTERACTIVE,
     )
-    
-    // ==================== 抖音视频提取 ====================
-    
+
+
+
     private fun douyinVideoExtractor() = ExtensionModule(
         id = "builtin-douyin-extractor",
         name = Strings.builtinDouyinExtractor,
@@ -83,9 +84,9 @@ object BuiltInModules {
         code = DOUYIN_EXTRACTOR_CODE,
         runMode = ModuleRunMode.INTERACTIVE,
     )
-    
-    // ==================== 小红书提取 ====================
-    
+
+
+
     private fun xiaohongshuExtractor() = ExtensionModule(
         id = "builtin-xiaohongshu-extractor",
         name = Strings.builtinXiaohongshuExtractor,
@@ -104,8 +105,8 @@ object BuiltInModules {
         runMode = ModuleRunMode.INTERACTIVE,
     )
 
-    // ==================== 视频增强 ====================
-    
+
+
     private fun videoEnhancer() = ExtensionModule(
         id = "builtin-video-enhancer",
         name = Strings.builtinVideoEnhancer,
@@ -122,9 +123,9 @@ object BuiltInModules {
         code = VIDEO_ENHANCER_CODE,
         runMode = ModuleRunMode.INTERACTIVE,
     )
-    
-    // ==================== 网页分析 ====================
-    
+
+
+
     private fun webAnalyzer() = ExtensionModule(
         id = "builtin-web-analyzer",
         name = Strings.builtinWebAnalyzer,
@@ -141,9 +142,27 @@ object BuiltInModules {
         code = WEB_ANALYZER_CODE,
         runMode = ModuleRunMode.INTERACTIVE,
     )
-    
-    // ==================== 深色模式 ====================
-    
+
+
+    private fun findInPage() = ExtensionModule(
+        id = "builtin-find-in-page",
+        name = Strings.builtinFindInPage,
+        description = Strings.builtinFindInPageDesc,
+        icon = "search",
+        category = ModuleCategory.NAVIGATION,
+        tags = listOf(Strings.tagSearch, Strings.tagKeyword, Strings.tagReading),
+        version = ModuleVersion(1, "1.0.0", Strings.versionV4Ui),
+        author = ModuleAuthor("WebToApp"),
+        builtIn = true,
+        enabled = false,
+        runAt = ModuleRunTime.DOCUMENT_IDLE,
+        permissions = listOf(ModulePermission.DOM_ACCESS, ModulePermission.NAVIGATION),
+        code = FIND_IN_PAGE_CODE,
+        runMode = ModuleRunMode.INTERACTIVE,
+    )
+
+
+
     private fun advancedDarkMode() = ExtensionModule(
         id = "builtin-dark-mode",
         name = Strings.builtinDarkMode,
@@ -161,8 +180,8 @@ object BuiltInModules {
         runMode = ModuleRunMode.INTERACTIVE,
     )
 
-    // ==================== 隐私保护 ====================
-    
+
+
     private fun privacyProtection() = ExtensionModule(
         id = "builtin-privacy-protection",
         name = Strings.builtinPrivacyProtection,
@@ -179,9 +198,9 @@ object BuiltInModules {
         code = PRIVACY_PROTECTION_CODE,
         runMode = ModuleRunMode.INTERACTIVE,
     )
-    
-    // ==================== 元素屏蔽器 ====================
-    
+
+
+
     private fun elementBlocker() = ExtensionModule(
         id = "builtin-element-blocker",
         name = Strings.builtinElementBlocker,
@@ -198,9 +217,9 @@ object BuiltInModules {
         code = ELEMENT_BLOCKER_CODE,
         runMode = ModuleRunMode.INTERACTIVE,
     )
-    
-    // ==================== 内容增强 ====================
-    
+
+
+
     private fun contentEnhancer() = ExtensionModule(
         id = "builtin-content-enhancer",
         name = Strings.builtinContentEnhancer,
@@ -219,14 +238,14 @@ object BuiltInModules {
     )
 
 
-    // ==================== 模块代码定义 ====================
-    
+
+
     private const val VIDEO_DOWNLOADER_CODE = """
 (function() {
     'use strict';
-    
+
     // 多语言支持
-    const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' : 
+    const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' :
                  (navigator.language || 'zh').toLowerCase().startsWith('zh') ? 'zh' : 'en';
     const I18N = {
         zh: { name: '视频下载', noVideo: '未检测到视频', detected: '检测到 {0} 个视频', video: '视频', blob: 'Blob流', download: '下载', blobNotSupported: 'Blob流暂不支持直接下载', downloading: '开始下载...' },
@@ -234,10 +253,10 @@ object BuiltInModules {
         ar: { name: 'تحميل الفيديو', noVideo: 'لم يتم الكشف عن فيديو', detected: 'تم الكشف عن {0} فيديو', video: 'فيديو', blob: 'Blob', download: 'تحميل', blobNotSupported: 'لا يدعم تحميل Blob مباشرة', downloading: 'جاري التحميل...' }
     };
     const T = I18N[LANG] || I18N.en;
-    
+
     const MODULE = { id: (typeof __MODULE_INFO__ !== 'undefined' ? __MODULE_INFO__.id : 'video-downloader'), name: T.name, icon: '⬇️', color: '#667eea' };
     let videos = [];
-    
+
     function detectVideos() {
         videos = [];
         document.querySelectorAll('video').forEach((v, i) => {
@@ -246,11 +265,11 @@ object BuiltInModules {
         });
         return videos;
     }
-    
+
     function getPanelHtml() {
         detectVideos();
         if (!videos.length) return '<div style="text-align:center;padding:40px;color:#9ca3af"><div style="font-size:48px;margin-bottom:16px">🎬</div><div>' + T.noVideo + '</div></div>';
-        
+
         return '<div style="color:#6b7280;font-size:13px;margin-bottom:16px">' + T.detected.replace('{0}', videos.length) + '</div>' +
             videos.map((v, i) => '<div style="background:#f9fafb;border-radius:12px;padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:12px">' +
                 '<div style="width:48px;height:48px;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:12px;display:flex;align-items:center;justify-content:center;color:white;font-size:20px">🎬</div>' +
@@ -258,7 +277,7 @@ object BuiltInModules {
                 '<button onclick="__wtaDownloadVideo(' + i + ')" style="background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;padding:10px 20px;border-radius:8px;font-size:14px;cursor:pointer">' + T.download + '</button></div>'
             ).join('');
     }
-    
+
     window.__wtaDownloadVideo = function(i) {
         const v = videos[i];
         if (!v) return;
@@ -269,12 +288,12 @@ object BuiltInModules {
             __WTA_MODULE_UI__.closePanel();
         }
     };
-    
+
     function register() {
         if (typeof __WTA_MODULE_UI__ === 'undefined') { setTimeout(register, 100); return; }
         __WTA_MODULE_UI__.register({ ...MODULE, uiConfig: (typeof __MODULE_UI_CONFIG__ !== 'undefined' ? __MODULE_UI_CONFIG__ : undefined), runMode: (typeof __MODULE_RUN_MODE__ !== 'undefined' ? __MODULE_RUN_MODE__ : 'INTERACTIVE'), onAction: c => c.innerHTML = getPanelHtml() });
     }
-    
+
     document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', register) : register();
 })();
 """
@@ -284,9 +303,9 @@ object BuiltInModules {
 (function() {
     'use strict';
     if (!location.hostname.includes('bilibili.com')) return;
-    
+
     // 多语言支持
-    const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' : 
+    const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' :
                  (navigator.language || 'zh').toLowerCase().startsWith('zh') ? 'zh' : 'en';
     const I18N = {
         zh: { name: 'B站视频', unknown: '未知视频', noInfo: '未找到视频信息', waitLoad: '请等待视频加载', quality: '画质', dlVideo: '下载视频流', dlAudio: '下载音频流', tip: '提示：B站视频和音频分离，需用工具合并', downloading: '开始下载', video: '视频', audio: '音频', copied: '链接已复制' },
@@ -294,10 +313,10 @@ object BuiltInModules {
         ar: { name: 'فيديو بيليبيلي', unknown: 'فيديو غير معروف', noInfo: 'لم يتم العثور على معلومات', waitLoad: 'يرجى انتظار تحميل الفيديو', quality: 'الجودة', dlVideo: 'تحميل الفيديو', dlAudio: 'تحميل الصوت', tip: 'تلميح: بيليبيلي يفصل الفيديو والصوت، تحتاج أداة للدمج', downloading: 'جاري التحميل', video: 'فيديو', audio: 'صوت', copied: 'تم نسخ الرابط' }
     };
     const T = I18N[LANG] || I18N.en;
-    
+
     const MODULE = { id: (typeof __MODULE_INFO__ !== 'undefined' ? __MODULE_INFO__.id : 'bilibili'), name: T.name, icon: '📺', color: '#fb7299' };
     const QN = { 127:'8K', 120:'4K', 116:'1080P60', 80:'1080P', 64:'720P', 32:'480P' };
-    
+
     function getInfo() {
         const p = window.__playinfo__;
         if (!p?.data) return null;
@@ -308,19 +327,19 @@ object BuiltInModules {
         } else if (d.durl?.length) { r.video = d.durl[0].url; r.quality = QN[d.quality] || d.quality+'P'; }
         return r;
     }
-    
+
     function getPanelHtml() {
         const info = getInfo();
         const title = document.querySelector('h1.video-title, .video-title')?.textContent || T.unknown;
         if (!info?.video && !info?.audio) return '<div style="text-align:center;padding:40px;color:#9ca3af"><div style="font-size:48px;margin-bottom:16px">📺</div><div>' + T.noInfo + '</div><div style="font-size:12px;margin-top:8px">' + T.waitLoad + '</div></div>';
-        
+
         let html = '<div style="margin-bottom:20px"><div style="font-size:15px;font-weight:600;color:#1f2937;margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + title + '</div><div style="font-size:13px;color:#fb7299">' + T.quality + ': ' + info.quality + '</div></div>';
         if (info.video) html += '<button onclick="__wtaBiliDL(\'video\')" style="width:100%;background:linear-gradient(135deg,#fb7299,#fc9db8);color:white;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px"><span>⬇️</span> ' + T.dlVideo + '</button>';
         if (info.audio) html += '<button onclick="__wtaBiliDL(\'audio\')" style="width:100%;background:linear-gradient(135deg,#23ade5,#5bc0de);color:white;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><span>🎵</span> ' + T.dlAudio + '</button>';
         html += '<div style="margin-top:16px;padding:12px;background:#fef3f6;border-radius:8px;font-size:12px;color:#9ca3af">' + T.tip + '</div>';
         return html;
     }
-    
+
     window.__wtaBiliDL = function(type) {
         const info = getInfo();
         const url = type === 'video' ? info?.video : info?.audio;
@@ -332,7 +351,7 @@ object BuiltInModules {
             __WTA_MODULE_UI__.closePanel();
         } else { navigator.clipboard?.writeText(url); __WTA_MODULE_UI__.toast(T.copied); }
     };
-    
+
     function register() {
         if (typeof __WTA_MODULE_UI__ === 'undefined') { setTimeout(register, 100); return; }
         __WTA_MODULE_UI__.register({ ...MODULE, uiConfig: (typeof __MODULE_UI_CONFIG__ !== 'undefined' ? __MODULE_UI_CONFIG__ : undefined), runMode: (typeof __MODULE_RUN_MODE__ !== 'undefined' ? __MODULE_RUN_MODE__ : 'INTERACTIVE'), onAction: c => c.innerHTML = getPanelHtml() });
@@ -346,9 +365,9 @@ object BuiltInModules {
 (function() {
     'use strict';
     if (!location.hostname.includes('douyin.com')) return;
-    
+
     // 多语言支持
-    const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' : 
+    const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' :
                  (navigator.language || 'zh').toLowerCase().startsWith('zh') ? 'zh' : 'en';
     const I18N = {
         zh: { name: '抖音视频', noVideo: '未找到视频', waitLoad: '请等待视频加载', default: '抖音视频', dlNoWm: '下载无水印视频', tip: '提示：下载的是无水印版本', downloading: '开始下载...', copied: '链接已复制' },
@@ -356,9 +375,9 @@ object BuiltInModules {
         ar: { name: 'فيديو دوين', noVideo: 'لم يتم العثور على فيديو', waitLoad: 'يرجى انتظار تحميل الفيديو', default: 'فيديو دوين', dlNoWm: 'تحميل بدون علامة مائية', tip: 'تلميح: تحميل بدون علامة مائية', downloading: 'جاري التحميل...', copied: 'تم نسخ الرابط' }
     };
     const T = I18N[LANG] || I18N.en;
-    
+
     const MODULE = { id: (typeof __MODULE_INFO__ !== 'undefined' ? __MODULE_INFO__.id : 'douyin'), name: T.name, icon: '🎵', color: '#fe2c55' };
-    
+
     function findVideoData(obj, depth = 0) {
         if (depth > 10 || !obj || typeof obj !== 'object') return null;
         if (obj.video?.play_addr) {
@@ -370,7 +389,7 @@ object BuiltInModules {
         for (const k of Object.keys(obj)) { const r = findVideoData(obj[k], depth + 1); if (r) return r; }
         return null;
     }
-    
+
     function getVideoData() {
         try {
             if (window._ROUTER_DATA) { const r = findVideoData(window._ROUTER_DATA); if (r) return r; }
@@ -378,17 +397,17 @@ object BuiltInModules {
         } catch (e) { /* video data extraction failed */ }
         return null;
     }
-    
+
     function getPanelHtml() {
         const data = getVideoData();
         if (!data?.url) return '<div style="text-align:center;padding:40px;color:#9ca3af"><div style="font-size:48px;margin-bottom:16px">🎵</div><div>' + T.noVideo + '</div><div style="font-size:12px;margin-top:8px">' + T.waitLoad + '</div></div>';
-        
+
         return '<div style="margin-bottom:20px"><div style="font-size:15px;font-weight:600;color:#1f2937;margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">' + (data.desc || T.default) + '</div>' +
             '<div style="font-size:13px;color:#9ca3af">@' + data.author + '</div></div>' +
             '<button onclick="__wtaDouyinDL()" style="width:100%;background:linear-gradient(135deg,#fe2c55,#ff6b81);color:white;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><span>⬇️</span> ' + T.dlNoWm + '</button>' +
             '<div style="margin-top:16px;padding:12px;background:#fff1f3;border-radius:8px;font-size:12px;color:#9ca3af">' + T.tip + '</div>';
     }
-    
+
     window.__wtaDouyinDL = function() {
         const data = getVideoData();
         if (!data?.url) return;
@@ -398,7 +417,7 @@ object BuiltInModules {
             __WTA_MODULE_UI__.closePanel();
         } else { navigator.clipboard?.writeText(data.url); __WTA_MODULE_UI__.toast(T.copied); }
     };
-    
+
     function register() {
         if (typeof __WTA_MODULE_UI__ === 'undefined') { setTimeout(register, 100); return; }
         __WTA_MODULE_UI__.register({ ...MODULE, uiConfig: (typeof __MODULE_UI_CONFIG__ !== 'undefined' ? __MODULE_UI_CONFIG__ : undefined), runMode: (typeof __MODULE_RUN_MODE__ !== 'undefined' ? __MODULE_RUN_MODE__ : 'INTERACTIVE'), onAction: c => c.innerHTML = getPanelHtml() });
@@ -412,9 +431,9 @@ object BuiltInModules {
 (function() {
     'use strict';
     if (!location.hostname.includes('xiaohongshu.com') && !location.hostname.includes('xhslink.com')) return;
-    
+
     // 多语言支持
-    const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' : 
+    const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' :
                  (navigator.language || 'zh').toLowerCase().startsWith('zh') ? 'zh' : 'en';
     const I18N = {
         zh: { name: '小红书', noMedia: '未检测到媒体', detected: '检测到 {0} 张图片，{1} 个视频', dlAllImg: '下载全部图片', dlAllVid: '下载全部视频', image: '图片', video: '视频', download: '下载', downloading: '开始下载...', dlBatch: '开始下载 {0} 个{1}...' },
@@ -422,10 +441,10 @@ object BuiltInModules {
         ar: { name: 'شياوهونغشو', noMedia: 'لم يتم الكشف عن وسائط', detected: '{0} صورة، {1} فيديو', dlAllImg: 'تحميل كل الصور', dlAllVid: 'تحميل كل الفيديوهات', image: 'صورة', video: 'فيديو', download: 'تحميل', downloading: 'جاري التحميل...', dlBatch: 'جاري تحميل {0} {1}...' }
     };
     const T = I18N[LANG] || I18N.en;
-    
+
     const MODULE = { id: (typeof __MODULE_INFO__ !== 'undefined' ? __MODULE_INFO__.id : 'xiaohongshu'), name: T.name, icon: '📕', color: '#ff2442' };
     let mediaList = [];
-    
+
     function detectMedia() {
         mediaList = [];
         document.querySelectorAll('img[src*="xhscdn"], img[src*="xiaohongshu"]').forEach((img, i) => {
@@ -439,23 +458,23 @@ object BuiltInModules {
         });
         return mediaList;
     }
-    
+
     function getPanelHtml() {
         detectMedia();
         if (!mediaList.length) return '<div style="text-align:center;padding:40px;color:#9ca3af"><div style="font-size:48px;margin-bottom:16px">📕</div><div>' + T.noMedia + '</div></div>';
-        
+
         const images = mediaList.filter(m => m.type === 'image');
         const videos = mediaList.filter(m => m.type === 'video');
-        
+
         let html = '<div style="color:#6b7280;font-size:13px;margin-bottom:16px">' + T.detected.replace('{0}', images.length).replace('{1}', videos.length) + '</div>';
-        
+
         if (images.length) {
             html += '<button onclick="__wtaXhsDLAll(\'image\')" style="width:100%;background:linear-gradient(135deg,#ff2442,#ff6b7a);color:white;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px"><span>🖼️</span> ' + T.dlAllImg + ' (' + images.length + ')</button>';
         }
         if (videos.length) {
             html += '<button onclick="__wtaXhsDLAll(\'video\')" style="width:100%;background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px"><span>🎬</span> ' + T.dlAllVid + ' (' + videos.length + ')</button>';
         }
-        
+
         html += '<div style="margin-top:8px;max-height:200px;overflow-y:auto">';
         mediaList.forEach((m, i) => {
             html += '<div style="display:flex;align-items:center;gap:12px;padding:12px;background:#f9fafb;border-radius:8px;margin-bottom:8px">' +
@@ -466,7 +485,7 @@ object BuiltInModules {
         html += '</div>';
         return html;
     }
-    
+
     window.__wtaXhsDL = function(i) {
         const m = mediaList[i];
         if (!m) return;
@@ -476,14 +495,14 @@ object BuiltInModules {
             __WTA_MODULE_UI__.toast(T.downloading);
         }
     };
-    
+
     window.__wtaXhsDLAll = function(type) {
         const items = mediaList.filter(m => m.type === type);
         items.forEach((m, i) => setTimeout(() => __wtaXhsDL(mediaList.indexOf(m)), i * 500));
         __WTA_MODULE_UI__.toast(T.dlBatch.replace('{0}', items.length).replace('{1}', type === 'image' ? T.image : T.video));
         __WTA_MODULE_UI__.closePanel();
     };
-    
+
     function register() {
         if (typeof __WTA_MODULE_UI__ === 'undefined') { setTimeout(register, 100); return; }
         __WTA_MODULE_UI__.register({ ...MODULE, uiConfig: (typeof __MODULE_UI_CONFIG__ !== 'undefined' ? __MODULE_UI_CONFIG__ : undefined), runMode: (typeof __MODULE_RUN_MODE__ !== 'undefined' ? __MODULE_RUN_MODE__ : 'INTERACTIVE'), onAction: c => c.innerHTML = getPanelHtml() });
@@ -496,9 +515,9 @@ object BuiltInModules {
     private const val VIDEO_ENHANCER_CODE = """
 (function() {
     'use strict';
-    
+
     // 多语言支持
-    const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' : 
+    const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' :
                  (navigator.language || 'zh').toLowerCase().startsWith('zh') ? 'zh' : 'en';
     const I18N = {
         zh: { name: '视频增强', noVideo: '未检测到视频', speed: '播放速度', speedSet: '播放速度: ', features: '功能', pip: '画中画', loop: '循环播放', back10: '后退10秒', fwd10: '前进10秒', pipOn: '已开启画中画', pipOff: '退出画中画', pipUnavail: '画中画不可用', loopOn: '已开启循环', loopOff: '已关闭循环', fwd: '前进', back: '后退', sec: '秒' },
@@ -506,32 +525,32 @@ object BuiltInModules {
         ar: { name: 'تحسين الفيديو', noVideo: 'لم يتم الكشف عن فيديو', speed: 'سرعة التشغيل', speedSet: 'السرعة: ', features: 'الميزات', pip: 'صورة داخل صورة', loop: 'تكرار', back10: 'رجوع 10ث', fwd10: 'تقديم 10ث', pipOn: 'تم تفعيل PiP', pipOff: 'تم إيقاف PiP', pipUnavail: 'PiP غير متاح', loopOn: 'تم تفعيل التكرار', loopOff: 'تم إيقاف التكرار', fwd: 'تقديم ', back: 'رجوع ', sec: 'ث' }
     };
     const T = I18N[LANG] || I18N.en;
-    
+
     const MODULE = { id: (typeof __MODULE_INFO__ !== 'undefined' ? __MODULE_INFO__.id : 'video-enhancer'), name: T.name, icon: '🎬', color: '#8b5cf6' };
     let currentSpeed = 1.0;
     const speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 3.0];
-    
+
     function getVideo() { return document.querySelector('video'); }
-    
+
     function setSpeed(speed) {
         const v = getVideo();
         if (v) { v.playbackRate = speed; currentSpeed = speed; __WTA_MODULE_UI__.toast(T.speedSet + speed + 'x'); }
     }
-    
+
     function togglePiP() {
         const v = getVideo();
         if (!v) return;
         if (document.pictureInPictureElement) { document.exitPictureInPicture(); __WTA_MODULE_UI__.toast(T.pipOff); }
         else { v.requestPictureInPicture().then(() => __WTA_MODULE_UI__.toast(T.pipOn)).catch(() => __WTA_MODULE_UI__.toast(T.pipUnavail)); }
     }
-    
+
     function getPanelHtml() {
         const v = getVideo();
         if (!v) return '<div style="text-align:center;padding:40px;color:#9ca3af"><div style="font-size:48px;margin-bottom:16px">🎬</div><div>' + T.noVideo + '</div></div>';
-        
+
         return '<div style="margin-bottom:20px"><div style="font-size:14px;color:#6b7280;margin-bottom:12px">' + T.speed + '</div>' +
             '<div style="display:flex;flex-wrap:wrap;gap:8px">' +
-            speeds.map(s => '<button onclick="__wtaSetSpeed(' + s + ')" style="flex:1;min-width:60px;padding:12px 8px;border-radius:8px;border:none;font-size:14px;cursor:pointer;' + 
+            speeds.map(s => '<button onclick="__wtaSetSpeed(' + s + ')" style="flex:1;min-width:60px;padding:12px 8px;border-radius:8px;border:none;font-size:14px;cursor:pointer;' +
                 (currentSpeed === s ? 'background:linear-gradient(135deg,#8b5cf6,#a78bfa);color:white' : 'background:#f3f4f6;color:#374151') + '">' + s + 'x</button>').join('') +
             '</div></div>' +
             '<div style="margin-bottom:16px"><div style="font-size:14px;color:#6b7280;margin-bottom:12px">' + T.features + '</div>' +
@@ -542,12 +561,12 @@ object BuiltInModules {
             '<button onclick="__wtaSkip(10)" style="padding:14px;border-radius:12px;border:none;background:#f3f4f6;font-size:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px"><span style="font-size:20px">⏩</span>' + T.fwd10 + '</button>' +
             '</div></div>';
     }
-    
+
     window.__wtaSetSpeed = function(s) { setSpeed(s); };
     window.__wtaTogglePiP = togglePiP;
     window.__wtaToggleLoop = function() { const v = getVideo(); if (v) { v.loop = !v.loop; __WTA_MODULE_UI__.toast(v.loop ? T.loopOn : T.loopOff); } };
     window.__wtaSkip = function(s) { const v = getVideo(); if (v) { v.currentTime += s; __WTA_MODULE_UI__.toast((s > 0 ? T.fwd : T.back) + Math.abs(s) + T.sec); } };
-    
+
     function register() {
         if (typeof __WTA_MODULE_UI__ === 'undefined') { setTimeout(register, 100); return; }
         __WTA_MODULE_UI__.register({ ...MODULE, uiConfig: (typeof __MODULE_UI_CONFIG__ !== 'undefined' ? __MODULE_UI_CONFIG__ : undefined), runMode: (typeof __MODULE_RUN_MODE__ !== 'undefined' ? __MODULE_RUN_MODE__ : 'INTERACTIVE'), onAction: c => c.innerHTML = getPanelHtml() });
@@ -560,9 +579,9 @@ object BuiltInModules {
     private const val WEB_ANALYZER_CODE = """
 (function() {
     'use strict';
-    
+
     // 多语言支持
-    const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' : 
+    const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' :
                  (navigator.language || 'zh').toLowerCase().startsWith('zh') ? 'zh' : 'en';
     const I18N = {
         zh: { name: '网页分析', pageInfo: '页面信息', title: '标题', domain: '域名', perf: '性能数据', loadTime: '加载时间(ms)', domReady: 'DOM就绪(ms)', stats: '元素统计', scripts: '脚本', styles: '样式', images: '图片', links: '链接', forms: '表单', iframes: '内嵌框架', videos: '视频' },
@@ -570,9 +589,9 @@ object BuiltInModules {
         ar: { name: 'محلل الويب', pageInfo: 'معلومات الصفحة', title: 'العنوان', domain: 'النطاق', perf: 'الأداء', loadTime: 'وقت التحميل(ms)', domReady: 'DOM جاهز(ms)', stats: 'إحصائيات العناصر', scripts: 'السكريبتات', styles: 'الأنماط', images: 'الصور', links: 'الروابط', forms: 'النماذج', iframes: 'الإطارات', videos: 'الفيديوهات' }
     };
     const T = I18N[LANG] || I18N.en;
-    
+
     const MODULE = { id: (typeof __MODULE_INFO__ !== 'undefined' ? __MODULE_INFO__.id : 'web-analyzer'), name: T.name, icon: '🔍', color: '#059669' };
-    
+
     function getPageInfo() {
         const scripts = document.querySelectorAll('script[src]').length;
         const styles = document.querySelectorAll('link[rel="stylesheet"]').length;
@@ -581,29 +600,29 @@ object BuiltInModules {
         const forms = document.querySelectorAll('form').length;
         const iframes = document.querySelectorAll('iframe').length;
         const videos = document.querySelectorAll('video').length;
-        
+
         return { scripts, styles, images, links, forms, iframes, videos };
     }
-    
+
     function getPanelHtml() {
         const info = getPageInfo();
         const perf = performance.timing;
         const loadTime = perf.loadEventEnd - perf.navigationStart;
         const domReady = perf.domContentLoadedEventEnd - perf.navigationStart;
-        
+
         return '<div style="margin-bottom:20px"><div style="font-size:14px;color:#6b7280;margin-bottom:12px">' + T.pageInfo + '</div>' +
             '<div style="background:#f9fafb;border-radius:12px;padding:16px">' +
             '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
             '<div><div style="font-size:12px;color:#9ca3af">' + T.title + '</div><div style="font-size:13px;color:#1f2937;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + document.title + '</div></div>' +
             '<div><div style="font-size:12px;color:#9ca3af">' + T.domain + '</div><div style="font-size:13px;color:#1f2937">' + location.hostname + '</div></div>' +
             '</div></div></div>' +
-            
+
             '<div style="margin-bottom:20px"><div style="font-size:14px;color:#6b7280;margin-bottom:12px">' + T.perf + '</div>' +
             '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
             '<div style="background:#ecfdf5;padding:12px;border-radius:8px;text-align:center"><div style="font-size:20px;font-weight:600;color:#059669">' + (loadTime > 0 ? loadTime : '-') + '</div><div style="font-size:11px;color:#6b7280">' + T.loadTime + '</div></div>' +
             '<div style="background:#eff6ff;padding:12px;border-radius:8px;text-align:center"><div style="font-size:20px;font-weight:600;color:#3b82f6">' + (domReady > 0 ? domReady : '-') + '</div><div style="font-size:11px;color:#6b7280">' + T.domReady + '</div></div>' +
             '</div></div>' +
-            
+
             '<div><div style="font-size:14px;color:#6b7280;margin-bottom:12px">' + T.stats + '</div>' +
             '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">' +
             [['📜', info.scripts, T.scripts], ['🎨', info.styles, T.styles], ['🖼️', info.images, T.images], ['🔗', info.links, T.links],
@@ -612,7 +631,7 @@ object BuiltInModules {
             ).join('') +
             '</div></div>';
     }
-    
+
     function register() {
         if (typeof __WTA_MODULE_UI__ === 'undefined') { setTimeout(register, 100); return; }
         __WTA_MODULE_UI__.register({ ...MODULE, uiConfig: (typeof __MODULE_UI_CONFIG__ !== 'undefined' ? __MODULE_UI_CONFIG__ : undefined), runMode: (typeof __MODULE_RUN_MODE__ !== 'undefined' ? __MODULE_RUN_MODE__ : 'INTERACTIVE'), onAction: c => c.innerHTML = getPanelHtml() });
@@ -622,12 +641,171 @@ object BuiltInModules {
 """
 
 
+    private const val FIND_IN_PAGE_CODE = """
+(function() {
+    'use strict';
+
+    const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' :
+                 (navigator.language || 'zh').toLowerCase().startsWith('zh') ? 'zh' : 'en';
+    const I18N = {
+        zh: { name: '页内查找', placeholder: '在当前页面查找', prev: '上一个', next: '下一个', clear: '清除', noMatch: '未找到匹配项', nativeUnavailable: '当前内核不支持原生页内查找', enterKeyword: '请输入关键词', searching: '正在查找...', tip: '使用 WebView 原生查找，高亮结果并自动定位', matchCount: '{0} / {1}' },
+        en: { name: 'Find in page', placeholder: 'Find in current page', prev: 'Previous', next: 'Next', clear: 'Clear', noMatch: 'No matches found', nativeUnavailable: 'Native find is unavailable in this engine', enterKeyword: 'Enter a keyword', searching: 'Searching...', tip: 'Uses native WebView search to highlight and jump between matches', matchCount: '{0} / {1}' },
+        ar: { name: 'بحث في الصفحة', placeholder: 'ابحث في الصفحة الحالية', prev: 'السابق', next: 'التالي', clear: 'مسح', noMatch: 'لا توجد نتائج', nativeUnavailable: 'البحث الأصلي غير متاح في هذا المحرك', enterKeyword: 'أدخل كلمة البحث', searching: 'جاري البحث...', tip: 'يستخدم بحث WebView الأصلي لتمييز النتائج والتنقل بينها', matchCount: '{0} / {1}' }
+    };
+    const T = I18N[LANG] || I18N.en;
+    const MODULE = { id: (typeof __MODULE_INFO__ !== 'undefined' ? __MODULE_INFO__.id : 'find-in-page'), name: T.name, icon: '🔎', color: '#2563eb' };
+
+    let currentQuery = '';
+    let currentState = { supported: false, activeMatchOrdinal: -1, numberOfMatches: 0, doneCounting: true, displayIndex: 0 };
+
+    function esc(value) {
+        return String(value || '').replace(/[&<>"']/g, function(ch) {
+            return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
+        });
+    }
+
+    function parseState(raw) {
+        if (!raw) return currentState;
+        if (typeof raw === 'object') return raw;
+        try { return JSON.parse(raw); } catch(e) { return currentState; }
+    }
+
+    function setState(nextState) {
+        currentState = Object.assign({}, currentState, parseState(nextState));
+        refreshPanel();
+    }
+
+    function callNative(name) {
+        if (typeof NativeBridge === 'undefined' || typeof NativeBridge[name] !== 'function') return null;
+        try {
+            if (name === 'findInPage') return NativeBridge.findInPage(currentQuery);
+            if (name === 'findNextInPage') return NativeBridge.findNextInPage(arguments[1] !== false);
+            if (name === 'clearFindInPage') return NativeBridge.clearFindInPage();
+        } catch(e) {
+            console.warn('[Find in page] Native call failed:', e);
+        }
+        return null;
+    }
+
+    function fallbackFind(forward) {
+        if (!currentQuery) return false;
+        try {
+            if (typeof window.find === 'function') {
+                return window.find(currentQuery, false, forward === false, true, false, false, false);
+            }
+        } catch(e) {
+            console.warn('[Find in page] window.find fallback failed:', e);
+        }
+        return false;
+    }
+
+    function doSearch() {
+        currentQuery = (document.getElementById('wta-find-query')?.value || '').trim();
+        if (!currentQuery) {
+            __WTA_MODULE_UI__.toast(T.enterKeyword);
+            return;
+        }
+
+        const nativeState = callNative('findInPage');
+        if (nativeState) {
+            setState(nativeState);
+            setTimeout(function() {
+                if (currentState.doneCounting && currentState.numberOfMatches === 0) {
+                    __WTA_MODULE_UI__.toast(T.noMatch);
+                }
+            }, 500);
+            return;
+        }
+
+        currentState = { supported: false, activeMatchOrdinal: -1, numberOfMatches: fallbackFind(true) ? 1 : 0, doneCounting: true, displayIndex: 0 };
+        __WTA_MODULE_UI__.toast(currentState.numberOfMatches ? T.nativeUnavailable : T.noMatch);
+        refreshPanel();
+    }
+
+    function go(forward) {
+        if (!currentQuery) {
+            doSearch();
+            return;
+        }
+        const nativeState = callNative('findNextInPage', forward);
+        if (nativeState) {
+            setState(nativeState);
+        } else {
+            fallbackFind(forward);
+        }
+    }
+
+    function clearSearch() {
+        currentQuery = '';
+        const input = document.getElementById('wta-find-query');
+        if (input) input.value = '';
+        const nativeState = callNative('clearFindInPage');
+        currentState = parseState(nativeState) || { supported: false, activeMatchOrdinal: -1, numberOfMatches: 0, doneCounting: true, displayIndex: 0 };
+        refreshPanel();
+    }
+
+    function statusText() {
+        if (!currentQuery) return T.tip;
+        if (!currentState.doneCounting) return T.searching;
+        if (!currentState.numberOfMatches) return T.noMatch;
+        return T.matchCount
+            .replace('{0}', currentState.displayIndex || Math.max(0, currentState.activeMatchOrdinal + 1))
+            .replace('{1}', currentState.numberOfMatches);
+    }
+
+    function getPanelHtml() {
+        const countColor = currentState.numberOfMatches ? '#2563eb' : '#9ca3af';
+        return '<div style="display:flex;flex-direction:column;gap:12px">' +
+            '<div style="display:flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:8px 10px">' +
+            '<span style="font-size:20px">🔎</span>' +
+            '<input id="wta-find-query" value="' + esc(currentQuery) + '" placeholder="' + esc(T.placeholder) + '" style="flex:1;min-width:0;border:none;outline:none;background:transparent;color:#111827;font-size:15px;line-height:24px" onkeydown="if(event.key===\'Enter\'){event.preventDefault();window.__wtaFindInPageSearch()}">' +
+            '<button onclick="window.__wtaFindInPageSearch()" style="width:36px;height:36px;border:none;border-radius:9px;background:#2563eb;color:white;font-size:16px;cursor:pointer">⌕</button>' +
+            '</div>' +
+            '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px">' +
+            '<div id="wta-find-status" style="font-size:13px;color:' + countColor + ';font-weight:600;min-height:20px">' + esc(statusText()) + '</div>' +
+            '<div style="display:flex;gap:6px">' +
+            '<button onclick="window.__wtaFindInPagePrev()" style="width:38px;height:34px;border:none;border-radius:9px;background:#eef2ff;color:#3730a3;font-size:18px;cursor:pointer" title="' + esc(T.prev) + '">↑</button>' +
+            '<button onclick="window.__wtaFindInPageNext()" style="width:38px;height:34px;border:none;border-radius:9px;background:#eef2ff;color:#3730a3;font-size:18px;cursor:pointer" title="' + esc(T.next) + '">↓</button>' +
+            '<button onclick="window.__wtaFindInPageClear()" style="height:34px;border:none;border-radius:9px;background:#f3f4f6;color:#4b5563;padding:0 12px;font-size:13px;cursor:pointer">' + esc(T.clear) + '</button>' +
+            '</div></div>' +
+            '</div>';
+    }
+
+    function refreshPanel() {
+        if (typeof __WTA_MODULE_UI__ !== 'undefined') {
+            __WTA_MODULE_UI__.updatePanel(MODULE.id, getPanelHtml());
+            setTimeout(function() {
+                const input = document.getElementById('wta-find-query');
+                if (input) {
+                    input.focus();
+                    input.setSelectionRange(input.value.length, input.value.length);
+                }
+            }, 50);
+        }
+    }
+
+    window.__wtaFindInPageNativeUpdate = setState;
+    window.__wtaFindInPageSearch = doSearch;
+    window.__wtaFindInPageNext = function() { go(true); };
+    window.__wtaFindInPagePrev = function() { go(false); };
+    window.__wtaFindInPageClear = clearSearch;
+
+    function register() {
+        if (typeof __WTA_MODULE_UI__ === 'undefined') { setTimeout(register, 100); return; }
+        __WTA_MODULE_UI__.register({ ...MODULE, uiConfig: (typeof __MODULE_UI_CONFIG__ !== 'undefined' ? __MODULE_UI_CONFIG__ : undefined), runMode: (typeof __MODULE_RUN_MODE__ !== 'undefined' ? __MODULE_RUN_MODE__ : 'INTERACTIVE'), onAction: c => { c.innerHTML = getPanelHtml(); setTimeout(function(){ const input = document.getElementById('wta-find-query'); if (input) input.focus(); }, 60); } });
+    }
+
+    document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', register) : register();
+})();
+"""
+
+
     private const val DARK_MODE_CODE = """
 (function() {
     'use strict';
-    
+
     // 多语言支持
-    const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' : 
+    const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' :
                  (navigator.language || 'zh').toLowerCase().startsWith('zh') ? 'zh' : 'en';
     const I18N = {
         zh: { name: '深色模式', enabled: '已开启深色模式', disabled: '已关闭深色模式', statusOn: '深色模式已开启', statusOff: '深色模式已关闭', desc: '智能反色，保护眼睛', turnOff: '关闭深色模式', turnOn: '开启深色模式' },
@@ -635,27 +813,27 @@ object BuiltInModules {
         ar: { name: 'الوضع الداكن', enabled: 'تم تفعيل الوضع الداكن', disabled: 'تم إيقاف الوضع الداكن', statusOn: 'الوضع الداكن مفعل', statusOff: 'الوضع الداكن موقف', desc: 'عكس ذكي، حماية العين', turnOff: 'إيقاف الوضع الداكن', turnOn: 'تفعيل الوضع الداكن' }
     };
     const T = I18N[LANG] || I18N.en;
-    
+
     const MODULE = { id: (typeof __MODULE_INFO__ !== 'undefined' ? __MODULE_INFO__.id : 'dark-mode'), name: T.name, icon: '🌙', color: '#6366f1' };
     const STORAGE_KEY = 'wta_dark_mode';
     let enabled = false;
     try { enabled = localStorage.getItem(STORAGE_KEY) === 'true'; } catch(e) { /* localStorage unavailable */ }
     let styleEl = null;
-    
+
     const darkCSS = 'html,html body{filter:invert(1) hue-rotate(180deg)!important;-webkit-filter:invert(1) hue-rotate(180deg)!important;background:#111!important}' +
         'img,video,picture,canvas,svg,iframe,[style*="background-image"],embed,object{filter:invert(1) hue-rotate(180deg)!important;-webkit-filter:invert(1) hue-rotate(180deg)!important}';
-    
+
     function toggle() {
         enabled = !enabled;
         try { localStorage.setItem(STORAGE_KEY, enabled); } catch(e) { /* localStorage unavailable */ }
         apply();
         if (typeof __WTA_MODULE_UI__ !== 'undefined') __WTA_MODULE_UI__.toast(enabled ? T.enabled : T.disabled);
     }
-    
+
     function getStyleParent() {
         return document.head || document.documentElement || document.querySelector('head');
     }
-    
+
     function apply() {
         if (enabled) {
             if (!styleEl || !styleEl.parentNode) {
@@ -671,7 +849,10 @@ object BuiltInModules {
                         var p = getStyleParent();
                         if (p) { p.appendChild(styleEl); styleEl.textContent = darkCSS; obs.disconnect(); }
                     });
-                    observer.observe(document.documentElement || document, { childList: true, subtree: true });
+                    var observerTarget = document.documentElement || document.body;
+                    if (observerTarget instanceof Node) {
+                        observer.observe(observerTarget, { childList: true, subtree: true });
+                    }
                     return;
                 }
             }
@@ -680,7 +861,7 @@ object BuiltInModules {
             styleEl.textContent = '';
         }
     }
-    
+
     function getPanelHtml() {
         return '<div style="text-align:center;padding:20px">' +
             '<div style="font-size:64px;margin-bottom:20px">' + (enabled ? '🌙' : '☀️') + '</div>' +
@@ -690,14 +871,14 @@ object BuiltInModules {
             (enabled ? 'background:#f3f4f6;color:#374151' : 'background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white') + '">' +
             (enabled ? '☀️ ' + T.turnOff : '🌙 ' + T.turnOn) + '</button></div>';
     }
-    
+
     window.__wtaToggleDark = function() { toggle(); if (typeof __WTA_MODULE_UI__ !== 'undefined') __WTA_MODULE_UI__.updatePanel(MODULE.id, getPanelHtml()); };
-    
+
     function register() {
         if (typeof __WTA_MODULE_UI__ === 'undefined') { setTimeout(register, 100); return; }
         __WTA_MODULE_UI__.register({ ...MODULE, uiConfig: (typeof __MODULE_UI_CONFIG__ !== 'undefined' ? __MODULE_UI_CONFIG__ : undefined), runMode: (typeof __MODULE_RUN_MODE__ !== 'undefined' ? __MODULE_RUN_MODE__ : 'INTERACTIVE'), onAction: c => c.innerHTML = getPanelHtml() });
     }
-    
+
     apply();
     // Re-apply when DOM is ready (in case early apply failed)
     if (document.readyState === 'loading') {
@@ -712,9 +893,9 @@ object BuiltInModules {
     private const val PRIVACY_PROTECTION_CODE = """
 (function() {
     'use strict';
-    
+
     // 多语言支持
-    const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' : 
+    const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' :
                  (navigator.language || 'zh').toLowerCase().startsWith('zh') ? 'zh' : 'en';
     const I18N = {
         zh: { name: '隐私保护', subtitle: '保护您的隐私安全', tracking: '阻止追踪', trackingDesc: '拦截常见追踪脚本', fingerprint: '指纹保护', fingerprintDesc: '模糊设备指纹信息', cookies: '清理Cookies', cookiesDesc: '退出时清理Cookies', enabled: '已开启', disabled: '已关闭' },
@@ -722,13 +903,13 @@ object BuiltInModules {
         ar: { name: 'حماية الخصوصية', subtitle: 'حماية خصوصيتك', tracking: 'حظر التتبع', trackingDesc: 'حظر سكريبتات التتبع', fingerprint: 'حماية البصمة', fingerprintDesc: 'تمويه بصمة الجهاز', cookies: 'مسح Cookies', cookiesDesc: 'مسح Cookies عند الخروج', enabled: 'مفعل', disabled: 'موقف' }
     };
     const T = I18N[LANG] || I18N.en;
-    
+
     const MODULE = { id: (typeof __MODULE_INFO__ !== 'undefined' ? __MODULE_INFO__.id : 'privacy'), name: T.name, icon: '🛡️', color: '#dc2626' };
     const STORAGE_KEY = 'wta_privacy';
     let settings = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{"tracking":true,"fingerprint":true,"cookies":false}');
-    
+
     function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(settings)); }
-    
+
     function applyProtection() {
         if (settings.tracking) {
             const blocked = ['google-analytics.com', 'googletagmanager.com', 'facebook.net', 'doubleclick.net', 'hotjar.com'];
@@ -744,14 +925,14 @@ object BuiltInModules {
             Object.defineProperty(screen, 'colorDepth', { get: () => 24 });
         }
     }
-    
+
     function getPanelHtml() {
         const items = [
             { key: 'tracking', icon: '🚫', name: T.tracking, desc: T.trackingDesc },
             { key: 'fingerprint', icon: '🎭', name: T.fingerprint, desc: T.fingerprintDesc },
             { key: 'cookies', icon: '🍪', name: T.cookies, desc: T.cookiesDesc }
         ];
-        
+
         return '<div style="margin-bottom:16px;text-align:center"><div style="font-size:48px;margin-bottom:8px">🛡️</div><div style="font-size:13px;color:#9ca3af">' + T.subtitle + '</div></div>' +
             items.map(item => '<div style="display:flex;align-items:center;gap:12px;padding:16px;background:#f9fafb;border-radius:12px;margin-bottom:8px">' +
                 '<span style="font-size:24px">' + item.icon + '</span>' +
@@ -761,19 +942,19 @@ object BuiltInModules {
                 '<span style="position:absolute;height:24px;width:24px;left:' + (settings[item.key] ? '22px' : '2px') + ';bottom:2px;background:white;border-radius:50%;transition:.3s;box-shadow:0 1px 3px rgba(0,0,0,.2)"></span></label></div>'
             ).join('');
     }
-    
+
     window.__wtaPrivacyToggle = function(key) {
         settings[key] = !settings[key];
         save();
         __WTA_MODULE_UI__.toast(settings[key] ? T.enabled : T.disabled);
         if (typeof __WTA_MODULE_UI__ !== 'undefined') __WTA_MODULE_UI__.updatePanel(MODULE.id, getPanelHtml());
     };
-    
+
     function register() {
         if (typeof __WTA_MODULE_UI__ === 'undefined') { setTimeout(register, 100); return; }
         __WTA_MODULE_UI__.register({ ...MODULE, uiConfig: (typeof __MODULE_UI_CONFIG__ !== 'undefined' ? __MODULE_UI_CONFIG__ : undefined), runMode: (typeof __MODULE_RUN_MODE__ !== 'undefined' ? __MODULE_RUN_MODE__ : 'INTERACTIVE'), onAction: c => c.innerHTML = getPanelHtml() });
     }
-    
+
     applyProtection();
     document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', register) : register();
 })();
@@ -783,9 +964,9 @@ object BuiltInModules {
     private const val CONTENT_ENHANCER_CODE = """
 (function() {
     'use strict';
-    
+
     // 多语言支持
-    const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' : 
+    const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' :
                  (navigator.language || 'zh').toLowerCase().startsWith('zh') ? 'zh' : 'en';
     const I18N = {
         zh: { name: '内容增强', enableCopy: '解除复制限制', copyText: '复制页面文本', copyHtml: '复制页面HTML', toTop: '回到顶部', toBottom: '滚动到底部', copyEnabled: '已解除复制限制', textCopied: '页面文本已复制', htmlCopied: '页面HTML已复制', atTop: '已回到顶部', atBottom: '已到达底部' },
@@ -793,9 +974,9 @@ object BuiltInModules {
         ar: { name: 'تحسين المحتوى', enableCopy: 'تفعيل النسخ', copyText: 'نسخ نص الصفحة', copyHtml: 'نسخ HTML', toTop: 'إلى الأعلى', toBottom: 'إلى الأسفل', copyEnabled: 'تم إزالة قيود النسخ', textCopied: 'تم نسخ النص', htmlCopied: 'تم نسخ HTML', atTop: 'في الأعلى', atBottom: 'في الأسفل' }
     };
     const T = I18N[LANG] || I18N.en;
-    
+
     const MODULE = { id: (typeof __MODULE_INFO__ !== 'undefined' ? __MODULE_INFO__.id : 'content-enhancer'), name: T.name, icon: '✨', color: '#f59e0b' };
-    
+
     function enableCopy() {
         document.body.style.userSelect = 'auto';
         document.body.style.webkitUserSelect = 'auto';
@@ -807,20 +988,20 @@ object BuiltInModules {
         document.head.appendChild(style);
         __WTA_MODULE_UI__.toast(T.copyEnabled);
     }
-    
+
     function copyPageText() {
         const text = document.body.innerText;
         navigator.clipboard?.writeText(text).then(() => __WTA_MODULE_UI__.toast(T.textCopied));
     }
-    
+
     function copyPageHtml() {
         const html = document.documentElement.outerHTML;
         navigator.clipboard?.writeText(html).then(() => __WTA_MODULE_UI__.toast(T.htmlCopied));
     }
-    
+
     function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); __WTA_MODULE_UI__.toast(T.atTop); }
     function scrollToBottom() { window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); __WTA_MODULE_UI__.toast(T.atBottom); }
-    
+
     function getPanelHtml() {
         const tools = [
             { icon: '📋', name: T.enableCopy, fn: '__wtaEnableCopy()' },
@@ -829,20 +1010,20 @@ object BuiltInModules {
             { icon: '⬆️', name: T.toTop, fn: '__wtaScrollTop()' },
             { icon: '⬇️', name: T.toBottom, fn: '__wtaScrollBottom()' }
         ];
-        
+
         return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
             tools.map(t => '<button onclick="' + t.fn + '" style="padding:20px 12px;border-radius:12px;border:none;background:#f9fafb;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .2s">' +
                 '<span style="font-size:28px">' + t.icon + '</span>' +
                 '<span style="font-size:13px;color:#374151">' + t.name + '</span></button>'
             ).join('') + '</div>';
     }
-    
+
     window.__wtaEnableCopy = enableCopy;
     window.__wtaCopyText = copyPageText;
     window.__wtaCopyHtml = copyPageHtml;
     window.__wtaScrollTop = scrollToTop;
     window.__wtaScrollBottom = scrollToBottom;
-    
+
     function register() {
         if (typeof __WTA_MODULE_UI__ === 'undefined') { setTimeout(register, 100); return; }
         __WTA_MODULE_UI__.register({ ...MODULE, uiConfig: (typeof __MODULE_UI_CONFIG__ !== 'undefined' ? __MODULE_UI_CONFIG__ : undefined), runMode: (typeof __MODULE_RUN_MODE__ !== 'undefined' ? __MODULE_RUN_MODE__ : 'INTERACTIVE'), onAction: c => c.innerHTML = getPanelHtml() });
@@ -855,9 +1036,9 @@ object BuiltInModules {
     private const val ELEMENT_BLOCKER_CODE = """
 (function() {
     'use strict';
-    
+
     // 多语言支持
-    const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' : 
+    const LANG = (navigator.language || 'zh').toLowerCase().startsWith('ar') ? 'ar' :
                  (navigator.language || 'zh').toLowerCase().startsWith('zh') ? 'zh' : 'en';
     const I18N = {
         zh: {
@@ -904,14 +1085,14 @@ object BuiltInModules {
         }
     };
     const T = I18N[LANG] || I18N.en;
-    
+
     const MODULE = { id: (typeof __MODULE_INFO__ !== 'undefined' ? __MODULE_INFO__.id : 'element-blocker'), name: T.name, icon: '🚫', color: '#ef4444' };
     const STORAGE_KEY = 'wta_blocked_elements';
     let blockedSelectors = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     let selectMode = false;
     let hoveredElement = null;
     let highlightOverlay = null;
-    
+
     // Create高亮覆盖层
     function createOverlay() {
         if (highlightOverlay) return;
@@ -920,12 +1101,12 @@ object BuiltInModules {
         highlightOverlay.style.cssText = 'position:fixed;pointer-events:none;z-index:2147483646;border:2px solid #ef4444;background:rgba(239,68,68,0.15);transition:all 0.1s ease;display:none';
         document.body.appendChild(highlightOverlay);
     }
-    
+
     // Generate元素的唯一选择器
     function getSelector(el) {
         if (!el || el === document.body || el === document.documentElement) return null;
         if (el.id) return '#' + CSS.escape(el.id);
-        
+
         let path = [];
         while (el && el !== document.body && el !== document.documentElement) {
             let selector = el.tagName.toLowerCase();
@@ -947,7 +1128,7 @@ object BuiltInModules {
         }
         return path.join(' > ');
     }
-    
+
     // App屏蔽规则
     function applyBlockedRules() {
         let styleEl = document.getElementById('wta-blocked-styles');
@@ -962,13 +1143,13 @@ object BuiltInModules {
             styleEl.textContent = '';
         }
     }
-    
+
     // Save屏蔽规则
     function saveRules() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(blockedSelectors));
         applyBlockedRules();
     }
-    
+
     // 屏蔽元素
     function blockElement(selector) {
         if (!selector || blockedSelectors.includes(selector)) return;
@@ -976,7 +1157,7 @@ object BuiltInModules {
         saveRules();
         __WTA_MODULE_UI__.toast(T.blocked);
     }
-    
+
     // Cancel屏蔽
     function unblockElement(index) {
         blockedSelectors.splice(index, 1);
@@ -984,7 +1165,7 @@ object BuiltInModules {
         __WTA_MODULE_UI__.toast(T.unblocked);
         __WTA_MODULE_UI__.updatePanel(MODULE.id, getPanelHtml());
     }
-    
+
     // 鼠标移动事件
     function onMouseMove(e) {
         if (!selectMode) return;
@@ -1004,7 +1185,7 @@ object BuiltInModules {
             highlightOverlay.style.height = rect.height + 'px';
         }
     }
-    
+
     // 单击选择
     function onClick(e) {
         if (!selectMode || !hoveredElement) return;
@@ -1015,7 +1196,7 @@ object BuiltInModules {
             __WTA_MODULE_UI__.toast(T.selected + ': ' + hoveredElement.tagName.toLowerCase() + ' (' + T.dblClickToBlock + ')');
         }
     }
-    
+
     // 双击屏蔽
     function onDblClick(e) {
         if (!selectMode || !hoveredElement) return;
@@ -1027,7 +1208,7 @@ object BuiltInModules {
             exitSelectMode();
         }
     }
-    
+
     // 进入选择模式
     function enterSelectMode() {
         selectMode = true;
@@ -1038,7 +1219,7 @@ object BuiltInModules {
         document.body.style.cursor = 'crosshair';
         __WTA_MODULE_UI__.toast(T.selectMode);
         __WTA_MODULE_UI__.closePanel();
-        
+
         // ESC 退出
         document.addEventListener('keydown', function escHandler(e) {
             if (e.key === 'Escape') {
@@ -1047,7 +1228,7 @@ object BuiltInModules {
             }
         });
     }
-    
+
     // 退出选择模式
     function exitSelectMode() {
         selectMode = false;
@@ -1058,7 +1239,7 @@ object BuiltInModules {
         document.removeEventListener('dblclick', onDblClick, true);
         document.body.style.cursor = '';
     }
-    
+
     // 清除所有屏蔽
     function clearAll() {
         blockedSelectors = [];
@@ -1066,14 +1247,14 @@ object BuiltInModules {
         __WTA_MODULE_UI__.toast(T.clearedAll);
         __WTA_MODULE_UI__.updatePanel(MODULE.id, getPanelHtml());
     }
-    
+
     function getPanelHtml() {
         let html = '<div style="margin-bottom:20px">' +
             '<button onclick="__wtaEnterSelectMode()" style="width:100%;background:linear-gradient(135deg,#ef4444,#f87171);color:white;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">' +
             '<span>👆</span> ' + T.selectElement + '</button></div>';
-        
+
         html += '<div style="font-size:14px;color:#6b7280;margin-bottom:12px">' + T.blockedCount.replace('{0}', blockedSelectors.length) + '</div>';
-        
+
         if (blockedSelectors.length) {
             html += '<div style="max-height:200px;overflow-y:auto">';
             blockedSelectors.forEach((selector, i) => {
@@ -1086,19 +1267,19 @@ object BuiltInModules {
         } else {
             html += '<div style="text-align:center;padding:24px;color:#9ca3af"><div style="font-size:32px;margin-bottom:8px">🎯</div><div style="font-size:13px">' + T.clickToSelect + '</div></div>';
         }
-        
+
         return html;
     }
-    
+
     window.__wtaEnterSelectMode = enterSelectMode;
     window.__wtaUnblock = unblockElement;
     window.__wtaClearAllBlocks = clearAll;
-    
+
     function register() {
         if (typeof __WTA_MODULE_UI__ === 'undefined') { setTimeout(register, 100); return; }
         __WTA_MODULE_UI__.register({ ...MODULE, uiConfig: (typeof __MODULE_UI_CONFIG__ !== 'undefined' ? __MODULE_UI_CONFIG__ : undefined), runMode: (typeof __MODULE_RUN_MODE__ !== 'undefined' ? __MODULE_RUN_MODE__ : 'INTERACTIVE'), onAction: c => c.innerHTML = getPanelHtml() });
     }
-    
+
     applyBlockedRules();
     document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', register) : register();
 })();

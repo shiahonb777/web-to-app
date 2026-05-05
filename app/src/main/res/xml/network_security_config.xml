@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <!-- Allow cleartext (HTTP) traffic globally.
-         This app is a web-to-app converter that loads arbitrary user-configured URLs,
-         including HTTP-only sites (game servers, LAN services, legacy websites).
-         Security is enforced at the WebView layer:
-         - shouldOverrideUrlLoading auto-upgrades HTTP → HTTPS for remote sites
-         - Shields HTTPS-upgrade engine provides additional protection
-         - Users explicitly choose to use HTTP-only URLs when saving apps -->
-    <base-config cleartextTrafficPermitted="true" />
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </base-config>
 </network-security-config>

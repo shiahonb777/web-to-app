@@ -24,9 +24,9 @@ import com.webtoapp.core.i18n.LanguageManager
 import com.webtoapp.util.isRunningOnTv
 import kotlinx.coroutines.launch
 
-/**
- * 语言选择按钮（用于 TopAppBar）
- */
+
+
+
 @Composable
 fun LanguageSelectorButton(
     onLanguageChanged: () -> Unit = {}
@@ -34,11 +34,11 @@ fun LanguageSelectorButton(
     val context = LocalContext.current
     val languageManager = remember { LanguageManager.getInstance(context) }
     val scope = rememberCoroutineScope()
-    
+
     val currentLanguage by languageManager.currentLanguageFlow.collectAsState(initial = AppLanguage.CHINESE)
     var showDialog by remember { mutableStateOf(false) }
-    
-    // 语言选择按钮
+
+
     IconButton(
         onClick = { showDialog = true },
         modifier = Modifier.size(40.dp)
@@ -49,8 +49,8 @@ fun LanguageSelectorButton(
             modifier = Modifier.size(20.dp)
         )
     }
-    
-    // 语言选择对话框
+
+
     if (showDialog) {
         LanguageSelectionDialog(
             currentLanguage = currentLanguage,
@@ -66,9 +66,9 @@ fun LanguageSelectorButton(
     }
 }
 
-/**
- * 语言选择对话框
- */
+
+
+
 @Composable
 fun LanguageSelectionDialog(
     currentLanguage: AppLanguage,
@@ -112,9 +112,9 @@ fun LanguageSelectionDialog(
     )
 }
 
-/**
- * 单个语言选项
- */
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun LanguageOption(
@@ -160,7 +160,7 @@ private fun LanguageOption(
                     }
                 )
             }
-            
+
             if (isSelected) {
                 RadioButton(
                     selected = true,
@@ -174,9 +174,9 @@ private fun LanguageOption(
     }
 }
 
-/**
- * 首次启动语言选择屏幕
- */
+
+
+
 @Composable
 fun FirstLaunchLanguageScreen(
     onLanguageSelected: () -> Unit
@@ -184,19 +184,19 @@ fun FirstLaunchLanguageScreen(
     val context = LocalContext.current
     val languageManager = remember { LanguageManager.getInstance(context) }
     val scope = rememberCoroutineScope()
-    
+
     var selectedLanguage by remember { mutableStateOf<AppLanguage?>(null) }
     val scrollState = rememberScrollState()
     val isTv = isRunningOnTv()
     val confirmFocusRequester = remember { FocusRequester() }
-    
-    // TV 上减小 icon 和间距，避免内容超出屏幕
+
+
     val iconSize = if (isTv) 48.dp else 72.dp
     val topSpacing = if (isTv) 12.dp else 24.dp
     val sectionSpacing = if (isTv) 16.dp else 32.dp
     val cardSpacing = if (isTv) 8.dp else 12.dp
     val horizontalPadding = if (isTv) 48.dp else 24.dp
-    
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -214,43 +214,43 @@ fun FirstLaunchLanguageScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
-            // TV 模式下顶部留一些空间
+
             if (isTv) {
                 Spacer(modifier = Modifier.height(16.dp))
             } else {
                 Spacer(modifier = Modifier.height(8.dp))
             }
-            
-            // Icon
+
+
             Icon(
                 imageVector = Icons.Outlined.Language,
                 contentDescription = null,
                 modifier = Modifier.size(iconSize),
                 tint = MaterialTheme.colorScheme.primary
             )
-            
+
             Spacer(modifier = Modifier.height(topSpacing))
-            
-            // 多语言欢迎文字
+
+
             Text(
                 text = "Welcome / 欢迎 / مرحبا",
                 style = if (isTv) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Text(
                 text = "Select Language / 选择语言 / اختر اللغة",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
-            
+
             Spacer(modifier = Modifier.height(sectionSpacing))
-            
-            // 语言选项 - TV 模式下限制宽度让卡片不会过宽
+
+
             Column(
                 modifier = Modifier
                     .then(if (isTv) Modifier.widthIn(max = 500.dp) else Modifier.fillMaxWidth()),
@@ -265,10 +265,10 @@ fun FirstLaunchLanguageScreen(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(sectionSpacing))
-            
-            // Confirm按钮
+
+
             PremiumButton(
                 onClick = {
                     selectedLanguage?.let { lang ->
@@ -295,16 +295,16 @@ fun FirstLaunchLanguageScreen(
                     style = MaterialTheme.typography.titleMedium
                 )
             }
-            
-            // 底部留白确保按钮不会被截断
+
+
             Spacer(modifier = Modifier.height(40.dp))
         }
     }
 }
 
-/**
- * 首次启动语言选项卡片
- */
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FirstLaunchLanguageOption(
@@ -359,7 +359,7 @@ private fun FirstLaunchLanguageOption(
                     }
                 )
             }
-            
+
             RadioButton(
                 selected = isSelected,
                 onClick = null,
@@ -380,10 +380,10 @@ fun LanguageSettingsCard(
     val context = LocalContext.current
     val languageManager = remember { LanguageManager.getInstance(context) }
     val scope = rememberCoroutineScope()
-    
+
     val currentLanguage by languageManager.currentLanguageFlow.collectAsState(initial = AppLanguage.CHINESE)
     var expanded by remember { mutableStateOf(false) }
-    
+
     EnhancedElevatedCard(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -411,7 +411,7 @@ fun LanguageSettingsCard(
                     )
                 }
             }
-            
+
             ExposedDropdownMenuBox(
                 expanded = expanded,
                 onExpandedChange = { expanded = it }
@@ -425,7 +425,7 @@ fun LanguageSettingsCard(
                         .fillMaxWidth()
                         .menuAnchor()
                 )
-                
+
                 ExposedDropdownMenu(
                     expanded = expanded,
                     onDismissRequest = { expanded = false }

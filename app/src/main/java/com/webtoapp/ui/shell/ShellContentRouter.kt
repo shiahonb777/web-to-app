@@ -13,12 +13,12 @@ import com.webtoapp.core.webview.WebViewCallbacks
 import com.webtoapp.data.model.WebViewConfig
 import com.webtoapp.ui.components.EdgeSwipeRefreshLayout
 
-/**
- * 根据 appType 路由到不同的内容显示组件
- *
- * 支持的类型：IMAGE, VIDEO, GALLERY, WORDPRESS, NODEJS_APP, PHP_APP,
- * PYTHON_APP, GO_APP, HTML, FRONTEND, 以及默认的 WEB 模式
- */
+
+
+
+
+
+
 @Composable
 fun ShellContentRouter(
     appType: String,
@@ -27,7 +27,7 @@ fun ShellContentRouter(
     webViewCallbacks: WebViewCallbacks,
     webViewManager: com.webtoapp.core.webview.WebViewManager,
     deepLinkUrl: String?,
-    // 下拉刷新
+
     swipeRefreshEnabled: Boolean,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
@@ -37,14 +37,14 @@ fun ShellContentRouter(
 ) {
     when {
         appType == "IMAGE" || appType == "VIDEO" -> {
-            // 单媒体应用模式
+
             MediaContentDisplay(
                 isVideo = appType == "VIDEO",
                 mediaConfig = config.mediaConfig
             )
         }
         appType == "GALLERY" -> {
-            // Gallery 画廊应用模式
+
             AppLogger.d("ShellScreen", "进入 GALLERY 分支，显示 ShellGalleryPlayer")
             ShellGalleryPlayer(
                 galleryConfig = config.galleryConfig,
@@ -52,7 +52,7 @@ fun ShellContentRouter(
             )
         }
         appType == "WORDPRESS" -> {
-            // WordPress 应用模式 - 从 assets 提取到私有目录，启动 PHP 服务器
+
             WordPressShellMode(
                 config = config,
                 webViewConfig = webViewConfig,
@@ -67,7 +67,7 @@ fun ShellContentRouter(
         appType == "NODEJS_APP" -> {
             val nodejsMode = config.nodejsConfig.mode
             if (nodejsMode == "STATIC") {
-                // 静态模式：直接加载 assets 中的静态文件
+
                 ShellLocalFileWebView(
                     config = config,
                     webViewConfig = webViewConfig,
@@ -83,7 +83,7 @@ fun ShellContentRouter(
                     onWebViewRefUpdated = onWebViewRefUpdated
                 )
             } else {
-                // 后端/全栈模式：提取并启动 Node.js 服务器
+
                 NodeJsShellMode(
                     config = config,
                     webViewConfig = webViewConfig,
@@ -162,10 +162,10 @@ fun ShellContentRouter(
             )
         }
         else -> {
-            // WebView（网页应用）
+
             val resolvedUrl = normalizeShellTargetUrlForSecurity(deepLinkUrl ?: config.targetUrl)
             AppLogger.d("ShellScreen", "进入 WebView 分支 (else)，加载 URL: $resolvedUrl")
-            // 用于 setOnChildScrollUpCallback 的 WebView 引用
+
             var swipeChildWebView: WebView? = null
             AndroidView(
                 factory = { ctx ->
@@ -201,8 +201,8 @@ fun ShellContentRouter(
                                 browserDisguiseConfig = config.browserDisguiseConfig,
                                 deviceDisguiseConfig = config.deviceDisguiseConfig)
 
-                            // 添加长按监听器
-                            // 持续跟踪触摸位置，确保长按时使用最新坐标
+
+
                             var lastTouchX = 0f
                             var lastTouchY = 0f
                             setOnTouchListener { view, event ->
@@ -214,7 +214,7 @@ fun ShellContentRouter(
                                     }
                                     MotionEvent.ACTION_UP -> view.performClick()
                                 }
-                                false // 不消费事件，让 WebView 继续处理
+                                false
                             }
                             setOnLongClickListener {
                                 webViewCallbacks.onLongPress(this, lastTouchX, lastTouchY)
@@ -222,7 +222,7 @@ fun ShellContentRouter(
 
                             onWebViewCreated(this)
                             onWebViewRefUpdated(this)
-                            // restoreState 只恢复导航历史，不恢复页面渲染内容，必须 reload
+
                             if (tag == "state_restored") {
                                 reload()
                             } else {
@@ -248,10 +248,10 @@ fun ShellContentRouter(
     }
 }
 
-/**
- * 本地文件 WebView - 用于 HTML/前端应用和 Node.js 静态模式
- * 共享相同的文件访问权限配置和长按监听器逻辑
- */
+
+
+
+
 @Composable
 fun ShellLocalFileWebView(
     config: ShellConfig,
@@ -261,14 +261,14 @@ fun ShellLocalFileWebView(
     targetUrl: String,
     enableJavaScript: Boolean,
     enableLocalStorage: Boolean,
-    // 下拉刷新
+
     swipeRefreshEnabled: Boolean,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
     onWebViewCreated: (WebView) -> Unit,
     onWebViewRefUpdated: (WebView) -> Unit
 ) {
-    // 用于 setOnChildScrollUpCallback 的 WebView 引用
+
     var swipeChildWebView: WebView? = null
     AndroidView(
         factory = { ctx ->
@@ -294,7 +294,7 @@ fun ShellLocalFileWebView(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT
                     )
-                    // 先调用 configureWebView 进行基础配置
+
                     webViewManager.configureWebView(
                         this,
                         webViewConfig,
@@ -304,24 +304,24 @@ fun ShellLocalFileWebView(
                         config.extensionFabIcon, allowGlobalModuleFallback = false,
                         browserDisguiseConfig = config.browserDisguiseConfig,
                         deviceDisguiseConfig = config.deviceDisguiseConfig)
-                    // 然后覆盖本地文件特定的设置（必须在 configureWebView 之后）
-                    // 因为 configureWebView 会将 allowFileAccessFromFileURLs 设为 false
+
+
                     settings.apply {
                         javaScriptEnabled = enableJavaScript
                         domStorageEnabled = enableLocalStorage
                         allowFileAccess = true
                         allowContentAccess = true
-                        // Allow本地文件访问（HTML中的相对路径资源，如 JS/CSS 文件）
+
                         @Suppress("DEPRECATION")
                         allowFileAccessFromFileURLs = true
                         @Suppress("DEPRECATION")
                         allowUniversalAccessFromFileURLs = true
-                        // Allow混合内容（HTTPS 页面加载 HTTP 资源，以及 file:// Page访问网络）
+
                         mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                     }
 
-                    // 添加长按监听器
-                    // 持续跟踪触摸位置，确保长按时使用最新坐标
+
+
                     var lastTouchX = 0f
                     var lastTouchY = 0f
                     setOnTouchListener { view, event ->
@@ -341,7 +341,7 @@ fun ShellLocalFileWebView(
 
                     onWebViewCreated(this)
                     onWebViewRefUpdated(this)
-                    // restoreState 只恢复导航历史，不恢复页面渲染内容，必须 reload
+
                     if (tag == "state_restored") {
                         reload()
                     } else {

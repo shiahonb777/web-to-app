@@ -25,15 +25,15 @@ import com.webtoapp.core.disguise.WebGLRenderer
 import com.webtoapp.core.disguise.ScreenProfile
 import com.webtoapp.core.i18n.Strings
 
-/**
- * 浏览器伪装配置卡片 v2.0
- * 
- * 🕶️ Browser Disguise Engine UI
- * - 5 级预设选择器
- * - 22 向量覆盖率仪表盘
- * - 分层细粒度开关
- * - WebGL/Screen 配置选择器
- */
+
+
+
+
+
+
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BrowserDisguiseConfigCard(
@@ -42,13 +42,13 @@ fun BrowserDisguiseConfigCard(
 ) {
     var expanded by remember { mutableStateOf(config?.enabled == true) }
     var showAdvanced by remember { mutableStateOf(false) }
-    
-    // 使用配置或默认值
+
+
     val currentConfig = config ?: BrowserDisguiseConfig.DISABLED
     var enabled by remember(config) { mutableStateOf(currentConfig.enabled) }
     var preset by remember(config) { mutableStateOf(currentConfig.preset) }
-    
-    // 各向量开关
+
+
     var canvasNoise by remember(config) { mutableStateOf(currentConfig.canvasNoise) }
     var webglSpoof by remember(config) { mutableStateOf(currentConfig.webglSpoof) }
     var webglRenderer by remember(config) { mutableStateOf(currentConfig.webglRenderer) }
@@ -67,7 +67,7 @@ fun BrowserDisguiseConfigCard(
     var batteryShield by remember(config) { mutableStateOf(currentConfig.batteryShield) }
     var nativeToStringProtection by remember(config) { mutableStateOf(currentConfig.nativeToStringProtection) }
     var iframeDisguisePropagation by remember(config) { mutableStateOf(currentConfig.iframeDisguisePropagation) }
-    
+
     fun buildConfig(): BrowserDisguiseConfig? {
         if (!enabled) return null
         return BrowserDisguiseConfig(
@@ -100,11 +100,11 @@ fun BrowserDisguiseConfigCard(
             errorStackCleaning = true
         )
     }
-    
+
     fun updateConfig() {
         onConfigChange(buildConfig())
     }
-    
+
     fun applyPreset(p: BrowserDisguisePreset) {
         preset = p
         if (p == BrowserDisguisePreset.OFF) {
@@ -134,11 +134,11 @@ fun BrowserDisguiseConfigCard(
         iframeDisguisePropagation = c.iframeDisguisePropagation
         updateConfig()
     }
-    
-    // 覆盖率计算
+
+
     val coverage = BrowserDisguiseConfig.calculateCoverage(buildConfig() ?: BrowserDisguiseConfig.DISABLED)
     val level = BrowserDisguiseConfig.getDisguiseLevel(coverage)
-    
+
     val levelColor by animateColorAsState(
         targetValue = when {
             !enabled -> MaterialTheme.colorScheme.surfaceVariant
@@ -150,13 +150,13 @@ fun BrowserDisguiseConfigCard(
         },
         label = "levelColor"
     )
-    
+
     EnhancedElevatedCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // ===== 标题行 =====
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -214,10 +214,10 @@ fun BrowserDisguiseConfigCard(
                     contentDescription = null
                 )
             }
-            
+
             AnimatedVisibility(visible = expanded) {
                 Column(modifier = Modifier.padding(top = 16.dp)) {
-                    // ===== Enable 开关 =====
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -241,16 +241,16 @@ fun BrowserDisguiseConfigCard(
                             }
                         )
                     }
-                    
+
                     AnimatedVisibility(visible = enabled) {
                         Column {
                             Spacer(modifier = Modifier.height(16.dp))
                             HorizontalDivider()
                             Spacer(modifier = Modifier.height(16.dp))
-                            
-                            // ===== 预设选择器 =====
+
+
                             Text(Strings.browserDisguisePreset, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(bottom = 8.dp))
-                            
+
                             val presets = BrowserDisguisePreset.entries.filter { it != BrowserDisguisePreset.OFF }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -265,7 +265,7 @@ fun BrowserDisguiseConfigCard(
                                         4 -> Color(0xFFE91E63)
                                         else -> MaterialTheme.colorScheme.primary
                                     }
-                                    
+
                                     Surface(
                                         modifier = Modifier
                                             .weight(1f)
@@ -297,20 +297,20 @@ fun BrowserDisguiseConfigCard(
                                     }
                                 }
                             }
-                            
+
                             Spacer(modifier = Modifier.height(12.dp))
-                            
-                            // ===== 覆盖率仪表盘 =====
+
+
                             CoverageDashboard(
                                 coverage = coverage,
                                 level = level,
                                 levelColor = levelColor,
                                 activeVectors = countActiveVectors(buildConfig() ?: BrowserDisguiseConfig.DISABLED)
                             )
-                            
+
                             Spacer(modifier = Modifier.height(12.dp))
-                            
-                            // ===== 高级开关展开 =====
+
+
                             Surface(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -339,12 +339,12 @@ fun BrowserDisguiseConfigCard(
                                     )
                                 }
                             }
-                            
+
                             AnimatedVisibility(visible = showAdvanced) {
                                 Column(modifier = Modifier.padding(top = 8.dp)) {
-                                    // Level 2: 指纹向量
+
                                     SectionHeader(Strings.browserDisguiseL2Title)
-                                    
+
                                     VectorSwitch(Strings.browserDisguiseCanvasNoise, Strings.browserDisguiseCanvasNoiseDesc, canvasNoise) {
                                         canvasNoise = it; preset = BrowserDisguisePreset.CUSTOM; updateConfig()
                                     }
@@ -360,12 +360,12 @@ fun BrowserDisguiseConfigCard(
                                     VectorSwitch(Strings.browserDisguiseClientRects, Strings.browserDisguiseClientRectsDesc, clientRectsNoise) {
                                         clientRectsNoise = it; preset = BrowserDisguisePreset.CUSTOM; updateConfig()
                                     }
-                                    
+
                                     Spacer(modifier = Modifier.height(8.dp))
-                                    
-                                    // Level 3: 环境伪装
+
+
                                     SectionHeader(Strings.browserDisguiseL3Title)
-                                    
+
                                     VectorSwitch(Strings.browserDisguiseTimezone, Strings.browserDisguiseTimezoneDesc, timezoneSpoof) {
                                         timezoneSpoof = it; preset = BrowserDisguisePreset.CUSTOM; updateConfig()
                                     }
@@ -381,12 +381,12 @@ fun BrowserDisguiseConfigCard(
                                     VectorSwitch(Strings.browserDisguiseMemory, Strings.browserDisguiseMemoryDesc, deviceMemorySpoof) {
                                         deviceMemorySpoof = it; preset = BrowserDisguisePreset.CUSTOM; updateConfig()
                                     }
-                                    
+
                                     Spacer(modifier = Modifier.height(8.dp))
-                                    
-                                    // Level 4: 深度伪装
+
+
                                     SectionHeader(Strings.browserDisguiseL4Title)
-                                    
+
                                     VectorSwitch(Strings.browserDisguiseMediaDevices, Strings.browserDisguiseMediaDevicesDesc, mediaDevicesSpoof) {
                                         mediaDevicesSpoof = it; preset = BrowserDisguisePreset.CUSTOM; updateConfig()
                                     }
@@ -399,12 +399,12 @@ fun BrowserDisguiseConfigCard(
                                     VectorSwitch(Strings.browserDisguiseBattery, Strings.browserDisguiseBatteryDesc, batteryShield) {
                                         batteryShield = it; preset = BrowserDisguisePreset.CUSTOM; updateConfig()
                                     }
-                                    
+
                                     Spacer(modifier = Modifier.height(8.dp))
-                                    
-                                    // Level 5: 原型链保护
+
+
                                     SectionHeader(Strings.browserDisguiseL5Title)
-                                    
+
                                     VectorSwitch(Strings.browserDisguisePrototype, Strings.browserDisguisePrototypeDesc, nativeToStringProtection) {
                                         nativeToStringProtection = it; preset = BrowserDisguisePreset.CUSTOM; updateConfig()
                                     }
@@ -413,8 +413,8 @@ fun BrowserDisguiseConfigCard(
                                     }
                                 }
                             }
-                            
-                            // ===== 技术说明 =====
+
+
                             Spacer(modifier = Modifier.height(12.dp))
                             Surface(
                                 color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
@@ -521,10 +521,10 @@ private fun CoverageDashboard(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
-            // 覆盖率进度条
+
+
             LinearProgressIndicator(
                 progress = { coverage },
                 modifier = Modifier
@@ -534,9 +534,9 @@ private fun CoverageDashboard(
                 color = levelColor,
                 trackColor = levelColor.copy(alpha = 0.15f)
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween

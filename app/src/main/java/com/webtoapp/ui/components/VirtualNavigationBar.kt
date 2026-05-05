@@ -26,9 +26,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 
-/**
- * Virtual navigation bar配置
- */
+
+
+
 data class VirtualNavBarConfig(
     val showBackButton: Boolean = true,
     val showForwardButton: Boolean = true,
@@ -43,11 +43,11 @@ data class VirtualNavBarConfig(
     val bottomPadding: Int = 8
 )
 
-/**
- * Virtual navigation bar - 在强制运行模式下提供应用内导航
- * 
- * 包含：返回、前进、刷新、主页 按钮
- */
+
+
+
+
+
 @Composable
 fun VirtualNavigationBar(
     visible: Boolean,
@@ -88,7 +88,7 @@ fun VirtualNavigationBar(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // 返回按钮
+
                     if (config.showBackButton) {
                         NavButton(
                             icon = Icons.AutoMirrored.Filled.ArrowBack,
@@ -99,8 +99,8 @@ fun VirtualNavigationBar(
                             disabledIconColor = config.disabledIconColor
                         )
                     }
-                    
-                    // 前进按钮
+
+
                     if (config.showForwardButton) {
                         NavButton(
                             icon = Icons.AutoMirrored.Filled.ArrowForward,
@@ -111,8 +111,8 @@ fun VirtualNavigationBar(
                             disabledIconColor = config.disabledIconColor
                         )
                     }
-                    
-                    // Refresh按钮
+
+
                     if (config.showRefreshButton) {
                         NavButton(
                             icon = Icons.Filled.Refresh,
@@ -123,8 +123,8 @@ fun VirtualNavigationBar(
                             disabledIconColor = config.disabledIconColor
                         )
                     }
-                    
-                    // 主页按钮
+
+
                     if (config.showHomeButton) {
                         NavButton(
                             icon = Icons.Filled.Home,
@@ -164,9 +164,9 @@ private fun NavButton(
     }
 }
 
-/**
- * 悬浮式虚拟导航栏 - 可拖动位置
- */
+
+
+
 @Composable
 fun FloatingVirtualNavigationBar(
     visible: Boolean,
@@ -179,7 +179,7 @@ fun FloatingVirtualNavigationBar(
     config: VirtualNavBarConfig = VirtualNavBarConfig(),
     modifier: Modifier = Modifier
 ) {
-    // 简化版本：固定在底部
+
     VirtualNavigationBar(
         visible = visible,
         canGoBack = canGoBack,

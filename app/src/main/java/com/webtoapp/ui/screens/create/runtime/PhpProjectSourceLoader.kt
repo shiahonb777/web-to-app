@@ -3,6 +3,7 @@ package com.webtoapp.ui.screens.create.runtime
 import android.content.Context
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
+import com.webtoapp.core.i18n.Strings
 import com.webtoapp.ui.screens.create.common.ProjectImportException
 import com.webtoapp.ui.screens.create.common.unwrapSingleDirectoryRoot
 import kotlinx.coroutines.Dispatchers
@@ -14,13 +15,13 @@ class PhpProjectSourceLoader {
     suspend fun copyDocumentTreeToTempDir(context: Context, treeUri: Uri, tempDir: File): File =
         withContext(Dispatchers.IO) {
             val treeDoc = DocumentFile.fromTreeUri(context, treeUri)
-                ?: throw ProjectImportException("目录不存在")
+                ?: throw ProjectImportException(Strings.importDirNotFound)
             if (!treeDoc.exists()) {
-                throw ProjectImportException("目录不存在")
+                throw ProjectImportException(Strings.importDirNotFound)
             }
             copyDocumentTreeToLocal(context, treeDoc, tempDir)
             if (tempDir.listFiles().isNullOrEmpty()) {
-                throw ProjectImportException("目录不存在")
+                throw ProjectImportException(Strings.importDirNotFound)
             }
             tempDir
         }
@@ -44,11 +45,11 @@ class PhpProjectSourceLoader {
                         entry = zipStream.nextEntry
                     }
                 }
-            } ?: throw ProjectImportException("ZIP 解压失败")
+            } ?: throw ProjectImportException(Strings.importZipExtractFailed)
 
             val projectDir = unwrapSingleDirectoryRoot(tempDir)
             if (!projectDir.walkTopDown().maxDepth(3).any { it.extension == "php" }) {
-                throw ProjectImportException("ZIP 中未找到 PHP 文件")
+                throw ProjectImportException(Strings.importZipNoPhpFound)
             }
             projectDir
         }

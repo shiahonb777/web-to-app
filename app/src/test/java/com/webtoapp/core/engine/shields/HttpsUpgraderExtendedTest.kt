@@ -14,9 +14,9 @@ class HttpsUpgraderExtendedTest {
     @Rule @JvmField
     val koinRule = com.webtoapp.util.KoinCleanupRule()
 
-    // ═══════════════════════════════════════════
-    // tryHttpFallback
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `tryHttpFallback returns http URL for https URL`() {
@@ -54,9 +54,9 @@ class HttpsUpgraderExtendedTest {
         assertThat(b).isEqualTo("http://b.com/page")
     }
 
-    // ═══════════════════════════════════════════
-    // shouldSkip — .local / .localhost 域名
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `tryUpgrade skips dot-local domains`() {
@@ -72,9 +72,9 @@ class HttpsUpgraderExtendedTest {
         assertThat(upgrader.tryUpgrade("http://dev.localhost")).isNull()
     }
 
-    // ═══════════════════════════════════════════
-    // shouldSkip — 127.0.0.1 / 0.0.0.0 / ::1
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `tryUpgrade skips 127-0-0-1`() {
@@ -90,9 +90,9 @@ class HttpsUpgraderExtendedTest {
         assertThat(upgrader.tryUpgrade("http://0.0.0.0:3000")).isNull()
     }
 
-    // ═══════════════════════════════════════════
-    // shouldSkip — 172.16-31.x 内网 IP
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `tryUpgrade skips 172-16-x private IP`() {
@@ -110,16 +110,16 @@ class HttpsUpgraderExtendedTest {
 
     @Test
     fun `tryUpgrade skips all IP addresses including public ones`() {
-        // IP_REGEX matches any IPv4 address, so all IPs are skipped
+
         val upgrader = HttpsUpgrader()
 
         assertThat(upgrader.tryUpgrade("http://172.32.0.1")).isNull()
         assertThat(upgrader.tryUpgrade("http://8.8.8.8")).isNull()
     }
 
-    // ═══════════════════════════════════════════
-    // onSslError — null input
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `onSslError returns null for null input`() {
@@ -132,7 +132,7 @@ class HttpsUpgraderExtendedTest {
     fun `onSslError returns null for non-pending domain`() {
         val upgrader = HttpsUpgrader()
 
-        // No tryUpgrade was called, so nothing is pending
+
         assertThat(upgrader.onSslError("https://example.com")).isNull()
     }
 }

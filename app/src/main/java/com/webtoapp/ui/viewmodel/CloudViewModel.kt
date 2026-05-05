@@ -11,17 +11,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-/**
- * 云服务 ViewModel
- *
- * 管理激活码兑换、设备管理、公告、项目等 UI 状态
- */
+
+
+
+
+
 class CloudViewModel(
     private val cloudRepo: CloudRepository,
     private val installedTracker: InstalledItemsTracker
 ) : ViewModel() {
 
-    // ─── 激活码 ───
+
 
     private val _redeemState = MutableStateFlow<FormState>(FormState.Idle)
     val redeemState: StateFlow<FormState> = _redeemState.asStateFlow()
@@ -29,7 +29,7 @@ class CloudViewModel(
     private val _activationHistory = MutableStateFlow<List<ActivationRecord>>(emptyList())
     val activationHistory: StateFlow<List<ActivationRecord>> = _activationHistory.asStateFlow()
 
-    // ─── 设备 ───
+
 
     private val _devices = MutableStateFlow<List<DeviceInfo>>(emptyList())
     val devices: StateFlow<List<DeviceInfo>> = _devices.asStateFlow()
@@ -37,12 +37,12 @@ class CloudViewModel(
     private val _devicesLoading = MutableStateFlow(false)
     val devicesLoading: StateFlow<Boolean> = _devicesLoading.asStateFlow()
 
-    // ─── 公告 ───
+
 
     private val _announcements = MutableStateFlow<List<AnnouncementData>>(emptyList())
     val announcements: StateFlow<List<AnnouncementData>> = _announcements.asStateFlow()
 
-    // ─── 项目 ───
+
 
     private val _projects = MutableStateFlow<List<CloudProject>>(emptyList())
     val projects: StateFlow<List<CloudProject>> = _projects.asStateFlow()
@@ -50,7 +50,7 @@ class CloudViewModel(
     private val _projectsLoading = MutableStateFlow(false)
     val projectsLoading: StateFlow<Boolean> = _projectsLoading.asStateFlow()
 
-    // ─── 我的发布 ───
+
 
     private val _myPublishedModules = MutableStateFlow<List<StoreModuleInfo>>(emptyList())
     val myPublishedModules: StateFlow<List<StoreModuleInfo>> = _myPublishedModules.asStateFlow()
@@ -58,12 +58,12 @@ class CloudViewModel(
     private val _myPublishedLoading = MutableStateFlow(false)
     val myPublishedLoading: StateFlow<Boolean> = _myPublishedLoading.asStateFlow()
 
-    // ─── 分析 ───
+
 
     private val _analytics = MutableStateFlow<AnalyticsData?>(null)
     val analytics: StateFlow<AnalyticsData?> = _analytics.asStateFlow()
 
-    // ─── 版本 ───
+
 
     private val _versions = MutableStateFlow<List<ProjectVersion>>(emptyList())
     val versions: StateFlow<List<ProjectVersion>> = _versions.asStateFlow()
@@ -77,7 +77,7 @@ class CloudViewModel(
     private val _publishErrorReport = MutableStateFlow<PublishErrorReport?>(null)
     val publishErrorReport: StateFlow<PublishErrorReport?> = _publishErrorReport.asStateFlow()
 
-    // ─── 通用 ───
+
 
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message.asStateFlow()
@@ -85,9 +85,9 @@ class CloudViewModel(
     fun clearMessage() { _message.value = null }
     fun clearPublishErrorReport() { _publishErrorReport.value = null }
 
-    // ═══════════════════════════════════════════
-    // ACTIVATION CODE
-    // ═══════════════════════════════════════════
+
+
+
 
     fun redeemCode(code: String) {
         if (_redeemState.value is FormState.Loading) return
@@ -117,9 +117,9 @@ class CloudViewModel(
         }
     }
 
-    // ═══════════════════════════════════════════
-    // DEVICE MANAGEMENT
-    // ═══════════════════════════════════════════
+
+
+
 
     fun loadDevices() {
         _devicesLoading.value = true
@@ -137,29 +137,29 @@ class CloudViewModel(
             when (val result = cloudRepo.removeDevice(deviceId)) {
                 is AuthResult.Success -> {
                     _message.value = result.data
-                    loadDevices() // 刷新列表
+                    loadDevices()
                 }
                 is AuthResult.Error -> _message.value = result.message
             }
         }
     }
 
-    // ═══════════════════════════════════════════
-    // ANNOUNCEMENTS
-    // ═══════════════════════════════════════════
+
+
+
 
     fun loadAnnouncements(appVersion: String? = null) {
         viewModelScope.launch {
             when (val result = cloudRepo.getAnnouncements(appVersion)) {
                 is AuthResult.Success -> _announcements.value = result.data
-                is AuthResult.Error -> {} // 静默失败
+                is AuthResult.Error -> {}
             }
         }
     }
 
-    // ═══════════════════════════════════════════
-    // PROJECT MANAGEMENT
-    // ═══════════════════════════════════════════
+
+
+
 
     fun loadProjects() {
         _projectsLoading.value = true
@@ -177,7 +177,7 @@ class CloudViewModel(
         viewModelScope.launch {
             when (val result = cloudRepo.getMyPublishedModules()) {
                 is AuthResult.Success -> _myPublishedModules.value = result.data.first
-                is AuthResult.Error -> {} // silent fail
+                is AuthResult.Error -> {}
             }
             _myPublishedLoading.value = false
         }
@@ -208,7 +208,7 @@ class CloudViewModel(
         }
     }
 
-    /** Server-side upload (APK → our server → GitHub) */
+
     fun publishVersion(projectId: Int, apkFile: java.io.File, versionCode: Int,
                        versionName: String, title: String? = null,
                        changelog: String? = null, uploadTo: String = "github") {
@@ -240,12 +240,12 @@ class CloudViewModel(
         }
     }
 
-    /**
-     * Direct upload: APK goes from user's device → GitHub directly.
-     * Server only provides a temporary token (1h, scoped).
-     *
-     * Flow: requestToken → directUpload → confirmVersion
-     */
+
+
+
+
+
+
     fun publishVersionDirect(projectId: Int, apkFile: java.io.File, versionCode: Int,
                               versionName: String, title: String? = null,
                               changelog: String? = null, uploadTo: String = "github") {
@@ -270,7 +270,7 @@ class CloudViewModel(
                     return@launch
                 }
 
-                // Step 1: Get temporary upload token from our server
+
                 _message.value = Strings.gettingUploadToken
                 val tokenResult = cloudRepo.requestUploadToken(
                     projectId, versionCode, versionName, title, changelog, apkFile.name
@@ -293,7 +293,7 @@ class CloudViewModel(
                     is AuthResult.Success -> {
                         val uploadInfo = tokenResult.data
 
-                        // Step 2: Upload APK directly to GitHub
+
                         _message.value = Strings.directUploadingGithub
                         val uploadResult = cloudRepo.directUploadToGithub(
                             uploadInfo, apkFile
@@ -318,7 +318,7 @@ class CloudViewModel(
                             is AuthResult.Success -> {
                                 val downloadUrl = uploadResult.data
 
-                                // Step 3: Confirm to our server
+
                                 _message.value = Strings.confirmingVersion
                                 val confirmResult = cloudRepo.confirmDirectUpload(
                                     projectId, versionCode, versionName, title, changelog,
@@ -424,9 +424,9 @@ class CloudViewModel(
         }
     }
 
-    // ═══════════════════════════════════════════
-    // PROJECT ACTIVATION CODES
-    // ═══════════════════════════════════════════
+
+
+
 
     private val _projectCodes = MutableStateFlow<List<ProjectActivationCode>>(emptyList())
     val projectCodes: StateFlow<List<ProjectActivationCode>> = _projectCodes.asStateFlow()
@@ -445,16 +445,16 @@ class CloudViewModel(
             when (val result = cloudRepo.generateProjectCodes(projectId, count, maxUses, prefix)) {
                 is AuthResult.Success -> {
                     _message.value = Strings.activationCodesGenerated.format(result.data.size)
-                    loadProjectCodes(projectId) // 刷新列表
+                    loadProjectCodes(projectId)
                 }
                 is AuthResult.Error -> _message.value = result.message
             }
         }
     }
 
-    // ═══════════════════════════════════════════
-    // PROJECT ANNOUNCEMENTS
-    // ═══════════════════════════════════════════
+
+
+
 
     private val _projectAnnouncements = MutableStateFlow<List<ProjectAnnouncement>>(emptyList())
     val projectAnnouncements: StateFlow<List<ProjectAnnouncement>> = _projectAnnouncements.asStateFlow()
@@ -492,9 +492,9 @@ class CloudViewModel(
         }
     }
 
-    // ═══════════════════════════════════════════
-    // PROJECT REMOTE CONFIGS
-    // ═══════════════════════════════════════════
+
+
+
 
     private val _projectConfigs = MutableStateFlow<List<ProjectConfig>>(emptyList())
     val projectConfigs: StateFlow<List<ProjectConfig>> = _projectConfigs.asStateFlow()
@@ -532,9 +532,9 @@ class CloudViewModel(
         }
     }
 
-    // ═══════════════════════════════════════════
-    // WEBHOOKS
-    // ═══════════════════════════════════════════
+
+
+
 
     private val _webhooks = MutableStateFlow<List<ProjectWebhook>>(emptyList())
     val webhooks: StateFlow<List<ProjectWebhook>> = _webhooks.asStateFlow()
@@ -572,9 +572,9 @@ class CloudViewModel(
         }
     }
 
-    // ═══════════════════════════════════════════
-    // BACKUPS
-    // ═══════════════════════════════════════════
+
+
+
 
     private val _backups = MutableStateFlow<List<BackupRecord>>(emptyList())
     val backups: StateFlow<List<BackupRecord>> = _backups.asStateFlow()
@@ -606,9 +606,9 @@ class CloudViewModel(
         }
     }
 
-    // ═══════════════════════════════════════════
-    // MANIFEST SYNC
-    // ═══════════════════════════════════════════
+
+
+
 
     private val _manifestSyncState = MutableStateFlow(ManifestSyncState())
     val manifestSyncState: StateFlow<ManifestSyncState> = _manifestSyncState.asStateFlow()
@@ -616,7 +616,7 @@ class CloudViewModel(
     fun uploadManifest(projectId: Int, manifestJson: String, forceOverwrite: Boolean = false) {
         viewModelScope.launch {
             _manifestSyncState.value = _manifestSyncState.value.copy(syncing = true)
-            // forceOverwrite: 传 version=0 跳过服务端的乐观并发检查
+
             val currentVersion = if (forceOverwrite) 0 else _manifestSyncState.value.localVersion
             when (val result = cloudRepo.uploadManifest(projectId, manifestJson, currentVersion)) {
                 is AuthResult.Success -> {
@@ -675,14 +675,14 @@ class CloudViewModel(
                         hasCloudManifest = result.data.manifestJson != null
                     )
                 }
-                is AuthResult.Error -> { /* silent */ }
+                is AuthResult.Error -> {  }
             }
         }
     }
 
-    // ═══════════════════════════════════════════
-    // MODULE STORE
-    // ═══════════════════════════════════════════
+
+
+
 
     private val _storeModules = MutableStateFlow<List<StoreModuleInfo>>(emptyList())
     val storeModules: StateFlow<List<StoreModuleInfo>> = _storeModules.asStateFlow()
@@ -696,7 +696,7 @@ class CloudViewModel(
     private val _featuredModules = MutableStateFlow<List<StoreModuleInfo>>(emptyList())
     val featuredModules: StateFlow<List<StoreModuleInfo>> = _featuredModules.asStateFlow()
 
-    // 可更新的模块 ID 集合（本地版本 < 远程版本）
+
     private val _updatableModuleIds = MutableStateFlow<Set<Int>>(emptySet())
     val updatableModuleIds: StateFlow<Set<Int>> = _updatableModuleIds.asStateFlow()
 
@@ -724,7 +724,7 @@ class CloudViewModel(
         viewModelScope.launch {
             when (val result = cloudRepo.getFeaturedModules(page = 1, size = 10)) {
                 is AuthResult.Success -> _featuredModules.value = result.data
-                is AuthResult.Error -> {} // silent fail for featured
+                is AuthResult.Error -> {}
             }
         }
     }
@@ -775,9 +775,9 @@ class CloudViewModel(
         }
     }
 
-    // ═══════════════════════════════════════════
-    // REMOTE SCRIPTS
-    // ═══════════════════════════════════════════
+
+
+
 
     private val _remoteScripts = MutableStateFlow<List<RemoteScriptInfo>>(emptyList())
     val remoteScripts: StateFlow<List<RemoteScriptInfo>> = _remoteScripts.asStateFlow()
@@ -838,9 +838,9 @@ class CloudViewModel(
         }
     }
 
-    // ═══════════════════════════════════════════
-    // ACTIVATION CODE PREVIEW
-    // ═══════════════════════════════════════════
+
+
+
 
     private val _previewState = MutableStateFlow<FormState>(FormState.Idle)
     val previewState: StateFlow<FormState> = _previewState.asStateFlow()
@@ -869,9 +869,9 @@ class CloudViewModel(
         _redeemPreview.value = null
     }
 
-    // ═══════════════════════════════════════════
-    // PROJECT UPDATE
-    // ═══════════════════════════════════════════
+
+
+
 
     fun updateProject(projectId: Int, name: String? = null, description: String? = null,
                       githubRepo: String? = null, giteeRepo: String? = null) {
@@ -886,9 +886,9 @@ class CloudViewModel(
         }
     }
 
-    // ═══════════════════════════════════════════
-    // R2 CLOUD STORAGE PUBLISH
-    // ═══════════════════════════════════════════
+
+
+
 
     fun publishVersionR2(projectId: Int, apkFile: java.io.File, versionCode: Int,
                           versionName: String, title: String? = null, changelog: String? = null) {
@@ -906,9 +906,9 @@ class CloudViewModel(
         }
     }
 
-    // ═══════════════════════════════════════════
-    // FCM PUSH
-    // ═══════════════════════════════════════════
+
+
+
 
     private val _pushHistory = MutableStateFlow<List<PushHistoryItem>>(emptyList())
     val pushHistory: StateFlow<List<PushHistoryItem>> = _pushHistory.asStateFlow()
@@ -916,8 +916,8 @@ class CloudViewModel(
     fun registerPushToken(projectId: Int, fcmToken: String, deviceId: String) {
         viewModelScope.launch {
             when (val result = cloudRepo.registerPushToken(projectId, fcmToken, deviceId)) {
-                is AuthResult.Success -> { /* silent success */ }
-                is AuthResult.Error -> { /* silent fail */ }
+                is AuthResult.Success -> {  }
+                is AuthResult.Error -> {  }
             }
         }
     }
@@ -947,9 +947,9 @@ class CloudViewModel(
         }
     }
 
-    // ═══════════════════════════════════════════
-    // BACKUP DOWNLOAD
-    // ═══════════════════════════════════════════
+
+
+
 
     fun downloadBackup(projectId: Int, backupId: Int, onUrl: (String) -> Unit) {
         viewModelScope.launch {

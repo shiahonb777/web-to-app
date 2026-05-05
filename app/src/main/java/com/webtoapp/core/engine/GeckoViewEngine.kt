@@ -17,16 +17,29 @@ import org.mozilla.geckoview.GeckoView
 import org.mozilla.geckoview.StorageController
 import org.mozilla.geckoview.WebResponse
 
-/**
- * GeckoView (Firefox) engine implementation.
- * Native .so libraries must be present at runtime (downloaded on demand).
- *
- * 优化点:
- * 1. evaluateJavascript: 使用 GeckoSession.evaluateJavascriptCatchError()，可靠获取返回值
- * 2. 崩溃自动恢复: onCrash 时自动重建 Session 并恢复页面
- * 3. onPageStarted 去重: ProgressDelegate.onPageStart 作为唯一触发点，NavigationDelegate 不再重复触发
- * 4. User-Agent 日志从 WARN → DEBUG
- */
+
+
+
+data class ProxyConfig(
+    val mode: String = "NONE",
+    val host: String = "",
+    val port: Int = 0,
+    val type: String = "HTTP",
+    val pacUrl: String = "",
+    val username: String = "",
+    val password: String = ""
+)
+
+
+
+
+
+
+
+
+
+
+
 class GeckoViewEngine(
     private val context: Context
 ) : BrowserEngine {
@@ -48,24 +61,90 @@ class GeckoViewEngine(
         @Volatile
         private var currentDnsConfig: com.webtoapp.data.model.DnsConfig? = null
 
+        @Volatile
+        private var currentProxyConfig: ProxyConfig? = null
+
         fun applyDnsConfig(config: com.webtoapp.data.model.DnsConfig) {
             currentDnsConfig = config
             val runtime = sharedRuntime ?: return
             applyDohToRuntime(runtime, config)
         }
 
+        fun applyProxyConfig(config: ProxyConfig) {
+            currentProxyConfig = config
+
+
+
+
+            val runtime = sharedRuntime
+            if (runtime != null && config.mode != "NONE") {
+                AppLogger.w(TAG, "GeckoView proxy set after runtime creation — proxy will take effect on next runtime creation")
+            }
+            AppLogger.d(TAG, "Proxy config stored: mode=${config.mode}, type=${config.type}, host=${config.host}:${config.port}")
+        }
+
+
+
+
+
+        private fun buildProxyArgs(config: ProxyConfig): List<String> {
+            if (config.mode == "NONE") return emptyList()
+            val args = mutableListOf<String>()
+            when (config.mode) {
+                "STATIC" -> {
+                    if (config.host.isBlank() || config.port <= 0) return emptyList()
+
+
+                    args.add("--pref=network.proxy.type=1")
+
+                    when (config.type.uppercase()) {
+                        "SOCKS5", "SOCKS" -> {
+                            args.add("--pref=network.proxy.socks=${config.host}")
+                            args.add("--pref=network.proxy.socks_port=${config.port}")
+                            args.add("--pref=network.proxy.socks_version=5")
+
+                            args.add("--pref=network.proxy.socks_remote_dns=true")
+                        }
+                        "HTTPS" -> {
+
+                            args.add("--pref=network.proxy.ssl=${config.host}")
+                            args.add("--pref=network.proxy.ssl_port=${config.port}")
+                            args.add("--pref=network.proxy.http=${config.host}")
+                            args.add("--pref=network.proxy.http_port=${config.port}")
+                            args.add("--pref=network.proxy.share_proxy_settings=true")
+                        }
+                        else -> {
+
+                            args.add("--pref=network.proxy.http=${config.host}")
+                            args.add("--pref=network.proxy.http_port=${config.port}")
+                            args.add("--pref=network.proxy.ssl=${config.host}")
+                            args.add("--pref=network.proxy.ssl_port=${config.port}")
+                            args.add("--pref=network.proxy.share_proxy_settings=true")
+                        }
+                    }
+                }
+                "PAC" -> {
+                    if (config.pacUrl.isBlank()) return emptyList()
+
+                    args.add("--pref=network.proxy.type=2")
+                    args.add("--pref=network.proxy.autoconfig_url=${config.pacUrl}")
+                }
+            }
+            return args
+        }
+
         private fun applyDohToRuntime(runtime: GeckoRuntime, config: com.webtoapp.data.model.DnsConfig) {
             val dohUrl = config.effectiveDohUrl
             if (dohUrl.isBlank()) {
-                // 禁用 DoH，使用系统 DNS
+
                 runtime.settings.setTrustedRecursiveResolverMode(GeckoRuntimeSettings.TRR_MODE_OFF)
                 AppLogger.d(TAG, "DoH disabled, using system DNS")
                 return
             }
 
-            // 使用 GeckoView 官方 TRR API
-            // TRR_MODE_FIRST = DoH first, native fallback (automatic)
-            // TRR_MODE_ONLY = DoH only, no native fallback (strict / bypassSystemDns)
+
+
+
             val trrMode = if (config.dohMode == "strict" || config.bypassSystemDns) {
                 GeckoRuntimeSettings.TRR_MODE_ONLY
             } else {
@@ -93,7 +172,7 @@ class GeckoViewEngine(
                         .build()
                 )
 
-            // 在创建时就应用 DNS 配置
+
             currentDnsConfig?.let { config ->
                 val dohUrl = config.effectiveDohUrl
                 if (dohUrl.isNotBlank()) {
@@ -104,6 +183,15 @@ class GeckoViewEngine(
                     }
                     settingsBuilder.trustedRecursiveResolverMode(trrMode)
                     settingsBuilder.trustedRecursiveResolverUri(dohUrl)
+                }
+            }
+
+
+            currentProxyConfig?.let { config ->
+                val proxyArgs = buildProxyArgs(config)
+                if (proxyArgs.isNotEmpty()) {
+                    settingsBuilder.arguments(proxyArgs.toTypedArray())
+                    AppLogger.d(TAG, "GeckoView proxy args applied at runtime creation: $proxyArgs")
                 }
             }
 
@@ -121,7 +209,7 @@ class GeckoViewEngine(
     private var canGoBackFlag = false
     private var canGoForwardFlag = false
 
-    // 用于崩溃恢复
+
     private var lastConfig: WebViewConfig? = null
     private var lastGeckoUaMode: Int = GeckoSessionSettings.USER_AGENT_MODE_MOBILE
     private var lastUserAgentOverride: String? = null
@@ -136,7 +224,7 @@ class GeckoViewEngine(
 
         val runtime = getRuntime(context)
 
-        // Determine UA mode based on userAgentMode config
+
         val geckoUaMode = when (config.userAgentMode) {
             UserAgentMode.CHROME_DESKTOP, UserAgentMode.SAFARI_DESKTOP,
             UserAgentMode.FIREFOX_DESKTOP, UserAgentMode.EDGE_DESKTOP -> GeckoSessionSettings.USER_AGENT_MODE_DESKTOP
@@ -160,7 +248,7 @@ class GeckoViewEngine(
         view.setSession(newSession)
         geckoView = view
 
-        // Apply user agent override based on userAgentMode
+
         val effectiveUserAgent = when (config.userAgentMode) {
             UserAgentMode.DEFAULT -> null
             UserAgentMode.CUSTOM -> config.customUserAgent?.takeIf { it.isNotBlank() }
@@ -175,9 +263,9 @@ class GeckoViewEngine(
         return view
     }
 
-    /**
-     * 集中设置所有 Delegate，避免代码散落
-     */
+
+
+
     private fun setupDelegates(session: GeckoSession, callback: BrowserEngineCallback) {
         setupContentDelegate(session, callback)
         setupNavigationDelegate(session, callback)
@@ -245,12 +333,12 @@ class GeckoViewEngine(
             ): GeckoResult<AllowOrDeny>? {
                 val uri = request.uri
 
-                // Google OAuth handling: Allow login to proceed within GeckoView
-                // with full kernel disguise (UA sanitization + JS anti-detection),
-                // instead of redirecting to system browser which breaks the flow.
+
+
+
                 if (isGoogleOAuthUrl(uri)) {
                     AppLogger.d("GeckoViewEngine", "Google OAuth detected — allowing in-GeckoView with kernel disguise: $uri")
-                    // Let it load normally — anti-detection JS will be injected in onPageStart
+
                     return GeckoResult.fromValue(AllowOrDeny.ALLOW)
                 }
 
@@ -259,7 +347,7 @@ class GeckoViewEngine(
                     return GeckoResult.fromValue(AllowOrDeny.DENY)
                 }
 
-                // ★ 不再在这里调用 onPageStarted — 由 ProgressDelegate.onPageStart 统一处理
+
                 return GeckoResult.fromValue(AllowOrDeny.ALLOW)
             }
 
@@ -276,10 +364,10 @@ class GeckoViewEngine(
     private fun setupProgressDelegate(session: GeckoSession, callback: BrowserEngineCallback) {
         session.progressDelegate = object : GeckoSession.ProgressDelegate {
             override fun onPageStart(session: GeckoSession, url: String) {
-                // ★ 唯一的 onPageStarted 触发点，避免重复回调
+
                 callback.onPageStarted(url)
 
-                // OAuth anti-detection injection for GeckoView
+
                 OAuthCompatEngine.getAntiDetectionJs(url)?.let { js ->
                     val provider = OAuthCompatEngine.getProviderType(url)
                     AppLogger.d(TAG, "Injecting OAuth anti-detection JS [$provider] (GeckoView) for: $url")
@@ -299,26 +387,26 @@ class GeckoViewEngine(
                 session: GeckoSession,
                 securityInfo: GeckoSession.ProgressDelegate.SecurityInformation
             ) {
-                // SSL state tracking if needed
+
             }
         }
     }
 
-    // ═══════════════════════════════════════
-    // 崩溃恢复
-    // ═══════════════════════════════════════
 
-    /**
-     * GeckoView Session 崩溃后尝试自动恢复
-     * 重新创建 Session，重新绑定到 GeckoView，并恢复到之前的 URL
-     */
+
+
+
+
+
+
+
     private fun attemptCrashRecovery() {
         val view = geckoView ?: return
         val cb = callback ?: return
         val urlToRestore = currentUrl
 
         try {
-            // 关闭旧 Session
+
             try { session?.close() } catch (_: Exception) { }
             session = null
 
@@ -334,7 +422,7 @@ class GeckoViewEngine(
             setupDelegates(newSession, cb)
             newSession.open(runtime)
 
-            // 恢复 User-Agent
+
             lastUserAgentOverride?.let {
                 newSession.settings.userAgentOverride = it
             }
@@ -342,7 +430,7 @@ class GeckoViewEngine(
             view.setSession(newSession)
             session = newSession
 
-            // 恢复页面
+
             if (!urlToRestore.isNullOrBlank() && urlToRestore != "about:blank") {
                 newSession.loadUri(urlToRestore)
                 AppLogger.i(TAG, "Crash recovery successful, restoring URL: $urlToRestore")
@@ -355,21 +443,21 @@ class GeckoViewEngine(
         }
     }
 
-    // ═══════════════════════════════════════
-    // 核心浏览操作
-    // ═══════════════════════════════════════
+
+
+
 
     override fun loadUrl(url: String) {
         session?.loadUri(url)
     }
 
-    /**
-     * 执行 JavaScript 并获取返回值
-     *
-     * 使用 GeckoSession 本身的 evaluate 能力，avoid 不可靠的 javascript: URI
-     * 如果 GeckoSession 不支持直接 evaluate，使用 WebExtension messaging 桥接
-     * 当前实现：使用 javascript: URI 作为 fire-and-forget + 改进转义
-     */
+
+
+
+
+
+
+
     override fun evaluateJavascript(script: String, resultCallback: ((String?) -> Unit)?) {
         val s = session
         if (s == null) {
@@ -377,8 +465,8 @@ class GeckoViewEngine(
             return
         }
 
-        // 将脚本包装为立即执行函数，避免全局命名空间污染
-        // 使用 Base64 编码避免转义问题
+
+
         try {
             val encoded = android.util.Base64.encodeToString(
                 script.toByteArray(Charsets.UTF_8),
@@ -388,7 +476,7 @@ class GeckoViewEngine(
             s.loadUri(wrappedScript)
         } catch (e: Exception) {
             AppLogger.e(TAG, "evaluateJavascript encoding failed", e)
-            // Fallback: 直接加载（简化转义）
+
             try {
                 val escaped = script
                     .replace("\\", "\\\\")
@@ -401,7 +489,7 @@ class GeckoViewEngine(
             }
         }
 
-        // GeckoView 的 javascript: URI 无法同步获取返回值
+
         resultCallback?.invoke(null)
     }
 
@@ -444,7 +532,7 @@ class GeckoViewEngine(
         }
     }
 
-    // --- OAuth helpers (delegated to OAuthCompatEngine) ---
+
 
     private fun isGoogleOAuthUrl(url: String): Boolean = OAuthCompatEngine.isOAuthUrl(url)
 

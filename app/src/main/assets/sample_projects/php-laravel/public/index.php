@@ -261,7 +261,7 @@ function renderLayout(string $content): string {
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--primary:#ef4444;--primary-light:#f87171;--bg:#0a0a1a;--card:rgba(255,255,255,0.04);--border:rgba(255,255,255,0.07);--text:#f0f0ff;--text2:rgba(240,240,255,0.55);--text3:rgba(240,240,255,0.3);--radius:14px}
 body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);line-height:1.7;min-height:100vh}
-body::before{content:'';position:fixed;top:-40%;left:-40%;width:180%;height:180%;background:radial-gradient(ellipse at 50% 30%,rgba(239,68,68,0.04) 0%,transparent 55%);pointer-events:none}
+body::before{content:"";position:fixed;top:-40%;left:-40%;width:180%;height:180%;background:radial-gradient(ellipse at 50% 30%,rgba(239,68,68,0.04) 0%,transparent 55%);pointer-events:none}
 a{color:var(--primary);text-decoration:none}
 .container{max-width:460px;margin:0 auto;padding:0 14px 32px;position:relative;z-index:1}
 .hero{background:transparent;color:#fff;padding:28px 20px 20px;text-align:center;margin-bottom:16px}

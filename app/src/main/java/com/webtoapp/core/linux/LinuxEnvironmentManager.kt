@@ -2,6 +2,7 @@ package com.webtoapp.core.linux
 
 import android.annotation.SuppressLint
 import android.content.Context
+import com.webtoapp.core.i18n.Strings
 import com.webtoapp.core.logging.AppLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,118 +10,118 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.withContext
 import java.io.File
 
-/**
- * 构建环境管理器
- * 
- * 第一性原理重构：
- * 
- * 问题本质：我们需要在 Android 上构建前端项目
- * 
- * 传统方案的问题：
- * - PRoot + Alpine + Node.js = 三层依赖，复杂且脆弱
- * - 依赖外部下载，网络问题导致失败
- * - SELinux 限制执行权限
- * 
- * 新方案：
- * 1. 优先使用已构建的项目（dist/build 目录）
- * 2. 如果需要构建，使用 esbuild（为 Android 编译的原生二进制）
- * 3. 若 esbuild 不可用，则明确报错并要求用户修复环境
- * 
- * 这个方案：
- * - 不依赖 PRoot
- * - 不依赖 Linux rootfs
- * - 不依赖 Node.js
- * - 失败即时暴露，不掩盖真实错误
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @SuppressLint("StaticFieldLeak")
 class LinuxEnvironmentManager private constructor(private val context: Context) {
-    
+
     companion object {
         private const val TAG = "LinuxEnvManager"
-        
+
         @Volatile
         private var instance: LinuxEnvironmentManager? = null
-        
+
         fun getInstance(context: Context): LinuxEnvironmentManager {
             return instance ?: synchronized(this) {
-                instance ?: LinuxEnvironmentManager(context.applicationContext).also { 
-                    instance = it 
+                instance ?: LinuxEnvironmentManager(context.applicationContext).also {
+                    instance = it
                 }
             }
         }
     }
-    
-    // 状态
+
+
     private val _state = MutableStateFlow<EnvironmentState>(EnvironmentState.NotInstalled)
     val state: StateFlow<EnvironmentState> = _state
-    
+
     private val _progress = MutableStateFlow(InstallProgress())
     val installProgress: StateFlow<InstallProgress> = _progress
-    
-    // Build引擎
+
+
     private val buildEngine by lazy { PureBuildEngine(context) }
-    
-    // 引擎目录
+
+
     private val engineDir: File by lazy { File(context.filesDir, "build_engine") }
-    
-    /**
-     * 检查是否已安装（esbuild 可用）
-     */
+
+
+
+
     fun isInstalled(): Boolean = NativeNodeEngine.isAvailable(context)
-    
-    /**
-     * 检查环境状态
-     */
+
+
+
+
     suspend fun checkEnvironment() = withContext(Dispatchers.IO) {
         _state.value = when {
             NativeNodeEngine.isAvailable(context) -> EnvironmentState.Ready
             else -> EnvironmentState.NotInstalled
         }
     }
-    
-    /**
-     * 初始化环境
-     * 
-     * 下载并安装 esbuild
-     */
+
+
+
+
+
+
     suspend fun initialize(
         onProgress: (String, Float) -> Unit = { _, _ -> }
     ): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             AppLogger.d(TAG, "开始初始化构建环境")
-            
+
             _state.value = EnvironmentState.Downloading("esbuild", 0f)
-            onProgress("初始化构建工具...", 0.1f)
-            
+            onProgress(Strings.linuxInitBuildTools, 0.1f)
+
             val result = NativeNodeEngine.initialize(context) { step, progress ->
                 _state.value = EnvironmentState.Installing(step, progress)
                 _progress.value = InstallProgress(step, progress)
                 onProgress(step, progress)
             }
-            
+
             if (result.isFailure) {
-                val message = result.exceptionOrNull()?.message ?: "esbuild 安装失败"
-                AppLogger.e(TAG, "esbuild 安装失败", result.exceptionOrNull())
+                val message = result.exceptionOrNull()?.message ?: Strings.linuxEsbuildInstallFailed
+                AppLogger.e(TAG, "esbuild install failed", result.exceptionOrNull())
                 _state.value = EnvironmentState.Error(message, recoverable = true)
                 return@withContext Result.failure(result.exceptionOrNull() ?: IllegalStateException(message))
             }
-            
+
             _state.value = EnvironmentState.Ready
             onProgress("Done", 1f)
-            
+
             AppLogger.d(TAG, "构建环境初始化完成")
             Result.success(Unit)
-            
+
         } catch (e: Exception) {
             AppLogger.e(TAG, "Initialization failed", e)
             _state.value = EnvironmentState.Error(e.message ?: "未知错误", recoverable = true)
             Result.failure(e)
         }
     }
-    
-    /**
-     * 构建项目
-     */
+
+
+
+
     suspend fun buildProject(
         projectPath: String,
         outputPath: String,
@@ -128,13 +129,13 @@ class LinuxEnvironmentManager private constructor(private val context: Context) 
     ): Result<BuildResult> = withContext(Dispatchers.IO) {
         buildEngine.build(projectPath, outputPath, onProgress)
     }
-    
-    /**
-     * 获取环境信息
-     */
+
+
+
+
     suspend fun getEnvironmentInfo(): EnvironmentInfo = withContext(Dispatchers.IO) {
         val esbuildAvailable = NativeNodeEngine.isAvailable(context)
-        
+
         EnvironmentInfo(
             isInstalled = esbuildAvailable,
             nodeVersion = null,
@@ -146,10 +147,10 @@ class LinuxEnvironmentManager private constructor(private val context: Context) 
             cacheSize = calculateSize(File(context.cacheDir, "build_cache"))
         )
     }
-    
-    /**
-     * 清理缓存
-     */
+
+
+
+
     suspend fun clearCache(): Result<Long> = withContext(Dispatchers.IO) {
         try {
             var freed = 0L
@@ -163,10 +164,10 @@ class LinuxEnvironmentManager private constructor(private val context: Context) 
             Result.failure(e)
         }
     }
-    
-    /**
-     * 重置环境
-     */
+
+
+
+
     suspend fun reset(): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             NativeNodeEngine.reset(context)
@@ -177,10 +178,10 @@ class LinuxEnvironmentManager private constructor(private val context: Context) 
             Result.failure(e)
         }
     }
-    
-    /**
-     * 执行命令（兼容旧接口）
-     */
+
+
+
+
     suspend fun executeCommand(
         command: String,
         args: List<String> = emptyList(),
@@ -189,7 +190,7 @@ class LinuxEnvironmentManager private constructor(private val context: Context) 
         timeout: Long = 300_000,
         onOutput: (String) -> Unit = {}
     ): CommandResult = withContext(Dispatchers.IO) {
-        // If it is esbuild 命令
+
         if (command == "esbuild" && NativeNodeEngine.isAvailable(context)) {
             val result = NativeNodeEngine.executeEsbuild(
                 context = context,
@@ -206,8 +207,8 @@ class LinuxEnvironmentManager private constructor(private val context: Context) 
                 duration = result.duration
             )
         }
-        
-        // 其他命令不支持
+
+
         CommandResult(
             exitCode = -1,
             stdout = "",
@@ -215,14 +216,14 @@ class LinuxEnvironmentManager private constructor(private val context: Context) 
             duration = 0
         )
     }
-    
+
     private fun calculateSize(dir: File): Long {
         if (!dir.exists()) return 0
         return dir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
     }
 }
 
-// ========== 数据类 ==========
+
 
 sealed class EnvironmentState {
     object NotInstalled : EnvironmentState()

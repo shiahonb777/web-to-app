@@ -2,11 +2,8 @@ package com.webtoapp.core.startup
 
 import android.content.Context
 import com.webtoapp.core.logging.AppLogger
-import com.webtoapp.data.model.AppType
 import com.webtoapp.data.repository.WebAppRepository
-import com.webtoapp.util.isInsecureRemoteHttpUrl
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class LegacyHttpUrlMigrationStartup(
@@ -20,18 +17,12 @@ class LegacyHttpUrlMigrationStartup(
             if (prefs.getBoolean(KEY_HTTP_URL_MIGRATED, false)) return@launch
 
             runCatching {
-                val allApps = webAppRepository.allWebApps.first()
-                val appsToUpdate = allApps
-                    .filter { it.appType == AppType.WEB && isInsecureRemoteHttpUrl(it.url) }
-                    .map { app ->
-                        app.copy(url = app.url.replaceFirst(Regex("(?i)^http://"), "https://"))
-                    }
+                val updatedCount = webAppRepository.upgradeLegacyRemoteHttpWebUrls()
 
-                if (appsToUpdate.isNotEmpty()) {
-                    webAppRepository.updateWebApps(appsToUpdate)
+                if (updatedCount > 0) {
                     AppLogger.i(
                         "WebToAppApplication",
-                        "Migrated ${appsToUpdate.size} legacy insecure HTTP web URL(s) to HTTPS"
+                        "Migrated $updatedCount legacy insecure HTTP web URL(s) to HTTPS"
                     )
                 }
 

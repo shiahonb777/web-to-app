@@ -34,9 +34,9 @@ import com.webtoapp.data.model.WebApp
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
-/**
- * 使用统计仪表盘页面
- */
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatsScreen(
@@ -50,7 +50,7 @@ fun StatsScreen(
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf(Strings.statsTitle, Strings.healthTitle)
-    
+
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
@@ -79,7 +79,7 @@ fun StatsScreen(
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
-                // Tab 切换
+
                 TabRow(selectedTabIndex = selectedTab) {
                     tabs.forEachIndexed { index, title ->
                         Tab(
@@ -96,7 +96,7 @@ fun StatsScreen(
                         )
                     }
                 }
-                
+
                 when (selectedTab) {
                     0 -> UsageStatsTab(apps, allStats, overallStats)
                     1 -> HealthMonitorTab(apps, healthRecords, onCheckHealth)
@@ -106,9 +106,9 @@ fun StatsScreen(
     }
 }
 
-/**
- * 使用统计 Tab
- */
+
+
+
 @Composable
 private fun UsageStatsTab(
     apps: List<WebApp>,
@@ -121,17 +121,17 @@ private fun UsageStatsTab(
     val sortedByTime = remember(allStats) {
         allStats.filter { it.totalUsageMs > 0 }.sortedByDescending { it.totalUsageMs }
     }
-    
+
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // 汇总卡片
+
         item {
             OverallStatsCard(overallStats)
         }
-        
-        // 最常使用排行
+
+
         item {
             Text(
                 Strings.statsMostUsed,
@@ -139,7 +139,7 @@ private fun UsageStatsTab(
                 modifier = Modifier.padding(top = 8.dp)
             )
         }
-        
+
         if (sortedByLaunches.isEmpty()) {
             item {
                 EmptyStatsCard()
@@ -156,8 +156,8 @@ private fun UsageStatsTab(
                 }
             }
         }
-        
-        // 使用时间排行
+
+
         item {
             Text(
                 Strings.statsMostTime,
@@ -165,7 +165,7 @@ private fun UsageStatsTab(
                 modifier = Modifier.padding(top = 8.dp)
             )
         }
-        
+
         if (sortedByTime.isEmpty()) {
             item {
                 EmptyStatsCard()
@@ -182,14 +182,14 @@ private fun UsageStatsTab(
                 }
             }
         }
-        
+
         item { Spacer(Modifier.height(32.dp)) }
     }
 }
 
-/**
- * 汇总统计卡片
- */
+
+
+
 @Composable
 private fun OverallStatsCard(stats: OverallStats) {
     EnhancedElevatedCard(
@@ -257,9 +257,9 @@ private fun StatItem(
     }
 }
 
-/**
- * 使用统计卡片（按启动次数）
- */
+
+
+
 @Composable
 private fun UsageStatsCard(
     app: WebApp,
@@ -273,7 +273,7 @@ private fun UsageStatsCard(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 排名
+
             Surface(
                 shape = CircleShape,
                 color = when (rank) {
@@ -293,15 +293,15 @@ private fun UsageStatsCard(
                     )
                 }
             }
-            
+
             Spacer(Modifier.width(12.dp))
-            
-            // App 图标
+
+
             AppIconSmall(app)
-            
+
             Spacer(Modifier.width(12.dp))
-            
-            // 信息
+
+
             Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                 Text(
                     app.name,
@@ -316,8 +316,8 @@ private fun UsageStatsCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            
-            // 启动次数
+
+
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     "${stats.launchCount}",
@@ -335,9 +335,9 @@ private fun UsageStatsCard(
     }
 }
 
-/**
- * 使用时间卡片（带进度条）
- */
+
+
+
 @Composable
 private fun UsageTimeCard(
     app: WebApp,
@@ -345,7 +345,7 @@ private fun UsageTimeCard(
     maxMs: Long
 ) {
     val fraction = if (maxMs > 0) (stats.totalUsageMs.toFloat() / maxMs).coerceIn(0f, 1f) else 0f
-    
+
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
@@ -384,9 +384,9 @@ private fun UsageTimeCard(
     }
 }
 
-/**
- * 健康监控 Tab
- */
+
+
+
 @Composable
 private fun HealthMonitorTab(
     apps: List<WebApp>,
@@ -395,22 +395,22 @@ private fun HealthMonitorTab(
 ) {
     val recordMap = remember(healthRecords) { healthRecords.associateBy { it.appId } }
     val webApps = remember(apps) { apps.filter { it.appType == AppType.WEB && it.url.startsWith("http") } }
-    
+
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // 健康概览
+
         item {
             HealthOverviewCard(webApps, recordMap)
         }
-        
-        // 每个 WEB 应用的健康状态
+
+
         items(webApps) { app ->
             val record = recordMap[app.id]
             HealthStatusCard(app, record, onCheckHealth)
         }
-        
+
         if (webApps.isEmpty()) {
             item {
                 EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
@@ -429,14 +429,14 @@ private fun HealthMonitorTab(
                 }
             }
         }
-        
+
         item { Spacer(Modifier.height(32.dp)) }
     }
 }
 
-/**
- * 健康概览卡片
- */
+
+
+
 @Composable
 private fun HealthOverviewCard(
     apps: List<WebApp>,
@@ -446,7 +446,7 @@ private fun HealthOverviewCard(
     val slow = apps.count { recordMap[it.id]?.status == HealthStatus.SLOW }
     val offline = apps.count { recordMap[it.id]?.status == HealthStatus.OFFLINE }
     val unknown = apps.size - online - slow - offline
-    
+
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
@@ -486,9 +486,9 @@ private fun HealthStatItem(count: Int, label: String, color: Color) {
     }
 }
 
-/**
- * 单个应用健康状态卡片
- */
+
+
+
 @Composable
 private fun HealthStatusCard(
     app: WebApp,
@@ -507,7 +507,7 @@ private fun HealthStatusCard(
         HealthStatus.OFFLINE -> Strings.healthOffline
         else -> Strings.healthUnknown
     }
-    
+
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
@@ -515,20 +515,20 @@ private fun HealthStatusCard(
                 .padding(12.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                // 状态指示灯
+
                 Box(
                     modifier = Modifier
                         .size(10.dp)
                         .clip(CircleShape)
                         .background(statusColor)
                 )
-                
+
                 Spacer(Modifier.width(10.dp))
-                
+
                 AppIconSmall(app)
-                
+
                 Spacer(Modifier.width(12.dp))
-                
+
                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                     Text(
                         app.name,
@@ -545,8 +545,8 @@ private fun HealthStatusCard(
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-                
-                // 状态标签
+
+
                 Surface(
                     shape = RoundedCornerShape(12.dp),
                     color = statusColor.copy(alpha = 0.12f)
@@ -560,8 +560,8 @@ private fun HealthStatusCard(
                     )
                 }
             }
-            
-            // 详细信息
+
+
             if (record != null && record.status != HealthStatus.UNKNOWN) {
                 Spacer(Modifier.height(8.dp))
                 Row(
@@ -597,9 +597,9 @@ private fun HealthStatusCard(
     }
 }
 
-/**
- * 空统计状态
- */
+
+
+
 @Composable
 private fun EmptyStatsCard() {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
@@ -627,9 +627,9 @@ private fun EmptyStatsCard() {
     }
 }
 
-/**
- * 小型 App 图标
- */
+
+
+
 @Composable
 private fun AppIconSmall(app: WebApp) {
     Surface(

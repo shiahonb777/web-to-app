@@ -1,7 +1,7 @@
-/**
- * ملاحظات Markdown — وضع داكن
- * Node.js بدون تبعيات
- */
+
+
+
+
 const http = require('http'); const fs = require('fs'); const path = require('path');
 const PORT = process.env.PORT || 3000; const DATA_FILE = path.join(__dirname, 'notes.json');
 const loadNotes = () => { try { if (fs.existsSync(DATA_FILE)) return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')); } catch (e) { } return [{ id: 1, title: 'مرحباً بتطبيق الملاحظات', content: '# مرحباً\n\nهذا تطبيق ملاحظات يدعم **Markdown**.\n\n## الميزات\n- إنشاء وتعديل\n- معاينة Markdown\n- بحث\n- حفظ محلي', createdAt: Date.now(), updatedAt: Date.now() }, { id: 2, title: 'صياغة Markdown', content: '# Markdown\n\n## التأكيد\n- **غامق**: `**نص**`\n- *مائل*: `*نص*`\n\n## القوائم\n- استخدم - للنقاط\n1. أرقام للترتيب', createdAt: Date.now() - 3600000, updatedAt: Date.now() - 3600000 }]; };
@@ -10,7 +10,7 @@ let notes = loadNotes(), nextId = Math.max(...notes.map(n => n.id), 0) + 1;
 function parseBody(req) { return new Promise(r => { let b = ''; req.on('data', c => b += c); req.on('end', () => { try { r(JSON.parse(b)) } catch (e) { r({}) } }) }) }
 function sendJson(res, data, s = 200) { res.writeHead(s, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify(data)) }
 const server = http.createServer(async (req, res) => {
-  const url = new URL(req.url, `http://${req.headers.host}`), p = url.pathname, m = req.method;
+  const url = new URL(req.url, `http:
   if (m === 'GET' && p === '/') { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); return res.end(getPage()) }
   if (m === 'GET' && p === '/api/notes') { const q = url.searchParams.get('q'); let r = notes; if (q) { const ql = q.toLowerCase(); r = notes.filter(n => n.title.toLowerCase().includes(ql) || n.content.toLowerCase().includes(ql)) } return sendJson(res, { success: true, data: r.map(n => ({ ...n, preview: n.content.substring(0, 80) })) }) }
   if (m === 'POST' && p === '/api/notes') { const { title, content } = await parseBody(req); const n = { id: nextId++, title: title || 'بدون عنوان', content: content || '', createdAt: Date.now(), updatedAt: Date.now() }; notes.unshift(n); saveNotes(notes); return sendJson(res, { success: true, data: n }) }

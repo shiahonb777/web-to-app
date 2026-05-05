@@ -24,15 +24,15 @@ import com.webtoapp.core.disguise.DisguiseConfig
 import com.webtoapp.core.disguise.DisguiseConfig.IconStormMode
 import com.webtoapp.core.i18n.Strings
 
-/**
- * 应用伪装功能配置卡片 v2.0
- * 
- * ICON STORM 引擎：
- * - 支持无限图标注入
- * - 分级模式选择器
- * - 实时影响评估
- * - 研究模式/压力测试
- */
+
+
+
+
+
+
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DisguiseConfigCard(
@@ -41,13 +41,13 @@ fun DisguiseConfigCard(
 ) {
     var expanded by remember { mutableStateOf(config?.enabled == true) }
     var enabled by remember(config) { mutableStateOf(config?.enabled ?: false) }
-    
-    // 多图标配置
+
+
     var multiLauncherIcons by remember(config) { mutableIntStateOf(config?.multiLauncherIcons ?: 1) }
     var iconStormMode by remember(config) { mutableStateOf(config?.iconStormMode ?: IconStormMode.NORMAL) }
     var randomizeNames by remember(config) { mutableStateOf(config?.randomizeNames ?: false) }
     var customNamePrefix by remember(config) { mutableStateOf(config?.customNamePrefix ?: "") }
-    
+
     fun updateConfig() {
         if (!enabled) {
             onConfigChange(null)
@@ -61,8 +61,8 @@ fun DisguiseConfigCard(
             ))
         }
     }
-    
-    // 影响等级颜色
+
+
     val impactLevel = DisguiseConfig.assessImpactLevel(multiLauncherIcons)
     val impactColor by animateColorAsState(
         targetValue = when (impactLevel) {
@@ -75,13 +75,13 @@ fun DisguiseConfigCard(
         },
         label = "impactColor"
     )
-    
+
     EnhancedElevatedCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // 标题行
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -143,10 +143,10 @@ fun DisguiseConfigCard(
                     contentDescription = null
                 )
             }
-            
+
             AnimatedVisibility(visible = expanded) {
                 Column(modifier = Modifier.padding(top = 16.dp)) {
-                    // Enable 开关
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -174,24 +174,24 @@ fun DisguiseConfigCard(
                             }
                         )
                     }
-                    
+
                     AnimatedVisibility(visible = enabled) {
                         Column {
                             Spacer(modifier = Modifier.height(16.dp))
                             HorizontalDivider()
                             Spacer(modifier = Modifier.height(16.dp))
-                            
-                            // ===== ICON STORM 模式选择器 =====
+
+
                             Text(
                                 Strings.iconStormMode,
                                 style = MaterialTheme.typography.titleSmall,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
-                            
-                            // 模式网格
+
+
                             val modes = IconStormMode.entries.toList()
                             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                // 第一行: Normal, Subtle, Flood
+
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -217,7 +217,7 @@ fun DisguiseConfigCard(
                                         )
                                     }
                                 }
-                                // 第二行: Storm, Extreme, Research, Custom
+
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -249,10 +249,10 @@ fun DisguiseConfigCard(
                                     }
                                 }
                             }
-                            
+
                             Spacer(modifier = Modifier.height(16.dp))
-                            
-                            // ===== 自定义数量输入 (仅 Custom 模式或高级模式显示) =====
+
+
                             Text(
                                 Strings.disguiseIconCountTitle,
                                 style = MaterialTheme.typography.titleSmall,
@@ -264,8 +264,8 @@ fun DisguiseConfigCard(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
-                            
-                            // 数量输入
+
+
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically
@@ -279,7 +279,7 @@ fun DisguiseConfigCard(
                                     value = multiLauncherIcons.toString(),
                                     onValueChange = { value ->
                                         val num = value.filter { it.isDigit() }.toIntOrNull() ?: 2
-                                        // 🔥 v2.0: 无上限
+
                                         multiLauncherIcons = num.coerceAtLeast(2)
                                         iconStormMode = when {
                                             num <= 10 -> IconStormMode.NORMAL
@@ -298,19 +298,19 @@ fun DisguiseConfigCard(
                                     supportingText = { Text(Strings.iconStormUnlimited) }
                                 )
                             }
-                            
-                            // ===== 影响评估仪表盘 =====
+
+
                             Spacer(modifier = Modifier.height(12.dp))
                             ImpactDashboard(
                                 count = multiLauncherIcons,
                                 impactLevel = impactLevel,
                                 impactColor = impactColor
                             )
-                            
-                            // ===== 高级选项 =====
+
+
                             Spacer(modifier = Modifier.height(12.dp))
-                            
-                            // 随机化名称
+
+
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -335,8 +335,8 @@ fun DisguiseConfigCard(
                                     }
                                 )
                             }
-                            
-                            // 自定义前缀 (当不随机时)
+
+
                             AnimatedVisibility(visible = !randomizeNames) {
                                 Column(modifier = Modifier.padding(top = 8.dp)) {
                                     PremiumTextField(
@@ -352,8 +352,8 @@ fun DisguiseConfigCard(
                                     )
                                 }
                             }
-                            
-                            // ===== 技术说明 =====
+
+
                             Spacer(modifier = Modifier.height(12.dp))
                             Surface(
                                 color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
@@ -377,8 +377,8 @@ fun DisguiseConfigCard(
                                     )
                                 }
                             }
-                            
-                            // ===== 危险警告 (>= 200 图标时显示) =====
+
+
                             AnimatedVisibility(visible = impactLevel >= 3) {
                                 Column {
                                     Spacer(modifier = Modifier.height(8.dp))
@@ -414,9 +414,9 @@ fun DisguiseConfigCard(
     }
 }
 
-/**
- * Icon Storm 模式选择芯片
- */
+
+
+
 @Composable
 private fun IconStormModeChip(
     mode: IconStormMode,
@@ -430,7 +430,7 @@ private fun IconStormModeChip(
     } else {
         MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
     }
-    
+
     Surface(
         modifier = modifier
             .clip(RoundedCornerShape(10.dp))
@@ -465,9 +465,9 @@ private fun IconStormModeChip(
     }
 }
 
-/**
- * 影响评估仪表盘
- */
+
+
+
 @Composable
 private fun ImpactDashboard(
     count: Int,
@@ -480,7 +480,7 @@ private fun ImpactDashboard(
         estimatedOverhead < 1024 * 1024 -> "${estimatedOverhead / 1024} KB"
         else -> "${"%.1f".format(estimatedOverhead.toDouble() / 1024 / 1024)} MB"
     }
-    
+
     Surface(
         color = impactColor.copy(alpha = 0.08f),
         shape = RoundedCornerShape(12.dp)
@@ -517,10 +517,10 @@ private fun ImpactDashboard(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
-            // 统计行
+
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -552,8 +552,8 @@ private fun ImpactDashboard(
                     )
                 }
             }
-            
-            // 影响描述
+
+
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 when (impactLevel) {

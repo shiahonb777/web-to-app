@@ -7,11 +7,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-/**
- * 扩展模块面板桥接
- * 
- * 提供统一的扩展模块 UI 管理，通过 FAB 统一入口
- */
+
+
+
+
+
 class ExtensionPanelBridge(
     private val context: Context,
     private val scope: CoroutineScope
@@ -19,19 +19,19 @@ class ExtensionPanelBridge(
     companion object {
         const val JS_INTERFACE_NAME = "ExtensionPanel"
     }
-    
-    // 已注册的模块 UI 信息
+
+
     private val registeredModules = mutableMapOf<String, ModuleUIInfo>()
-    
-    // 当前活跃的模块ID
+
+
     private var activeModuleId: String? = null
-    
-    // WebView 引用
+
+
     private var webViewRef: WebView? = null
 
-    /**
-     * 模块 UI 信息
-     */
+
+
+
     data class ModuleUIInfo(
         val id: String,
         val name: String,
@@ -40,18 +40,18 @@ class ExtensionPanelBridge(
         val hasPanel: Boolean = false,
         val panelHtml: String = ""
     )
-    
+
     fun setWebView(webView: WebView) {
         webViewRef = webView
     }
-    
-    /**
-     * 注册模块到面板
-     * @param moduleId 模块ID
-     * @param name 模块名称
-     * @param icon 模块图标（emoji）
-     * @param color 主题色（十六进制）
-     */
+
+
+
+
+
+
+
+
     @JavascriptInterface
     fun registerModule(moduleId: String, name: String, icon: String, color: String) {
         scope.launch(Dispatchers.Main) {
@@ -64,17 +64,17 @@ class ExtensionPanelBridge(
             updatePanelUI()
         }
     }
-    
-    /**
-     * 注册模块（带UI配置）
-     * @param moduleId 模块ID
-     * @param name 模块名称
-     * @param icon 模块图标（emoji）
-     */
+
+
+
+
+
+
+
     @JavascriptInterface
     fun registerModuleWithConfig(
-        moduleId: String, 
-        name: String, 
+        moduleId: String,
+        name: String,
         icon: String
     ) {
         scope.launch(Dispatchers.Main) {
@@ -86,12 +86,12 @@ class ExtensionPanelBridge(
             )
         }
     }
-    
-    /**
-     * 注册模块面板内容
-     * @param moduleId 模块ID
-     * @param panelHtml 面板HTML内容
-     */
+
+
+
+
+
+
     @JavascriptInterface
     fun registerModulePanel(moduleId: String, panelHtml: String) {
         scope.launch(Dispatchers.Main) {
@@ -101,9 +101,9 @@ class ExtensionPanelBridge(
         }
     }
 
-    /**
-     * 显示模块面板
-     */
+
+
+
     @JavascriptInterface
     fun showModulePanel(moduleId: String) {
         scope.launch(Dispatchers.Main) {
@@ -114,10 +114,10 @@ class ExtensionPanelBridge(
             )
         }
     }
-    
-    /**
-     * 隐藏面板
-     */
+
+
+
+
     @JavascriptInterface
     fun hidePanel() {
         scope.launch(Dispatchers.Main) {
@@ -125,10 +125,10 @@ class ExtensionPanelBridge(
             webViewRef?.evaluateJavascript("__WTA_PANEL__.hidePanel()", null)
         }
     }
-    
-    /**
-     * 显示 Toast 提示
-     */
+
+
+
+
     @JavascriptInterface
     fun showToast(message: String, duration: Int = 2000) {
         scope.launch(Dispatchers.Main) {
@@ -138,19 +138,19 @@ class ExtensionPanelBridge(
             )
         }
     }
-    
-    // ==================== 通用方法 ====================
-    
-    /**
-     * 更新面板 UI
-     */
+
+
+
+
+
+
     private fun updatePanelUI() {
         webViewRef?.evaluateJavascript("__WTA_PANEL__.updateModules()", null)
     }
-    
-    /**
-     * 设置FAB可见性
-     */
+
+
+
+
     @JavascriptInterface
     fun setFabVisible(visible: Boolean) {
         scope.launch(Dispatchers.Main) {
@@ -160,10 +160,10 @@ class ExtensionPanelBridge(
             )
         }
     }
-    
-    /**
-     * 设置FAB位置
-     */
+
+
+
+
     @JavascriptInterface
     fun setFabPosition(bottom: Int, right: Int) {
         scope.launch(Dispatchers.Main) {
@@ -173,10 +173,10 @@ class ExtensionPanelBridge(
             )
         }
     }
-    
-    /**
-     * 获取已注册模块列表（JSON格式）
-     */
+
+
+
+
     @JavascriptInterface
     fun getRegisteredModules(): String {
         val modules = registeredModules.values.map { info ->
@@ -184,10 +184,10 @@ class ExtensionPanelBridge(
         }
         return "[${modules.joinToString(",")}]"
     }
-    
-    /**
-     * 获取支持的UI类型列表
-     */
+
+
+
+
     @JavascriptInterface
     fun getSupportedUITypes(): String {
         return """["FLOATING_BUTTON"]"""

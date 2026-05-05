@@ -8,10 +8,10 @@ import com.webtoapp.data.model.WebApp
 import com.webtoapp.data.repository.WebAppRepository
 import java.io.InputStream
 
-/**
- * 批量导入服务
- * 支持从文本、书签文件、模板文件导入
- */
+
+
+
+
 class BatchImportService(
     private val context: Context,
     private val repository: WebAppRepository
@@ -19,31 +19,31 @@ class BatchImportService(
     companion object {
         private const val TAG = "BatchImportService"
     }
-    
+
     private val gson: Gson by lazy { GsonBuilder().setPrettyPrinting().create() }
-    
-    /**
-     * 解析的 URL 条目
-     */
+
+
+
+
     data class ParsedEntry(
         val name: String,
         val url: String
     )
-    
-    /**
-     * 从文本解析 URL 列表
-     * 支持格式：
-     *   - 纯 URL（每行一个）
-     *   - 名称|URL（竖线分隔）
-     *   - 名称 URL（空格分隔，URL 以 http 开头）
-     */
+
+
+
+
+
+
+
+
     fun parseFromText(text: String): List<ParsedEntry> {
         return text.lines()
             .map { it.trim() }
             .filter { it.isNotBlank() && !it.startsWith("#") && !it.startsWith("//") }
             .mapNotNull { line ->
                 when {
-                    // 格式: 名称|URL
+
                     line.contains("|") -> {
                         val parts = line.split("|", limit = 2)
                         val name = parts[0].trim()
@@ -51,11 +51,11 @@ class BatchImportService(
                         if (url.isValidUrl()) ParsedEntry(name.ifBlank { extractName(url) }, normalizeUrl(url))
                         else null
                     }
-                    // 纯 URL
+
                     line.isValidUrl() -> {
                         ParsedEntry(extractName(line), normalizeUrl(line))
                     }
-                    // 格式: 名称 URL（空格分隔）
+
                     line.contains(" ") -> {
                         val lastSpace = line.lastIndexOf(" ")
                         val possibleUrl = line.substring(lastSpace + 1).trim()
@@ -69,11 +69,11 @@ class BatchImportService(
             }
             .distinctBy { it.url }
     }
-    
-    /**
-     * 从 HTML 书签文件解析
-     * 支持 Netscape 书签格式（Chrome/Firefox 导出）
-     */
+
+
+
+
+
     fun parseFromBookmarksHtml(input: InputStream): List<ParsedEntry> {
         return try {
             val html = input.bufferedReader().readText()
@@ -90,28 +90,28 @@ class BatchImportService(
             emptyList()
         }
     }
-    
-    /**
-     * 批量创建 WebApp
-     */
+
+
+
+
     suspend fun importEntries(entries: List<ParsedEntry>): Int {
         if (entries.isEmpty()) return 0
-        
+
         val webApps = entries.map { entry ->
             WebApp(
                 name = entry.name,
                 url = entry.url
             )
         }
-        
+
         val ids = repository.createWebApps(webApps)
         AppLogger.i(TAG, "批量导入 ${ids.size} 个应用")
         return ids.size
     }
-    
-    /**
-     * 导出 WebApp 配置为 JSON 模板
-     */
+
+
+
+
     fun exportAsTemplate(app: WebApp): String {
         val template = AppTemplate(
             name = app.name,
@@ -128,10 +128,10 @@ class BatchImportService(
         )
         return gson.toJson(template)
     }
-    
-    /**
-     * 从 JSON 模板导入
-     */
+
+
+
+
     fun parseTemplate(json: String): AppTemplate? {
         return try {
             gson.fromJson(json, AppTemplate::class.java)
@@ -140,10 +140,10 @@ class BatchImportService(
             null
         }
     }
-    
-    /**
-     * 从模板创建 WebApp
-     */
+
+
+
+
     suspend fun importFromTemplate(template: AppTemplate): Long {
         val app = WebApp(
             name = template.name,
@@ -155,20 +155,20 @@ class BatchImportService(
         )
         return repository.createWebApp(app)
     }
-    
-    // ==================== 辅助方法 ====================
-    
+
+
+
     private fun String.isValidUrl(): Boolean {
-        return startsWith("http://") || startsWith("https://") || 
+        return startsWith("http://") || startsWith("https://") ||
                matches(Regex("""^[a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}.*"""))
     }
-    
+
     private fun normalizeUrl(url: String): String {
         return if (!url.startsWith("http://") && !url.startsWith("https://")) {
             "https://$url"
         } else url
     }
-    
+
     private fun extractName(url: String): String {
         return try {
             val host = java.net.URL(normalizeUrl(url)).host
@@ -181,9 +181,9 @@ class BatchImportService(
     }
 }
 
-/**
- * App 模板数据（用于导出/导入/分享）
- */
+
+
+
 data class AppTemplate(
     val name: String,
     val url: String,

@@ -43,7 +43,7 @@ internal val STRICT_COMPAT_HOST_SUFFIXES = setOf(
     "byteimg.com"
 )
 
-// Keep strict-host fallback probe logic for diagnostics, but do not auto-jump to external browser.
+
 internal const val STRICT_HOST_AUTO_EXTERNAL_FALLBACK_ENABLED = false
 
 internal fun shouldSkipLongPressEnhancer(url: String?): Boolean {

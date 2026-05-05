@@ -6,9 +6,9 @@ import org.junit.Test
 
 class DeviceDisguiseConfigTest {
 
-    // ═══════════════════════════════════════════
-    // toUserAgentMode
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `toUserAgentMode returns DEFAULT when disabled`() {
@@ -75,9 +75,9 @@ class DeviceDisguiseConfigTest {
         assertThat(config.toUserAgentMode()).isEqualTo(UserAgentMode.FIREFOX_DESKTOP)
     }
 
-    // ═══════════════════════════════════════════
-    // generateUserAgent
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `generateUserAgent returns empty string when disabled`() {
@@ -127,9 +127,9 @@ class DeviceDisguiseConfigTest {
         assertThat(config.generateUserAgent()).contains("Windows NT")
     }
 
-    // ═══════════════════════════════════════════
-    // requiresDesktopViewport
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `requiresDesktopViewport returns false when disabled`() {
@@ -174,9 +174,9 @@ class DeviceDisguiseConfigTest {
         assertThat(config.requiresDesktopViewport()).isTrue()
     }
 
-    // ═══════════════════════════════════════════
-    // DeviceBrand.getBrandsForType
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `getBrandsForType PHONE returns phone brands`() {
@@ -201,9 +201,9 @@ class DeviceDisguiseConfigTest {
         assertThat(brands.map { it }).contains(DeviceBrand.APPLE_WATCH)
     }
 
-    // ═══════════════════════════════════════════
-    // DeviceType enum
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `DeviceType has all expected values`() {
@@ -217,9 +217,9 @@ class DeviceDisguiseConfigTest {
         )
     }
 
-    // ═══════════════════════════════════════════
-    // DeviceOS enum
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `DeviceOS has all expected values`() {

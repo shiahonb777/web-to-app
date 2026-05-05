@@ -4,12 +4,12 @@ import com.webtoapp.core.activation.ActivationManager
 import com.webtoapp.core.adblock.AdBlocker
 import com.webtoapp.core.announcement.AnnouncementManager
 
-/**
- * runtime entry service.
- *
- * path startup usage.
- * dependency.
- */
+
+
+
+
+
+
 object ShellRuntimeServices {
 
     private var shellModeManager: ShellModeManager? = null

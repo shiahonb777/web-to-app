@@ -106,7 +106,7 @@ fun DeviceManagementScreen(
                     contentPadding = PaddingValues(20.dp),
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
-                    // 设备数量
+
                     item {
                         Text(
                             text = "${Strings.cloudDeviceCount} · ${devices.size}",

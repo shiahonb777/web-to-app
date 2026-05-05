@@ -49,17 +49,17 @@ import com.webtoapp.core.i18n.Strings
 import com.webtoapp.ui.components.aimodule.*
 import kotlinx.coroutines.flow.collectLatest
 
-/**
- * AI 模块开发器界面（重构版）
- * 
- * 使用新组件重构的聊天式界面，集成：
- * - ModelSelector: 模型选择器
- * - StreamingMessageBubble: 流式消息气泡
- * - ToolCallCard: 工具调用卡片
- * - CodePreviewPanel: 代码预览面板
- * 
- * Requirements: 4.1, 4.2, 4.4, 4.5, 4.7
- */
+
+
+
+
+
+
+
+
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AiModuleDeveloperScreen(
@@ -71,17 +71,17 @@ fun AiModuleDeveloperScreen(
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
     val clipboardManager = LocalClipboardManager.current
-    
-    // ViewModel
+
+
     val viewModel: AiModuleDeveloperViewModel = viewModel(
         factory = AiModuleDeveloperViewModel.Factory(context)
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    
-    // 滚动状态
+
+
     val listState = rememberLazyListState()
-    
-    // Handle一次性事件
+
+
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
             when (event) {
@@ -97,7 +97,7 @@ fun AiModuleDeveloperScreen(
                     }
                 }
                 is AiModuleDeveloperEvent.ModuleCreated -> {
-                    // Module创建成功，由外部处理
+
                 }
                 is AiModuleDeveloperEvent.NavigateToAiSettings -> {
                     onNavigateToAiSettings()
@@ -108,12 +108,12 @@ fun AiModuleDeveloperScreen(
             }
         }
     }
-    
+
     Scaffold(
         modifier = Modifier.imePadding(),
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -125,7 +125,7 @@ fun AiModuleDeveloperScreen(
                             tint = MaterialTheme.colorScheme.primary
                         )
                         Text(Strings.aiModuleDeveloper, fontWeight = FontWeight.Bold)
-                        // 状态徽章
+
                         if (uiState.isDeveloping) {
                             Spacer(modifier = Modifier.width(4.dp))
                             StreamingStatusBadge(state = uiState.agentState)
@@ -138,13 +138,13 @@ fun AiModuleDeveloperScreen(
                     }
                 },
                 actions = {
-                    // Reset按钮
+
                     if (uiState.messages.isNotEmpty() || uiState.generatedModule != null) {
                         IconButton(onClick = { viewModel.resetState() }) {
                             Icon(Icons.Default.Refresh, Strings.btnReset)
                         }
                     }
-                    // 帮助按钮
+
                     IconButton(onClick = { viewModel.toggleHelpDialog(true) }) {
                         Icon(Icons.Outlined.Help, Strings.help)
                     }
@@ -160,7 +160,7 @@ fun AiModuleDeveloperScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // 主内容区域
+
             LazyColumn(
                 state = listState,
                 modifier = Modifier
@@ -169,7 +169,7 @@ fun AiModuleDeveloperScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // 欢迎界面
+
                 if (uiState.showWelcome) {
                     item { WelcomeCard() }
                     item { FeatureChips() }
@@ -179,18 +179,18 @@ fun AiModuleDeveloperScreen(
                         )
                     }
                 }
-                
-                // 对话消息
+
+
                 items(uiState.messages, key = { it.id }) { message ->
                     ConversationMessageItem(
                         message = message,
-                        onToolCallExpand = { /* 可选：处理工具调用展开 */ }
+                        onToolCallExpand = {  }
                     )
                 }
-                
-                // 流式输出中的内容
+
+
                 if (uiState.isStreaming) {
-                    // 思考内容
+
                     if (uiState.thinkingContent.isNotBlank()) {
                         item {
                             ThinkingBlock(
@@ -199,8 +199,8 @@ fun AiModuleDeveloperScreen(
                             )
                         }
                     }
-                    
-                    // 流式内容
+
+
                     if (uiState.streamingContent.isNotBlank()) {
                         item {
                             AssistantMessageBubble(
@@ -209,21 +209,21 @@ fun AiModuleDeveloperScreen(
                             )
                         }
                     }
-                    
-                    // 当前工具调用
+
+
                     if (uiState.currentToolCalls.isNotEmpty()) {
                         item {
                             ToolCallGroup(toolCalls = uiState.currentToolCalls)
                         }
                     }
-                    
-                    // 状态指示器
+
+
                     item {
                         StreamingStatusCard(state = uiState.agentState)
                     }
                 }
-                
-                // Generate的模块预览
+
+
                 if (uiState.generatedModule != null && !uiState.isStreaming) {
                     item {
                         GeneratedModuleSection(
@@ -239,27 +239,27 @@ fun AiModuleDeveloperScreen(
                         )
                     }
                 }
-                
-                // Error信息
+
+
                 if (uiState.error != null) {
                     item {
                         com.webtoapp.ui.components.aimodule.ErrorCard(
                             error = uiState.error!!,
                             onRetry = { viewModel.retry() },
                             onRetryWithDifferentModel = { viewModel.retryWithDifferentModel() },
-                            onShowRawResponse = { /* Handled internally by ErrorCard */ },
+                            onShowRawResponse = {  },
                             onGoToSettings = { viewModel.navigateToAiSettings() },
-                            onManualEdit = { /* Focus on code editor if available */ },
+                            onManualEdit = {  },
                             onDismiss = { viewModel.clearError() }
                         )
                     }
                 }
-                
-                // 底部间距
+
+
                 item { Spacer(modifier = Modifier.height(80.dp)) }
             }
-            
-            // 输入区域
+
+
             InputSection(
                 userInput = uiState.userInput,
                 onInputChange = { viewModel.updateUserInput(it) },
@@ -278,8 +278,8 @@ fun AiModuleDeveloperScreen(
             )
         }
     }
-    
-    // 分类选择对话框
+
+
     if (uiState.showCategorySelector) {
         CategorySelectorDialog(
             selectedCategory = uiState.selectedCategory,
@@ -287,17 +287,17 @@ fun AiModuleDeveloperScreen(
             onDismiss = { viewModel.toggleCategorySelector(false) }
         )
     }
-    
-    // 帮助对话框
+
+
     if (uiState.showHelpDialog) {
         HelpDialog(onDismiss = { viewModel.toggleHelpDialog(false) })
     }
 }
 
 
-/**
- * 对话消息项
- */
+
+
+
 @Composable
 private fun ConversationMessageItem(
     message: ConversationMessage,
@@ -312,29 +312,29 @@ private fun ConversationMessageItem(
                 UserMessageBubble(content = message.content)
             }
             MessageRole.ASSISTANT -> {
-                // 思考内容
+
                 if (!message.thinkingContent.isNullOrBlank()) {
                     ThinkingBlock(
                         content = message.thinkingContent,
                         isStreaming = message.isStreaming
                     )
                 }
-                
-                // 消息内容
+
+
                 if (message.content.isNotBlank()) {
                     AssistantMessageBubble(
                         content = message.content,
                         isStreaming = message.isStreaming
                     )
                 }
-                
-                // 工具调用
+
+
                 if (message.toolCalls.isNotEmpty()) {
                     ToolCallGroup(toolCalls = message.toolCalls)
                 }
             }
             else -> {
-                // System消息或工具消息
+
                 Text(
                     text = message.content,
                     style = MaterialTheme.typography.bodySmall,
@@ -345,9 +345,9 @@ private fun ConversationMessageItem(
     }
 }
 
-/**
- * 输入区域组件
- */
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun InputSection(
@@ -373,15 +373,15 @@ private fun InputSection(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // 模型选择器
+
             ModelSelector(
                 selectedModel = selectedModel,
                 availableModels = availableModels,
                 onModelSelected = onModelSelected,
                 onConfigureClick = onConfigureModels
             )
-            
-            // 分类选择
+
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -398,18 +398,18 @@ private fun InputSection(
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                
+
                 PremiumFilterChip(
                     selected = selectedCategory != null,
                     onClick = onCategoryClick,
-                    label = { 
+                    label = {
                         Text(
                             selectedCategory?.let { "${it.icon} ${it.getDisplayName()}" } ?: Strings.autoDetectCategory,
                             style = MaterialTheme.typography.labelMedium
                         )
                     }
                 )
-                
+
                 if (selectedCategory != null) {
                     IconButton(
                         onClick = onClearCategory,
@@ -424,13 +424,13 @@ private fun InputSection(
                     }
                 }
             }
-            
-            // 输入框
+
+
             OutlinedTextField(
                 value = userInput,
                 onValueChange = onInputChange,
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { 
+                placeholder = {
                     Text(
                         Strings.inputPlaceholder,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
@@ -449,9 +449,9 @@ private fun InputSection(
                             Icon(
                                 Icons.Default.Send,
                                 contentDescription = Strings.startDevelopment,
-                                tint = if (userInput.isNotBlank()) 
-                                    MaterialTheme.colorScheme.primary 
-                                else 
+                                tint = if (userInput.isNotBlank())
+                                    MaterialTheme.colorScheme.primary
+                                else
                                     MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                             )
                         }
@@ -467,9 +467,9 @@ private fun InputSection(
     }
 }
 
-/**
- * 生成的模块区域
- */
+
+
+
 @Composable
 private fun GeneratedModuleSection(
     module: GeneratedModuleData,
@@ -486,10 +486,10 @@ private fun GeneratedModuleSection(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Module信息卡片
+
         ModuleInfoCard(module = module)
-        
-        // 代码预览面板
+
+
         CodePreviewPanel(
             jsCode = editedJsCode.ifBlank { module.jsCode },
             cssCode = editedCssCode.ifBlank { module.cssCode },
@@ -500,8 +500,8 @@ private fun GeneratedModuleSection(
             onSave = onSave,
             isEditable = true
         )
-        
-        // 编辑提示
+
+
         if (hasEdits) {
             Surface(
                 shape = RoundedCornerShape(8.dp),
@@ -529,9 +529,9 @@ private fun GeneratedModuleSection(
     }
 }
 
-/**
- * 模块信息卡片
- */
+
+
+
 @Composable
 private fun ModuleInfoCard(module: GeneratedModuleData) {
     Card(
@@ -542,7 +542,7 @@ private fun ModuleInfoCard(module: GeneratedModuleData) {
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Success标识
+
             Surface(
                 shape = RoundedCornerShape(8.dp),
                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
@@ -566,10 +566,10 @@ private fun ModuleInfoCard(module: GeneratedModuleData) {
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
-            // Module信息
+
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -599,10 +599,10 @@ private fun ModuleInfoCard(module: GeneratedModuleData) {
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
-            // 状态标签
+
+
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (module.syntaxValid) {
                     StatusChip(iconVector = Icons.Outlined.CheckCircle, text = Strings.syntaxCorrect, color = MaterialTheme.colorScheme.primary)
@@ -611,10 +611,10 @@ private fun ModuleInfoCard(module: GeneratedModuleData) {
                     StatusChip(iconVector = Icons.Outlined.Lock, text = Strings.secureStatus, color = MaterialTheme.colorScheme.secondary)
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
-            // Description
+
+
             Text(
                 module.description,
                 style = MaterialTheme.typography.bodyMedium,
@@ -625,9 +625,9 @@ private fun ModuleInfoCard(module: GeneratedModuleData) {
     }
 }
 
-/**
- * 状态标签
- */
+
+
+
 @Composable
 private fun StatusChip(iconVector: ImageVector, text: String, color: Color) {
     Surface(
@@ -655,9 +655,9 @@ private fun StatusChip(iconVector: ImageVector, text: String, color: Color) {
 }
 
 
-/**
- * 流式状态卡片
- */
+
+
+
 @Composable
 private fun StreamingStatusCard(state: AgentState) {
     val stateIcon: ImageVector = when (state) {
@@ -684,7 +684,7 @@ private fun StreamingStatusCard(state: AgentState) {
         AgentState.SYNTAX_CHECKING, AgentState.SECURITY_SCANNING -> MaterialTheme.colorScheme.secondary
         else -> MaterialTheme.colorScheme.primary
     }
-    
+
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -713,9 +713,9 @@ private fun StreamingStatusCard(state: AgentState) {
     }
 }
 
-/**
- * 流式状态徽章
- */
+
+
+
 @Composable
 private fun StreamingStatusBadge(state: AgentState) {
     val text = when (state) {
@@ -727,7 +727,7 @@ private fun StreamingStatusBadge(state: AgentState) {
         AgentState.SECURITY_SCANNING -> Strings.statusScanning
         else -> Strings.statusProcessing
     }
-    
+
     val infiniteTransition = rememberInfiniteTransition(label = "badge")
     val alpha by infiniteTransition.animateFloat(
         initialValue = 0.5f,
@@ -738,7 +738,7 @@ private fun StreamingStatusBadge(state: AgentState) {
         ),
         label = "badgeAlpha"
     )
-    
+
     Surface(
         shape = RoundedCornerShape(6.dp),
         color = MaterialTheme.colorScheme.primary.copy(alpha = alpha * 0.2f)
@@ -753,16 +753,16 @@ private fun StreamingStatusBadge(state: AgentState) {
     }
 }
 
-/**
- * 流式动画点
- */
+
+
+
 @Composable
 private fun StreamingDots(
     color: Color,
     modifier: Modifier = Modifier
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "streamingDots")
-    
+
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -783,7 +783,7 @@ private fun StreamingDots(
                 ),
                 label = "dot$index"
             )
-            
+
             Box(
                 modifier = Modifier
                     .size((6 * scale).dp)
@@ -794,13 +794,13 @@ private fun StreamingDots(
     }
 }
 
-/**
- * 发送中指示器
- */
+
+
+
 @Composable
 private fun SendingIndicator(modifier: Modifier = Modifier) {
     val infiniteTransition = rememberInfiniteTransition(label = "sending")
-    
+
     Row(
         modifier = modifier.size(24.dp),
         horizontalArrangement = Arrangement.Center,
@@ -821,7 +821,7 @@ private fun SendingIndicator(modifier: Modifier = Modifier) {
                 ),
                 label = "sendDot$index"
             )
-            
+
             Box(
                 modifier = Modifier
                     .padding(horizontal = 1.dp)
@@ -834,11 +834,11 @@ private fun SendingIndicator(modifier: Modifier = Modifier) {
     }
 }
 
-// ==================== 欢迎界面组件 ====================
 
-/**
- * 欢迎卡片
- */
+
+
+
+
 @Composable
 private fun WelcomeCard() {
     Card(
@@ -854,7 +854,7 @@ private fun WelcomeCard() {
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // AI 图标
+
             Box(
                 modifier = Modifier
                     .size(80.dp)
@@ -876,9 +876,9 @@ private fun WelcomeCard() {
                     tint = Color.White
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             Text(
                 Strings.aiAssistant,
                 style = MaterialTheme.typography.headlineSmall,
@@ -886,9 +886,9 @@ private fun WelcomeCard() {
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Text(
                 Strings.aiAssistantDesc,
                 style = MaterialTheme.typography.bodyMedium,
@@ -900,9 +900,9 @@ private fun WelcomeCard() {
     }
 }
 
-/**
- * 功能特性标签
- */
+
+
+
 @Composable
 private fun FeatureChips() {
     Row(
@@ -945,9 +945,9 @@ private fun FeatureChip(iconVector: ImageVector, text: String) {
     }
 }
 
-/**
- * 示例需求
- */
+
+
+
 @Composable
 private fun ExampleRequirements(onSelect: (String) -> Unit) {
     val examples = listOf(
@@ -958,7 +958,7 @@ private fun ExampleRequirements(onSelect: (String) -> Unit) {
         Icons.Outlined.FastForward to Strings.exampleVideoSpeed,
         Icons.Outlined.KeyboardArrowUp to Strings.exampleBackToTop
     )
-    
+
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -977,7 +977,7 @@ private fun ExampleRequirements(onSelect: (String) -> Unit) {
                 color = MaterialTheme.colorScheme.onSurface
             )
         }
-        
+
         examples.chunked(2).forEach { row ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1025,11 +1025,11 @@ private fun ExampleRequirements(onSelect: (String) -> Unit) {
 }
 
 
-// ==================== 对话框组件 ====================
 
-/**
- * 分类选择对话框
- */
+
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CategorySelectorDialog(
@@ -1039,7 +1039,7 @@ private fun CategorySelectorDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { 
+        title = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1067,7 +1067,7 @@ private fun CategorySelectorDialog(
                     )
                     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 }
-                
+
                 items(ModuleCategory.values().toList()) { category ->
                     CategoryItem(
                         icon = category.icon,
@@ -1101,9 +1101,9 @@ private fun CategoryItem(
             .fillMaxWidth()
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
-        color = if (selected) 
-            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) 
-        else 
+        color = if (selected)
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+        else
             Color.Transparent
     ) {
         Row(
@@ -1150,14 +1150,14 @@ private fun CategoryItem(
     }
 }
 
-/**
- * 帮助对话框
- */
+
+
+
 @Composable
 private fun HelpDialog(onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { 
+        title = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1182,7 +1182,7 @@ private fun HelpDialog(onDismiss: () -> Unit) {
                         content = Strings.helpHowToUseContent
                     )
                 }
-                
+
                 item {
                     HelpSection(
                         iconVector = Icons.Outlined.Edit,
@@ -1190,7 +1190,7 @@ private fun HelpDialog(onDismiss: () -> Unit) {
                         content = Strings.helpRequirementTipsContent
                     )
                 }
-                
+
                 item {
                     HelpSection(
                         iconVector = Icons.Outlined.SmartToy,
@@ -1198,7 +1198,7 @@ private fun HelpDialog(onDismiss: () -> Unit) {
                         content = Strings.helpModelSelectionContent
                     )
                 }
-                
+
                 item {
                     HelpSection(
                         iconVector = Icons.Outlined.FolderOpen,
@@ -1206,7 +1206,7 @@ private fun HelpDialog(onDismiss: () -> Unit) {
                         content = Strings.helpCategorySelectionContent
                     )
                 }
-                
+
                 item {
                     HelpSection(
                         iconVector = Icons.Outlined.Search,
@@ -1214,7 +1214,7 @@ private fun HelpDialog(onDismiss: () -> Unit) {
                         content = Strings.helpAutoCheckContent
                     )
                 }
-                
+
                 item {
                     HelpSection(
                         iconVector = Icons.Outlined.Edit,
@@ -1222,7 +1222,7 @@ private fun HelpDialog(onDismiss: () -> Unit) {
                         content = Strings.helpCodeEditContent
                     )
                 }
-                
+
                 item {
                     HelpSection(
                         iconVector = Icons.Outlined.Save,

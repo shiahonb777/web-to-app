@@ -10,72 +10,72 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
-/**
- * AI 模块开发器
- * 
- * 使用 AI 辅助生成扩展模块代码
- * 
- * 注意：推荐使用新的 ModuleAgentEngine 获得更好的开发体验
- * @see com.webtoapp.core.extension.agent.ModuleAgentEngine
- */
+
+
+
+
+
+
+
+
 class AiModuleDeveloper(private val context: Context) {
-    
+
     companion object {
-        // 代码块解析
+
         private val JSON_BLOCK_REGEX = Regex("```json\\s*([\\s\\S]*?)\\s*```")
         private val JS_BLOCK_REGEX = Regex("```(?:javascript|js)\\s*([\\s\\S]*?)\\s*```")
         private val CSS_BLOCK_REGEX = Regex("```css\\s*([\\s\\S]*?)\\s*```")
     }
-    
+
     private val aiConfigManager = AiConfigManager(context)
     private val aiClient = AiApiClient(context)
     private val gson = com.webtoapp.util.GsonProvider.gson
-    
-    // 新的 Agent 引擎（推荐使用）
+
+
     val agentEngine = ModuleAgentEngine(context)
-    
-    /**
-     * AI 生成模块代码（简化版本）
-     * 
-     * 推荐使用 agentEngine.develop() 获得完整的 Agent 开发体验
-     */
+
+
+
+
+
+
     suspend fun generateModuleCode(
         prompt: String,
         category: ModuleCategory? = null,
         existingCode: String? = null
     ): AiGenerationResult = withContext(Dispatchers.IO) {
         try {
-            // Get AI 配置
+
             val apiKeys = aiConfigManager.apiKeysFlow.first()
             val savedModels = aiConfigManager.savedModelsFlow.first()
-            
+
             if (apiKeys.isEmpty()) {
                 return@withContext AiGenerationResult.Error(Strings.aiErrorNoApiKey)
             }
-            
+
             val defaultModelId = aiConfigManager.defaultModelIdFlow.first()
-            val savedModel = savedModels.find { it.id == defaultModelId } 
+            val savedModel = savedModels.find { it.id == defaultModelId }
                 ?: savedModels.firstOrNull()
 
             if (savedModel == null) {
                 return@withContext AiGenerationResult.Error(Strings.aiErrorNoModel)
             }
-            
+
             val apiKey = apiKeys.find { it.id == savedModel.apiKeyId }
             if (apiKey == null) {
                 return@withContext AiGenerationResult.Error(Strings.aiErrorNoApiKeyForModel)
             }
-            
+
             val systemPrompt = buildSystemPrompt(category)
             val userPrompt = buildUserPrompt(prompt, existingCode)
-            
+
             val messages = listOf(
                 mapOf("role" to "system", "content" to systemPrompt),
                 mapOf("role" to "user", "content" to userPrompt)
             )
-            
+
             val response = aiClient.chat(apiKey, savedModel.model, messages)
-            
+
             if (response.isSuccess) {
                 val content = response.getOrNull() ?: ""
                 val parsed = parseAiResponse(content)
@@ -88,14 +88,14 @@ class AiModuleDeveloper(private val context: Context) {
         }
     }
 
-    /**
-     * 构建系统提示词
-     */
+
+
+
     private fun buildSystemPrompt(category: ModuleCategory?): String {
         val categoryHint = category?.let {
             "用户希望创建一个「${it.getDisplayName()}」类型的模块，${it.getDescription()}。"
         } ?: ""
-        
+
         return """
 你是一个专业的 JavaScript/CSS 开发专家，专门为 WebToApp 扩展模块系统编写代码。
 
@@ -139,10 +139,10 @@ $categoryHint
 ```
         """.trimIndent()
     }
-    
-    /**
-     * 构建用户提示词
-     */
+
+
+
+
     private fun buildUserPrompt(prompt: String, existingCode: String?): String {
         return if (existingCode.isNullOrBlank()) {
             "请根据以下需求创建一个扩展模块：\n\n$prompt"
@@ -159,27 +159,27 @@ $existingCode
             """.trimIndent()
         }
     }
-    
-    /**
-     * 解析 AI 响应
-     */
+
+
+
+
     private fun parseAiResponse(content: String): AiGeneratedModule {
         try {
-            // 提取 JSON 块
+
             val jsonMatch = JSON_BLOCK_REGEX.find(content)
-            
+
             if (jsonMatch != null) {
                 val jsonStr = jsonMatch.groupValues[1]
                 return gson.fromJson(jsonStr, AiGeneratedModule::class.java)
             }
-            
-            // 尝试直接解析
+
+
             return gson.fromJson(content, AiGeneratedModule::class.java)
         } catch (e: Exception) {
-            // Parse失败，尝试提取代码块
+
             val jsCode = JS_BLOCK_REGEX.find(content)?.groupValues?.get(1) ?: content
             val cssCode = CSS_BLOCK_REGEX.find(content)?.groupValues?.get(1) ?: ""
-            
+
             return AiGeneratedModule(
                 name = Strings.aiGeneratedModule,
                 description = Strings.aiGeneratedModuleDesc,
@@ -190,10 +190,10 @@ $existingCode
             )
         }
     }
-    
-    /**
-     * 优化现有代码
-     */
+
+
+
+
     suspend fun optimizeCode(code: String): AiGenerationResult {
         return generateModuleCode(
             prompt = "请优化以下代码，提高性能和可读性，修复潜在问题",
@@ -203,17 +203,17 @@ $existingCode
 }
 
 
-/**
- * AI 生成结果
- */
+
+
+
 sealed class AiGenerationResult {
     data class Success(val module: AiGeneratedModule) : AiGenerationResult()
     data class Error(val message: String) : AiGenerationResult()
 }
 
-/**
- * AI 生成的模块数据
- */
+
+
+
 data class AiGeneratedModule(
     val name: String,
     val description: String,
@@ -222,9 +222,9 @@ data class AiGeneratedModule(
     val cssCode: String,
     val configItems: List<AiConfigItem>
 ) {
-    /**
-     * 转换为 ExtensionModule
-     */
+
+
+
     fun toExtensionModule(): ExtensionModule {
         return ExtensionModule(
             name = name.ifBlank { Strings.aiGeneratedModule },
@@ -242,9 +242,9 @@ data class AiGeneratedModule(
     }
 }
 
-/**
- * AI 配置项
- */
+
+
+
 data class AiConfigItem(
     val key: String,
     val name: String,
@@ -258,7 +258,7 @@ data class AiConfigItem(
         } catch (e: Exception) {
             ConfigItemType.TEXT
         }
-        
+
         return ModuleConfigItem(
             key = key,
             name = name,

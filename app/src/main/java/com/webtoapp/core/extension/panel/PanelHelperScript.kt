@@ -1,13 +1,13 @@
 package com.webtoapp.core.extension.panel
 
-/**
- * extension .
- */
+
+
+
 object PanelHelperScript {
     val helperScript: String = """
 (function() {
     'use strict';
-    
+
     // etc.
     function waitForPanel(callback, maxWait = 10000) {
         const start = Date.now();
@@ -23,7 +23,7 @@ object PanelHelperScript {
         };
         check();
     }
-    
+
     // UI.
     const UI_TYPE = {
         FLOATING_BUTTON: 'FLOATING_BUTTON',   // button.
@@ -34,12 +34,12 @@ object PanelHelperScript {
         MINI_BUTTON: 'MINI_BUTTON',           // button.
         CUSTOM: 'CUSTOM'                      // CustomUI
     };
-    
+
     const RUN_MODE = {
         INTERACTIVE: 'INTERACTIVE',  // interaction.
         AUTO: 'AUTO'                 // Note.
     };
-    
+
     const UI_POSITION = {
         TOP_LEFT: 'TOP_LEFT',
         TOP_CENTER: 'TOP_CENTER',
@@ -51,14 +51,14 @@ object PanelHelperScript {
         BOTTOM_CENTER: 'BOTTOM_CENTER',
         BOTTOM_RIGHT: 'BOTTOM_RIGHT'
     };
-    
+
     // Module UI.
     window.__WTA_MODULE_UI__ = {
         // Export.
         UI_TYPE: UI_TYPE,
         RUN_MODE: RUN_MODE,
         UI_POSITION: UI_POSITION,
-        
+
         /**
          * @param {Object} config config.
          * @param {string} config.id ID.
@@ -88,7 +88,7 @@ object PanelHelperScript {
                 panel.registerModule(config);
             });
         },
-        
+
         /**
          * @param {string} id ID.
          * @param {string} icon (emoji)
@@ -108,7 +108,7 @@ object PanelHelperScript {
                 badge: options.badge || null
             };
         },
-        
+
         /**
          */
         updatePanel(moduleId, html) {
@@ -116,7 +116,7 @@ object PanelHelperScript {
                 window.__WTA_PANEL__.updateModulePanelContent(moduleId, html);
             }
         },
-        
+
         /**
          */
         updateFloatingPanel(moduleId, html) {
@@ -124,7 +124,7 @@ object PanelHelperScript {
                 window.__WTA_PANEL__.updateFloatingPanelContent(moduleId, html);
             }
         },
-        
+
         /**
          * UI.
          */
@@ -133,7 +133,7 @@ object PanelHelperScript {
                 window.__WTA_PANEL__.updateCustomUI(moduleId, html);
             }
         },
-        
+
         /**
          * by.
          */
@@ -142,7 +142,7 @@ object PanelHelperScript {
                 window.__WTA_PANEL__.updateMiniButtonBadge(moduleId, count);
             }
         },
-        
+
         /**
          * Sidebar visibility controls.
          */
@@ -151,19 +151,19 @@ object PanelHelperScript {
                 window.__WTA_PANEL__.showSidebar(moduleId);
             }
         },
-        
+
         hideSidebar(moduleId) {
             if (window.__WTA_PANEL__) {
                 window.__WTA_PANEL__.hideSidebar(moduleId);
             }
         },
-        
+
         toggleSidebar(moduleId) {
             if (window.__WTA_PANEL__) {
                 window.__WTA_PANEL__.toggleSidebar(moduleId);
             }
         },
-        
+
         /**
          * Floating panel visibility controls.
          */
@@ -172,13 +172,13 @@ object PanelHelperScript {
                 window.__WTA_PANEL__.showFloatingPanel(moduleId);
             }
         },
-        
+
         hideFloatingPanel(moduleId) {
             if (window.__WTA_PANEL__) {
                 window.__WTA_PANEL__.hideFloatingPanel(moduleId);
             }
         },
-        
+
         /**
          * Bottom bar visibility control.
          */
@@ -187,7 +187,7 @@ object PanelHelperScript {
                 window.__WTA_PANEL__.setBottomBarVisible(visible);
             }
         },
-        
+
         /**
          */
         toggleToolbarCollapse(moduleId) {
@@ -195,7 +195,7 @@ object PanelHelperScript {
                 window.__WTA_PANEL__.toggleToolbarCollapse(moduleId);
             }
         },
-        
+
         /**
          * Toast.
          */
@@ -204,7 +204,7 @@ object PanelHelperScript {
                 window.__WTA_PANEL__.showToast(message, duration);
             }
         },
-        
+
         /**
          */
         closePanel() {
@@ -212,7 +212,7 @@ object PanelHelperScript {
                 window.__WTA_PANEL__.hidePanel();
             }
         },
-        
+
         /**
          */
         showPanel() {
@@ -220,7 +220,7 @@ object PanelHelperScript {
                 window.__WTA_PANEL__.showPanel();
             }
         },
-        
+
         /**
          */
         back() {
@@ -228,7 +228,7 @@ object PanelHelperScript {
                 window.__WTA_PANEL__.hideModuleDetail();
             }
         },
-        
+
         /**
          * FAB can.
          */
@@ -237,7 +237,7 @@ object PanelHelperScript {
                 window.__WTA_PANEL__.setFabVisible(visible);
             }
         },
-        
+
         /**
          * FAB.
          */

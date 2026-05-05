@@ -28,10 +28,10 @@ import kotlinx.coroutines.launch
 import com.webtoapp.ui.components.ThemedBackgroundBox
 import androidx.compose.ui.graphics.Color
 
-/**
- * Hosts 广告拦截管理界面
- * 支持从文件和 URL 导入 hosts 规则
- */
+
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HostsAdBlockScreen(
@@ -40,21 +40,21 @@ fun HostsAdBlockScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
-    
-    // Get AdBlocker 实例（通过 Koin 注入）
+
+
     val adBlocker = remember { org.koin.java.KoinJavaComponent.get<com.webtoapp.core.adblock.AdBlocker>(com.webtoapp.core.adblock.AdBlocker::class.java) }
-    
-    // 状态
+
+
     var hostsRulesCount by remember { mutableIntStateOf(adBlocker.getHostsFileRuleCount()) }
     var isImporting by remember { mutableStateOf(false) }
     var showUrlDialog by remember { mutableStateOf(false) }
     var showClearDialog by remember { mutableStateOf(false) }
     var importUrl by remember { mutableStateOf("") }
-    
-    // 已启用的源
+
+
     var enabledSources by remember { mutableStateOf(adBlocker.getEnabledHostsSources()) }
-    
-    // File选择器
+
+
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -80,14 +80,14 @@ fun HostsAdBlockScreen(
             }
         }
     }
-    
-    // Load已保存的规则
+
+
     LaunchedEffect(Unit) {
         adBlocker.loadHostsRules(context)
         hostsRulesCount = adBlocker.getHostsFileRuleCount()
         enabledSources = adBlocker.getEnabledHostsSources()
     }
-    
+
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
@@ -125,7 +125,7 @@ fun HostsAdBlockScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 统计卡片
+
             item {
                 EnhancedElevatedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -154,7 +154,7 @@ fun HostsAdBlockScreen(
                                 )
                             }
                         }
-                        
+
                         if (hostsRulesCount > 0) {
                             Icon(
                                 Icons.Outlined.Shield,
@@ -166,8 +166,8 @@ fun HostsAdBlockScreen(
                     }
                 }
             }
-            
-            // Import选项
+
+
             item {
                 Text(
                     Strings.importFromFile,
@@ -175,13 +175,13 @@ fun HostsAdBlockScreen(
                     fontWeight = FontWeight.Medium
                 )
             }
-            
+
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // 从文件导入
+
                     EnhancedElevatedCard(
                         onClick = { filePickerLauncher.launch("*/*") },
                         modifier = Modifier.weight(weight = 1f, fill = true),
@@ -205,8 +205,8 @@ fun HostsAdBlockScreen(
                             )
                         }
                     }
-                    
-                    // 从 URL 导入
+
+
                     EnhancedElevatedCard(
                         onClick = { showUrlDialog = true },
                         modifier = Modifier.weight(weight = 1f, fill = true),
@@ -232,8 +232,8 @@ fun HostsAdBlockScreen(
                     }
                 }
             }
-            
-            // 常用 hosts 源
+
+
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
@@ -242,7 +242,7 @@ fun HostsAdBlockScreen(
                     fontWeight = FontWeight.Medium
                 )
             }
-            
+
             items(AdBlocker.POPULAR_HOSTS_SOURCES) { source ->
                 HostsSourceCard(
                     source = source,
@@ -272,8 +272,8 @@ fun HostsAdBlockScreen(
                     }
                 )
             }
-            
-            // 清空按钮
+
+
             if (hostsRulesCount > 0) {
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
@@ -290,8 +290,8 @@ fun HostsAdBlockScreen(
                     }
                 }
             }
-            
-            // 说明
+
+
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 EnhancedElevatedCard(
@@ -319,8 +319,8 @@ fun HostsAdBlockScreen(
                 }
             }
         }
-        
-        // Load指示器
+
+
         if (isImporting) {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -339,8 +339,8 @@ fun HostsAdBlockScreen(
             }
         }
     }
-    
-    // URL 导入对话框
+
+
     if (showUrlDialog) {
         AlertDialog(
             onDismissRequest = { if (!isImporting) showUrlDialog = false },
@@ -401,8 +401,8 @@ fun HostsAdBlockScreen(
             }
         )
     }
-    
-    // 清空确认对话框
+
+
     if (showClearDialog) {
         AlertDialog(
             onDismissRequest = { showClearDialog = false },
@@ -437,9 +437,9 @@ fun HostsAdBlockScreen(
         }
 }
 
-/**
- * Hosts 源卡片
- */
+
+
+
 @Composable
 private fun HostsSourceCard(
     source: HostsSource,
@@ -488,9 +488,9 @@ private fun HostsSourceCard(
                     overflow = TextOverflow.Ellipsis
                 )
             }
-            
+
             Spacer(modifier = Modifier.width(12.dp))
-            
+
             FilledTonalButton(
                 onClick = onImport,
                 enabled = !isImporting,

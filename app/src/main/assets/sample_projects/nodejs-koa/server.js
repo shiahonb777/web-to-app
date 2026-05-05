@@ -1,7 +1,7 @@
-/**
- * Markdown 笔记应用 — 暗色主题版
- * Node.js 内置模块，零依赖
- */
+
+
+
+
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -23,7 +23,7 @@ function parseBody(req) { return new Promise(r => { let b = ''; req.on('data', c
 function sendJson(res, data, s = 200) { res.writeHead(s, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify(data)); }
 
 const server = http.createServer(async (req, res) => {
-  const url = new URL(req.url, `http://${req.headers.host}`);
+  const url = new URL(req.url, `http:
   const p = url.pathname, m = req.method;
 
   if (m === 'GET' && p === '/') { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); return res.end(getPage()); }

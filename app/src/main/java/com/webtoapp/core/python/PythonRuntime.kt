@@ -4,6 +4,7 @@ import android.content.Context
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.core.port.PortManager
 import com.webtoapp.core.shell.ShellLogger
+import com.webtoapp.util.destroyGracefullyCompat
 import com.webtoapp.util.destroyForciblyCompat
 import com.webtoapp.util.isAliveCompat
 import kotlinx.coroutines.Dispatchers
@@ -15,31 +16,31 @@ import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 
-/**
- * Python Web 应用运行时管理器
- * 
- * 通过下载的 CPython 二进制执行 Python Web 项目。
- * 执行方式类似 PHP：ProcessBuilder 启动独立进程。
- * 
- * 支持框架：Flask / Django / FastAPI / Tornado / 原生 Python
- * 
- * 执行流程：
- * 1. 检测框架类型和入口文件
- * 2. 安装 requirements.txt 依赖（pip install --target）
- * 3. 构建启动命令（根据框架选择不同的启动方式）
- * 4. 通过 ProcessBuilder 启动 Python 进程
- * 5. 健康检查确认服务就绪
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class PythonRuntime(private val context: Context) {
-    
+
     companion object {
         private const val TAG = "PythonRuntime"
         private const val MAX_HEALTH_CHECK_RETRIES = 60
         private const val HEALTH_CHECK_INTERVAL_MS = 500L
     }
-    
-    // ==================== 状态 ====================
-    
+
+
+
     sealed class ServerState {
         object Stopped : ServerState()
         object Starting : ServerState()
@@ -47,7 +48,7 @@ class PythonRuntime(private val context: Context) {
         data class Running(val port: Int, val pid: Long) : ServerState()
         data class Error(val message: String) : ServerState()
     }
-    
+
     private val _serverState = MutableStateFlow<ServerState>(ServerState.Stopped)
     val serverState: StateFlow<ServerState> = _serverState
 
@@ -55,35 +56,35 @@ class PythonRuntime(private val context: Context) {
     private var currentPort: Int = 0
     private val pythonOutputBuffer = StringBuffer()
     private val pythonStderrBuffer = StringBuffer()
-    
-    // ==================== 公开 API ====================
-    
+
+
+
     fun getProjectsDir(): File {
         return File(context.filesDir, "python_projects").also { it.mkdirs() }
     }
-    
+
     fun getProjectDir(projectId: String): File {
         return File(getProjectsDir(), projectId)
     }
-    
-    /**
-     * 检查 Python 是否可用
-     */
+
+
+
+
     fun isPythonAvailable(): Boolean {
         return PythonDependencyManager.isPythonReady(context)
     }
-    
-    /**
-     * 启动 Python 服务器
-     * 
-     * @param projectDir Python 项目根目录
-     * @param entryFile 入口文件
-     * @param framework 框架类型
-     * @param port 监听端口（0=自动分配）
-     * @param envVars 额外环境变量
-     * @param installDeps 是否先安装依赖
-     * @return 实际使用的端口号，失败返回 -1
-     */
+
+
+
+
+
+
+
+
+
+
+
+
     suspend fun startServer(
         projectDir: String,
         entryFile: String = "app.py",
@@ -97,24 +98,24 @@ class PythonRuntime(private val context: Context) {
                 _serverState.value = ServerState.Error("Python 运行时未就绪，请先下载依赖")
                 return@withContext -1
             }
-            
+
             stopServer()
             _serverState.value = ServerState.Starting
-            
+
             val projDir = File(projectDir)
             val pythonBin = PythonDependencyManager.getPythonExecutablePath(context)
             val pythonHome = PythonDependencyManager.getPythonHome(context)
             val muslLinker = PythonDependencyManager.getMuslLinkerPath(context)
-            
+
             AppLogger.i(TAG, "musl linker: ${muslLinker ?: "(不可用 - Python 可能无法执行)"}")
             ShellLogger.i(TAG, "musl linker: ${muslLinker ?: "(不可用)"}")
-            
-            // === 预飞检查：验证 Python 二进制有效性 ===
+
+
             val binFile = File(pythonBin)
             AppLogger.i(TAG, "Python 二进制: ${binFile.absolutePath} (${binFile.length() / 1024} KB, executable=${binFile.canExecute()})")
             ShellLogger.i(TAG, "Python 二进制: ${binFile.absolutePath} (${binFile.length() / 1024} KB)")
-            
-            // 检查文件大小（有效的 Python 二进制应 > 1MB）
+
+
             if (binFile.length() < 1024 * 1024) {
                 val errMsg = "Python 二进制无效: 文件过小 (${binFile.length()} bytes)，请重新下载 Python 运行时或重新构建 APK"
                 AppLogger.e(TAG, errMsg)
@@ -122,8 +123,8 @@ class PythonRuntime(private val context: Context) {
                 _serverState.value = ServerState.Error(errMsg)
                 return@withContext -1
             }
-            
-            // 验证 PYTHONHOME 包含标准库
+
+
             val stdlibDir = File(pythonHome, "lib/python${PythonDependencyManager.PYTHON_VERSION}")
             if (!stdlibDir.exists()) {
                 AppLogger.w(TAG, "PYTHONHOME 标准库目录不存在: ${stdlibDir.absolutePath}")
@@ -132,8 +133,8 @@ class PythonRuntime(private val context: Context) {
                 val fileCount = stdlibDir.walkTopDown().filter { it.isFile }.count()
                 AppLogger.i(TAG, "PYTHONHOME 标准库: ${stdlibDir.absolutePath} ($fileCount 文件)")
             }
-            
-            // 运行 --version 验证二进制是否真正可执行
+
+
             val versionCheck = verifyPythonBinary(pythonBin, pythonHome, muslLinker)
             if (versionCheck == null) {
                 val errMsg = "Python 二进制无法执行: 运行 --version 失败。" +
@@ -146,8 +147,8 @@ class PythonRuntime(private val context: Context) {
             }
             AppLogger.i(TAG, "Python 版本验证通过: $versionCheck")
             ShellLogger.i(TAG, "Python 版本验证通过: $versionCheck")
-            
-            // 安装依赖
+
+
             if (installDeps && File(projDir, "requirements.txt").exists()) {
                 _serverState.value = ServerState.InstallingDeps
                 AppLogger.i(TAG, "安装 Python 依赖...")
@@ -156,7 +157,7 @@ class PythonRuntime(private val context: Context) {
                     ShellLogger.d(TAG, "[pip] $line")
                 }
                 if (!depsInstalled) {
-                    // pip install 失败，但如果 .pypackages 已从 APK assets 中提取（构建时预装），仍然可以继续
+
                     val sitePackages = File(projDir, ".pypackages")
                     val existingPackages = sitePackages.listFiles()
                     if (sitePackages.exists() && existingPackages != null && existingPackages.isNotEmpty()) {
@@ -171,8 +172,8 @@ class PythonRuntime(private val context: Context) {
                     }
                 }
             }
-            
-            // 分配端口
+
+
             val projectId = projDir.name
             val serverPort = PortManager.allocateForPython(projectId, port)
             if (serverPort < 0) {
@@ -180,29 +181,29 @@ class PythonRuntime(private val context: Context) {
                 return@withContext -1
             }
             currentPort = serverPort
-            
-            // 检查入口文件
+
+
             val entryFilePath = File(projDir, entryFile)
             if (!entryFilePath.exists()) {
                 _serverState.value = ServerState.Error("入口文件不存在: $entryFile")
                 PortManager.release(serverPort)
                 return@withContext -1
             }
-            
-            // 创建引导脚本（修复 importlib.metadata 和端口问题）
+
+
             createBootstrapScript(projDir, serverPort)
-            
-            // 构建启动命令
+
+
             val command = buildPythonCommand(pythonBin, framework, entryFile, serverPort, muslLinker, pythonHome)
-            
+
             AppLogger.i(TAG, "启动 Python 服务器: ${command.joinToString(" ")}")
             AppLogger.i(TAG, "工作目录: $projectDir, 端口: $serverPort, 框架: $framework")
             ShellLogger.i(TAG, "启动 Python 服务器: ${command.joinToString(" ")}")
-            
+
             val processBuilder = ProcessBuilder(command)
             processBuilder.directory(projDir)
-            
-            // 设置环境变量
+
+
             val env = processBuilder.environment()
             env["PYTHONHOME"] = pythonHome
             env["HOME"] = context.filesDir.absolutePath
@@ -211,8 +212,8 @@ class PythonRuntime(private val context: Context) {
             env["HOST"] = "127.0.0.1"
             env["FLASK_ENV"] = "production"
             env["DJANGO_SETTINGS_MODULE"] = detectDjangoSettings(projDir)
-            
-            // PYTHONPATH: 标准库 + 项目本地包 + 项目目录
+
+
             val sitePackages = File(projDir, ".pypackages")
             val pythonPath = buildList {
                 add("${pythonHome}/lib/python${PythonDependencyManager.PYTHON_VERSION}")
@@ -222,8 +223,8 @@ class PythonRuntime(private val context: Context) {
             }.joinToString(":")
             env["PYTHONPATH"] = pythonPath
             env["LD_LIBRARY_PATH"] = "${pythonHome}/lib"
-            
-            // ★ 详细诊断日志
+
+
             AppLogger.i(TAG, "=== Python 服务器启动诊断 ===")
             AppLogger.i(TAG, "PYTHONHOME=$pythonHome")
             AppLogger.i(TAG, "PYTHONPATH=$pythonPath")
@@ -233,17 +234,17 @@ class PythonRuntime(private val context: Context) {
             AppLogger.i(TAG, "stdlib 存在=${File(pythonHome, "lib/python${PythonDependencyManager.PYTHON_VERSION}").exists()}, 文件数=${File(pythonHome, "lib/python${PythonDependencyManager.PYTHON_VERSION}").walkTopDown().filter { it.isFile }.count()}")
             AppLogger.i(TAG, "libpython so 存在=${File(pythonHome, "lib/libpython3.12.so.1.0").exists()}, 大小=${File(pythonHome, "lib/libpython3.12.so.1.0").let { if (it.exists()) "${it.length()/1024}KB" else "N/A" }}")
             AppLogger.i(TAG, "=========================")
-            
+
             env["PATH"] = "${File(pythonHome, "bin").absolutePath}:${env["PATH"] ?: "/usr/bin"}"
-            
-            // 用户自定义环境变量
+
+
             envVars.forEach { (k, v) -> env[k] = v }
-            
+
             pythonOutputBuffer.setLength(0)
             pythonStderrBuffer.setLength(0)
             pythonProcess = processBuilder.start()
-            
-            // stdout 日志线程
+
+
             pythonProcess?.inputStream?.let { stream ->
                 Thread {
                     try {
@@ -255,8 +256,8 @@ class PythonRuntime(private val context: Context) {
                     } catch (e: Exception) { AppLogger.d(TAG, "Python stdout reader ended", e) }
                 }.apply { isDaemon = true; start() }
             }
-            
-            // stderr 日志线程
+
+
             pythonProcess?.errorStream?.let { stream ->
                 Thread {
                     try {
@@ -268,8 +269,8 @@ class PythonRuntime(private val context: Context) {
                     } catch (e: Exception) { AppLogger.d(TAG, "Python stderr reader ended", e) }
                 }.apply { isDaemon = true; start() }
             }
-            
-            // 等待服务器就绪
+
+
             val ready = waitForServerReady(serverPort)
             if (ready) {
                 val pid = getProcessPid(pythonProcess)
@@ -303,13 +304,12 @@ class PythonRuntime(private val context: Context) {
             -1
         }
     }
-    
+
     fun stopServer() {
         try {
             pythonProcess?.let { process ->
-                process.destroy()
                 try {
-                    Thread.sleep(200)
+                    process.destroyGracefullyCompat(timeoutMs = 200L)
                     if (process.isAliveCompat()) process.destroyForciblyCompat()
                 } catch (e: Exception) { AppLogger.d(TAG, "Force kill Python process failed", e) }
                 AppLogger.i(TAG, "Python 服务器已停止")
@@ -324,19 +324,19 @@ class PythonRuntime(private val context: Context) {
             _serverState.value = ServerState.Stopped
         }
     }
-    
+
     fun isServerRunning(): Boolean {
         return try { pythonProcess?.isAliveCompat() == true } catch (_: Exception) { false }
     }
-    
+
     fun getCurrentPort(): Int = currentPort
-    
+
     fun getServerUrl(): String? {
         return if (isServerRunning() && currentPort > 0) "http://127.0.0.1:$currentPort" else null
     }
 
-    // ==================== 项目检测 ====================
-    
+
+
     fun detectFramework(projectDir: File): String {
         val candidates = listOf("app.py", "main.py", "wsgi.py", "application.py", "run.py")
         for (candidate in candidates) {
@@ -373,7 +373,7 @@ class PythonRuntime(private val context: Context) {
         }
         return "raw"
     }
-    
+
     fun detectEntryFile(projectDir: File, framework: String): String {
         return when (framework) {
             "django" -> if (File(projectDir, "manage.py").exists()) "manage.py" else "app.py"
@@ -387,7 +387,7 @@ class PythonRuntime(private val context: Context) {
                 .firstOrNull { File(projectDir, it).exists() } ?: "app.py"
         }
     }
-    
+
     fun createProject(projectId: String, sourceDir: File): File {
         val projectDir = File(getProjectsDir(), projectId)
         projectDir.mkdirs()
@@ -409,31 +409,31 @@ class PythonRuntime(private val context: Context) {
         }
         return projectDir
     }
-    
-    /**
-     * 从 SAF URI 创建项目（解决 Android 11+ Scoped Storage 限制）
-     * 
-     * 在 Android 11+ 上，通过 OpenDocumentTree 选择的目录无法使用 java.io.File 直接访问文件，
-     * 必须使用 DocumentFile + ContentResolver API 进行遍历和读取。
-     * 
-     * @param projectId 项目 ID
-     * @param treeUri SAF 返回的目录 URI（content://...）
-     * @param context Android Context，用于获取 ContentResolver
-     * @return 内部项目目录
-     */
+
+
+
+
+
+
+
+
+
+
+
+
     fun createProjectFromUri(projectId: String, treeUri: android.net.Uri, context: Context): File {
         val projectDir = File(getProjectsDir(), projectId)
         projectDir.mkdirs()
         val excludeDirs = setOf("venv", ".venv", "__pycache__", ".git", "node_modules", ".idea", ".mypy_cache", ".pytest_cache", "env", "__MACOSX")
-        
+
         val rootDoc = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, treeUri)
         if (rootDoc == null || !rootDoc.exists()) {
             AppLogger.e(TAG, "SAF 目录无效: $treeUri")
             return projectDir
         }
-        
+
         var copiedCount = 0
-        
+
         fun copyDocTree(doc: androidx.documentfile.provider.DocumentFile, relativePath: String) {
             if (doc.isDirectory) {
                 val dirName = doc.name ?: return
@@ -457,17 +457,17 @@ class PythonRuntime(private val context: Context) {
                 }
             }
         }
-        
-        // 直接遍历根目录下的子项（不再包裹一层根目录名称）
+
+
         rootDoc.listFiles().forEach { child -> copyDocTree(child, "") }
-        
+
         AppLogger.i(TAG, "SAF 项目文件已复制到: ${projectDir.absolutePath} (共 $copiedCount 个文件)")
         if (copiedCount == 0) {
             AppLogger.w(TAG, "警告: SAF 未复制到任何文件! treeUri=$treeUri, rootDoc.name=${rootDoc.name}")
         }
         return projectDir
     }
-    
+
     fun generatePreviewHtml(projectDir: File, framework: String, entryFile: String): String {
         val entryFileObj = File(projectDir, entryFile)
         val sourceCode = if (entryFileObj.exists()) {
@@ -494,16 +494,16 @@ ${if (escapedReqs.isNotBlank()) """<div class="section"><div class="section-titl
 <div class="tip">💡 此项目是 $frameworkLabel 后端应用。${if (pythonReady) "Python 运行时已就绪，可直接启动服务器。" else "需要先下载 Python 运行时才能运行。"}</div>
 </body></html>"""
     }
-    
-    // ==================== 内部方法 ====================
-    
-    /**
-     * 验证 Python 二进制是否可执行
-     * 通过 musl linker 运行 python --version，返回版本字符串，失败返回 null
-     */
+
+
+
+
+
+
+
     private fun verifyPythonBinary(pythonBin: String, pythonHome: String, muslLinker: String? = null): String? {
         return try {
-            // 通过 musl linker 间接执行（Android 上无 /lib/ld-musl-aarch64.so.1）
+
             val cmd = if (muslLinker != null) {
                 listOf(muslLinker, "--library-path", "${pythonHome}/lib", pythonBin, "--version")
             } else {
@@ -537,23 +537,23 @@ ${if (escapedReqs.isNotBlank()) """<div class="section"><div class="section-titl
             null
         }
     }
-    
-    /**
-     * 根据框架类型构建 Python 启动命令
-     * 在 Android 上通过 musl linker 间接执行 Python（因为 Python 二进制依赖 musl 动态链接器）
-     */
+
+
+
+
+
     private fun buildPythonCommand(
         pythonBin: String, framework: String, entryFile: String, port: Int,
         muslLinker: String? = null, pythonHome: String? = null
     ): List<String> {
-        // musl linker 前缀: ld-musl-aarch64.so.1 --library-path <lib> python3.12 ...
+
         val linkerPrefix = if (muslLinker != null && pythonHome != null) {
             listOf(muslLinker, "--library-path", "${pythonHome}/lib")
         } else emptyList()
-        
+
         val pythonArgs = when (framework) {
             "flask" -> {
-                // Flask：使用引导脚本修复 importlib.metadata 和端口问题
+
                 listOf(pythonBin, "_w2a_bootstrap.py", entryFile, port.toString())
             }
             "django" -> {
@@ -570,16 +570,16 @@ ${if (escapedReqs.isNotBlank()) """<div class="section"><div class="section-titl
                 listOf(pythonBin, "_w2a_bootstrap.py", entryFile, port.toString())
             }
         }
-        
+
         return linkerPrefix + pythonArgs
     }
-    
-    /**
-     * 创建 Python 引导脚本
-     * 修复 Android 运行时的两个关键问题:
-     * 1. importlib.metadata.PackageNotFoundError - 通过 --target 安装的包缺少 .dist-info 元数据
-     * 2. 端口硬编码 - Flask app.run() 中硬编码的端口与 WebToApp 分配的端口不一致
-     */
+
+
+
+
+
+
+
     private fun createBootstrapScript(projectDir: File, port: Int) {
         val bootstrapFile = File(projectDir, "_w2a_bootstrap.py")
         bootstrapFile.writeText("""#!/usr/bin/env python3
@@ -594,7 +594,7 @@ try:
     import importlib.metadata
     _orig_version = importlib.metadata.version
     _orig_distribution = importlib.metadata.distribution
-    
+
     def _patched_version(name):
         try:
             return _orig_version(name)
@@ -607,7 +607,7 @@ try:
             except (ImportError, Exception):
                 pass
             return "0.0.0"
-    
+
     importlib.metadata.version = _patched_version
 except Exception:
     pass
@@ -640,12 +640,12 @@ else:
 """)
         AppLogger.d(TAG, "Created bootstrap script: ${bootstrapFile.absolutePath}")
     }
-    
-    /**
-     * 检测 Django settings 模块
-     */
+
+
+
+
     private fun detectDjangoSettings(projectDir: File): String {
-        // 查找包含 settings.py 的子目录
+
         projectDir.listFiles()?.forEach { dir ->
             if (dir.isDirectory && File(dir, "settings.py").exists()) {
                 return "${dir.name}.settings"
@@ -653,7 +653,7 @@ else:
         }
         return "config.settings"
     }
-    
+
     private suspend fun waitForServerReady(port: Int): Boolean {
         repeat(MAX_HEALTH_CHECK_RETRIES) { attempt ->
             var conn: HttpURLConnection? = null
@@ -673,11 +673,10 @@ else:
             } finally {
                 try { conn?.disconnect() } catch (_: Exception) {}
             }
-            
+
             pythonProcess?.let { process ->
                 if (!process.isAliveCompat()) {
                     val exitCode = try { process.exitValue() } catch (_: Exception) { -1 }
-                    Thread.sleep(200)
                     val stdout = pythonOutputBuffer.toString().trim().ifEmpty { "(no stdout)" }
                     val stderr = pythonStderrBuffer.toString().trim().ifEmpty { "(no stderr)" }
                     AppLogger.e(TAG, "Python 进程意外退出, exitCode=$exitCode\nstdout: $stdout\nstderr: $stderr")
@@ -689,7 +688,7 @@ else:
         AppLogger.e(TAG, "Python 服务器启动超时 (${MAX_HEALTH_CHECK_RETRIES * HEALTH_CHECK_INTERVAL_MS}ms)")
         return false
     }
-    
+
     private fun getProcessPid(process: Process?): Long {
         if (process == null) return -1
         return try {

@@ -24,20 +24,20 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-/**
- * Shell Activity 的权限处理委托
- *
- * 封装所有 ActivityResultLauncher 和权限请求逻辑。
- * 必须在 Activity.onCreate() 之前（即 Activity 初始化阶段）实例化。
- */
+
+
+
+
+
+
 class ShellPermissionDelegate(private val activity: AppCompatActivity) {
 
-    // Permission请求相关
+
     private var pendingPermissionRequest: PermissionRequest? = null
     private var pendingGeolocationOrigin: String? = null
     private var pendingGeolocationCallback: GeolocationPermissions.Callback? = null
 
-    // 待下载信息（权限请求后使用）
+
     private var pendingDownload: PendingDownload? = null
 
     private data class PendingDownload(
@@ -47,24 +47,24 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
         val mimeType: String,
         val contentLength: Long
     )
-    
-    // ===== 文件选择器 (支持相机拍照 + 相册 + 文件) =====
-    
-    // 相机拍照临时文件 URI
+
+
+
+
     private var cameraPhotoUri: Uri? = null
-    
-    // WebView 文件选择回调
+
+
     private var pendingFilePathCallback: android.webkit.ValueCallback<Array<Uri>>? = null
-    
-    /**
-     * 完整文件选择器 — 同时支持相机拍照、相册选图、文件选择
-     * 
-     * 核心问题：Android WebView 的 onShowFileChooser 需要一个 Intent 选择器，
-     * 而不是简单的 GetMultipleContents()，因为后者不支持：
-     * 1. 相机拍照（<input capture="camera">）
-     * 2. 视频录制（<input capture="camcorder">）
-     * 3. 正确的 MIME 类型过滤
-     */
+
+
+
+
+
+
+
+
+
+
     private val fileChooserActivityLauncher = activity.registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -73,17 +73,17 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
             AppLogger.w("ShellPermission", "fileChooserActivityLauncher: no pending callback")
             return@registerForActivityResult
         }
-        
+
         if (result.resultCode == android.app.Activity.RESULT_OK) {
             val resultUris = mutableListOf<Uri>()
-            
-            // 情况1: 用户从相机拍照返回（使用预设的 URI）
+
+
             val data = result.data
             if (data == null || (data.data == null && data.clipData == null)) {
-                // 没有 data 意味着是从相机拍照返回
+
                 cameraPhotoUri?.let { resultUris.add(it) }
             } else {
-                // 情况2: 用户从相册/文件选择器返回
+
                 data.data?.let { uri -> resultUris.add(uri) }
                 data.clipData?.let { clipData ->
                     for (i in 0 until clipData.itemCount) {
@@ -91,103 +91,103 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
                     }
                 }
             }
-            
+
             AppLogger.d("ShellPermission", "File chooser result: ${resultUris.size} files")
             callback.onReceiveValue(resultUris.toTypedArray())
         } else {
-            // 用户取消 — 必须传 null，否则 WebView 的文件选择器会永久失效
+
             AppLogger.d("ShellPermission", "File chooser cancelled")
             callback.onReceiveValue(null)
         }
-        
+
         pendingFilePathCallback = null
         cameraPhotoUri = null
     }
-    
-    // 相机权限请求 launcher（文件选择器场景）
+
+
     private var pendingFileChooserParams: WebChromeClient.FileChooserParams? = null
     private val cameraForFileChooserPermLauncher = activity.registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
-        // 无论相机权限是否授予，都继续启动文件选择器
-        // 如果相机权限被拒，选择器中只有相册不会有拍照选项
+
+
         launchFileChooserIntent(pendingFileChooserParams)
         pendingFileChooserParams = null
     }
-    
-    /**
-     * 处理 WebView 的 onShowFileChooser 回调
-     * 
-     * 构建一个包含相机拍照 + 相册 + 文件管理器的 Intent 选择器
-     */
+
+
+
+
+
+
     fun handleFileChooser(
         filePathCallback: android.webkit.ValueCallback<Array<Uri>>?,
         fileChooserParams: WebChromeClient.FileChooserParams?
     ): Boolean {
-        // 取消之前未完成的回调
+
         pendingFilePathCallback?.onReceiveValue(null)
         pendingFilePathCallback = filePathCallback
-        
+
         if (filePathCallback == null) return false
-        
-        // 检查是否需要相机权限
+
+
         val needsCamera = isCameraRequired(fileChooserParams)
         val hasCameraPermission = ContextCompat.checkSelfPermission(
             activity, Manifest.permission.CAMERA
         ) == PackageManager.PERMISSION_GRANTED
-        
+
         if (needsCamera && !hasCameraPermission) {
-            // 先请求相机权限，获得后再启动选择器
+
             pendingFileChooserParams = fileChooserParams
             cameraForFileChooserPermLauncher.launch(Manifest.permission.CAMERA)
         } else {
             launchFileChooserIntent(fileChooserParams)
         }
-        
+
         return true
     }
-    
-    /**
-     * 判断网页是否要求使用相机
-     */
+
+
+
+
     private fun isCameraRequired(params: WebChromeClient.FileChooserParams?): Boolean {
         if (params == null) return false
-        
-        // capture="camera" / capture="camcorder" / capture="microphone"
+
+
         if (params.isCaptureEnabled) return true
-        
-        // accept 类型为 image/* 或 video/* 时提供相机选项
+
+
         val acceptTypes = params.acceptTypes
         if (acceptTypes == null || acceptTypes.isEmpty() || (acceptTypes.size == 1 && acceptTypes[0].isNullOrBlank())) {
-            // 无 accept 限制（accept="*/*" 或未设置）— 提供相机选项
+
             return true
         }
-        
+
         for (type in acceptTypes) {
             if (type.isNullOrBlank()) continue
             val lower = type.lowercase()
-            // MIME 类型匹配
+
             if (lower.startsWith("image/") || lower.startsWith("video/")) return true
-            // 文件扩展名匹配
+
             if (lower in setOf(".jpg", ".jpeg", ".png", ".gif", ".webp", ".heic", ".heif",
                     ".bmp", ".svg", ".mp4", ".mov", ".avi", ".mkv", ".webm", ".3gp")) return true
         }
-        
-        return false // 非图片/视频类型时不要求相机
+
+        return false
     }
-    
-    /**
-     * 构建并启动文件选择器 Intent（相机 + 相册 + 文件）
-     */
+
+
+
+
     private fun launchFileChooserIntent(params: WebChromeClient.FileChooserParams?) {
         try {
             val hasCameraPermission = ContextCompat.checkSelfPermission(
                 activity, Manifest.permission.CAMERA
             ) == PackageManager.PERMISSION_GRANTED
-            
+
             val extraIntents = mutableListOf<Intent>()
-            
-            // 1. 相机拍照 Intent
+
+
             if (hasCameraPermission) {
                 try {
                     val photoFile = createImageFile()
@@ -196,18 +196,18 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
                         "${activity.packageName}.fileprovider",
                         photoFile
                     )
-                    
+
                     val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
                         putExtra(MediaStore.EXTRA_OUTPUT, cameraPhotoUri)
                         addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
                     }
-                    
-                    // 确认设备有相机应用
+
+
                     if (cameraIntent.resolveActivity(activity.packageManager) != null) {
                         extraIntents.add(cameraIntent)
                     }
-                    
-                    // 2. 视频录制 Intent
+
+
                     val videoIntent = Intent(MediaStore.ACTION_VIDEO_CAPTURE)
                     if (videoIntent.resolveActivity(activity.packageManager) != null) {
                         extraIntents.add(videoIntent)
@@ -216,80 +216,80 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
                     AppLogger.e("ShellPermission", "Camera intent creation failed", e)
                 }
             }
-            
-            // 3. 文件/相册选择 Intent（主 Intent）
+
+
             val rawAcceptTypes = params?.acceptTypes ?: arrayOf("*/*")
-            // 将文件扩展名转换为 MIME 类型（Android Intent 不支持 .json 这类扩展名）
+
             val resolvedMimeTypes = rawAcceptTypes
                 .filter { !it.isNullOrBlank() }
                 .map { type ->
                     if (type.startsWith(".")) {
-                        // 文件扩展名 → MIME 类型
+
                         extensionToMimeType(type.lowercase())
                     } else {
                         type
                     }
                 }
                 .distinct()
-            
+
             val mimeType = when {
                 resolvedMimeTypes.isEmpty() -> "*/*"
                 resolvedMimeTypes.size == 1 -> resolvedMimeTypes[0]
-                else -> "*/*" // 多类型时用 */* 配合 EXTRA_MIME_TYPES
+                else -> "*/*"
             }
-            
+
             val contentIntent = Intent(Intent.ACTION_GET_CONTENT).apply {
                 addCategory(Intent.CATEGORY_OPENABLE)
                 type = mimeType
-                
-                // 允许多选（如果网页支持）
+
+
                 if (params?.mode == WebChromeClient.FileChooserParams.MODE_OPEN_MULTIPLE) {
                     putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
                 }
-                
-                // 如果有多个文件类型，设置 EXTRA_MIME_TYPES
+
+
                 if (resolvedMimeTypes.size > 1) {
                     putExtra(Intent.EXTRA_MIME_TYPES, resolvedMimeTypes.toTypedArray())
                     type = "*/*"
                 }
             }
-            
-            // 4. 组合成 Chooser
+
+
             val chooserIntent = Intent.createChooser(contentIntent, null).apply {
                 if (extraIntents.isNotEmpty()) {
                     putExtra(Intent.EXTRA_INITIAL_INTENTS, extraIntents.toTypedArray())
                 }
             }
-            
+
             fileChooserActivityLauncher.launch(chooserIntent)
             AppLogger.d("ShellPermission", "File chooser launched: mimeType=$mimeType, camera=${extraIntents.isNotEmpty()}")
-            
+
         } catch (e: Exception) {
             AppLogger.e("ShellPermission", "Failed to launch file chooser", e)
             pendingFilePathCallback?.onReceiveValue(null)
             pendingFilePathCallback = null
         }
     }
-    
-    /**
-     * 创建临时图片文件（用于相机拍照输出）
-     */
+
+
+
+
     private fun createImageFile(): File {
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
         val imageDir = File(activity.cacheDir, "camera_photos").apply { mkdirs() }
         return File.createTempFile("IMG_${timestamp}_", ".jpg", imageDir)
     }
-    
-    /**
-     * 将文件扩展名转换为 MIME 类型
-     * 
-     * WebView 的 FileChooserParams.acceptTypes 可能包含文件扩展名（如 ".json", ".csv"），
-     * 但 Android 的 Intent.ACTION_GET_CONTENT 只支持 MIME 类型过滤。
-     * 如果传入 ".json" 作为 type，系统找不到匹配的应用，会回退到只显示相机。
-     */
+
+
+
+
+
+
+
+
     private fun extensionToMimeType(ext: String): String {
         return when (ext) {
-            // 文档
+
             ".json" -> "application/json"
             ".xml" -> "application/xml"
             ".csv" -> "text/csv"
@@ -304,7 +304,7 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
             ".rtf" -> "application/rtf"
             ".odt" -> "application/vnd.oasis.opendocument.text"
             ".ods" -> "application/vnd.oasis.opendocument.spreadsheet"
-            // 代码/配置
+
             ".html", ".htm" -> "text/html"
             ".css" -> "text/css"
             ".js" -> "application/javascript"
@@ -317,7 +317,7 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
             ".ini", ".conf", ".cfg" -> "text/plain"
             ".md" -> "text/markdown"
             ".log" -> "text/plain"
-            // 图片
+
             ".jpg", ".jpeg" -> "image/jpeg"
             ".png" -> "image/png"
             ".gif" -> "image/gif"
@@ -326,33 +326,33 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
             ".bmp" -> "image/bmp"
             ".heic", ".heif" -> "image/heif"
             ".ico" -> "image/x-icon"
-            // 音频
+
             ".mp3" -> "audio/mpeg"
             ".wav" -> "audio/wav"
             ".ogg" -> "audio/ogg"
             ".flac" -> "audio/flac"
             ".aac" -> "audio/aac"
             ".m4a" -> "audio/mp4"
-            // 视频
+
             ".mp4" -> "video/mp4"
             ".webm" -> "video/webm"
             ".mkv" -> "video/x-matroska"
             ".avi" -> "video/x-msvideo"
             ".mov" -> "video/quicktime"
             ".3gp" -> "video/3gpp"
-            // 压缩包
+
             ".zip" -> "application/zip"
             ".tar" -> "application/x-tar"
             ".gz", ".gzip" -> "application/gzip"
             ".rar" -> "application/vnd.rar"
             ".7z" -> "application/x-7z-compressed"
-            // 其他
+
             ".apk" -> "application/vnd.android.package-archive"
             ".wasm" -> "application/wasm"
             ".sql" -> "application/sql"
             ".db", ".sqlite" -> "application/x-sqlite3"
             else -> {
-                // 尝试使用系统 MimeTypeMap
+
                 val extWithoutDot = ext.removePrefix(".")
                 android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(extWithoutDot)
                     ?: "application/octet-stream"
@@ -360,24 +360,24 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
         }
     }
 
-    // 外部设置的文件选择回调 (保留兼容旧 API)
+
     @Deprecated("Use handleFileChooser() instead")
     var onFileChooserResult: ((Array<android.net.Uri>) -> Unit)? = null
-    
-    // 保留旧 launcher 兼容已有调用（但不再使用）
+
+
     val fileChooserLauncher = activity.registerForActivityResult(
         ActivityResultContracts.GetMultipleContents()
     ) { uris ->
         onFileChooserResult?.invoke(uris.toTypedArray())
     }
 
-    // Storage权限请求
+
     private val storagePermissionLauncher = activity.registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         val allGranted = permissions.values.all { it }
         if (allGranted) {
-            // Permission已授予，执行下载
+
             pendingDownload?.let { download ->
                 DownloadHelper.handleDownload(
                     context = activity,
@@ -392,7 +392,7 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
             }
         } else {
             Toast.makeText(activity, Strings.storagePermissionRequired, Toast.LENGTH_SHORT).show()
-            // 尝试使用浏览器下载
+
             pendingDownload?.let { download ->
                 DownloadHelper.openInBrowser(activity, download.url)
             }
@@ -400,7 +400,7 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
         pendingDownload = null
     }
 
-    // Permission请求launcher（用于摄像头、麦克风等）
+
     private val permissionLauncher = activity.registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -421,7 +421,7 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
         }
     }
 
-    // 位置权限请求launcher
+
     private val locationPermissionLauncher = activity.registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -431,7 +431,7 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
         pendingGeolocationCallback = null
     }
 
-    // 通知权限请求launcher（Android 13+）
+
     private val notificationPermissionLauncher = activity.registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
@@ -442,11 +442,11 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
         }
     }
 
-    // ===== Public Methods =====
 
-    /**
-     * 请求通知权限（Android 13+）
-     */
+
+
+
+
     fun requestNotificationPermissionIfNeeded() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val hasPermission = ContextCompat.checkSelfPermission(
@@ -460,13 +460,13 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
         }
     }
 
-    /**
-     * 处理WebView权限请求，先请求Android系统权限
-     *
-     * 注意: MODIFY_AUDIO_SETTINGS 是 normal permission（安装时自动授权），
-     * 不需要也不能通过 runtime permission 请求，否则某些设备上
-     * 系统会忽略它并导致 allGranted 判断失败。
-     */
+
+
+
+
+
+
+
     fun handlePermissionRequest(request: PermissionRequest) {
         val resources = request.resources
         val androidPermissions = mutableListOf<String>()
@@ -481,17 +481,17 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
                     AppLogger.d("ShellActivity", "Added CAMERA permission request")
                 }
                 PermissionRequest.RESOURCE_AUDIO_CAPTURE -> {
-                    // 只添加 RECORD_AUDIO（dangerous permission，需要 runtime 请求）
-                    // MODIFY_AUDIO_SETTINGS 是 normal permission，安装时自动授权，不需要 runtime 请求
+
+
                     androidPermissions.add(Manifest.permission.RECORD_AUDIO)
                     AppLogger.d("ShellActivity", "Added RECORD_AUDIO permission request (MODIFY_AUDIO_SETTINGS is normal, auto-granted)")
                 }
                 PermissionRequest.RESOURCE_MIDI_SYSEX -> {
-                    // MIDI SysEx 不需要额外 Android 运行时权限，直接授权
+
                     AppLogger.d("ShellActivity", "MIDI_SYSEX resource, no Android permission needed")
                 }
                 PermissionRequest.RESOURCE_PROTECTED_MEDIA_ID -> {
-                    // Protected Media ID 不需要额外 Android 运行时权限，直接授权
+
                     AppLogger.d("ShellActivity", "PROTECTED_MEDIA_ID resource, no Android permission needed")
                 }
                 else -> {
@@ -500,19 +500,19 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
             }
         }
 
-        // 去重
+
         val uniquePermissions = androidPermissions.distinct()
 
         AppLogger.d("ShellActivity", "Android permissions to request: ${uniquePermissions.joinToString()}")
 
         if (uniquePermissions.isEmpty()) {
-            // 不需要Android权限，直接授权WebView
+
             AppLogger.d("ShellActivity", "No Android permissions needed, granting WebView request directly")
             request.grant(resources)
             return
         }
 
-        // 预检：过滤掉已经授权的权限，只请求尚未授权的
+
         val notGranted = uniquePermissions.filter {
             androidx.core.content.ContextCompat.checkSelfPermission(
                 activity, it
@@ -520,20 +520,20 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
         }
 
         if (notGranted.isEmpty()) {
-            // 所有权限已授权，直接 grant WebView 请求
+
             AppLogger.d("ShellActivity", "All permissions already granted, granting WebView request directly")
             request.grant(resources)
         } else {
-            // 需要先请求Android权限
+
             AppLogger.d("ShellActivity", "Requesting Android permissions: ${notGranted.joinToString()}")
             pendingPermissionRequest = request
             permissionLauncher.launch(notGranted.toTypedArray())
         }
     }
 
-    /**
-     * 处理地理位置权限请求
-     */
+
+
+
     fun handleGeolocationPermission(origin: String?, callback: GeolocationPermissions.Callback?) {
         pendingGeolocationOrigin = origin
         pendingGeolocationCallback = callback
@@ -543,9 +543,9 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
         ))
     }
 
-    /**
-     * 处理下载（带权限检查）
-     */
+
+
+
     fun handleDownloadWithPermission(
         url: String,
         userAgent: String,
@@ -554,11 +554,11 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
         contentLength: Long,
         webView: android.webkit.WebView?
     ) {
-        // Create Blob 下载回调
+
         val onBlobDownload: ((String, String) -> Unit) = { blobUrl, filename ->
             val safeBlobUrl = org.json.JSONObject.quote(blobUrl)
             val safeFilename = org.json.JSONObject.quote(filename)
-            // 大文件使用分块处理避免 DOM 冻结
+
             webView?.evaluateJavascript("""
                 (function() {
                     try {
@@ -566,13 +566,13 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
                         const filename = $safeFilename;
                         const LARGE_FILE_THRESHOLD = 10 * 1024 * 1024;
                         const CHUNK_SIZE = 1024 * 1024;
-                        
+
                         function uint8ToBase64(u8) {
                             const S = 8192; const p = [];
                             for (let i = 0; i < u8.length; i += S) p.push(String.fromCharCode.apply(null, u8.subarray(i, i + S)));
                             return btoa(p.join(''));
                         }
-                        
+
                         function processChunked(blob, fname) {
                             const mimeType = blob.type || 'application/octet-stream';
                             if (!window.AndroidDownload || !window.AndroidDownload.startChunkedDownload) {
@@ -590,7 +590,7 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
                             }
                             next();
                         }
-                        
+
                         function processSmall(blob, fname) {
                             const reader = new FileReader();
                             reader.onloadend = function() {
@@ -602,7 +602,7 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
                             };
                             reader.readAsDataURL(blob);
                         }
-                        
+
                         if (blobUrl.startsWith('data:')) {
                             const parts = blobUrl.split(',');
                             const meta = parts[0];
@@ -636,7 +636,7 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
             """.trimIndent(), null)
         }
 
-        // Android 10+ 不需要存储权限即可使用 DownloadManager
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             DownloadHelper.handleDownload(
                 context = activity,
@@ -652,7 +652,7 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
             return
         }
 
-        // Android 9 及以下需要检查存储权限
+
         val hasPermission = ContextCompat.checkSelfPermission(
             activity,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -671,7 +671,7 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
                 onBlobDownload = onBlobDownload
             )
         } else {
-            // Save下载信息，请求权限
+
             pendingDownload = PendingDownload(url, userAgent, contentDisposition, mimeType, contentLength)
             storagePermissionLauncher.launch(
                 arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)

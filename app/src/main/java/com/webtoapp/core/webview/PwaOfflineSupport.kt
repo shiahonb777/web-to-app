@@ -3,38 +3,38 @@ package com.webtoapp.core.webview
 import android.webkit.WebView
 import com.webtoapp.core.logging.AppLogger
 
-/**
- * PWA 离线支持
- * 
- * 通过向网页注入 Service Worker 缓存层，使包装的网站 App 支持离线访问。
- * 
- * 工作原理：
- * 1. 在页面加载完成后注入 Service Worker 注册脚本
- * 2. Service Worker 使用 Cache API 缓存关键资源（HTML、CSS、JS、图片）
- * 3. 离线时从缓存返回资源，显示缓存版本而非错误页
- * 4. 支持三种缓存策略：Cache First / Network First / Stale While Revalidate
- * 
- * 注意：Android WebView 从 Chrome 40+ 开始支持 Service Worker
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
 object PwaOfflineSupport {
-    
+
     private const val TAG = "PwaOfflineSupport"
-    
-    /**
-     * 缓存策略
-     */
+
+
+
+
     enum class CacheStrategy {
-        /** 优先从缓存读取，缓存无数据时走网络 — 最快但可能过时 */
+
         CACHE_FIRST,
-        /** 优先走网络，网络失败时用缓存 — 保证数据最新 */
+
         NETWORK_FIRST,
-        /** 立即返回缓存并在后台更新 — 平衡速度和新鲜度 */
+
         STALE_WHILE_REVALIDATE
     }
-    
-    /**
-     * 离线支持配置
-     */
+
+
+
+
     data class OfflineConfig(
         val enabled: Boolean = false,
         val strategy: CacheStrategy = CacheStrategy.NETWORK_FIRST,
@@ -43,30 +43,30 @@ object PwaOfflineSupport {
         val cacheableExtensions: List<String> = DEFAULT_CACHEABLE_EXTENSIONS,
         val excludePatterns: List<String> = emptyList()
     )
-    
+
     private val DEFAULT_CACHEABLE_EXTENSIONS = listOf(
         "html", "htm", "css", "js", "json",
         "png", "jpg", "jpeg", "gif", "webp", "svg", "ico",
         "woff", "woff2", "ttf", "eot",
         "mp3", "mp4", "webm"
     )
-    
-    /**
-     * 生成 Service Worker 脚本
-     * 这个脚本会被注入到 WebView 中注册 Service Worker
-     */
+
+
+
+
+
     fun generateServiceWorkerScript(config: OfflineConfig): String {
         val strategyName = when (config.strategy) {
             CacheStrategy.CACHE_FIRST -> "cache-first"
             CacheStrategy.NETWORK_FIRST -> "network-first"
             CacheStrategy.STALE_WHILE_REVALIDATE -> "stale-while-revalidate"
         }
-        
+
         val extensionsArray = config.cacheableExtensions.joinToString(",") { "'$it'" }
         val excludeArray = config.excludePatterns.joinToString(",") { "'$it'" }
         val maxAgeMs = config.maxAgeHours.toLong() * 3600 * 1000
         val maxCacheBytes = config.maxCacheSizeMb.toLong() * 1024 * 1024
-        
+
         return """
             const WTA_SW_SCRIPT = `
 const CACHE_NAME = 'wta-offline-v1';
@@ -174,7 +174,7 @@ async function staleWhileRevalidate(request) {
         }
         return response;
     }).catch(() => null);
-    
+
     if (cached) {
         fetchPromise; // fire and forget background update
         return cached;
@@ -202,7 +202,7 @@ self.addEventListener('fetch', event => {
     const request = event.request;
     if (request.method !== 'GET') return;
     if (!isCacheable(request.url) && !request.url.endsWith('/')) return;
-    
+
     let handler;
     switch (STRATEGY) {
         case 'cache-first': handler = cacheFirst; break;
@@ -219,7 +219,7 @@ self.addEventListener('fetch', event => {
                     console.log('[WTA] Service Worker not supported');
                     return;
                 }
-                
+
                 // Check if already registered
                 navigator.serviceWorker.getRegistrations().then(function(regs) {
                     const existing = regs.find(r => r.active && r.active.scriptURL.includes('blob:'));
@@ -227,10 +227,10 @@ self.addEventListener('fetch', event => {
                         console.log('[WTA] Service Worker already registered');
                         return;
                     }
-                    
+
                     const blob = new Blob([WTA_SW_SCRIPT], { type: 'application/javascript' });
                     const swUrl = URL.createObjectURL(blob);
-                    
+
                     navigator.serviceWorker.register(swUrl, { scope: '/' })
                         .then(function(reg) {
                             console.log('[WTA] Service Worker registered:', reg.scope);
@@ -244,25 +244,25 @@ self.addEventListener('fetch', event => {
             })();
         """.trimIndent()
     }
-    
-    /**
-     * 注入 Service Worker 到 WebView
-     * 应在 onPageFinished 后调用
-     */
+
+
+
+
+
     fun injectServiceWorker(webView: WebView, config: OfflineConfig) {
         if (!config.enabled) return
-        
+
         val script = generateServiceWorkerScript(config)
         webView.evaluateJavascript(script) { result ->
             AppLogger.d(TAG, "Service Worker injection result: $result")
         }
         AppLogger.i(TAG, "PWA offline support injected (strategy: ${config.strategy})")
     }
-    
-    /**
-     * 生成离线提示页面 HTML
-     * 当完全无网络且缓存也没有数据时显示
-     */
+
+
+
+
+
     fun generateOfflineFallbackHtml(): String = """
         <!DOCTYPE html>
         <html lang="zh">

@@ -14,6 +14,8 @@ import com.webtoapp.ui.animation.CardExpandTransition
 import com.webtoapp.ui.animation.CardCollapseTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -24,6 +26,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,17 +52,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import com.webtoapp.R
 import com.webtoapp.ui.components.EnhancedElevatedCard
+import com.webtoapp.ui.design.*
 import com.webtoapp.core.pwa.PwaAnalysisResult
 import com.webtoapp.core.pwa.PwaAnalysisState
 import com.webtoapp.core.pwa.PwaDataSource
 
-// Pre-compiled regex for package name validation (avoid allocation during recomposition)
+
 private val PACKAGE_NAME_REGEX = AppConstants.PACKAGE_NAME_REGEX
 
-/**
- * 创建/编辑应用页面
- */
-@OptIn(ExperimentalMaterial3Api::class)
+
+
+
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun CreateAppScreen(
     viewModel: MainViewModel,
@@ -73,9 +77,23 @@ fun CreateAppScreen(
     val hasUnsavedChanges by viewModel.hasUnsavedChanges.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
     var showDiscardDialog by remember { mutableStateOf(false) }
-    var showPermissionConfig by remember { mutableStateOf(false) }
+    var showCapabilitySearch by remember { mutableStateOf(false) }
+    var browserExpandedOverride by rememberSaveable { mutableStateOf<Boolean?>(null) }
+    var appearanceExpandedOverride by rememberSaveable { mutableStateOf<Boolean?>(null) }
+    var runExpandedOverride by rememberSaveable { mutableStateOf<Boolean?>(null) }
+    var securityExpandedOverride by rememberSaveable { mutableStateOf<Boolean?>(null) }
+    var labExpandedOverride by rememberSaveable { mutableStateOf<Boolean?>(null) }
+    var exportExpandedOverride by rememberSaveable { mutableStateOf<Boolean?>(null) }
+    var showPermissionConfig by rememberSaveable { mutableStateOf(false) }
+    val basicRequester = remember { BringIntoViewRequester() }
+    val browserRequester = remember { BringIntoViewRequester() }
+    val appearanceRequester = remember { BringIntoViewRequester() }
+    val runRequester = remember { BringIntoViewRequester() }
+    val securityRequester = remember { BringIntoViewRequester() }
+    val labRequester = remember { BringIntoViewRequester() }
+    val exportRequester = remember { BringIntoViewRequester() }
 
-    // Handle保存结果
+
     LaunchedEffect(uiState) {
         if (uiState is UiState.Success) {
             onSaved()
@@ -83,12 +101,16 @@ fun CreateAppScreen(
         }
     }
 
-    // Intercept system back when there are unsaved changes
-    BackHandler(enabled = hasUnsavedChanges) {
+
+    BackHandler(enabled = showPermissionConfig) {
+        showPermissionConfig = false
+    }
+
+    BackHandler(enabled = hasUnsavedChanges && !showPermissionConfig) {
         showDiscardDialog = true
     }
 
-    // Image选择器 - 选择后复制到私有目录实现持久化
+
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -97,7 +119,7 @@ fun CreateAppScreen(
         }
     }
 
-    // Start画面图片选择器
+
     val splashImagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -106,7 +128,7 @@ fun CreateAppScreen(
         }
     }
 
-    // Start画面视频选择器
+
     val splashVideoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -118,90 +140,133 @@ fun CreateAppScreen(
     val coroutineScope = rememberCoroutineScope()
     var isPreviewSaving by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
+    val capabilities = remember(editState) { buildAppCapabilities(editState) }
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
-            TopAppBar(
-                title = { Text(if (isEdit) Strings.editApp else Strings.createApp) },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        if (hasUnsavedChanges) showDiscardDialog = true else onBack()
-                    }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
-                    }
-                },
-                actions = {
-                    // 缓存式预览按钮 — 先保存再用正式路径打开
-                    IconButton(
-                        onClick = {
-                            if (isPreviewSaving) return@IconButton
-                            isPreviewSaving = true
-                            coroutineScope.launch {
-                                try {
-                                    val appId = viewModel.saveAndPreview()
-                                    if (appId != null && appId > 0) {
-                                        WebViewActivity.start(context, appId)
-                                    } else {
-                                        snackbarHostState.showSnackbar(Strings.saveFailed)
-                                    }
-                                } catch (e: Exception) {
-                                    snackbarHostState.showSnackbar(Strings.saveFailed)
-                                } finally {
-                                    isPreviewSaving = false
-                                }
-                            }
-                        },
-                        enabled = (editState.url.isNotBlank() || editState.name.isNotBlank()) && !isPreviewSaving
-                    ) {
-                        if (isPreviewSaving) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Icon(
-                                Icons.Filled.PlayArrow,
-                                contentDescription = Strings.btnPreview
-                            )
-                        }
-                    }
-                    TextButton(
-                        onClick = { viewModel.saveApp() },
-                        enabled = uiState !is UiState.Loading
-                    ) {
-                        if (uiState is UiState.Loading) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Text(Strings.btnSave)
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
-                )
-            )
+    fun focusCapability(capability: AppCapability) {
+        when (capability.section) {
+            AppCapabilitySection.Basic -> Unit
+            AppCapabilitySection.Browser -> browserExpandedOverride = true
+            AppCapabilitySection.Appearance -> appearanceExpandedOverride = true
+            AppCapabilitySection.Run -> runExpandedOverride = true
+            AppCapabilitySection.Security -> securityExpandedOverride = true
+            AppCapabilitySection.Lab -> labExpandedOverride = true
+            AppCapabilitySection.Export -> exportExpandedOverride = true
         }
-    ) { padding ->
-        ThemedBackgroundBox(
+        val requester = when (capability.section) {
+            AppCapabilitySection.Basic -> basicRequester
+            AppCapabilitySection.Browser -> browserRequester
+            AppCapabilitySection.Appearance -> appearanceRequester
+            AppCapabilitySection.Run -> runRequester
+            AppCapabilitySection.Security -> securityRequester
+            AppCapabilitySection.Lab -> labRequester
+            AppCapabilitySection.Export -> exportRequester
+        }
+        coroutineScope.launch {
+            kotlinx.coroutines.delay(120)
+            requester.bringIntoView()
+        }
+    }
+
+    if (showPermissionConfig) {
+        PermissionConfigScreen(
+            permissions = editState.apkExportConfig.runtimePermissions,
+            onPermissionsChange = { permissions ->
+                viewModel.updateEditState {
+                    copy(
+                        apkExportConfig = apkExportConfig.copy(
+                            runtimePermissions = permissions
+                        )
+                    )
+                }
+            },
+            onBack = { showPermissionConfig = false }
+        )
+    } else WtaScreen(
+        title = if (isEdit) Strings.editApp else Strings.createApp,
+        snackbarHostState = snackbarHostState,
+        onBack = {
+            if (hasUnsavedChanges) showDiscardDialog = true else onBack()
+        },
+        actions = {
+            IconButton(
+                onClick = { showCapabilitySearch = true }
+            ) {
+                Icon(
+                    Icons.Filled.Search,
+                    contentDescription = Strings.search
+                )
+            }
+            IconButton(
+                onClick = {
+                    if (isPreviewSaving) return@IconButton
+                    isPreviewSaving = true
+                    coroutineScope.launch {
+                        try {
+                            val appId = viewModel.saveAndPreview()
+                            if (appId != null && appId > 0) {
+                                WebViewActivity.start(context, appId)
+                            } else {
+                                snackbarHostState.showSnackbar(Strings.saveFailed)
+                            }
+                        } catch (e: Exception) {
+                            snackbarHostState.showSnackbar(Strings.saveFailed)
+                        } finally {
+                            isPreviewSaving = false
+                        }
+                    }
+                },
+                enabled = (editState.url.isNotBlank() || editState.name.isNotBlank()) && !isPreviewSaving
+            ) {
+                if (isPreviewSaving) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Icon(
+                        Icons.Filled.PlayArrow,
+                        contentDescription = Strings.btnPreview
+                    )
+                }
+            }
+            TextButton(
+                onClick = { viewModel.saveApp() },
+                enabled = uiState !is UiState.Loading
+            ) {
+                if (uiState is UiState.Loading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(Strings.btnSave)
+                }
+            }
+        }
+    ) {
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .verticalScroll(scrollState)
+                .padding(
+                    horizontal = WtaSpacing.ScreenHorizontal,
+                    vertical = WtaSpacing.ScreenVertical
+                ),
+            verticalArrangement = Arrangement.spacedBy(WtaSpacing.SectionGap)
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize()
-                    .fillMaxSize()
-                    .imePadding()
-                    .verticalScroll(scrollState)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+            if (uiState is UiState.Error) {
+                WtaStatusBanner(
+                    message = (uiState as UiState.Error).message,
+                    tone = WtaStatusTone.Error
+                )
+            }
+
+            WtaSection(
+                title = Strings.labelBasicInfo,
+                level = WtaCapabilityLevel.Common,
+                headerStyle = WtaSectionHeaderStyle.Hidden,
+                modifier = Modifier.bringIntoViewRequester(basicRequester)
             ) {
-                // 基本信息卡片
                 BasicInfoCard(
                     editState = editState,
                     onNameChange = { viewModel.updateEditState { copy(name = it) } },
@@ -212,7 +277,7 @@ fun CreateAppScreen(
                     }
                 )
 
-                // PWA 自动感知（仅 WEB 类型显示）
+
                 if (editState.appType == AppType.WEB) {
                     PwaAnalysisSection(
                         viewModel = viewModel,
@@ -220,305 +285,370 @@ fun CreateAppScreen(
                     )
                 }
 
-            // Activation码设置
-            ActivationCodeCard(
-                enabled = editState.activationEnabled,
-                activationCodes = editState.activationCodeList,
-                requireEveryTime = editState.activationRequireEveryTime,
-                dialogConfig = editState.activationDialogConfig,
-                onEnabledChange = { viewModel.updateEditState { copy(activationEnabled = it) } },
-                onCodesChange = { viewModel.updateEditState { copy(activationCodeList = it) } },
-                onRequireEveryTimeChange = { viewModel.updateEditState { copy(activationRequireEveryTime = it) } },
-                onDialogConfigChange = { viewModel.updateEditState { copy(activationDialogConfig = it) } }
-            )
-
-            // Announcement设置
-            AnnouncementCard(
-                editState = editState,
-                onEnabledChange = { viewModel.updateEditState { copy(announcementEnabled = it) } },
-                onAnnouncementChange = { viewModel.updateEditState { copy(announcement = it) } }
-            )
-            
-            if (hasConfiguredLegacyAds(editState)) {
-                LegacyAdCapabilityWarningCard()
             }
 
-            // Ad拦截设置
-            AdBlockCard(
-                editState = editState,
-                onEnabledChange = { viewModel.updateEditState { copy(adBlockEnabled = it) } },
-                onRulesChange = { viewModel.updateEditState { copy(adBlockRules = it) } },
-                onToggleEnabledChange = { 
-                    viewModel.updateEditState { 
-                        copy(webViewConfig = webViewConfig.copy(adBlockToggleEnabled = it)) 
-                    } 
+            WtaSection(
+                title = Strings.tagBrowser,
+                level = WtaCapabilityLevel.Advanced,
+                headerStyle = WtaSectionHeaderStyle.Quiet,
+                modifier = Modifier.bringIntoViewRequester(browserRequester),
+                capabilityTags = listOf(
+                    Strings.capabilityAdBlock,
+                    Strings.capabilityExtension,
+                    Strings.fullscreenMode,
+                    Strings.landscapeModeLabel
+                ),
+                initiallyExpanded = editState.adBlockEnabled ||
+                    editState.extensionModuleEnabled ||
+                    editState.webViewConfig.hideBrowserToolbar ||
+                    editState.webViewConfig.hideToolbar ||
+                    editState.webViewConfig.landscapeMode ||
+                    editState.webViewConfig.longPressMenuEnabled ||
+                    hasConfiguredBrowserAdvancedConfig(editState.webViewConfig),
+                expanded = browserExpandedOverride,
+                onExpandedChange = { browserExpandedOverride = it }
+            ) {
+                if (hasConfiguredLegacyAds(editState)) {
+                    LegacyAdCapabilityWarningCard()
                 }
-            )
 
-            // 扩展模块设置
-            com.webtoapp.ui.components.ExtensionModuleCard(
-                enabled = editState.extensionModuleEnabled,
-                selectedModuleIds = editState.extensionModuleIds,
-                extensionFabIcon = editState.extensionFabIcon,
-                onEnabledChange = { viewModel.updateEditState { copy(extensionModuleEnabled = it) } },
-                onModuleIdsChange = { viewModel.updateEditState { copy(extensionModuleIds = it) } },
-                onFabIconChange = { viewModel.updateEditState { copy(extensionFabIcon = it) } }
-            )
+                AdBlockCard(
+                    editState = editState,
+                    onEnabledChange = { viewModel.updateEditState { copy(adBlockEnabled = it) } },
+                    onRulesChange = { viewModel.updateEditState { copy(adBlockRules = it) } },
+                    onToggleEnabledChange = {
+                        viewModel.updateEditState {
+                            copy(webViewConfig = webViewConfig.copy(adBlockToggleEnabled = it))
+                        }
+                    }
+                )
 
-            // 隐藏浏览器工具栏（独立于全屏模式）
-            HideBrowserToolbarCard(
-                enabled = editState.webViewConfig.hideBrowserToolbar,
-                onEnabledChange = {
-                    viewModel.updateEditState {
-                        copy(webViewConfig = webViewConfig.copy(hideBrowserToolbar = it))
-                    }
-                }
-            )
+                com.webtoapp.ui.components.ExtensionModuleCard(
+                    enabled = editState.extensionModuleEnabled,
+                    selectedModuleIds = editState.extensionModuleIds,
+                    extensionFabIcon = editState.extensionFabIcon,
+                    onEnabledChange = { viewModel.updateEditState { copy(extensionModuleEnabled = it) } },
+                    onModuleIdsChange = { viewModel.updateEditState { copy(extensionModuleIds = it) } },
+                    onFabIconChange = { viewModel.updateEditState { copy(extensionFabIcon = it) } }
+                )
 
-            // Fullscreen模式
-            FullscreenModeCard(
-                enabled = editState.webViewConfig.hideToolbar,
-                showStatusBar = editState.webViewConfig.showStatusBarInFullscreen,
-                showNavigationBar = editState.webViewConfig.showNavigationBarInFullscreen,
-                showToolbar = editState.webViewConfig.showToolbarInFullscreen,
-                webViewConfig = editState.webViewConfig,
-                onEnabledChange = {
-                    viewModel.updateEditState {
-                        copy(webViewConfig = webViewConfig.copy(hideToolbar = it))
-                    }
-                },
-                onShowStatusBarChange = {
-                    viewModel.updateEditState {
-                        copy(webViewConfig = webViewConfig.copy(showStatusBarInFullscreen = it))
-                    }
-                },
-                onShowNavigationBarChange = {
-                    viewModel.updateEditState {
-                        copy(webViewConfig = webViewConfig.copy(showNavigationBarInFullscreen = it))
-                    }
-                },
-                onShowToolbarChange = {
-                    viewModel.updateEditState {
-                        copy(webViewConfig = webViewConfig.copy(showToolbarInFullscreen = it))
-                    }
-                },
-                onWebViewConfigChange = { newConfig ->
-                    viewModel.updateEditState {
-                        copy(webViewConfig = newConfig)
-                    }
-                }
-            )
 
-            // 屏幕方向模式
-            LandscapeModeCard(
-                enabled = editState.webViewConfig.landscapeMode,
-                onEnabledChange = { enabled ->
-                    viewModel.updateEditState {
-                        copy(webViewConfig = webViewConfig.copy(
-                            landscapeMode = enabled,
-                            orientationMode = if (enabled) com.webtoapp.data.model.OrientationMode.LANDSCAPE 
-                                             else com.webtoapp.data.model.OrientationMode.PORTRAIT
-                        ))
-                    }
-                },
-                orientationMode = editState.webViewConfig.orientationMode,
-                onOrientationModeChange = { mode ->
-                    viewModel.updateEditState {
-                        copy(webViewConfig = webViewConfig.copy(
-                            orientationMode = mode,
-                            landscapeMode = mode in listOf(
-                                com.webtoapp.data.model.OrientationMode.LANDSCAPE,
-                                com.webtoapp.data.model.OrientationMode.REVERSE_LANDSCAPE,
-                                com.webtoapp.data.model.OrientationMode.SENSOR_LANDSCAPE
+                FullscreenModeCard(
+                    enabled = editState.webViewConfig.hideToolbar,
+                    showStatusBar = editState.webViewConfig.showStatusBarInFullscreen,
+                    showNavigationBar = editState.webViewConfig.showNavigationBarInFullscreen,
+                    hideBrowserToolbarInFullscreen =
+                        editState.webViewConfig.hideBrowserToolbar ||
+                            !editState.webViewConfig.showToolbarInFullscreen,
+                    webViewConfig = editState.webViewConfig,
+                    onEnabledChange = {
+                        viewModel.updateEditState {
+                            copy(
+                                webViewConfig = webViewConfig.copy(
+                                    hideToolbar = it,
+                                    hideBrowserToolbar = false
+                                )
                             )
-                        ))
+                        }
+                    },
+                    onShowStatusBarChange = {
+                        viewModel.updateEditState {
+                            copy(webViewConfig = webViewConfig.copy(showStatusBarInFullscreen = it))
+                        }
+                    },
+                    onShowNavigationBarChange = {
+                        viewModel.updateEditState {
+                            copy(webViewConfig = webViewConfig.copy(showNavigationBarInFullscreen = it))
+                        }
+                    },
+                    onHideBrowserToolbarInFullscreenChange = {
+                        viewModel.updateEditState {
+                            copy(
+                                webViewConfig = webViewConfig.copy(
+                                    showToolbarInFullscreen = !it,
+                                    hideBrowserToolbar = false
+                                )
+                            )
+                        }
+                    },
+                    onWebViewConfigChange = { newConfig ->
+                        viewModel.updateEditState {
+                            copy(webViewConfig = newConfig)
+                        }
                     }
-                }
-            )
-            
-            // 保持屏幕常亮
-            KeepScreenOnCard(
-                screenAwakeMode = editState.webViewConfig.screenAwakeMode,
-                onScreenAwakeModeChange = { mode ->
-                    viewModel.updateEditState {
-                        copy(webViewConfig = webViewConfig.copy(
-                            screenAwakeMode = mode,
-                            keepScreenOn = mode != com.webtoapp.data.model.ScreenAwakeMode.OFF
-                        ))
-                    }
-                },
-                screenAwakeTimeoutMinutes = editState.webViewConfig.screenAwakeTimeoutMinutes,
-                onScreenAwakeTimeoutChange = { minutes ->
-                    viewModel.updateEditState {
-                        copy(webViewConfig = webViewConfig.copy(screenAwakeTimeoutMinutes = minutes))
-                    }
-                },
-                screenBrightness = editState.webViewConfig.screenBrightness,
-                onScreenBrightnessChange = { brightness ->
-                    viewModel.updateEditState {
-                        copy(webViewConfig = webViewConfig.copy(screenBrightness = brightness))
-                    }
-                }
-            )
-            
-            // 悬浮小窗模式
-            FloatingWindowConfigCard(
-                config = editState.webViewConfig.floatingWindowConfig,
-                onConfigChange = { newConfig ->
-                    viewModel.updateEditState {
-                        copy(webViewConfig = webViewConfig.copy(floatingWindowConfig = newConfig))
-                    }
-                }
-            )
+                )
 
-            // Start画面
-            SplashScreenCard(
-                editState = editState,
-                onEnabledChange = { viewModel.updateEditState { copy(splashEnabled = it) } },
-                onSelectImage = { splashImagePickerLauncher.launch("image/*") },
-                onSelectVideo = { splashVideoPickerLauncher.launch("video/*") },
-                onDurationChange = { 
-                    viewModel.updateEditState { 
-                        copy(splashConfig = splashConfig.copy(duration = it)) 
-                    } 
-                },
-                onClickToSkipChange = {
-                    viewModel.updateEditState {
-                        copy(splashConfig = splashConfig.copy(clickToSkip = it))
-                    }
-                },
-                onOrientationChange = {
-                    viewModel.updateEditState {
-                        copy(splashConfig = splashConfig.copy(orientation = it))
-                    }
-                },
-                onFillScreenChange = {
-                    viewModel.updateEditState {
-                        copy(splashConfig = splashConfig.copy(fillScreen = it))
-                    }
-                },
-                onEnableAudioChange = {
-                    viewModel.updateEditState {
-                        copy(splashConfig = splashConfig.copy(enableAudio = it))
-                    }
-                },
-                onVideoTrimChange = { startMs, endMs, totalDurationMs ->
-                    viewModel.updateEditState {
-                        copy(splashConfig = splashConfig.copy(
-                            videoStartMs = startMs,
-                            videoEndMs = endMs,
-                            videoDurationMs = totalDurationMs
-                        ))
-                    }
-                },
-                onClearMedia = { viewModel.clearSplashMedia() }
-            )
 
-            // Background music
-            BgmCard(
-                enabled = editState.bgmEnabled,
-                config = editState.bgmConfig,
-                onEnabledChange = { viewModel.updateEditState { copy(bgmEnabled = it) } },
-                onConfigChange = { viewModel.updateEditState { copy(bgmConfig = it) } }
-            )
-
-            // Web page自动翻译
-            TranslateCard(
-                enabled = editState.translateEnabled,
-                config = editState.translateConfig,
-                onEnabledChange = { viewModel.updateEditState { copy(translateEnabled = it) } },
-                onConfigChange = { viewModel.updateEditState { copy(translateConfig = it) } }
-            )
-            
-            // 自启动设置
-            AutoStartCard(
-                config = editState.autoStartConfig,
-                onConfigChange = { viewModel.updateEditState { copy(autoStartConfig = it) } }
-            )
-            
-            // 强制运行设置
-            com.webtoapp.ui.components.ForcedRunConfigCard(
-                config = editState.forcedRunConfig,
-                onConfigChange = { viewModel.updateEditState { copy(forcedRunConfig = it) } }
-            )
-            
-            // 黑科技功能设置（独立模块）
-            com.webtoapp.ui.components.BlackTechConfigCard(
-                config = editState.blackTechConfig,
-                onConfigChange = { viewModel.updateEditState { copy(blackTechConfig = it) } }
-            )
-            
-            // App伪装设置（独立模块）
-            com.webtoapp.ui.components.DisguiseConfigCard(
-                config = editState.disguiseConfig,
-                onConfigChange = { viewModel.updateEditState { copy(disguiseConfig = it) } }
-            )
-
-            // 设备伪装（独立一级功能）
-            DeviceDisguiseCard(
-                config = editState.deviceDisguiseConfig,
-                onConfigChange = { newConfig ->
-                    viewModel.updateEditState {
-                        copy(deviceDisguiseConfig = newConfig)
+                LandscapeModeCard(
+                    enabled = editState.webViewConfig.landscapeMode,
+                    onEnabledChange = { enabled ->
+                        viewModel.updateEditState {
+                            copy(webViewConfig = webViewConfig.copy(
+                                landscapeMode = enabled,
+                                orientationMode = if (enabled) com.webtoapp.data.model.OrientationMode.LANDSCAPE
+                                                 else com.webtoapp.data.model.OrientationMode.PORTRAIT
+                            ))
+                        }
+                    },
+                    orientationMode = editState.webViewConfig.orientationMode,
+                    onOrientationModeChange = { mode ->
+                        viewModel.updateEditState {
+                            copy(webViewConfig = webViewConfig.copy(
+                                orientationMode = mode,
+                                landscapeMode = mode in listOf(
+                                    com.webtoapp.data.model.OrientationMode.LANDSCAPE,
+                                    com.webtoapp.data.model.OrientationMode.REVERSE_LANDSCAPE,
+                                    com.webtoapp.data.model.OrientationMode.SENSOR_LANDSCAPE
+                                )
+                            ))
+                        }
                     }
-                }
-            )
+                )
 
-            // 长按菜单设置
-            LongPressMenuCard(
-                style = editState.webViewConfig.longPressMenuStyle,
-                onStyleChange = { 
-                    viewModel.updateEditState { 
-                        copy(webViewConfig = webViewConfig.copy(
-                            longPressMenuEnabled = it != LongPressMenuStyle.DISABLED,
-                            longPressMenuStyle = it
-                        )) 
-                    } 
-                }
-            )
-
-            // WebView高级设置
-            WebViewConfigCard(
-                config = editState.webViewConfig,
-                onConfigChange = { viewModel.updateEditState { copy(webViewConfig = it) } },
-                apkExportConfig = editState.apkExportConfig,
-                onApkExportConfigChange = { viewModel.updateEditState { copy(apkExportConfig = it) } },
-                onOpenPermissionConfig = { showPermissionConfig = true }
-            )
-
-            // Error提示
-            if (uiState is UiState.Error) {
-                EnhancedElevatedCard(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Default.Error,
-                            null,
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            text = (uiState as UiState.Error).message,
-                            color = MaterialTheme.colorScheme.onErrorContainer
-                        )
+                LongPressMenuCard(
+                    style = editState.webViewConfig.longPressMenuStyle,
+                    onStyleChange = {
+                        viewModel.updateEditState {
+                            copy(webViewConfig = webViewConfig.copy(
+                                longPressMenuEnabled = it != LongPressMenuStyle.DISABLED,
+                                longPressMenuStyle = it
+                            ))
+                        }
                     }
-                }
+                )
+
+                BrowserAdvancedConfigCard(
+                    config = editState.webViewConfig,
+                    onConfigChange = { viewModel.updateEditState { copy(webViewConfig = it) } }
+                )
+            }
+
+            WtaSection(
+                title = Strings.appearance,
+                headerStyle = WtaSectionHeaderStyle.Quiet,
+                modifier = Modifier.bringIntoViewRequester(appearanceRequester),
+                capabilityTags = listOf(
+                    Strings.capabilitySplash,
+                    Strings.capabilityAnnouncement,
+                    Strings.bgmTitle,
+                    Strings.translateEngine
+                ),
+                collapsible = true,
+                initiallyExpanded = editState.splashEnabled ||
+                    editState.announcementEnabled ||
+                    editState.bgmEnabled ||
+                    editState.translateEnabled,
+                expanded = appearanceExpandedOverride,
+                onExpandedChange = { appearanceExpandedOverride = it }
+            ) {
+                SplashScreenCard(
+                    editState = editState,
+                    onEnabledChange = { viewModel.updateEditState { copy(splashEnabled = it) } },
+                    onSelectImage = { splashImagePickerLauncher.launch("image/*") },
+                    onSelectVideo = { splashVideoPickerLauncher.launch("video/*") },
+                    onDurationChange = {
+                        viewModel.updateEditState {
+                            copy(splashConfig = splashConfig.copy(duration = it))
+                        }
+                    },
+                    onClickToSkipChange = {
+                        viewModel.updateEditState {
+                            copy(splashConfig = splashConfig.copy(clickToSkip = it))
+                        }
+                    },
+                    onOrientationChange = {
+                        viewModel.updateEditState {
+                            copy(splashConfig = splashConfig.copy(orientation = it))
+                        }
+                    },
+                    onFillScreenChange = {
+                        viewModel.updateEditState {
+                            copy(splashConfig = splashConfig.copy(fillScreen = it))
+                        }
+                    },
+                    onEnableAudioChange = {
+                        viewModel.updateEditState {
+                            copy(splashConfig = splashConfig.copy(enableAudio = it))
+                        }
+                    },
+                    onVideoTrimChange = { startMs, endMs, totalDurationMs ->
+                        viewModel.updateEditState {
+                            copy(splashConfig = splashConfig.copy(
+                                videoStartMs = startMs,
+                                videoEndMs = endMs,
+                                videoDurationMs = totalDurationMs
+                            ))
+                        }
+                    },
+                    onClearMedia = { viewModel.clearSplashMedia() }
+                )
+
+                AnnouncementCard(
+                    editState = editState,
+                    onEnabledChange = { viewModel.updateEditState { copy(announcementEnabled = it) } },
+                    onAnnouncementChange = { viewModel.updateEditState { copy(announcement = it) } }
+                )
+
+                BgmCard(
+                    enabled = editState.bgmEnabled,
+                    config = editState.bgmConfig,
+                    onEnabledChange = { viewModel.updateEditState { copy(bgmEnabled = it) } },
+                    onConfigChange = { viewModel.updateEditState { copy(bgmConfig = it) } }
+                )
+
+                TranslateCard(
+                    enabled = editState.translateEnabled,
+                    config = editState.translateConfig,
+                    onEnabledChange = { viewModel.updateEditState { copy(translateEnabled = it) } },
+                    onConfigChange = { viewModel.updateEditState { copy(translateConfig = it) } }
+                )
+            }
+
+            WtaSection(
+                title = Strings.run,
+                level = WtaCapabilityLevel.Advanced,
+                headerStyle = WtaSectionHeaderStyle.Quiet,
+                modifier = Modifier.bringIntoViewRequester(runRequester),
+                capabilityTags = listOf(
+                    Strings.keepScreenOnLabel,
+                    Strings.screenBrightnessLabel,
+                    Strings.floatingWindowTitle,
+                    Strings.autoStartSettings
+                ),
+                expanded = runExpandedOverride,
+                onExpandedChange = { runExpandedOverride = it }
+            ) {
+                KeepScreenOnCard(
+                    screenAwakeMode = editState.webViewConfig.screenAwakeMode,
+                    onScreenAwakeModeChange = { mode ->
+                        viewModel.updateEditState {
+                            copy(webViewConfig = webViewConfig.copy(
+                                screenAwakeMode = mode,
+                                keepScreenOn = mode != com.webtoapp.data.model.ScreenAwakeMode.OFF
+                            ))
+                        }
+                    },
+                    screenAwakeTimeoutMinutes = editState.webViewConfig.screenAwakeTimeoutMinutes,
+                    onScreenAwakeTimeoutChange = { minutes ->
+                        viewModel.updateEditState {
+                            copy(webViewConfig = webViewConfig.copy(screenAwakeTimeoutMinutes = minutes))
+                        }
+                    },
+                    screenBrightness = editState.webViewConfig.screenBrightness,
+                    onScreenBrightnessChange = { brightness ->
+                        viewModel.updateEditState {
+                            copy(webViewConfig = webViewConfig.copy(screenBrightness = brightness))
+                        }
+                    }
+                )
+
+                FloatingWindowConfigCard(
+                    config = editState.webViewConfig.floatingWindowConfig,
+                    onConfigChange = { newConfig ->
+                        viewModel.updateEditState {
+                            copy(webViewConfig = webViewConfig.copy(floatingWindowConfig = newConfig))
+                        }
+                    }
+                )
+
+                AutoStartCard(
+                    config = editState.autoStartConfig,
+                    onConfigChange = { viewModel.updateEditState { copy(autoStartConfig = it) } }
+                )
+            }
+
+            WtaSection(
+                title = Strings.securityProtection,
+                level = WtaCapabilityLevel.Advanced,
+                headerStyle = WtaSectionHeaderStyle.Quiet,
+                modifier = Modifier.bringIntoViewRequester(securityRequester),
+                capabilityTags = listOf(
+                    Strings.capabilityActivation,
+                    Strings.activationCodeVerify
+                ),
+                initiallyExpanded = editState.activationEnabled,
+                expanded = securityExpandedOverride,
+                onExpandedChange = { securityExpandedOverride = it }
+            ) {
+                ActivationCodeCard(
+                    enabled = editState.activationEnabled,
+                    activationCodes = editState.activationCodeList,
+                    requireEveryTime = editState.activationRequireEveryTime,
+                    dialogConfig = editState.activationDialogConfig,
+                    onEnabledChange = { viewModel.updateEditState { copy(activationEnabled = it) } },
+                    onCodesChange = { viewModel.updateEditState { copy(activationCodeList = it) } },
+                    onRequireEveryTimeChange = { viewModel.updateEditState { copy(activationRequireEveryTime = it) } },
+                    onDialogConfigChange = { viewModel.updateEditState { copy(activationDialogConfig = it) } }
+                )
+            }
+
+            WtaSection(
+                title = "Lab",
+                level = WtaCapabilityLevel.Lab,
+                headerStyle = WtaSectionHeaderStyle.Quiet,
+                modifier = Modifier.bringIntoViewRequester(labRequester),
+                capabilityTags = listOf(
+                    Strings.forcedRunSettings,
+                    Strings.blackTechFeatures,
+                    Strings.enableDisguise,
+                    Strings.deviceDisguiseTitle
+                ),
+                expanded = labExpandedOverride,
+                onExpandedChange = { labExpandedOverride = it }
+            ) {
+                com.webtoapp.ui.components.ForcedRunConfigCard(
+                    config = editState.forcedRunConfig,
+                    onConfigChange = { viewModel.updateEditState { copy(forcedRunConfig = it) } }
+                )
+
+                com.webtoapp.ui.components.BlackTechConfigCard(
+                    config = editState.blackTechConfig,
+                    onConfigChange = { viewModel.updateEditState { copy(blackTechConfig = it) } }
+                )
+
+                com.webtoapp.ui.components.DisguiseConfigCard(
+                    config = editState.disguiseConfig,
+                    onConfigChange = { viewModel.updateEditState { copy(disguiseConfig = it) } }
+                )
+
+                DeviceDisguiseCard(
+                    config = editState.deviceDisguiseConfig,
+                    onConfigChange = { newConfig ->
+                        viewModel.updateEditState {
+                            copy(deviceDisguiseConfig = newConfig)
+                        }
+                    }
+                )
+            }
+
+            WtaSection(
+                title = Strings.apkExportConfig,
+                level = WtaCapabilityLevel.Advanced,
+                headerStyle = WtaSectionHeaderStyle.Quiet,
+                modifier = Modifier.bringIntoViewRequester(exportRequester),
+                capabilityTags = listOf(
+                    Strings.customPackageName,
+                    Strings.versionName,
+                    Strings.apkArchitecture,
+                    Strings.customSigning,
+                    Strings.capabilityPermissions
+                ),
+                initiallyExpanded = editState.apkExportConfig.isMeaningful(),
+                expanded = exportExpandedOverride,
+                onExpandedChange = { exportExpandedOverride = it }
+            ) {
+                ApkExportSettingsCard(
+                    config = editState.apkExportConfig,
+                    onConfigChange = { viewModel.updateEditState { copy(apkExportConfig = it) } },
+                    onOpenPermissionConfig = { showPermissionConfig = true }
+                )
             }
 
             Spacer(modifier = Modifier.height(32.dp))
-            }
         }
     }
 
-    // Unsaved changes confirmation dialog
+
     if (showDiscardDialog) {
         AlertDialog(
             onDismissRequest = { showDiscardDialog = false },
@@ -546,19 +676,15 @@ fun CreateAppScreen(
         )
     }
 
-    // Permission Configuration full-screen overlay
-    if (showPermissionConfig) {
-        ThemedBackgroundBox {
-            PermissionConfigScreen(
-                permissions = editState.apkExportConfig.runtimePermissions,
-                onPermissionsChange = { newPermissions ->
-                    viewModel.updateEditState {
-                        copy(apkExportConfig = apkExportConfig.copy(runtimePermissions = newPermissions))
-                    }
-                },
-                onBack = { showPermissionConfig = false }
-            )
-        }
+    if (showCapabilitySearch) {
+        CapabilitySearchDialog(
+            capabilities = capabilities,
+            onDismiss = { showCapabilitySearch = false },
+            onSelect = { capability ->
+                showCapabilitySearch = false
+                focusCapability(capability)
+            }
+        )
     }
 }
 
@@ -568,6 +694,32 @@ private fun hasConfiguredLegacyAds(editState: EditState): Boolean {
         config.bannerId.isNotBlank() ||
         config.interstitialId.isNotBlank() ||
         config.splashId.isNotBlank()
+}
+
+private fun hasConfiguredBrowserAdvancedConfig(config: WebViewConfig): Boolean {
+    val defaultConfig = WebViewConfig()
+    return config.javaScriptEnabled != defaultConfig.javaScriptEnabled ||
+        config.domStorageEnabled != defaultConfig.domStorageEnabled ||
+        config.enableCrossOriginIsolation != defaultConfig.enableCrossOriginIsolation ||
+        config.zoomEnabled != defaultConfig.zoomEnabled ||
+        config.fullscreenEnabled != defaultConfig.fullscreenEnabled ||
+        config.swipeRefreshEnabled != defaultConfig.swipeRefreshEnabled ||
+        config.openExternalLinks != defaultConfig.openExternalLinks ||
+        config.popupBlockerEnabled != defaultConfig.popupBlockerEnabled ||
+        config.showFloatingBackButton != defaultConfig.showFloatingBackButton ||
+        config.pwaOfflineEnabled != defaultConfig.pwaOfflineEnabled ||
+        config.pwaOfflineStrategy != defaultConfig.pwaOfflineStrategy ||
+        config.errorPageConfig != defaultConfig.errorPageConfig ||
+        config.keyboardAdjustMode != defaultConfig.keyboardAdjustMode ||
+        config.injectScripts.isNotEmpty() ||
+        config.proxyMode != defaultConfig.proxyMode ||
+        config.proxyHost.isNotBlank() ||
+        config.proxyPort != defaultConfig.proxyPort ||
+        config.proxyType != defaultConfig.proxyType ||
+        config.pacUrl.isNotBlank() ||
+        config.proxyBypassRules.isNotEmpty() ||
+        config.proxyUsername.isNotBlank() ||
+        config.proxyPassword.isNotBlank()
 }
 
 @Composable
@@ -597,11 +749,12 @@ private fun LegacyAdCapabilityWarningCard() {
             )
         }
     }
+
 }
 
-/**
- * 基本信息卡片
- */
+
+
+
 @Composable
 fun BasicInfoCard(
     editState: EditState,
@@ -610,298 +763,230 @@ fun BasicInfoCard(
     onSelectIcon: () -> Unit,
     onSelectIconFromLibrary: (String) -> Unit = {}
 ) {
-    EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
+    WtaSettingCard {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            modifier = Modifier.padding(vertical = WtaSpacing.ContentGap),
+            verticalArrangement = Arrangement.spacedBy(WtaSpacing.ContentGap)
         ) {
-            Text(
-                text = Strings.labelBasicInfo,
-                style = MaterialTheme.typography.titleMedium
-            )
+            Column(
+                modifier = Modifier.padding(horizontal = WtaSpacing.RowHorizontal),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                IconPickerWithLibrary(
+                    iconUri = editState.iconUri,
+                    iconPath = editState.savedIconPath,
+                    websiteUrl = if (editState.appType == AppType.WEB) editState.url else null,
+                    onSelectFromGallery = onSelectIcon,
+                    onSelectFromLibrary = onSelectIconFromLibrary
+                )
 
-            // Icon选择（带图标库功能）
-            IconPickerWithLibrary(
-                iconUri = editState.iconUri,
-                iconPath = editState.savedIconPath,
-                websiteUrl = if (editState.appType == AppType.WEB) editState.url else null,
-                onSelectFromGallery = onSelectIcon,
-                onSelectFromLibrary = onSelectIconFromLibrary
-            )
 
-            // App名称（带随机按钮）
-            AppNameTextField(
-                value = editState.name,
-                onValueChange = onNameChange
-            )
+                AppNameTextField(
+                    value = editState.name,
+                    onValueChange = onNameChange
+                )
 
-            // 根据应用类型显示不同内容
-            when (editState.appType) {
-                AppType.WEB -> {
-                    // Website URL输入框（仅 WEB 类型）
-                    PremiumTextField(
-                        value = editState.url,
-                        onValueChange = onUrlChange,
-                        label = { Text(Strings.labelUrl) },
-                        placeholder = { Text("https://example.com") },
-                        leadingIcon = { Icon(Icons.Outlined.Link, null) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Uri,
-                            imeAction = ImeAction.Done
-                        )
-                    )
-                }
-                AppType.HTML, AppType.FRONTEND -> {
-                    // HTML/前端应用显示文件信息
-                    val htmlConfig = editState.htmlConfig
-                    val fileCount = htmlConfig?.files?.size ?: 0
-                    val entryFile = htmlConfig?.entryFile?.takeIf { it.isNotBlank() } ?: "index.html"
-                    val isFrontend = editState.appType == AppType.FRONTEND
-                    
-                    EnhancedElevatedCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer
-                        )
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                if (isFrontend) Icons.Outlined.Web else Icons.Outlined.Code,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSecondaryContainer
+
+                when (editState.appType) {
+                    AppType.WEB -> {
+
+                        PremiumTextField(
+                            value = editState.url,
+                            onValueChange = onUrlChange,
+                            label = { Text(Strings.labelUrl) },
+                            placeholder = { Text("https://example.com") },
+                            leadingIcon = { Icon(Icons.Outlined.Link, null) },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Uri,
+                                imeAction = ImeAction.Done
                             )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = if (isFrontend) Strings.frontendApp else Strings.htmlApp,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                                )
-                                Text(
-                                    text = "${Strings.entryFile}: $entryFile · ${Strings.totalFilesCount.replace("%d", fileCount.toString())}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
-                                )
-                            }
-                        }
-                    }
-                }
-                AppType.IMAGE, AppType.VIDEO -> {
-                    // Media应用显示文件路径
-                    val mediaPath = editState.url
-                    val isVideo = editState.appType == AppType.VIDEO
-                    val fileName = mediaPath.substringAfterLast("/", Strings.unknownFile)
-                    
-                    EnhancedElevatedCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer
                         )
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                if (isVideo) Icons.Outlined.Videocam else Icons.Outlined.Image,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSecondaryContainer
+                    }
+                    AppType.HTML, AppType.FRONTEND -> {
+
+                        val htmlConfig = editState.htmlConfig
+                        val fileCount = htmlConfig?.files?.size ?: 0
+                        val entryFile = htmlConfig?.entryFile?.takeIf { it.isNotBlank() } ?: "index.html"
+                        val isFrontend = editState.appType == AppType.FRONTEND
+
+                        BasicInfoSummaryRow(
+                            icon = if (isFrontend) Icons.Outlined.Web else Icons.Outlined.Code,
+                            title = if (isFrontend) Strings.frontendApp else Strings.htmlApp,
+                            subtitle = "${Strings.entryFile}: $entryFile · ${Strings.totalFilesCount.replace("%d", fileCount.toString())}"
+                        )
+                    }
+                    AppType.IMAGE, AppType.VIDEO -> {
+
+                        val mediaPath = editState.url
+                        val isVideo = editState.appType == AppType.VIDEO
+                        val fileName = mediaPath.substringAfterLast("/", Strings.unknownFile)
+
+                        BasicInfoSummaryRow(
+                            icon = if (isVideo) Icons.Outlined.Videocam else Icons.Outlined.Image,
+                            title = if (isVideo) Strings.videoApp else Strings.imageApp,
+                            subtitle = fileName
+                        )
+                    }
+                    AppType.WORDPRESS -> {
+
+                        BasicInfoSummaryRow(
+                            icon = Icons.Outlined.Language,
+                            title = Strings.appTypeWordPress,
+                            subtitle = Strings.runtimePhpSqlite
+                        )
+                    }
+                    AppType.GALLERY -> {
+
+                        BasicInfoSummaryRow(
+                            icon = Icons.Outlined.PhotoLibrary,
+                            title = Strings.galleryApp,
+                            subtitle = Strings.galleryMediaList
+                        )
+                    }
+                    AppType.NODEJS_APP -> {
+
+                        BasicInfoSummaryRow(
+                            icon = Icons.Outlined.Terminal,
+                            title = Strings.appTypeNodeJs,
+                            subtitle = Strings.runtimeNodeJs
+                        )
+                    }
+                    AppType.PHP_APP, AppType.PYTHON_APP, AppType.GO_APP -> {
+                        val (label, desc) = when (editState.appType) {
+                            AppType.PHP_APP -> Strings.appTypePhp to Strings.runtimePhp
+                            AppType.PYTHON_APP -> Strings.appTypePython to Strings.runtimePython
+                            AppType.GO_APP -> Strings.appTypeGo to Strings.runtimeGoBinary
+                            else -> "" to ""
+                        }
+                        BasicInfoSummaryRow(
+                            icon = Icons.Outlined.Terminal,
+                            title = label,
+                            subtitle = desc
+                        )
+                    }
+                    AppType.MULTI_WEB -> {
+
+                        PremiumTextField(
+                            value = editState.url,
+                            onValueChange = onUrlChange,
+                            label = { Text(Strings.labelUrl) },
+                            placeholder = { Text("https://example.com") },
+                            leadingIcon = { Icon(Icons.Outlined.Link, null) },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Uri,
+                                imeAction = ImeAction.Done
                             )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                                Text(
-                                    text = if (isVideo) Strings.videoApp else Strings.imageApp,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                                )
-                                Text(
-                                    text = fileName,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
-                                    maxLines = 1
-                                )
-                            }
-                        }
-                    }
-                }
-                AppType.WORDPRESS -> {
-                    // WordPress 应用显示类型信息
-                    EnhancedElevatedCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer
                         )
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                Icons.Outlined.Language,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = Strings.appTypeWordPress,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                                )
-                                Text(
-                                    text = "PHP + SQLite",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
-                                )
-                            }
-                        }
                     }
-                }
-                AppType.GALLERY -> {
-                    // 画廊应用有独立的编辑界面，此处显示简要信息
-                    EnhancedElevatedCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer
-                        )
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                Icons.Outlined.PhotoLibrary,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                                Text(
-                                    text = Strings.galleryApp,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                                )
-                                Text(
-                                    text = Strings.galleryMediaList,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
-                                    maxLines = 1
-                                )
-                            }
-                        }
-                    }
-                }
-                AppType.NODEJS_APP -> {
-                    // Node.js 应用显示类型信息
-                    EnhancedElevatedCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer
-                        )
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                Icons.Outlined.Terminal,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = Strings.appTypeNodeJs,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                                )
-                                Text(
-                                    text = "Node.js Runtime",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
-                                )
-                            }
-                        }
-                    }
-                }
-                AppType.PHP_APP, AppType.PYTHON_APP, AppType.GO_APP -> {
-                    val (label, desc) = when (editState.appType) {
-                        AppType.PHP_APP -> Strings.appTypePhp to "PHP Runtime"
-                        AppType.PYTHON_APP -> Strings.appTypePython to "Python Runtime"
-                        AppType.GO_APP -> Strings.appTypeGo to "Go Binary"
-                        else -> "" to ""
-                    }
-                    EnhancedElevatedCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer
-                        )
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                Icons.Outlined.Terminal,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = label,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                                )
-                                Text(
-                                    text = desc,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
-                                )
-                            }
-                        }
-                    }
-                }
-                AppType.MULTI_WEB -> {
-                    // 多站点聚合应用：简化处理，使用 Web URL 输入
-                    PremiumTextField(
-                        value = editState.url,
-                        onValueChange = onUrlChange,
-                        label = { Text(Strings.labelUrl) },
-                        placeholder = { Text("https://example.com") },
-                        leadingIcon = { Icon(Icons.Outlined.Link, null) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Uri,
-                            imeAction = ImeAction.Done
-                        )
-                    )
                 }
             }
         }
     }
 }
 
+@Composable
+private fun BasicInfoSummaryRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    subtitle: String
+) {
+    WtaSettingRow(
+        title = title,
+        subtitle = subtitle,
+        icon = icon,
+        subtitleMaxLines = 1,
+        contentPadding = PaddingValues(horizontal = 0.dp, vertical = WtaSpacing.ContentGap)
+    )
+}
 
-/**
- * PWA 自动感知区域
- */
+
+@Composable
+private fun CapabilitySearchDialog(
+    capabilities: List<AppCapability>,
+    onDismiss: () -> Unit,
+    onSelect: (AppCapability) -> Unit
+) {
+    var query by remember { mutableStateOf("") }
+    val filtered = remember(query, capabilities) {
+        capabilities.filter { it.matches(query) }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(Strings.capabilitySearchTitle) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(WtaSpacing.CardGap)) {
+                OutlinedTextField(
+                    value = query,
+                    onValueChange = { query = it },
+                    label = { Text(Strings.capabilitySearchLabel) },
+                    placeholder = { Text(Strings.capabilitySearchPlaceholder) },
+                    leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 420.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(WtaSpacing.CardGap)
+                ) {
+                    if (filtered.isEmpty()) {
+                        WtaEmptyState(
+                            title = Strings.capabilitySearchEmptyTitle,
+                            message = Strings.capabilitySearchEmptyMessage
+                        )
+                    } else {
+                        filtered.forEach { capability ->
+                            WtaSettingCard(onClick = { onSelect(capability) }) {
+                                WtaSettingRow(
+                                    title = capability.title,
+                                    subtitle = capability.subtitle,
+                                    icon = capability.icon
+                                ) {
+                                    Text(
+                                        text = if (capability.configured) Strings.configured else when (capability.level) {
+                                            WtaCapabilityLevel.Common -> Strings.common
+                                            WtaCapabilityLevel.Advanced -> Strings.advanced
+                                            WtaCapabilityLevel.Lab -> Strings.lab
+                                        },
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(Strings.btnCancel)
+            }
+        }
+    )
+}
+
+
+
+
+
 @Composable
 fun PwaAnalysisSection(
     viewModel: MainViewModel,
     editState: EditState
 ) {
     val pwaState by viewModel.pwaAnalysisState.collectAsStateWithLifecycle()
-    val scope = rememberCoroutineScope()
     var showResultCard by remember { mutableStateOf(false) }
 
-    // 当分析成功时显示结果卡片
+
     LaunchedEffect(pwaState) {
         if (pwaState is PwaAnalysisState.Success) {
             showResultCard = true
@@ -909,9 +994,9 @@ fun PwaAnalysisSection(
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        // 分析按钮
+
         val isAnalyzing = pwaState is PwaAnalysisState.Analyzing
-        
+
         FilledTonalButton(
             onClick = {
                 showResultCard = false
@@ -919,7 +1004,7 @@ fun PwaAnalysisSection(
             },
             enabled = editState.url.isNotBlank() && !isAnalyzing,
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(WtaRadius.Button)
         ) {
             if (isAnalyzing) {
                 CircularProgressIndicator(
@@ -935,40 +1020,21 @@ fun PwaAnalysisSection(
             }
         }
 
-        // 错误提示
+
         AnimatedVisibility(
             visible = pwaState is PwaAnalysisState.Error,
             enter = fadeIn() + expandVertically(),
             exit = fadeOut() + shrinkVertically()
         ) {
             val error = (pwaState as? PwaAnalysisState.Error)?.message ?: ""
-            EnhancedElevatedCard(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.elevatedCardColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer
-                )
-            ) {
-                Row(
-                    modifier = Modifier.padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        Icons.Outlined.ErrorOutline,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "${Strings.pwaAnalysisFailed}: $error",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onErrorContainer
-                    )
-                }
-            }
+            WtaStatusBanner(
+                title = Strings.pwaAnalysisFailed,
+                message = error,
+                tone = WtaStatusTone.Error
+            )
         }
 
-        // 分析结果卡片
+
         AnimatedVisibility(
             visible = showResultCard && pwaState is PwaAnalysisState.Success,
             enter = CardExpandTransition,
@@ -993,29 +1059,24 @@ fun PwaAnalysisSection(
     }
 }
 
-/**
- * PWA 分析结果卡片
- */
+
+
+
 @Composable
 private fun PwaResultCard(
     result: PwaAnalysisResult,
     onApply: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    EnhancedElevatedCard(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = if (result.isPwa)
-                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-            else
-                MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
+    WtaSettingCard {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(
+                horizontal = WtaSpacing.RowHorizontal,
+                vertical = WtaSpacing.RowVertical
+            ),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // 标题行
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -1041,7 +1102,7 @@ private fun PwaResultCard(
                             MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                
+
                 IconButton(onClick = onDismiss, modifier = Modifier.size(24.dp)) {
                     Icon(
                         Icons.Filled.Close,
@@ -1051,7 +1112,7 @@ private fun PwaResultCard(
                 }
             }
 
-            // 数据来源
+
             Text(
                 text = when (result.source) {
                     PwaDataSource.MANIFEST -> Strings.pwaSourceManifest
@@ -1062,9 +1123,9 @@ private fun PwaResultCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+            WtaSectionDivider(modifier = Modifier.padding(horizontal = 0.dp))
 
-            // 检测到的信息
+
             result.suggestedName?.let { name ->
                 PwaInfoRow(label = Strings.pwaName, value = name)
             }
@@ -1083,7 +1144,7 @@ private fun PwaResultCard(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    // 色块预览
+
                     val parsedColor = try {
                         Color(android.graphics.Color.parseColor(color))
                     } catch (e: Exception) {
@@ -1092,7 +1153,7 @@ private fun PwaResultCard(
                     Box(
                         modifier = Modifier
                             .size(16.dp)
-                            .clip(RoundedCornerShape(4.dp))
+                            .clip(RoundedCornerShape(WtaRadius.Button))
                             .background(parsedColor)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
@@ -1118,11 +1179,11 @@ private fun PwaResultCard(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // 一键应用按钮
-            Button(
+
+            FilledTonalButton(
                 onClick = onApply,
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(WtaRadius.Button)
             ) {
                 Icon(Icons.Filled.AutoFixHigh, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
@@ -1132,9 +1193,9 @@ private fun PwaResultCard(
     }
 }
 
-/**
- * PWA 信息行
- */
+
+
+
 @Composable
 private fun PwaInfoRow(label: String, value: String) {
     Row(
@@ -1154,16 +1215,16 @@ private fun PwaInfoRow(label: String, value: String) {
         )
     }
 }
-/**
- * 导出应用主题选择卡片
- */
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppThemeCard(
     selectedTheme: String,
     onThemeChange: (String) -> Unit
 ) {
-    // Theme选项列表 - 使用本地化名称
+
     val themeOptions = listOf(
         "AURORA" to Strings.themeAurora,
         "CYBERPUNK" to Strings.themeCyberpunk,
@@ -1178,7 +1239,7 @@ fun AppThemeCard(
         "NEON_TOKYO" to Strings.themeNeonTokyo,
         "LAVENDER" to Strings.themeLavender
     )
-    
+
     var expanded by remember { mutableStateOf(false) }
     val selectedDisplayName = themeOptions.find { it.first == selectedTheme }?.second ?: Strings.themeAurora
 
@@ -1208,7 +1269,7 @@ fun AppThemeCard(
                     style = MaterialTheme.typography.titleMedium
                 )
             }
-            
+
             Text(
                 text = Strings.exportAppThemeHint,
                 style = MaterialTheme.typography.bodySmall,
@@ -1229,7 +1290,7 @@ fun AppThemeCard(
                         .fillMaxWidth()
                         .menuAnchor()
                 )
-                
+
                 ExposedDropdownMenu(
                     expanded = expanded,
                     onDismissRequest = { expanded = false }
@@ -1258,9 +1319,9 @@ fun AppThemeCard(
     }
 }
 
-/**
- * 网页自动翻译配置卡片 — 多引擎 / 20 种语言
- */
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TranslateCard(
@@ -1271,11 +1332,11 @@ fun TranslateCard(
 ) {
     var langExpanded by remember { mutableStateOf(false) }
     var engineExpanded by remember { mutableStateOf(false) }
-    
-    // 所有支持的语言（从 enum 直接生成，使用原生语言名称）
+
+
     val languageOptions = TranslateLanguage.entries.toList()
-    
-    // 翻译引擎选项
+
+
     val engineOptions = TranslateEngine.entries.toList()
 
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
@@ -1330,8 +1391,8 @@ fun TranslateCard(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                
-                // 目标语言选择（20 种语言）
+
+
                 ExposedDropdownMenuBox(
                     expanded = langExpanded,
                     onExpandedChange = { langExpanded = it }
@@ -1346,14 +1407,14 @@ fun TranslateCard(
                             .fillMaxWidth()
                             .menuAnchor()
                     )
-                    
+
                     ExposedDropdownMenu(
                         expanded = langExpanded,
                         onDismissRequest = { langExpanded = false }
                     ) {
                         languageOptions.forEach { language ->
                             DropdownMenuItem(
-                                text = { 
+                                text = {
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1383,8 +1444,8 @@ fun TranslateCard(
                         }
                     }
                 }
-                
-                // 翻译引擎选择
+
+
                 ExposedDropdownMenuBox(
                     expanded = engineExpanded,
                     onExpandedChange = { engineExpanded = it }
@@ -1399,7 +1460,7 @@ fun TranslateCard(
                             .fillMaxWidth()
                             .menuAnchor()
                     )
-                    
+
                     ExposedDropdownMenu(
                         expanded = engineExpanded,
                         onDismissRequest = { engineExpanded = false }
@@ -1424,8 +1485,8 @@ fun TranslateCard(
                         }
                     }
                 }
-                
-                // 显示翻译按钮选项
+
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -1444,8 +1505,8 @@ fun TranslateCard(
                         onCheckedChange = { onConfigChange(config.copy(showFloatingButton = it)) }
                     )
                 }
-                
-                // 自动翻译选项
+
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -1469,4 +1530,3 @@ fun TranslateCard(
         }
     }
 }
-

@@ -22,8 +22,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.InsertDriveFile
+import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -47,6 +48,10 @@ import com.webtoapp.data.model.HtmlConfig
 import com.webtoapp.data.model.HtmlFile
 import com.webtoapp.data.model.HtmlFileType
 import com.webtoapp.ui.components.*
+import com.webtoapp.ui.design.WtaStatusBanner
+import com.webtoapp.ui.design.WtaStatusTone
+import com.webtoapp.ui.screens.create.WtaCreateFlowScaffold
+import com.webtoapp.ui.screens.create.WtaCreateFlowSection
 import com.webtoapp.util.HtmlProjectProcessor
 import com.webtoapp.util.ZipProjectImporter
 import kotlinx.coroutines.Dispatchers
@@ -54,33 +59,30 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import com.webtoapp.ui.components.ThemedBackgroundBox
 import androidx.compose.ui.graphics.Color
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
-/**
- * Snapshot of HTML app editor state for dirty-tracking.
- * Compared against current state to determine if user has made changes.
- */
+
+
+
+
 private data class HtmlEditorStateSnapshot(
     val appName: String = "",
-    val htmlFile: HtmlFile? = null,
-    val cssFile: HtmlFile? = null,
-    val jsFile: HtmlFile? = null,
+    val manualFiles: List<HtmlFile> = emptyList(),
     val appIcon: Uri? = null,
     val enableJavaScript: Boolean = true,
     val enableLocalStorage: Boolean = true,
     val landscapeMode: Boolean = false
 )
 
-/**
- * 创建/编辑HTML应用页面
- * 支持单个HTML文件、HTML+CSS+JS项目
- */
+
+
+
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun CreateHtmlAppScreen(
-    existingAppId: Long? = null,  // 编辑模式时传入已有应用ID
+    existingAppId: Long? = null,
     onBack: () -> Unit,
     onCreated: (
         name: String,
@@ -97,17 +99,17 @@ fun CreateHtmlAppScreen(
         enableLocalStorage: Boolean,
         landscapeMode: Boolean
     ) -> Unit = { _, _, _, _, _, _, _ -> },
-    importDir: String? = null,  // 从AI编程导入的目录
-    importProjectName: String? = null  // Import的项目名称
+    importDir: String? = null,
+    importProjectName: String? = null
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val isEditMode = existingAppId != null
-    
-    // 导入模式切换: 0=手动选择, 1=ZIP导入
+
+
     var selectedTabIndex by remember { mutableIntStateOf(0) }
-    
-    // 编辑模式时加载已有应用数据
+
+
     var existingApp by remember { mutableStateOf<com.webtoapp.data.model.WebApp?>(null) }
     LaunchedEffect(existingAppId) {
         if (existingAppId != null) {
@@ -116,193 +118,145 @@ fun CreateHtmlAppScreen(
                 .first()
         }
     }
-    val scrollState = rememberScrollState()
-    
-    // App信息
     var appName by remember { mutableStateOf(importProjectName ?: "") }
     var appIcon by remember { mutableStateOf<Uri?>(null) }
     var appIconPath by remember { mutableStateOf<String?>(null) }
-    
-    // ==================== ZIP 导入状态 ====================
+
+
     var zipAnalysis by remember { mutableStateOf<ZipProjectImporter.ZipProjectAnalysis?>(null) }
     var zipImporting by remember { mutableStateOf(false) }
     var zipError by remember { mutableStateOf<String?>(null) }
     var zipEntryFile by remember { mutableStateOf("") }
     var showEntryFileDialog by remember { mutableStateOf(false) }
     var showFileListDialog by remember { mutableStateOf(false) }
-    
-    // ==================== 文件夹导入状态 ====================
+
+
     var folderAnalysis by remember { mutableStateOf<ZipProjectImporter.ZipProjectAnalysis?>(null) }
     var folderImporting by remember { mutableStateOf(false) }
     var folderError by remember { mutableStateOf<String?>(null) }
     var folderEntryFile by remember { mutableStateOf("") }
     var showFolderEntryFileDialog by remember { mutableStateOf(false) }
     var showFolderFileListDialog by remember { mutableStateOf(false) }
-    
-    // 单HTML模式 - 三个独立的文件槽位
-    var htmlFile by remember { mutableStateOf<HtmlFile?>(null) }
-    var cssFile by remember { mutableStateOf<HtmlFile?>(null) }
-    var jsFile by remember { mutableStateOf<HtmlFile?>(null) }
-    
-    // Configure选项（需要在 LaunchedEffect 之前声明）
+
+
+    var manualFiles by remember { mutableStateOf<List<HtmlFile>>(emptyList()) }
+
+
     var enableJavaScript by remember { mutableStateOf(true) }
     var enableLocalStorage by remember { mutableStateOf(true) }
     var landscapeMode by remember { mutableStateOf(false) }
-    
-    // Theme配置（需要在 LaunchedEffect 之前声明）
+
+
     var themeType by remember { mutableStateOf("AURORA") }
-    
-    // 代码优化（Linux 环境）
+
+
     var enableOptimize by remember { mutableStateOf(false) }
     var isOptimizing by remember { mutableStateOf(false) }
     var optimizeResult by remember { mutableStateOf<HtmlProjectOptimizer.OptimizeResult?>(null) }
     val esbuildAvailable = remember { NativeNodeEngine.isAvailable(context) }
-    
-    // 编辑模式：加载现有应用数据到UI状态
+
+
     LaunchedEffect(existingApp) {
         existingApp?.let { app ->
-            // 加载基本信息
+
             appName = app.name
             appIconPath = app.iconPath
-            
-            // 加载 HTML 配置
+
+
             app.htmlConfig?.let { config ->
-                // 尝试从文件列表中恢复文件槽位
-                config.files.forEach { file ->
-                    when (file.type) {
-                        HtmlFileType.HTML -> {
-                            // 检查文件是否存在
-                            if (java.io.File(file.path).exists()) {
-                                htmlFile = file
-                            }
-                        }
-                        HtmlFileType.CSS -> {
-                            if (java.io.File(file.path).exists()) {
-                                cssFile = file
-                            }
-                        }
-                        HtmlFileType.JS -> {
-                            if (java.io.File(file.path).exists()) {
-                                jsFile = file
-                            }
-                        }
-                        else -> { /* 忽略其他类型 */ }
-                    }
-                }
-                
-                // 如果文件列表恢复后仍有缺失槽位，尝试从项目目录中扫描补全
-                if ((htmlFile == null || cssFile == null || jsFile == null) && config.projectId.isNotBlank()) {
+
+                val restoredFiles = config.files.filter { java.io.File(it.path).exists() }.toMutableList()
+
+
+                if (config.projectId.isNotBlank()) {
                     val projectDir = java.io.File(context.filesDir, "html_projects/${config.projectId}")
                     if (projectDir.exists()) {
+                        val restoredNames = restoredFiles.map { it.name }.toSet()
                         projectDir.listFiles()?.forEach { file ->
-                            when {
-                                (file.name.endsWith(".html", ignoreCase = true) ||
-                                file.name.endsWith(".htm", ignoreCase = true)) && htmlFile == null -> {
-                                    htmlFile = HtmlFile(
-                                        name = file.name,
-                                        path = file.absolutePath,
-                                        type = HtmlFileType.HTML
-                                    )
-                                }
-                                file.name.endsWith(".css", ignoreCase = true) && cssFile == null -> {
-                                    cssFile = HtmlFile(
-                                        name = file.name,
-                                        path = file.absolutePath,
-                                        type = HtmlFileType.CSS
-                                    )
-                                }
-                                file.name.endsWith(".js", ignoreCase = true) && jsFile == null -> {
-                                    jsFile = HtmlFile(
-                                        name = file.name,
-                                        path = file.absolutePath,
-                                        type = HtmlFileType.JS
-                                    )
-                                }
+                            if (file.isFile && file.name !in restoredNames) {
+                                val type = getFileType(file.name)
+                                restoredFiles.add(HtmlFile(
+                                    name = file.name,
+                                    path = file.absolutePath,
+                                    type = type
+                                ))
                             }
                         }
                     }
                 }
-                
-                // 加载配置选项
+                manualFiles = restoredFiles
+
+
                 enableJavaScript = config.enableJavaScript
                 enableLocalStorage = config.enableLocalStorage
                 landscapeMode = config.landscapeMode
             }
-            
-            // 加载主题
+
+
             themeType = app.themeType
         }
     }
-    
-    // 从AI编程导入文件
+
+
     LaunchedEffect(importDir) {
         if (importDir != null) {
             val dir = java.io.File(importDir)
             if (dir.exists() && dir.isDirectory) {
-                dir.listFiles()?.forEach { file ->
-                    when {
-                        file.name.endsWith(".html", ignoreCase = true) || 
-                        file.name.endsWith(".htm", ignoreCase = true) -> {
-                            htmlFile = HtmlFile(
-                                name = file.name,
-                                path = file.absolutePath,
-                                type = HtmlFileType.HTML
-                            )
-                        }
-                        file.name.endsWith(".css", ignoreCase = true) -> {
-                            cssFile = HtmlFile(
-                                name = file.name,
-                                path = file.absolutePath,
-                                type = HtmlFileType.CSS
-                            )
-                        }
-                        file.name.endsWith(".js", ignoreCase = true) -> {
-                            jsFile = HtmlFile(
-                                name = file.name,
-                                path = file.absolutePath,
-                                type = HtmlFileType.JS
-                            )
-                        }
-                    }
+                val importedFiles = dir.listFiles()?.mapNotNull { file ->
+                    if (file.isFile) {
+                        HtmlFile(
+                            name = file.name,
+                            path = file.absolutePath,
+                            type = getFileType(file.name)
+                        )
+                    } else null
+                } ?: emptyList()
+                manualFiles = importedFiles
+
+                if (appName.isBlank()) {
+                    appName = importProjectName ?: importedFiles.firstOrNull {
+                        it.type == HtmlFileType.HTML
+                    }?.name?.substringBeforeLast(".") ?: ""
                 }
             }
         }
     }
-    
-    // 项目分析结果
+
+
     var projectAnalysis by remember { mutableStateOf<HtmlProjectProcessor.ProjectAnalysis?>(null) }
     var showAnalysisDialog by remember { mutableStateOf(false) }
-    
-    // 当文件变化时重新分析
-    LaunchedEffect(htmlFile, cssFile, jsFile) {
+
+
+    LaunchedEffect(manualFiles) {
+        val htmlFile = manualFiles.firstOrNull { it.type == HtmlFileType.HTML || it.name.endsWith(".html", ignoreCase = true) || it.name.endsWith(".htm", ignoreCase = true) }
         if (htmlFile != null) {
             projectAnalysis = withContext(Dispatchers.IO) {
                 HtmlProjectProcessor.analyzeProject(
-                    htmlFilePath = htmlFile?.path,
-                    cssFilePath = cssFile?.path,
-                    jsFilePath = jsFile?.path
+                    htmlFilePath = htmlFile.path,
+                    cssFilePath = manualFiles.firstOrNull { it.type == HtmlFileType.CSS }?.path,
+                    jsFilePath = manualFiles.firstOrNull { it.type == HtmlFileType.JS }?.path
                 )
             }
         } else {
             projectAnalysis = null
         }
     }
-    
-    // 判断是否可以创建
+
+
     val canCreate = when (selectedTabIndex) {
-        0 -> htmlFile != null
+        0 -> manualFiles.any { it.type == HtmlFileType.HTML || it.name.endsWith(".html", ignoreCase = true) || it.name.endsWith(".htm", ignoreCase = true) }
         1 -> zipAnalysis != null && zipAnalysis!!.htmlFiles.isNotEmpty()
         2 -> folderAnalysis != null && folderAnalysis!!.htmlFiles.isNotEmpty()
         else -> false
     }
-    
-    // Yes否有问题需要关注
-    val hasIssues = projectAnalysis?.issues?.any { 
-        it.severity == HtmlProjectProcessor.IssueSeverity.ERROR || 
-        it.severity == HtmlProjectProcessor.IssueSeverity.WARNING 
+
+
+    val hasIssues = projectAnalysis?.issues?.any {
+        it.severity == HtmlProjectProcessor.IssueSeverity.ERROR ||
+        it.severity == HtmlProjectProcessor.IssueSeverity.WARNING
     } == true
-    
-    // ZIP 文件选择器
+
+
     val zipPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri ->
@@ -333,8 +287,8 @@ fun CreateHtmlAppScreen(
             }
         }
     }
-    
-    // 文件夹选择器 (OpenDocumentTree)
+
+
     val folderPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocumentTree()
     ) { uri ->
@@ -363,90 +317,52 @@ fun CreateHtmlAppScreen(
             }
         }
     }
-    
-    // HTML文件选择器
-    val htmlPickerLauncher = rememberLauncherForActivityResult(
+
+
+    val filePickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri ->
         uri?.let {
             val fileName = getFileName(context, it)
             val tempFile = copyUriToTempFile(context, it, fileName)
             if (tempFile != null && fileName != null) {
-                htmlFile = HtmlFile(
+                val fileType = getFileType(fileName)
+                val newFile = HtmlFile(
                     name = fileName,
                     path = tempFile.absolutePath,
-                    type = HtmlFileType.HTML
+                    type = fileType
                 )
-                // Auto设置应用名
-                if (appName.isBlank()) {
+                manualFiles = manualFiles + newFile
+
+                if (appName.isBlank() && (fileType == HtmlFileType.HTML || fileType == HtmlFileType.OTHER && fileName.endsWith(".html", ignoreCase = true))) {
                     appName = fileName.substringBeforeLast(".")
                 }
             }
         }
     }
-    
-    // CSS文件选择器
-    val cssPickerLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.GetContent()
-    ) { uri ->
-        uri?.let {
-            val fileName = getFileName(context, it)
-            val tempFile = copyUriToTempFile(context, it, fileName)
-            if (tempFile != null && fileName != null) {
-                cssFile = HtmlFile(
-                    name = fileName,
-                    path = tempFile.absolutePath,
-                    type = HtmlFileType.CSS
-                )
-            }
-        }
-    }
-    
-    // JS文件选择器
-    val jsPickerLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.GetContent()
-    ) { uri ->
-        uri?.let {
-            val fileName = getFileName(context, it)
-            val tempFile = copyUriToTempFile(context, it, fileName)
-            if (tempFile != null && fileName != null) {
-                jsFile = HtmlFile(
-                    name = fileName,
-                    path = tempFile.absolutePath,
-                    type = HtmlFileType.JS
-                )
-            }
-        }
-    }
-    
-    // Build文件列表
-    val htmlFiles = remember(htmlFile, cssFile, jsFile) {
-        listOfNotNull(htmlFile, cssFile, jsFile)
-    }
-    // Verify entryFile：必须有文件名部分（不能只是 .html）
-    val entryFile = htmlFile?.name?.takeIf { 
-        it.isNotBlank() && it.substringBeforeLast(".").isNotBlank() 
-    } ?: "index.html"
-    
-    // Icon选择器
+
+
+    val entryFile = manualFiles.firstOrNull {
+        it.type == HtmlFileType.HTML || it.name.endsWith(".html", ignoreCase = true) || it.name.endsWith(".htm", ignoreCase = true)
+    }?.name?.takeIf { it.isNotBlank() && it.substringBeforeLast(".").isNotBlank() } ?: "index.html"
+
+
     val iconPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri -> uri?.let { appIcon = it } }
-    
-    // ==================== Dirty State & Back Confirmation ====================
-    // Snapshot-based dirty tracking: capture baseline after data loading, compare current state against it
+
+
+
     var baselineSnapshot by remember { mutableStateOf(HtmlEditorStateSnapshot(appName = importProjectName ?: "")) }
-    
-    // Update baseline after edit mode data loading completes
+
+
     LaunchedEffect(existingApp) {
         existingApp?.let {
-            // Wait one frame for LaunchedEffect(existingApp) above to update local state
+
             kotlinx.coroutines.delay(100)
             baselineSnapshot = HtmlEditorStateSnapshot(
                 appName = appName,
-                htmlFile = htmlFile,
-                cssFile = cssFile,
-                jsFile = jsFile,
+                manualFiles = manualFiles,
                 appIcon = appIcon,
                 enableJavaScript = enableJavaScript,
                 enableLocalStorage = enableLocalStorage,
@@ -454,16 +370,14 @@ fun CreateHtmlAppScreen(
             )
         }
     }
-    
-    // Update baseline after AI import loading completes
+
+
     LaunchedEffect(importDir) {
         if (importDir != null) {
             kotlinx.coroutines.delay(100)
             baselineSnapshot = HtmlEditorStateSnapshot(
                 appName = appName,
-                htmlFile = htmlFile,
-                cssFile = cssFile,
-                jsFile = jsFile,
+                manualFiles = manualFiles,
                 appIcon = appIcon,
                 enableJavaScript = enableJavaScript,
                 enableLocalStorage = enableLocalStorage,
@@ -471,30 +385,28 @@ fun CreateHtmlAppScreen(
             )
         }
     }
-    
-    val hasUnsavedChanges = remember(appName, htmlFile, cssFile, jsFile, appIcon, enableJavaScript, enableLocalStorage, landscapeMode, baselineSnapshot) {
+
+    val hasUnsavedChanges = remember(appName, manualFiles, appIcon, enableJavaScript, enableLocalStorage, landscapeMode, baselineSnapshot) {
         appName != baselineSnapshot.appName ||
-        htmlFile != baselineSnapshot.htmlFile ||
-        cssFile != baselineSnapshot.cssFile ||
-        jsFile != baselineSnapshot.jsFile ||
+        manualFiles != baselineSnapshot.manualFiles ||
         appIcon != baselineSnapshot.appIcon ||
         enableJavaScript != baselineSnapshot.enableJavaScript ||
         enableLocalStorage != baselineSnapshot.enableLocalStorage ||
         landscapeMode != baselineSnapshot.landscapeMode
     }
     var showExitConfirmDialog by remember { mutableStateOf(false) }
-    
-    // ==================== Inline Code Editor State ====================
+
+
     var showCodeEditorDialog by remember { mutableStateOf(false) }
     var codeEditorType by remember { mutableStateOf(HtmlFileType.HTML) }
     var codeEditorContent by remember { mutableStateOf("") }
-    
-    // BackHandler — intercept back when there are unsaved changes
+
+
     BackHandler(enabled = hasUnsavedChanges) {
         showExitConfirmDialog = true
     }
-    
-    // Exit Confirmation Dialog
+
+
     if (showExitConfirmDialog) {
         AlertDialog(
             onDismissRequest = { showExitConfirmDialog = false },
@@ -521,8 +433,8 @@ fun CreateHtmlAppScreen(
             }
         )
     }
-    
-    // Code Editor Full-screen Dialog
+
+
     if (showCodeEditorDialog) {
         CodeEditorDialog(
             fileType = codeEditorType,
@@ -534,7 +446,7 @@ fun CreateHtmlAppScreen(
                     HtmlFileType.JS -> "script.js"
                     else -> "file.txt"
                 }
-                // Write content to a temp file
+
                 scope.launch {
                     val file = withContext(Dispatchers.IO) {
                         val tempDir = File(context.cacheDir, "html_temp").apply { mkdirs() }
@@ -547,186 +459,169 @@ fun CreateHtmlAppScreen(
                         path = file.absolutePath,
                         type = codeEditorType
                     )
-                    when (codeEditorType) {
-                        HtmlFileType.HTML -> {
-                            htmlFile = htmlFileObj
-                            if (appName.isBlank()) appName = "index"
-                        }
-                        HtmlFileType.CSS -> cssFile = htmlFileObj
-                        HtmlFileType.JS -> jsFile = htmlFileObj
-                        else -> {}
+
+                    val existingIndex = manualFiles.indexOfFirst { it.name == fileName }
+                    if (existingIndex >= 0) {
+                        manualFiles = manualFiles.toMutableList().also { it[existingIndex] = htmlFileObj }
+                    } else {
+                        manualFiles = manualFiles + htmlFileObj
                     }
+                    if (appName.isBlank() && codeEditorType == HtmlFileType.HTML) appName = "index"
                 }
                 showCodeEditorDialog = false
             },
             onDismiss = { showCodeEditorDialog = false }
         )
     }
-    
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            TopAppBar(
-                title = { Text(Strings.createHtmlAppTitle) },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        if (hasUnsavedChanges) showExitConfirmDialog = true else onBack()
-                    }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, Strings.back)
-                    }
-                },
-                actions = {
-                    TextButton(
-                        onClick = {
-                            val finalIconUri = appIconPath?.let { Uri.parse("file://$it") } ?: appIcon
-                            
-                            when (selectedTabIndex) {
-                                0 -> {
-                                    // 手动模式
-                                    if (enableOptimize && !isOptimizing) {
-                                        isOptimizing = true
-                                        scope.launch {
-                                            val result = HtmlProjectOptimizer.optimizeFiles(
-                                                context = context,
-                                                jsFilePath = jsFile?.path,
-                                                cssFilePath = cssFile?.path
-                                            )
-                                            optimizeResult = result
-                                            isOptimizing = false
-                                            
-                                            val config = HtmlConfig(
-                                                entryFile = entryFile,
-                                                files = htmlFiles,
-                                                enableJavaScript = enableJavaScript,
-                                                enableLocalStorage = enableLocalStorage,
-                                                landscapeMode = landscapeMode
-                                            )
-                                            onCreated(
-                                                appName.ifBlank { Strings.createHtmlApp },
-                                                config,
-                                                finalIconUri,
-                                                themeType
-                                            )
-                                        }
-                                    } else {
-                                        val config = HtmlConfig(
-                                            entryFile = entryFile,
-                                            files = htmlFiles,
-                                            enableJavaScript = enableJavaScript,
-                                            enableLocalStorage = enableLocalStorage,
-                                            landscapeMode = landscapeMode
+
+    WtaCreateFlowScaffold(
+        title = Strings.createHtmlAppTitle,
+        onBack = {
+            if (hasUnsavedChanges) showExitConfirmDialog = true else onBack()
+        },
+        actions = {
+            TextButton(
+                onClick = {
+                    val finalIconUri = appIconPath?.let { Uri.parse("file://$it") } ?: appIcon
+
+                    when (selectedTabIndex) {
+                        0 -> {
+
+                            if (enableOptimize && !isOptimizing) {
+                                isOptimizing = true
+                                scope.launch {
+                                    val result = HtmlProjectOptimizer.optimizeFiles(
+                                        context = context,
+                                        jsFilePath = manualFiles.firstOrNull { it.type == HtmlFileType.JS }?.path,
+                                        cssFilePath = manualFiles.firstOrNull { it.type == HtmlFileType.CSS }?.path
+                                    )
+                                    optimizeResult = result
+                                    isOptimizing = false
+
+                                    val config = HtmlConfig(
+                                        entryFile = entryFile,
+                                        files = manualFiles,
+                                        enableJavaScript = enableJavaScript,
+                                        enableLocalStorage = enableLocalStorage,
+                                        landscapeMode = landscapeMode
+                                    )
+                                    onCreated(
+                                        appName.ifBlank { Strings.createHtmlApp },
+                                        config,
+                                        finalIconUri,
+                                        themeType
+                                    )
+                                }
+                            } else {
+                                val config = HtmlConfig(
+                                    entryFile = entryFile,
+                                    files = manualFiles,
+                                    enableJavaScript = enableJavaScript,
+                                    enableLocalStorage = enableLocalStorage,
+                                    landscapeMode = landscapeMode
+                                )
+                                onCreated(
+                                    appName.ifBlank { Strings.createHtmlApp },
+                                    config,
+                                    finalIconUri,
+                                    themeType
+                                )
+                            }
+                        }
+                        1 -> {
+
+                            zipAnalysis?.let { analysis ->
+                                if (enableOptimize && !isOptimizing) {
+                                    isOptimizing = true
+                                    scope.launch {
+                                        val result = HtmlProjectOptimizer.optimizeDirectory(
+                                            context = context,
+                                            projectDir = analysis.extractDir
                                         )
-                                        onCreated(
-                                            appName.ifBlank { Strings.createHtmlApp },
-                                            config,
+                                        optimizeResult = result
+                                        isOptimizing = false
+
+                                        onZipCreated(
+                                            appName.ifBlank { analysis.suggestedAppName },
+                                            analysis.extractDir,
+                                            zipEntryFile,
                                             finalIconUri,
-                                            themeType
+                                            enableJavaScript,
+                                            enableLocalStorage,
+                                            landscapeMode
                                         )
                                     }
-                                }
-                                1 -> {
-                                    // ZIP 导入模式
-                                    zipAnalysis?.let { analysis ->
-                                        if (enableOptimize && !isOptimizing) {
-                                            isOptimizing = true
-                                            scope.launch {
-                                                val result = HtmlProjectOptimizer.optimizeDirectory(
-                                                    context = context,
-                                                    projectDir = analysis.extractDir
-                                                )
-                                                optimizeResult = result
-                                                isOptimizing = false
-                                                
-                                                onZipCreated(
-                                                    appName.ifBlank { analysis.suggestedAppName },
-                                                    analysis.extractDir,
-                                                    zipEntryFile,
-                                                    finalIconUri,
-                                                    enableJavaScript,
-                                                    enableLocalStorage,
-                                                    landscapeMode
-                                                )
-                                            }
-                                        } else {
-                                            onZipCreated(
-                                                appName.ifBlank { analysis.suggestedAppName },
-                                                analysis.extractDir,
-                                                zipEntryFile,
-                                                finalIconUri,
-                                                enableJavaScript,
-                                                enableLocalStorage,
-                                                landscapeMode
-                                            )
-                                        }
-                                    }
-                                }
-                                2 -> {
-                                    // 文件夹导入模式
-                                    folderAnalysis?.let { analysis ->
-                                        if (enableOptimize && !isOptimizing) {
-                                            isOptimizing = true
-                                            scope.launch {
-                                                val result = HtmlProjectOptimizer.optimizeDirectory(
-                                                    context = context,
-                                                    projectDir = analysis.extractDir
-                                                )
-                                                optimizeResult = result
-                                                isOptimizing = false
-                                                
-                                                onZipCreated(
-                                                    appName.ifBlank { analysis.suggestedAppName },
-                                                    analysis.extractDir,
-                                                    folderEntryFile,
-                                                    finalIconUri,
-                                                    enableJavaScript,
-                                                    enableLocalStorage,
-                                                    landscapeMode
-                                                )
-                                            }
-                                        } else {
-                                            onZipCreated(
-                                                appName.ifBlank { analysis.suggestedAppName },
-                                                analysis.extractDir,
-                                                folderEntryFile,
-                                                finalIconUri,
-                                                enableJavaScript,
-                                                enableLocalStorage,
-                                                landscapeMode
-                                            )
-                                        }
-                                    }
+                                } else {
+                                    onZipCreated(
+                                        appName.ifBlank { analysis.suggestedAppName },
+                                        analysis.extractDir,
+                                        zipEntryFile,
+                                        finalIconUri,
+                                        enableJavaScript,
+                                        enableLocalStorage,
+                                        landscapeMode
+                                    )
                                 }
                             }
-                        },
-                        enabled = canCreate && !isOptimizing
-                    ) {
-                        if (isOptimizing) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(16.dp),
-                                strokeWidth = 2.dp
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(Strings.optimizing)
-                        } else {
-                            Text(Strings.btnCreate)
+                        }
+                        2 -> {
+
+                            folderAnalysis?.let { analysis ->
+                                if (enableOptimize && !isOptimizing) {
+                                    isOptimizing = true
+                                    scope.launch {
+                                        val result = HtmlProjectOptimizer.optimizeDirectory(
+                                            context = context,
+                                            projectDir = analysis.extractDir
+                                        )
+                                        optimizeResult = result
+                                        isOptimizing = false
+
+                                        onZipCreated(
+                                            appName.ifBlank { analysis.suggestedAppName },
+                                            analysis.extractDir,
+                                            folderEntryFile,
+                                            finalIconUri,
+                                            enableJavaScript,
+                                            enableLocalStorage,
+                                            landscapeMode
+                                        )
+                                    }
+                                } else {
+                                    onZipCreated(
+                                        appName.ifBlank { analysis.suggestedAppName },
+                                        analysis.extractDir,
+                                        folderEntryFile,
+                                        finalIconUri,
+                                        enableJavaScript,
+                                        enableLocalStorage,
+                                        landscapeMode
+                                    )
+                                }
+                            }
                         }
                     }
+                },
+                enabled = canCreate && !isOptimizing
+            ) {
+                if (isOptimizing) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(Strings.optimizing)
+                } else {
+                    Text(Strings.btnCreate)
                 }
-            )
+            }
         }
-    ) { padding ->
-        ThemedBackgroundBox(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
+    ) {
         Column(
-            modifier = Modifier.fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // ==================== 导入模式 Tab ====================
+
+            WtaCreateFlowSection(title = Strings.importProject) {
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     ScrollableTabRow(
@@ -784,10 +679,10 @@ fun CreateHtmlAppScreen(
                     }
                 }
             }
-            
-            // ==================== 手动选择模式 ====================
+
+
             if (selectedTabIndex == 0) {
-                // Select文件
+
                 EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
@@ -801,65 +696,49 @@ fun CreateHtmlAppScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(16.dp))
-                        
-                        // HTML文件槽位（必选）
-                        FileSlotWithEditor(
-                            label = Strings.htmlFile,
-                            icon = Icons.Outlined.Code,
-                            file = htmlFile,
-                            required = true,
-                            onSelect = { htmlPickerLauncher.launch("text/html") },
-                            onClear = { htmlFile = null },
-                            onEdit = {
-                                codeEditorType = HtmlFileType.HTML
-                                codeEditorContent = if (htmlFile != null) {
-                                    try { File(htmlFile!!.path).readText() } catch (e: Exception) { "" }
-                                } else ""
-                                showCodeEditorDialog = true
+
+
+                        manualFiles.forEachIndexed { index, file ->
+                            val (icon, label) = when (file.type) {
+                                HtmlFileType.HTML -> Icons.Outlined.Code to Strings.htmlFile
+                                HtmlFileType.CSS -> Icons.Outlined.Palette to Strings.cssFile
+                                HtmlFileType.JS -> Icons.Outlined.Javascript to Strings.jsFile
+                                HtmlFileType.IMAGE -> Icons.Outlined.Image to "Image"
+                                HtmlFileType.FONT -> Icons.Outlined.FontDownload to "Font"
+                                HtmlFileType.OTHER -> Icons.AutoMirrored.Outlined.InsertDriveFile to file.name.substringAfterLast(".", "File")
                             }
-                        )
-                        
+                            HtmlFileSlot(
+                                label = label,
+                                icon = icon,
+                                file = file,
+                                required = file.type == HtmlFileType.HTML,
+                                onSelect = { filePickerLauncher.launch("*/*") },
+                                onClear = { manualFiles = manualFiles.toMutableList().also { it.removeAt(index) } },
+                                onEdit = {
+                                    codeEditorType = file.type.takeIf { it == HtmlFileType.HTML || it == HtmlFileType.CSS || it == HtmlFileType.JS } ?: HtmlFileType.OTHER
+                                    codeEditorContent = try { File(file.path).readText() } catch (e: Exception) { "" }
+                                    showCodeEditorDialog = true
+                                }
+                            )
+                            if (index < manualFiles.lastIndex) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                            }
+                        }
+
+
                         Spacer(modifier = Modifier.height(12.dp))
-                        
-                        // CSS文件槽位（可选）
-                        FileSlotWithEditor(
-                            label = Strings.cssFile,
-                            icon = Icons.Outlined.Palette,
-                            file = cssFile,
-                            required = false,
-                            onSelect = { cssPickerLauncher.launch("text/css") },
-                            onClear = { cssFile = null },
-                            onEdit = {
-                                codeEditorType = HtmlFileType.CSS
-                                codeEditorContent = if (cssFile != null) {
-                                    try { File(cssFile!!.path).readText() } catch (e: Exception) { "" }
-                                } else ""
-                                showCodeEditorDialog = true
-                            }
-                        )
-                        
-                        Spacer(modifier = Modifier.height(12.dp))
-                        
-                        // JS文件槽位（可选）
-                        FileSlotWithEditor(
-                            label = Strings.jsFile,
-                            icon = Icons.Outlined.Javascript,
-                            file = jsFile,
-                            required = false,
-                            onSelect = { jsPickerLauncher.launch("*/*") },
-                            onClear = { jsFile = null },
-                            onEdit = {
-                                codeEditorType = HtmlFileType.JS
-                                codeEditorContent = if (jsFile != null) {
-                                    try { File(jsFile!!.path).readText() } catch (e: Exception) { "" }
-                                } else ""
-                                showCodeEditorDialog = true
-                            }
-                        )
+                        OutlinedButton(
+                            onClick = { filePickerLauncher.launch("*/*") },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(Icons.Outlined.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(Strings.htmlAddFiles)
+                        }
                     }
                 }
-                
-                // ==================== 直接编写代码 ====================
+
+
                 EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(
@@ -884,17 +763,18 @@ fun CreateHtmlAppScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(12.dp))
-                        
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            // HTML 编写按钮
+
                             PremiumOutlinedButton(
                                 onClick = {
                                     codeEditorType = HtmlFileType.HTML
-                                    codeEditorContent = if (htmlFile != null) {
-                                        try { File(htmlFile!!.path).readText() } catch (e: Exception) { "" }
+                                    val existingHtml = manualFiles.firstOrNull { it.type == HtmlFileType.HTML || it.name.endsWith(".html", ignoreCase = true) }
+                                    codeEditorContent = if (existingHtml != null) {
+                                        try { File(existingHtml.path).readText() } catch (e: Exception) { "" }
                                     } else "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>My App</title>\n</head>\n<body>\n    <h1>Hello World</h1>\n</body>\n</html>"
                                     showCodeEditorDialog = true
                                 },
@@ -904,12 +784,13 @@ fun CreateHtmlAppScreen(
                                 Spacer(Modifier.width(4.dp))
                                 Text("HTML", maxLines = 1)
                             }
-                            // CSS 编写按钮
+
                             PremiumOutlinedButton(
                                 onClick = {
                                     codeEditorType = HtmlFileType.CSS
-                                    codeEditorContent = if (cssFile != null) {
-                                        try { File(cssFile!!.path).readText() } catch (e: Exception) { "" }
+                                    val existingCss = manualFiles.firstOrNull { it.type == HtmlFileType.CSS }
+                                    codeEditorContent = if (existingCss != null) {
+                                        try { File(existingCss.path).readText() } catch (e: Exception) { "" }
                                     } else "/* Styles */\nbody {\n    margin: 0;\n    padding: 0;\n    font-family: sans-serif;\n}\n"
                                     showCodeEditorDialog = true
                                 },
@@ -919,12 +800,13 @@ fun CreateHtmlAppScreen(
                                 Spacer(Modifier.width(4.dp))
                                 Text("CSS", maxLines = 1)
                             }
-                            // JS 编写按钮
+
                             PremiumOutlinedButton(
                                 onClick = {
                                     codeEditorType = HtmlFileType.JS
-                                    codeEditorContent = if (jsFile != null) {
-                                        try { File(jsFile!!.path).readText() } catch (e: Exception) { "" }
+                                    val existingJs = manualFiles.firstOrNull { it.type == HtmlFileType.JS }
+                                    codeEditorContent = if (existingJs != null) {
+                                        try { File(existingJs.path).readText() } catch (e: Exception) { "" }
                                     } else "// JavaScript\ndocument.addEventListener('DOMContentLoaded', () => {\n    console.log('App loaded');\n});\n"
                                     showCodeEditorDialog = true
                                 },
@@ -938,8 +820,8 @@ fun CreateHtmlAppScreen(
                     }
                 }
             }
-            
-            // ==================== ZIP 导入模式 ====================
+
+
             if (selectedTabIndex == 1) {
                 ZipImportSection(
                     zipAnalysis = zipAnalysis,
@@ -956,8 +838,8 @@ fun CreateHtmlAppScreen(
                     }
                 )
             }
-            
-            // ==================== 文件夹导入模式 ====================
+
+
             if (selectedTabIndex == 2) {
                 FolderImportSection(
                     folderAnalysis = folderAnalysis,
@@ -974,8 +856,10 @@ fun CreateHtmlAppScreen(
                     }
                 )
             }
-            
-            // App信息（仅新建时显示，编辑时在通用配置中设置）
+            }
+
+
+            WtaCreateFlowSection(title = Strings.appConfig) {
             if (!isEditMode) {
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
@@ -984,30 +868,30 @@ fun CreateHtmlAppScreen(
                         style = MaterialTheme.typography.titleMedium
                     )
                     Spacer(modifier = Modifier.height(12.dp))
-                    
-                    // App名称（带随机按钮）
+
+
                     AppNameTextFieldSimple(
                         value = appName,
                         onValueChange = { appName = it }
                     )
-                    
+
                     Spacer(modifier = Modifier.height(12.dp))
-                    
-                    // App图标（带图标库功能）
+
+
                     IconPickerWithLibrary(
                         iconUri = appIcon,
                         iconPath = appIconPath,
                         onSelectFromGallery = { iconPickerLauncher.launch("image/*") },
-                        onSelectFromLibrary = { path -> 
-                            appIconPath = path 
+                        onSelectFromLibrary = { path ->
+                            appIconPath = path
                             appIcon = null
                         }
                     )
                 }
             }
             }
-            
-            // 高级配置
+
+
             EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
@@ -1015,8 +899,8 @@ fun CreateHtmlAppScreen(
                         style = MaterialTheme.typography.titleMedium
                     )
                     Spacer(modifier = Modifier.height(12.dp))
-                    
-                    // JavaScript 开关
+
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -1035,12 +919,12 @@ fun CreateHtmlAppScreen(
                             onCheckedChange = { enableJavaScript = it }
                         )
                     }
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
                     HorizontalDivider()
                     Spacer(modifier = Modifier.height(8.dp))
-                    
-                    // Local存储开关
+
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -1059,12 +943,12 @@ fun CreateHtmlAppScreen(
                             onCheckedChange = { enableLocalStorage = it }
                         )
                     }
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
                     HorizontalDivider()
                     Spacer(modifier = Modifier.height(8.dp))
-                    
-                    // Landscape模式开关（仅新建时显示，编辑时在通用配置中设置）
+
+
                     if (!isEditMode) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -1085,12 +969,16 @@ fun CreateHtmlAppScreen(
                         )
                     }
                     }
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
                     HorizontalDivider()
                     Spacer(modifier = Modifier.height(8.dp))
-                    
-                    // 代码优化开关
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                    HorizontalDivider()
+                    Spacer(modifier = Modifier.height(8.dp))
+
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -1103,9 +991,9 @@ fun CreateHtmlAppScreen(
                                 Text(
                                     text = if (esbuildAvailable) "esbuild" else "built-in",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = if (esbuildAvailable) 
+                                    color = if (esbuildAvailable)
                                         MaterialTheme.colorScheme.primary
-                                    else 
+                                    else
                                         MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier
                                         .background(
@@ -1129,16 +1017,16 @@ fun CreateHtmlAppScreen(
                             onCheckedChange = { enableOptimize = it }
                         )
                     }
-                    
-                    // 优化结果展示
+
+
                     if (optimizeResult != null) {
                         Spacer(modifier = Modifier.height(8.dp))
                         val result = optimizeResult!!
                         EnhancedElevatedCard(
                             colors = CardDefaults.cardColors(
-                                containerColor = if (result.success) 
+                                containerColor = if (result.success)
                                     MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-                                else 
+                                else
                                     MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
                             )
                         ) {
@@ -1192,129 +1080,53 @@ fun CreateHtmlAppScreen(
                     }
                 }
             }
-            
-            // 项目问题警告卡片
-            if (hasIssues && projectAnalysis != null) {
-                EnhancedElevatedCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
-                    )
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                Icons.Outlined.Warning,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                                Text(
-                                    text = Strings.projectIssuesDetected,
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = MaterialTheme.colorScheme.onErrorContainer
-                                )
-                                val errorCount = projectAnalysis!!.issues.count { 
-                                    it.severity == HtmlProjectProcessor.IssueSeverity.ERROR 
-                                }
-                                val warningCount = projectAnalysis!!.issues.count { 
-                                    it.severity == HtmlProjectProcessor.IssueSeverity.WARNING 
-                                }
-                                Text(
-                                    text = buildString {
-                                        if (errorCount > 0) append(Strings.errorsCount.replace("%d", errorCount.toString()))
-                                        if (errorCount > 0 && warningCount > 0) append(", ")
-                                        if (warningCount > 0) append(Strings.warningsCount.replace("%d", warningCount.toString()))
-                                    },
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f)
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            text = Strings.autoFixHint,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        TextButton(
-                            onClick = { showAnalysisDialog = true },
-                            colors = ButtonDefaults.textButtonColors(
-                                contentColor = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                        ) {
-                            Icon(
-                                Icons.Outlined.Visibility,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(Strings.viewAnalysisResult)
-                        }
-                    }
-                }
             }
-            
-            // 提示信息（根据模式显示不同提示）
-            EnhancedElevatedCard(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer
-                )
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.Top
-                ) {
-                    Icon(
-                        Icons.Outlined.Info,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSecondaryContainer
+
+
+            WtaCreateFlowSection(title = Strings.preview) {
+                if (hasIssues && projectAnalysis != null) {
+                    val errorCount = projectAnalysis!!.issues.count {
+                        it.severity == HtmlProjectProcessor.IssueSeverity.ERROR
+                    }
+                    val warningCount = projectAnalysis!!.issues.count {
+                        it.severity == HtmlProjectProcessor.IssueSeverity.WARNING
+                    }
+                    WtaStatusBanner(
+                        title = Strings.projectIssuesDetected,
+                        message = buildString {
+                            if (errorCount > 0) append(Strings.errorsCount.replace("%d", errorCount.toString()))
+                            if (errorCount > 0 && warningCount > 0) append(", ")
+                            if (warningCount > 0) append(Strings.warningsCount.replace("%d", warningCount.toString()))
+                            if (isNotEmpty()) append("\n")
+                            append(Strings.autoFixHint)
+                        },
+                        tone = WtaStatusTone.Error,
+                        actionLabel = Strings.viewAnalysisResult,
+                        onAction = { showAnalysisDialog = true },
+                        messageMaxLines = 4
                     )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = when (selectedTabIndex) {
+                }
+
+
+                WtaStatusBanner(
+                    message = when (selectedTabIndex) {
                             0 -> Strings.htmlAppTip
                             1 -> Strings.zipTip
                             2 -> Strings.folderTip
                             else -> Strings.htmlAppTip
-                        },
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                }
-            }
-            
-            // 功能提示
-            EnhancedElevatedCard(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                    },
+                    tone = WtaStatusTone.Info,
+                    messageMaxLines = 4
                 )
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.Top
-                ) {
-                    Icon(
-                        Icons.Outlined.Lightbulb,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onTertiaryContainer
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = Strings.featureTip,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer
-                    )
-                }
-            }
-            
-            // Path引用提示（仅手动模式）
+
+
+                WtaStatusBanner(
+                    message = Strings.featureTip,
+                    tone = WtaStatusTone.Warning,
+                    messageMaxLines = 4
+                )
+
+
             if (selectedTabIndex == 0) {
                 EnhancedElevatedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -1348,18 +1160,19 @@ fun CreateHtmlAppScreen(
                     }
                 }
             }
+            }
         }
     }
-    
-    // 项目分析结果对话框
+
+
     if (showAnalysisDialog && projectAnalysis != null) {
         ProjectAnalysisDialog(
             analysis = projectAnalysis!!,
             onDismiss = { showAnalysisDialog = false }
         )
     }
-    
-    // ZIP 入口文件选择对话框
+
+
     if (showEntryFileDialog && zipAnalysis != null) {
         ZipEntryFileDialog(
             htmlFiles = zipAnalysis!!.htmlFiles.map { it.relativePath },
@@ -1371,16 +1184,16 @@ fun CreateHtmlAppScreen(
             onDismiss = { showEntryFileDialog = false }
         )
     }
-    
-    // ZIP 文件列表对话框
+
+
     if (showFileListDialog && zipAnalysis != null) {
         ZipFileListDialog(
             analysis = zipAnalysis!!,
             onDismiss = { showFileListDialog = false }
         )
     }
-    
-    // 文件夹导入 - 入口文件选择对话框
+
+
     if (showFolderEntryFileDialog && folderAnalysis != null) {
         ZipEntryFileDialog(
             htmlFiles = folderAnalysis!!.htmlFiles.map { it.relativePath },
@@ -1392,20 +1205,19 @@ fun CreateHtmlAppScreen(
             onDismiss = { showFolderEntryFileDialog = false }
         )
     }
-    
-    // 文件夹导入 - 文件列表对话框
+
+
     if (showFolderFileListDialog && folderAnalysis != null) {
         ZipFileListDialog(
             analysis = folderAnalysis!!,
             onDismiss = { showFolderFileListDialog = false }
         )
     }
-        }
 }
 
-/**
- * 项目分析结果对话框
- */
+
+
+
 @Composable
 private fun ProjectAnalysisDialog(
     analysis: HtmlProjectProcessor.ProjectAnalysis,
@@ -1437,7 +1249,7 @@ private fun ProjectAnalysisDialog(
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // File信息
+
                 item {
                     Text(
                         text = Strings.fileInfo,
@@ -1445,7 +1257,7 @@ private fun ProjectAnalysisDialog(
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
-                
+
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         analysis.htmlFiles.forEach { file ->
@@ -1459,8 +1271,8 @@ private fun ProjectAnalysisDialog(
                         }
                     }
                 }
-                
-                // 问题列表
+
+
                 if (analysis.issues.isNotEmpty()) {
                     item {
                         Spacer(modifier = Modifier.height(8.dp))
@@ -1470,13 +1282,13 @@ private fun ProjectAnalysisDialog(
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
-                    
+
                     items(analysis.issues) { issue ->
                         IssueCard(issue)
                     }
                 }
-                
-                // 建议
+
+
                 if (analysis.suggestions.isNotEmpty()) {
                     item {
                         Spacer(modifier = Modifier.height(8.dp))
@@ -1486,7 +1298,7 @@ private fun ProjectAnalysisDialog(
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
-                    
+
                     items(analysis.suggestions) { suggestion ->
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -1507,8 +1319,8 @@ private fun ProjectAnalysisDialog(
                         }
                     }
                 }
-                
-                // Auto修复说明
+
+
                 item {
                     Spacer(modifier = Modifier.height(8.dp))
                     EnhancedElevatedCard(
@@ -1545,9 +1357,9 @@ private fun ProjectAnalysisDialog(
     )
 }
 
-/**
- * 文件信息行
- */
+
+
+
 @Composable
 private fun FileInfoRow(file: HtmlProjectProcessor.FileInfo, type: String) {
     Row(
@@ -1588,9 +1400,9 @@ private fun FileInfoRow(file: HtmlProjectProcessor.FileInfo, type: String) {
     }
 }
 
-/**
- * 问题卡片
- */
+
+
+
 @Composable
 private fun IssueCard(issue: HtmlProjectProcessor.ProjectIssue) {
     val (icon, containerColor, contentColor) = when (issue.severity) {
@@ -1610,7 +1422,7 @@ private fun IssueCard(issue: HtmlProjectProcessor.ProjectIssue) {
             MaterialTheme.colorScheme.onSecondaryContainer
         )
     }
-    
+
     EnhancedElevatedCard(
         colors = CardDefaults.cardColors(containerColor = containerColor)
     ) {
@@ -1649,9 +1461,9 @@ private fun IssueCard(issue: HtmlProjectProcessor.ProjectIssue) {
     }
 }
 
-/**
- * 格式化文件大小
- */
+
+
+
 private fun formatFileSize(size: Long): String {
     return when {
         size < 1024 -> "$size B"
@@ -1660,219 +1472,9 @@ private fun formatFileSize(size: Long): String {
     }
 }
 
-/**
- * 文件槽位组件
- */
-@Composable
-private fun FileSlot(
-    label: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    file: HtmlFile?,
-    required: Boolean,
-    onSelect: () -> Unit,
-    onClear: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(MaterialTheme.shapes.medium)
-            .background(
-                if (file != null) 
-                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-                else 
-                    if (com.webtoapp.ui.theme.LocalIsDarkTheme.current) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.72f)
-            )
-            .border(
-                width = 1.dp,
-                color = if (file != null)
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-                else if (required)
-                    MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
-                else
-                    MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                shape = MaterialTheme.shapes.medium
-            )
-            .clickable { onSelect() }
-            .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = if (file != null) 
-                MaterialTheme.colorScheme.primary 
-            else 
-                MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(24.dp)
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                if (required) {
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "*",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            }
-            if (file != null) {
-                Text(
-                    text = file.name,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            } else {
-                Text(
-                    text = Strings.clickToSelectFile,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-        if (file != null) {
-            IconButton(
-                onClick = onClear,
-                modifier = Modifier.size(32.dp)
-            ) {
-                Icon(
-                    Icons.Default.Close,
-                    contentDescription = Strings.clearFile,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-        }
-    }
-}
 
-/**
- * 带编辑按钮的文件槽位组件
- */
-@Composable
-private fun FileSlotWithEditor(
-    label: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    file: HtmlFile?,
-    required: Boolean,
-    onSelect: () -> Unit,
-    onClear: () -> Unit,
-    onEdit: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(MaterialTheme.shapes.medium)
-            .background(
-                if (file != null) 
-                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-                else 
-                    if (com.webtoapp.ui.theme.LocalIsDarkTheme.current) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.72f)
-            )
-            .border(
-                width = 1.dp,
-                color = if (file != null)
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-                else if (required)
-                    MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
-                else
-                    MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                shape = MaterialTheme.shapes.medium
-            )
-            .clickable { onSelect() }
-            .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = if (file != null) 
-                MaterialTheme.colorScheme.primary 
-            else 
-                MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(24.dp)
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                if (required) {
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "*",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            }
-            if (file != null) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = file.name,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f, fill = false)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "• ${Strings.orWriteDirectly}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            } else {
-                Text(
-                    text = "${Strings.clickToSelectFile} ${Strings.orWriteDirectly}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-        // Edit button
-        IconButton(
-            onClick = { onEdit() },
-            modifier = Modifier.size(32.dp)
-        ) {
-            Icon(
-                Icons.Outlined.Edit,
-                contentDescription = Strings.editCode,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(18.dp)
-            )
-        }
-        if (file != null) {
-            IconButton(
-                onClick = onClear,
-                modifier = Modifier.size(32.dp)
-            ) {
-                Icon(
-                    Icons.Default.Close,
-                    contentDescription = Strings.clearFile,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-        }
-    }
-}
 
-/**
- * 全屏代码编辑器对话框
- */
+
 @Composable
 private fun CodeEditorDialog(
     fileType: HtmlFileType,
@@ -1882,33 +1484,33 @@ private fun CodeEditorDialog(
 ) {
     var codeText by remember { mutableStateOf(initialContent) }
     val isModified = codeText != initialContent
-    
+
     val title = when (fileType) {
         HtmlFileType.HTML -> "HTML"
         HtmlFileType.CSS -> "CSS"
         HtmlFileType.JS -> "JavaScript"
         else -> Strings.codeEditorTitle
     }
-    
+
     val placeholder = when (fileType) {
         HtmlFileType.HTML -> Strings.htmlCodePlaceholder
         HtmlFileType.CSS -> Strings.cssCodePlaceholder
         HtmlFileType.JS -> Strings.jsCodePlaceholder
         else -> ""
     }
-    
-    // Accent color for syntax label
+
+
     val accentColor = when (fileType) {
         HtmlFileType.HTML -> Color(0xFFE44D26)
         HtmlFileType.CSS -> Color(0xFF264DE4)
         HtmlFileType.JS -> Color(0xFFF7DF1E)
         else -> MaterialTheme.colorScheme.primary
     }
-    
+
     Dialog(
         onDismissRequest = {
             if (!isModified) onDismiss()
-            // If modified, user must explicitly save or discard
+
         },
         properties = DialogProperties(
             usePlatformDefaultWidth = false,
@@ -1919,11 +1521,11 @@ private fun CodeEditorDialog(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(0.dp),
-            color = Color(0xFF1E1E1E), // VS Code dark bg
+            color = Color(0xFF1E1E1E),
             shape = RoundedCornerShape(0.dp)
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
-                // ==================== Top Bar ====================
+
                 Surface(
                     color = Color(0xFF252526),
                     tonalElevation = 2.dp
@@ -1937,8 +1539,8 @@ private fun CodeEditorDialog(
                     ) {
                         IconButton(onClick = {
                             if (isModified) {
-                                // Just dismiss without saving when back is pressed
-                                // The user clicked X, they probably want to cancel
+
+
                             }
                             onDismiss()
                         }) {
@@ -1948,8 +1550,8 @@ private fun CodeEditorDialog(
                                 tint = Color(0xFFCCCCCC)
                             )
                         }
-                        
-                        // File type badge
+
+
                         Surface(
                             color = accentColor.copy(alpha = 0.2f),
                             shape = RoundedCornerShape(4.dp)
@@ -1961,16 +1563,16 @@ private fun CodeEditorDialog(
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                             )
                         }
-                        
+
                         Spacer(modifier = Modifier.width(8.dp))
-                        
+
                         Text(
                             text = Strings.codeEditorTitle,
                             style = MaterialTheme.typography.titleSmall,
                             color = Color(0xFFCCCCCC),
                             modifier = Modifier.weight(1f)
                         )
-                        
+
                         if (isModified) {
                             Surface(
                                 color = Color(0xFF4EC9B0).copy(alpha = 0.15f),
@@ -1985,8 +1587,8 @@ private fun CodeEditorDialog(
                             }
                             Spacer(modifier = Modifier.width(4.dp))
                         }
-                        
-                        // Save button
+
+
                         TextButton(
                             onClick = { onSave(codeText) },
                             enabled = codeText.isNotBlank()
@@ -2005,18 +1607,18 @@ private fun CodeEditorDialog(
                         }
                     }
                 }
-                
-                // ==================== Code Editor Area ====================
+
+
                 val scrollState = rememberScrollState()
                 val horizontalScrollState = rememberScrollState()
-                
+
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
                 ) {
                     Row(modifier = Modifier.fillMaxSize()) {
-                        // Line numbers
+
                         val lineCount = maxOf(codeText.count { it == '\n' } + 1, 1)
                         Column(
                             modifier = Modifier
@@ -2039,16 +1641,16 @@ private fun CodeEditorDialog(
                                 )
                             }
                         }
-                        
-                        // Vertical divider
+
+
                         Box(
                             modifier = Modifier
                                 .width(1.dp)
                                 .fillMaxHeight()
                                 .background(Color(0xFF333333))
                         )
-                        
-                        // Code input area
+
+
                         BasicTextField(
                             value = codeText,
                             onValueChange = { codeText = it },
@@ -2082,8 +1684,8 @@ private fun CodeEditorDialog(
                         )
                     }
                 }
-                
-                // ==================== Bottom Status Bar ====================
+
+
                 Surface(
                     color = Color(0xFF007ACC)
                 ) {
@@ -2115,9 +1717,9 @@ private fun CodeEditorDialog(
     }
 }
 
-/**
- * 从Uri获取文件名
- */
+
+
+
 private fun getFileName(context: android.content.Context, uri: Uri): String? {
     var result: String? = null
     if (uri.scheme == "content") {
@@ -2136,9 +1738,9 @@ private fun getFileName(context: android.content.Context, uri: Uri): String? {
     return result
 }
 
-/**
- * 复制Uri内容到临时文件
- */
+
+
+
 private fun copyUriToTempFile(
     context: android.content.Context,
     uri: Uri,
@@ -2159,9 +1761,9 @@ private fun copyUriToTempFile(
     }
 }
 
-/**
- * 根据文件名获取文件类型
- */
+
+
+
 private fun getFileType(fileName: String): HtmlFileType {
     val extension = fileName.substringAfterLast('.', "").lowercase()
     return when (extension) {
@@ -2174,11 +1776,11 @@ private fun getFileType(fileName: String): HtmlFileType {
     }
 }
 
-// ==================== ZIP 导入相关组件 ====================
 
-/**
- * ZIP 导入区域
- */
+
+
+
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ZipImportSection(
@@ -2192,7 +1794,7 @@ private fun ZipImportSection(
     onReimport: () -> Unit
 ) {
     if (zipImporting) {
-        // 解压中
+
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = Modifier
@@ -2209,10 +1811,10 @@ private fun ZipImportSection(
             }
         }
     } else if (zipAnalysis != null) {
-        // 分析结果展示
+
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
-                // 标题 + 重新导入按钮
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -2249,10 +1851,10 @@ private fun ZipImportSection(
                         Text(Strings.zipReimport, style = MaterialTheme.typography.labelMedium)
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(12.dp))
-                
-                // 入口文件
+
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -2293,18 +1895,18 @@ private fun ZipImportSection(
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(12.dp))
-                
-                // 资源统计
+
+
                 Text(
                     text = Strings.zipResourceStats,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                
-                // 资源类型标签
+
+
                 val stats = zipAnalysis.stats
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
@@ -2324,10 +1926,10 @@ private fun ZipImportSection(
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
-                // 文件总数和大小
+
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -2343,15 +1945,15 @@ private fun ZipImportSection(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                
-                // 查看文件列表按钮
+
+
                 Spacer(modifier = Modifier.height(8.dp))
                 TextButton(
                     onClick = onShowFileList,
                     modifier = Modifier.align(Alignment.End)
                 ) {
                     Icon(
-                        Icons.Outlined.List,
+                        Icons.AutoMirrored.Outlined.List,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp)
                     )
@@ -2360,8 +1962,8 @@ private fun ZipImportSection(
                 }
             }
         }
-        
-        // 警告信息
+
+
         if (zipAnalysis.warnings.isNotEmpty()) {
             EnhancedElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
@@ -2393,7 +1995,7 @@ private fun ZipImportSection(
             }
         }
     } else {
-        // 初始状态：选择 ZIP
+
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = Modifier.padding(16.dp),
@@ -2411,7 +2013,7 @@ private fun ZipImportSection(
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 PremiumOutlinedButton(
                     onClick = onSelectZip,
                     modifier = Modifier.fillMaxWidth()
@@ -2424,8 +2026,8 @@ private fun ZipImportSection(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(Strings.selectZipFile)
                 }
-                
-                // 错误信息
+
+
                 if (zipError != null) {
                     Spacer(modifier = Modifier.height(12.dp))
                     EnhancedElevatedCard(
@@ -2457,9 +2059,9 @@ private fun ZipImportSection(
     }
 }
 
-/**
- * ZIP 入口文件选择对话框
- */
+
+
+
 @Composable
 private fun ZipEntryFileDialog(
     htmlFiles: List<String>,
@@ -2541,9 +2143,9 @@ private fun ZipEntryFileDialog(
     )
 }
 
-/**
- * ZIP 文件列表对话框
- */
+
+
+
 @Composable
 private fun ZipFileListDialog(
     analysis: ZipProjectImporter.ZipProjectAnalysis,
@@ -2577,7 +2179,7 @@ private fun ZipFileListDialog(
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                // 按资源类型分组展示
+
                 analysis.stats.forEach { stat ->
                     item {
                         Text(
@@ -2587,7 +2189,7 @@ private fun ZipFileListDialog(
                             modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
                         )
                     }
-                    
+
                     val filesOfType = analysis.allFiles.filter { it.resourceType == stat.type }
                     items(filesOfType) { file ->
                         Row(
@@ -2627,19 +2229,19 @@ private fun ZipFileListDialog(
     )
 }
 
-/** Helper: format Long as file size */
+
 private fun Long.toFileSizeString(): String = when {
     this < 1024 -> "$this B"
     this < 1024 * 1024 -> "${this / 1024} KB"
     else -> String.format(java.util.Locale.getDefault(), "%.1f MB", this / (1024.0 * 1024.0))
 }
 
-// ==================== 文件夹导入相关组件 ====================
 
-/**
- * 文件夹导入区域
- * 复用 ZIP 导入的 UI 模式和数据结构
- */
+
+
+
+
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun FolderImportSection(
@@ -2653,7 +2255,7 @@ private fun FolderImportSection(
     onReimport: () -> Unit
 ) {
     if (folderImporting) {
-        // 导入中
+
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = Modifier
@@ -2670,10 +2272,10 @@ private fun FolderImportSection(
             }
         }
     } else if (folderAnalysis != null) {
-        // 分析结果展示（复用 ZIP 分析结果的 UI 结构）
+
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
-                // 标题 + 重新选择按钮
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -2710,10 +2312,10 @@ private fun FolderImportSection(
                         Text(Strings.zipReimport, style = MaterialTheme.typography.labelMedium)
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(12.dp))
-                
-                // 入口文件
+
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -2754,18 +2356,18 @@ private fun FolderImportSection(
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(12.dp))
-                
-                // 资源统计
+
+
                 Text(
                     text = Strings.zipResourceStats,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                
-                // 资源类型标签
+
+
                 val stats = folderAnalysis.stats
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
@@ -2785,10 +2387,10 @@ private fun FolderImportSection(
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
-                // 文件总数和大小
+
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -2804,15 +2406,15 @@ private fun FolderImportSection(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                
-                // 查看文件列表按钮
+
+
                 Spacer(modifier = Modifier.height(8.dp))
                 TextButton(
                     onClick = onShowFileList,
                     modifier = Modifier.align(Alignment.End)
                 ) {
                     Icon(
-                        Icons.Outlined.List,
+                        Icons.AutoMirrored.Outlined.List,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp)
                     )
@@ -2821,8 +2423,8 @@ private fun FolderImportSection(
                 }
             }
         }
-        
-        // 警告信息
+
+
         if (folderAnalysis.warnings.isNotEmpty()) {
             EnhancedElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
@@ -2854,7 +2456,7 @@ private fun FolderImportSection(
             }
         }
     } else {
-        // 初始状态：选择文件夹
+
         EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = Modifier.padding(16.dp),
@@ -2872,7 +2474,7 @@ private fun FolderImportSection(
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 PremiumOutlinedButton(
                     onClick = onSelectFolder,
                     modifier = Modifier.fillMaxWidth()
@@ -2885,8 +2487,8 @@ private fun FolderImportSection(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(Strings.folderSelectFolder)
                 }
-                
-                // 错误信息
+
+
                 if (folderError != null) {
                     Spacer(modifier = Modifier.height(12.dp))
                     EnhancedElevatedCard(
@@ -2918,20 +2520,20 @@ private fun FolderImportSection(
     }
 }
 
-// ==================== 文件夹导入核心逻辑 ====================
 
-/** 应当跳过的文件/目录 */
+
+
 private val FOLDER_SKIP_PATTERNS = setOf(
     "__MACOSX", ".DS_Store", "Thumbs.db", ".git", ".svn", ".hg",
     "node_modules", ".idea", ".vscode"
 )
 
-/**
- * 从 SAF 文件夹导入 HTML 项目
- * 
- * 使用 DocumentsContract API 递归遍历 SAF 文档树，
- * 将所有文件复制到本地缓存目录，然后分析项目结构。
- */
+
+
+
+
+
+
 private fun importFolderFromSaf(
     context: android.content.Context,
     treeUri: Uri
@@ -2940,13 +2542,13 @@ private fun importFolderFromSaf(
         if (exists()) deleteRecursively()
         mkdirs()
     }
-    
+
     try {
-        // 递归复制 SAF 文档树到本地目录
+
         val docId = DocumentsContract.getTreeDocumentId(treeUri)
         val docUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, docId)
-        
-        // 获取文件夹名称作为建议的应用名
+
+
         var folderName = "HTML Project"
         context.contentResolver.query(
             docUri,
@@ -2957,15 +2559,15 @@ private fun importFolderFromSaf(
                 folderName = cursor.getString(0) ?: folderName
             }
         }
-        
+
         copyDocumentTree(context, treeUri, docId, tempDir)
-        
-        // 处理嵌套根目录（和 ZIP 导入一样）
+
+
         val projectRoot = unwrapSingleRootDir(tempDir)
-        
-        // 分析项目
+
+
         return analyzeFolder(projectRoot, folderName)
-        
+
     } catch (e: Exception) {
         tempDir.deleteRecursively()
         AppLogger.e("FolderImport", "文件夹导入失败", e)
@@ -2973,9 +2575,9 @@ private fun importFolderFromSaf(
     }
 }
 
-/**
- * 递归复制 SAF 文档树到本地目录
- */
+
+
+
 private fun copyDocumentTree(
     context: android.content.Context,
     treeUri: Uri,
@@ -2983,7 +2585,7 @@ private fun copyDocumentTree(
     targetDir: File
 ) {
     val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, parentDocId)
-    
+
     context.contentResolver.query(
         childrenUri,
         arrayOf(
@@ -2997,23 +2599,23 @@ private fun copyDocumentTree(
         val docIdIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
         val nameIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
         val mimeIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_MIME_TYPE)
-        
+
         while (cursor.moveToNext()) {
             val childDocId = cursor.getString(docIdIndex)
             val childName = cursor.getString(nameIndex) ?: continue
             val mimeType = cursor.getString(mimeIndex) ?: ""
-            
-            // 跳过不需要的文件/目录
+
+
             if (FOLDER_SKIP_PATTERNS.any { childName.equals(it, ignoreCase = true) }) {
                 continue
             }
-            
+
             if (mimeType == DocumentsContract.Document.MIME_TYPE_DIR) {
-                // 子目录：递归处理
+
                 val subDir = File(targetDir, childName).apply { mkdirs() }
                 copyDocumentTree(context, treeUri, childDocId, subDir)
             } else {
-                // 文件：复制到本地
+
                 val targetFile = File(targetDir, childName)
                 val fileUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, childDocId)
                 try {
@@ -3030,9 +2632,9 @@ private fun copyDocumentTree(
     }
 }
 
-/**
- * 如果目录中只有一个子目录，展开它（和 ZIP 导入一致的逻辑）
- */
+
+
+
 private fun unwrapSingleRootDir(dir: File): File {
     val children = dir.listFiles() ?: return dir
     return if (children.size == 1 && children[0].isDirectory) {
@@ -3042,7 +2644,7 @@ private fun unwrapSingleRootDir(dir: File): File {
     }
 }
 
-/** 文件分类扩展名集合 */
+
 private val HTML_EXT = setOf("html", "htm", "xhtml")
 private val CSS_EXT = setOf("css")
 private val JS_EXT = setOf("js", "mjs", "jsx", "ts", "tsx")
@@ -3052,16 +2654,16 @@ private val AUDIO_EXT = setOf("mp3", "wav", "ogg", "aac", "flac", "m4a")
 private val VIDEO_EXT = setOf("mp4", "webm", "mkv", "avi", "mov")
 private val DATA_EXT = setOf("json", "xml", "csv", "txt", "md", "yaml", "yml")
 
-/**
- * 分析文件夹项目，复用 ZipProjectAnalysis 数据结构
- */
+
+
+
 private fun analyzeFolder(
     projectDir: File,
     folderName: String
 ): ZipProjectImporter.ZipProjectAnalysis {
     val allFiles = mutableListOf<ZipProjectImporter.ProjectFile>()
     val warnings = mutableListOf<String>()
-    
+
     projectDir.walkTopDown()
         .filter { it.isFile }
         .filter { file -> !FOLDER_SKIP_PATTERNS.any { file.name.equals(it, ignoreCase = true) } }
@@ -3077,24 +2679,24 @@ private fun analyzeFolder(
                 )
             )
         }
-    
+
     val htmlFiles = allFiles.filter { it.resourceType == ZipProjectImporter.ResourceType.HTML }
-    
-    // 自动识别入口文件
+
+
     val entryFile = htmlFiles.find { it.relativePath.equals("index.html", ignoreCase = true) }?.relativePath
         ?: htmlFiles.find { it.relativePath.equals("index.htm", ignoreCase = true) }?.relativePath
         ?: htmlFiles.find { it.fileName.equals("index.html", ignoreCase = true) }?.relativePath
         ?: htmlFiles.find { !it.relativePath.contains('/') }?.relativePath
         ?: htmlFiles.firstOrNull()?.relativePath
-    
+
     if (entryFile == null && htmlFiles.isEmpty()) {
         warnings.add(Strings.folderNoHtmlWarning)
     }
-    
+
     if (allFiles.any { it.size > 50 * 1024 * 1024 }) {
         warnings.add(Strings.largeFileWarning)
     }
-    
+
     val stats = ZipProjectImporter.ResourceType.entries
         .map { type ->
             val files = allFiles.filter { it.resourceType == type }
@@ -3105,7 +2707,7 @@ private fun analyzeFolder(
             )
         }
         .filter { it.count > 0 }
-    
+
     return ZipProjectImporter.ZipProjectAnalysis(
         extractDir = projectDir.absolutePath,
         allFiles = allFiles,
@@ -3115,11 +2717,11 @@ private fun analyzeFolder(
         totalFileCount = allFiles.size,
         totalSize = allFiles.sumOf { it.size },
         warnings = warnings,
-        zipFileName = folderName  // 复用 zipFileName 字段作为文件夹名
+        zipFileName = folderName
     )
 }
 
-/** 根据文件扩展名分类资源类型 */
+
 private fun classifyFileByExt(fileName: String): ZipProjectImporter.ResourceType {
     val ext = fileName.substringAfterLast('.', "").lowercase()
     return when (ext) {

@@ -23,12 +23,12 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.concurrent.TimeUnit
 
-/**
- * Application-scoped APK download manager with progress tracking and notification support.
- *
- * This is a proper singleton — created once with Application context and lives for the entire
- * app lifecycle. Downloads survive tab switches and navigation changes.
- */
+
+
+
+
+
+
 class AppDownloadManager private constructor(private val context: Context) {
 
     companion object {
@@ -52,10 +52,10 @@ class AppDownloadManager private constructor(private val context: Context) {
         val appId: Int,
         val appName: String,
         val url: String,
-        val progress: Float = 0f,          // 0..1
+        val progress: Float = 0f,
         val downloadedBytes: Long = 0,
         val totalBytes: Long = -1,
-        val speed: Long = 0,               // bytes/sec
+        val speed: Long = 0,
         val status: DownloadStatus = DownloadStatus.PENDING,
         val filePath: String? = null,
         val error: String? = null
@@ -101,15 +101,15 @@ class AppDownloadManager private constructor(private val context: Context) {
         scanDownloadedApps()
     }
 
-    /** Check number of active downloads */
+
     val activeDownloadCount: Int
         get() = _activeTasks.value.count {
             it.value.status == DownloadStatus.DOWNLOADING || it.value.status == DownloadStatus.PENDING
         }
 
-    /** Start downloading an APK with notification progress */
+
     suspend fun startDownload(appId: Int, appName: String, url: String) {
-        // Don't start duplicate downloads
+
         val existing = _activeTasks.value[appId]
         if (existing != null && existing.status == DownloadStatus.DOWNLOADING) return
 
@@ -121,7 +121,7 @@ class AppDownloadManager private constructor(private val context: Context) {
         )
         _activeTasks.update { it + (appId to task) }
 
-        // Show initial notification
+
         showProgressNotification(appId, appName, 0, true)
 
         withContext(Dispatchers.IO) {
@@ -157,10 +157,10 @@ class AppDownloadManager private constructor(private val context: Context) {
                         val buffer = ByteArray(8192)
                         var bytesRead: Int
                         while (input.read(buffer).also { bytesRead = it } != -1) {
-                            // Check if cancelled
+
                             val currentTask = _activeTasks.value[appId]
                             if (currentTask == null) {
-                                // Task was cancelled — clean up partial file
+
                                 file.delete()
                                 cancelNotification(appId)
                                 return@withContext
@@ -169,7 +169,7 @@ class AppDownloadManager private constructor(private val context: Context) {
                             fos.write(buffer, 0, bytesRead)
                             downloadedBytes += bytesRead
 
-                            // Calculate speed every 500ms
+
                             val now = System.currentTimeMillis()
                             val elapsed = now - lastTime
                             val speed = if (elapsed > 500) {
@@ -190,7 +190,7 @@ class AppDownloadManager private constructor(private val context: Context) {
                                 )
                             }
 
-                            // Update notification at most every 500ms to avoid ANR
+
                             if (now - lastNotifyTime > 500) {
                                 showProgressNotification(appId, appName, (progress * 100).toInt(), totalBytes <= 0)
                                 lastNotifyTime = now
@@ -199,7 +199,7 @@ class AppDownloadManager private constructor(private val context: Context) {
                     }
                 }
 
-                // Download complete
+
                 updateTask(appId) {
                     copy(
                         status = DownloadStatus.COMPLETED,
@@ -209,7 +209,7 @@ class AppDownloadManager private constructor(private val context: Context) {
                     )
                 }
 
-                // Update downloaded list
+
                 _downloadedApps.update { list ->
                     list.filterNot { it.appId == appId } + DownloadedApp(
                         appId = appId,
@@ -233,26 +233,26 @@ class AppDownloadManager private constructor(private val context: Context) {
         }
     }
 
-    /** Cancel a download */
+
     fun cancelDownload(appId: Int) {
         _activeTasks.update { it - appId }
         cancelNotification(appId)
     }
 
-    /** Remove completed/failed task from display */
+
     fun dismissTask(appId: Int) {
         _activeTasks.update { it - appId }
         cancelNotification(appId)
     }
 
-    /** Delete a downloaded APK file */
+
     fun deleteDownloadedApp(appId: Int) {
         val app = _downloadedApps.value.find { it.appId == appId } ?: return
         File(app.filePath).delete()
         _downloadedApps.update { it.filterNot { a -> a.appId == appId } }
     }
 
-    /** Install an APK */
+
     fun installApk(filePath: String) {
         try {
             val file = File(filePath)
@@ -274,9 +274,9 @@ class AppDownloadManager private constructor(private val context: Context) {
         }
     }
 
-    // ═══════════════════════════════════════════
-    // Notifications
-    // ═══════════════════════════════════════════
+
+
+
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -331,11 +331,11 @@ class AppDownloadManager private constructor(private val context: Context) {
         notificationManager.cancel(NOTIFICATION_BASE_ID + appId)
     }
 
-    // ═══════════════════════════════════════════
-    // Internal helpers
-    // ═══════════════════════════════════════════
 
-    /** Scan existing downloaded APKs */
+
+
+
+
     private fun scanDownloadedApps() {
         val files = downloadDir.listFiles { f -> f.extension == "apk" } ?: return
         val apps = files.map { file ->

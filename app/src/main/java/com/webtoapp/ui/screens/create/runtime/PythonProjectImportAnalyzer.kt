@@ -1,6 +1,7 @@
 package com.webtoapp.ui.screens.create.runtime
 
 import com.webtoapp.ui.screens.create.common.ProjectImportAnalysis
+import com.webtoapp.core.i18n.Strings
 import com.webtoapp.ui.screens.create.common.ProjectImportException
 import com.webtoapp.ui.screens.create.common.formatProjectName
 import com.webtoapp.ui.screens.create.common.parseEnvFile
@@ -29,7 +30,7 @@ data class PythonProjectImportAnalysis(
 class PythonProjectImportAnalyzer {
     fun analyze(projectDir: File): PythonProjectImportAnalysis {
         if (!projectDir.exists() || !projectDir.isDirectory) {
-            throw ProjectImportException("Python 项目目录不存在")
+            throw ProjectImportException(Strings.importPythonDirNotFound)
         }
 
         val framework = detectFramework(projectDir)

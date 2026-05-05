@@ -1,9 +1,9 @@
 package com.webtoapp.core.errorpage
 
-/**
- * 内置错误页视觉风格生成器
- * 每种风格包含：全屏背景、SVG 插画、动效、标题、描述
- */
+
+
+
+
 object ErrorPageStyles {
 
     fun getStyleCss(style: ErrorPageStyle): String = when (style) {
@@ -24,7 +24,7 @@ object ErrorPageStyles {
         ErrorPageStyle.NEON -> neonBody(title, subtitle)
     }
 
-    // ===================== SATELLITE 深空卫星 =====================
+
 
     private fun satelliteCss() = """
         body { background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%); }
@@ -84,7 +84,7 @@ object ErrorPageStyles {
         </script>
     """.trimIndent()
 
-    // ===================== OCEAN 深海世界 =====================
+
 
     private fun oceanCss() = """
         body { background: linear-gradient(180deg, #0a1628 0%, #0d2847 40%, #134e6f 100%); }
@@ -148,7 +148,7 @@ object ErrorPageStyles {
         </script>
     """.trimIndent()
 
-    // ===================== FOREST 萤火森林 =====================
+
 
     private fun forestCss() = """
         body { background: linear-gradient(180deg, #0a1a0a 0%, #132413 50%, #1a321a 100%); }
@@ -209,7 +209,7 @@ object ErrorPageStyles {
         </script>
     """.trimIndent()
 
-    // ===================== MINIMAL 极简线条 =====================
+
 
     private fun minimalCss() = """
         body { background: #fafafa; }
@@ -246,7 +246,7 @@ object ErrorPageStyles {
         <p class="error-subtitle">$subtitle</p>
     """.trimIndent()
 
-    // ===================== NEON 赛博霓虹 =====================
+
 
     private fun neonCss() = """
         body { background: #0a0a0a; }

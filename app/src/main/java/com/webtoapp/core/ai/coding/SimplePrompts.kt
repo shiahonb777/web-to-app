@@ -3,19 +3,19 @@ package com.webtoapp.core.ai.coding
 import com.webtoapp.core.i18n.AppLanguage
 import com.webtoapp.core.i18n.Strings
 
-/**
- * 简单模式提示词 - 用于不支持工具调用的模型回退方案
- * 
- * 设计原则：
- * - 引导 AI 直接输出 HTML（以 <!DOCTYPE html> 开头），不使用代码块标记
- * - 简洁明确的代码规范，专注移动端 WebView
- * - 支持风格模板定制
- */
+
+
+
+
+
+
+
+
 object SimplePrompts {
-    
-    /**
-     * 构建系统提示词 - 极简版（语言自适应）
-     */
+
+
+
+
     fun buildSystemPrompt(): String {
         return when (Strings.currentLanguage.value) {
             AppLanguage.ENGLISH -> """
@@ -68,18 +68,18 @@ You are a mobile frontend expert, creating HTML pages in mobile APP WebView.
             """.trimIndent()
         }
     }
-    
-    /**
-     * 构建系统提示词 - 带风格模板（语言自适应）
-     */
+
+
+
+
     fun buildSystemPrompt(template: StyleTemplate? = null): String {
         val base = buildSystemPrompt()
-        
+
         if (template == null) return base
-        
+
         val isEnglish = Strings.currentLanguage.value == AppLanguage.ENGLISH
         val isArabic = Strings.currentLanguage.value == AppLanguage.ARABIC
-        
+
         return buildString {
             append(base)
             appendLine()

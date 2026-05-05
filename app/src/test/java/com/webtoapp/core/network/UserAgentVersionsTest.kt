@@ -5,9 +5,9 @@ import com.webtoapp.data.model.UserAgentMode
 import com.webtoapp.data.model.UserAgentVersions
 import org.junit.Test
 
-/**
- * UA 版本集中管理 + UserAgentMode 测试
- */
+
+
+
 class UserAgentVersionsTest {
 
     @Test

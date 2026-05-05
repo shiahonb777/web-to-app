@@ -137,19 +137,19 @@ private fun resolvePythonPreviewSpec(context: Context, app: WebApp): AppPreviewS
     val runtime = PythonRuntime(context)
     val config = app.pythonAppConfig
     var projectDir = config?.projectId?.takeIf { it.isNotBlank() }?.let(runtime::getProjectDir)?.takeIf { it.exists() }
-    
-    // 自动检测入口文件 — 处理 ZIP 导入嵌套目录的情况
+
+
     var entryFile = config?.entryFile ?: "app.py"
     var framework = config?.framework ?: "raw"
     if (projectDir != null && !File(projectDir, entryFile).exists()) {
-        // 尝试重新检测
+
         val detectedFramework = runtime.detectFramework(projectDir)
         val detectedEntry = runtime.detectEntryFile(projectDir, detectedFramework)
         if (File(projectDir, detectedEntry).exists()) {
             framework = detectedFramework
             entryFile = detectedEntry
         } else {
-            // 扫描子目录
+
             val pySubDir = projectDir.listFiles()
                 ?.filter { it.isDirectory && it.name != "__MACOSX" && it.name != "__pycache__" && !it.name.startsWith("._") && it.name != "venv" && it.name != ".venv" && it.name != ".git" }
                 ?.firstOrNull { sub -> sub.listFiles()?.any { it.isFile && it.extension == "py" } == true }
@@ -160,7 +160,7 @@ private fun resolvePythonPreviewSpec(context: Context, app: WebApp): AppPreviewS
             }
         }
     }
-    
+
     val staticEntry = projectDir?.let { findStaticHtmlEntry(it, listOf("dist", "build", "public", "static", "www", "templates", "")) }
     if (staticEntry != null) {
         return AppPreviewSpec(captureUrl = staticEntry.toFileUrl())
@@ -392,7 +392,7 @@ private fun escapeHtml(value: String): String {
 }
 
 private fun resolveMultiWebPreviewSpec(app: WebApp): AppPreviewSpec {
-    // Preview the first site's URL for the thumbnail
+
     val firstSite = app.multiWebConfig?.sites?.firstOrNull { it.enabled && it.url.isNotBlank() }
     val previewUrl = firstSite?.url?.takeIf { it.startsWith("http") }
     return AppPreviewSpec(captureUrl = previewUrl)

@@ -5,9 +5,9 @@ import org.junit.Test
 
 class DisguiseConfigTest {
 
-    // ═══════════════════════════════════════════
-    // DISABLED preset
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `DISABLED preset has enabled false`() {
@@ -19,9 +19,9 @@ class DisguiseConfigTest {
         assertThat(DisguiseConfig.DISABLED.multiLauncherIcons).isEqualTo(1)
     }
 
-    // ═══════════════════════════════════════════
-    // MULTI_ICON presets
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `MULTI_ICON_3 has 3 icons`() {
@@ -35,9 +35,9 @@ class DisguiseConfigTest {
         assertThat(DisguiseConfig.MULTI_ICON_5.multiLauncherIcons).isEqualTo(5)
     }
 
-    // ═══════════════════════════════════════════
-    // v2.0 Storm presets
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `SUBTLE_FLOOD has 25 icons with SUBTLE mode`() {
@@ -69,9 +69,9 @@ class DisguiseConfigTest {
         assertThat(DisguiseConfig.RESEARCH.iconStormMode).isEqualTo(DisguiseConfig.IconStormMode.RESEARCH)
     }
 
-    // ═══════════════════════════════════════════
-    // custom factory
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `custom creates config with specified count`() {
@@ -94,9 +94,9 @@ class DisguiseConfigTest {
         assertThat(config.customNamePrefix).isEqualTo("App_")
     }
 
-    // ═══════════════════════════════════════════
-    // fromMode factory
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `fromMode NORMAL creates 2 icons`() {
@@ -116,9 +116,9 @@ class DisguiseConfigTest {
         assertThat(config.multiLauncherIcons).isEqualTo(77)
     }
 
-    // ═══════════════════════════════════════════
-    // IconStormMode
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `IconStormMode has all expected modes`() {
@@ -142,9 +142,9 @@ class DisguiseConfigTest {
         }
     }
 
-    // ═══════════════════════════════════════════
-    // getAliasCount
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `getAliasCount returns 0 when disabled`() {
@@ -164,9 +164,9 @@ class DisguiseConfigTest {
         assertThat(config.getAliasCount()).isEqualTo(9)
     }
 
-    // ═══════════════════════════════════════════
-    // assessImpactLevel
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `assessImpactLevel returns 0 for 10 or fewer icons`() {
@@ -204,9 +204,9 @@ class DisguiseConfigTest {
         assertThat(DisguiseConfig.assessImpactLevel(10000)).isEqualTo(5)
     }
 
-    // ═══════════════════════════════════════════
-    // estimateManifestOverhead
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `estimateManifestOverhead for 1 icon is 0`() {
@@ -215,19 +215,19 @@ class DisguiseConfigTest {
 
     @Test
     fun `estimateManifestOverhead for 100 icons is approximately 50KB`() {
-        // (100-1) * 520 = 51480 bytes ≈ 50 KB
+
         assertThat(DisguiseConfig.estimateManifestOverhead(100)).isEqualTo(51_480L)
     }
 
     @Test
     fun `estimateManifestOverhead for 5000 icons is approximately 2-6MB`() {
-        // (5000-1) * 520 = 2599480 bytes
+
         assertThat(DisguiseConfig.estimateManifestOverhead(5000)).isEqualTo(2_599_480L)
     }
 
-    // ═══════════════════════════════════════════
-    // getEstimatedOverhead
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `getEstimatedOverhead for DISABLED shows zero bytes`() {
@@ -246,9 +246,9 @@ class DisguiseConfigTest {
         assertThat(overhead).contains("MB")
     }
 
-    // ═══════════════════════════════════════════
-    // getImpactLevel
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `getImpactLevel matches assessImpactLevel for current config`() {

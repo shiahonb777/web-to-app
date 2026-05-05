@@ -28,9 +28,9 @@ import com.webtoapp.data.model.*
 import com.webtoapp.ui.components.*
 import androidx.compose.ui.graphics.Color
 
-/**
- * 用户脚本配置区域
- */
+
+
+
 @Composable
 fun UserScriptsSection(
     scripts: List<UserScript>,
@@ -39,9 +39,9 @@ fun UserScriptsSection(
     var showEditorDialog by remember { mutableStateOf(false) }
     var editingScript by remember { mutableStateOf<UserScript?>(null) }
     var editingIndex by remember { mutableIntStateOf(-1) }
-    
+
     Column {
-        // 标题行
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -89,10 +89,10 @@ fun UserScriptsSection(
                 )
             }
         }
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
-        // Script列表
+
+
         if (scripts.isEmpty()) {
             Text(
                 text = Strings.noScripts,
@@ -127,20 +127,20 @@ fun UserScriptsSection(
             }
         }
     }
-    
-    // Script编辑对话框
+
+
     if (showEditorDialog) {
         UserScriptEditorDialog(
             script = editingScript,
             onDismiss = { showEditorDialog = false },
             onSave = { script ->
                 if (editingIndex >= 0) {
-                    // 编辑现有脚本
+
                     onScriptsChange(scripts.mapIndexed { i, s ->
                         if (i == editingIndex) script else s
                     })
                 } else {
-                    // 添加新脚本
+
                     onScriptsChange(scripts + script)
                 }
                 showEditorDialog = false
@@ -149,9 +149,9 @@ fun UserScriptsSection(
     }
 }
 
-/**
- * 单个脚本项
- */
+
+
+
 @Composable
 fun UserScriptItem(
     script: UserScript,
@@ -182,7 +182,7 @@ fun UserScriptItem(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        
+
         Row(verticalAlignment = Alignment.CenterVertically) {
             PremiumSwitch(
                 checked = script.enabled,
@@ -208,9 +208,9 @@ fun UserScriptItem(
     }
 }
 
-/**
- * 脚本编辑对话框
- */
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserScriptEditorDialog(
@@ -223,19 +223,19 @@ fun UserScriptEditorDialog(
     var runAt by remember { mutableStateOf(script?.runAt ?: ScriptRunTime.DOCUMENT_END) }
     var enabled by remember { mutableStateOf(script?.enabled ?: true) }
     var runAtExpanded by remember { mutableStateOf(false) }
-    
+
     var nameError by remember { mutableStateOf(false) }
     var codeError by remember { mutableStateOf(false) }
-    
+
     val isEdit = script != null
     val scrollState = rememberScrollState()
     val context = LocalContext.current
-    
-    // 大代码阈值：超过此长度显示只读摘要而不是可编辑输入框
+
+
     val largeCodeThreshold = 5000
     val isLargeCode = code.length > largeCodeThreshold
-    
-    // JS 文件导入
+
+
     val jsFilePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
@@ -245,7 +245,7 @@ fun UserScriptEditorDialog(
                 if (content.isNotEmpty()) {
                     code = content
                     codeError = false
-                    // 自动填充文件名作为脚本名称（仅当名称为空时）
+
                     if (name.isBlank()) {
                         val fileName = uri.lastPathSegment?.substringAfterLast('/')?.substringBeforeLast('.') ?: ""
                         if (fileName.isNotBlank()) name = fileName
@@ -254,7 +254,7 @@ fun UserScriptEditorDialog(
             } catch (e: Exception) { android.util.Log.w("CreateApp", "Failed to read script file", e) }
         }
     }
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(if (isEdit) Strings.editScript else Strings.addScript) },
@@ -265,10 +265,10 @@ fun UserScriptEditorDialog(
                     .fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Script名称
+
                 PremiumTextField(
                     value = name,
-                    onValueChange = { 
+                    onValueChange = {
                         name = it
                         nameError = false
                     },
@@ -281,8 +281,8 @@ fun UserScriptEditorDialog(
                     } else null,
                     modifier = Modifier.fillMaxWidth()
                 )
-                
-                // 运行时机选择
+
+
                 ExposedDropdownMenuBox(
                     expanded = runAtExpanded,
                     onExpandedChange = { runAtExpanded = it }
@@ -301,7 +301,7 @@ fun UserScriptEditorDialog(
                             .fillMaxWidth()
                             .menuAnchor()
                     )
-                    
+
                     ExposedDropdownMenu(
                         expanded = runAtExpanded,
                         onDismissRequest = { runAtExpanded = false }
@@ -343,8 +343,8 @@ fun UserScriptEditorDialog(
                         }
                     }
                 }
-                
-                // Enable开关
+
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -356,8 +356,8 @@ fun UserScriptEditorDialog(
                         onCheckedChange = { enabled = it }
                     )
                 }
-                
-                // 导入 JS 文件按钮
+
+
                 PremiumOutlinedButton(
                     onClick = {
                         jsFilePickerLauncher.launch(arrayOf(
@@ -378,14 +378,14 @@ fun UserScriptEditorDialog(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(Strings.scriptImportFile)
                 }
-                
-                // Script代码 —— 根据代码大小切换显示模式
+
+
                 if (isLargeCode) {
-                    // 大代码：只读摘要卡片（避免 TextField 卡死）
+
                     val lineCount = code.count { it == '\n' } + 1
                     val sizeText = if (code.length > 1024) "%.1f KB".format(code.length / 1024f) else "${code.length} B"
                     val preview = code.lineSequence().take(6).joinToString("\n")
-                    
+
                     OutlinedCard(
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -434,10 +434,10 @@ fun UserScriptEditorDialog(
                         }
                     }
                 } else {
-                    // 小代码：正常可编辑输入框
+
                     PremiumTextField(
                         value = code,
-                        onValueChange = { 
+                        onValueChange = {
                             code = it
                             codeError = false
                         },
@@ -459,7 +459,7 @@ fun UserScriptEditorDialog(
                 onClick = {
                     nameError = name.isBlank()
                     codeError = code.isBlank()
-                    
+
                     if (!nameError && !codeError) {
                         onSave(UserScript(
                             name = name,

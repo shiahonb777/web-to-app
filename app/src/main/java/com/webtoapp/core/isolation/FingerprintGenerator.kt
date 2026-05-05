@@ -2,51 +2,51 @@ package com.webtoapp.core.isolation
 
 import kotlin.random.Random
 
-/**
- * 浏览器指纹生成器 — 生成完整一致的浏览器身份
- *
- * 关键设计原则：
- * 1. **一致性** — UA、platform、vendor、Client Hints、WebGL 必须互相匹配
- *    (如 UA 说 Mac + Chrome，则 platform=MacIntel, vendor=Google Inc., WebGL 用 Apple GPU)
- * 2. **现代化** — 使用 2024-2025 年真实浏览器版本号
- * 3. **确定性** — 同一 seed 始终生成完全相同的指纹（会话内一致）
- * 4. **真实性** — 每个组合都对应真实存在的浏览器/系统/硬件配置
- */
+
+
+
+
+
+
+
+
+
+
 object FingerprintGenerator {
 
-    // ==================== Consistent Browser Profiles ====================
-    /**
-     * A complete browser profile — all fields are internally consistent.
-     * These represent real-world browser+OS+hardware combinations.
-     */
+
+
+
+
+
     private data class BrowserProfile(
         val userAgent: String,
         val platform: String,
         val vendor: String,
         val appVersion: String,
-        // Client Hints (Sec-CH-UA)
-        val chUa: String,              // e.g. "\"Chromium\";v=\"131\", \"Google Chrome\";v=\"131\""
-        val chUaPlatform: String,      // e.g. "\"Windows\""
-        val chUaMobile: String,        // "?0"
-        val chUaPlatformVersion: String, // e.g. "\"15.0.0\""
-        val chUaFullVersion: String,   // e.g. "\"131.0.6778.86\""
-        val chUaModel: String,         // "" for desktop
-        val chUaArch: String,          // "\"x86\"" or "\"arm\""
-        val chUaBitness: String,       // "\"64\""
-        // WebGL — must match the OS
+
+        val chUa: String,
+        val chUaPlatform: String,
+        val chUaMobile: String,
+        val chUaPlatformVersion: String,
+        val chUaFullVersion: String,
+        val chUaModel: String,
+        val chUaArch: String,
+        val chUaBitness: String,
+
         val webglVendor: String,
         val webglRenderer: String,
-        // Hardware
-        val maxTouchPoints: Int,       // 0 for desktop
+
+        val maxTouchPoints: Int,
         val colorDepth: Int,
-        // Browser type (for internal logic)
+
         val browserType: BrowserType
     )
 
     enum class BrowserType { CHROME, FIREFOX, SAFARI, EDGE }
 
     private val profiles = listOf(
-        // ==================== Chrome on Windows ====================
+
         BrowserProfile(
             userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
             platform = "Win32", vendor = "Google Inc.",
@@ -91,7 +91,7 @@ object FingerprintGenerator {
             webglVendor = "Google Inc. (NVIDIA)", webglRenderer = "ANGLE (NVIDIA, NVIDIA GeForce GTX 1660 SUPER Direct3D11 vs_5_0 ps_5_0, D3D11)",
             maxTouchPoints = 0, colorDepth = 24, browserType = BrowserType.CHROME
         ),
-        // ==================== Chrome on macOS ====================
+
         BrowserProfile(
             userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
             platform = "MacIntel", vendor = "Google Inc.",
@@ -114,7 +114,7 @@ object FingerprintGenerator {
             webglVendor = "Google Inc. (Apple)", webglRenderer = "ANGLE (Apple, Apple M1 Pro, OpenGL 4.1)",
             maxTouchPoints = 0, colorDepth = 30, browserType = BrowserType.CHROME
         ),
-        // ==================== Chrome on Linux ====================
+
         BrowserProfile(
             userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
             platform = "Linux x86_64", vendor = "Google Inc.",
@@ -126,7 +126,7 @@ object FingerprintGenerator {
             webglVendor = "Google Inc. (NVIDIA Corporation)", webglRenderer = "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 3070/PCIe/SSE2, OpenGL 4.5)",
             maxTouchPoints = 0, colorDepth = 24, browserType = BrowserType.CHROME
         ),
-        // ==================== Firefox on Windows ====================
+
         BrowserProfile(
             userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0",
             platform = "Win32", vendor = "",
@@ -145,7 +145,7 @@ object FingerprintGenerator {
             webglVendor = "Mozilla", webglRenderer = "Mozilla -- ANGLE (Intel, Intel(R) UHD Graphics 630 Direct3D11 vs_5_0 ps_5_0, D3D11)",
             maxTouchPoints = 0, colorDepth = 24, browserType = BrowserType.FIREFOX
         ),
-        // ==================== Firefox on macOS ====================
+
         BrowserProfile(
             userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:133.0) Gecko/20100101 Firefox/133.0",
             platform = "MacIntel", vendor = "",
@@ -155,7 +155,7 @@ object FingerprintGenerator {
             webglVendor = "Mozilla", webglRenderer = "Mozilla -- Apple M2 -- Apple GPU",
             maxTouchPoints = 0, colorDepth = 30, browserType = BrowserType.FIREFOX
         ),
-        // ==================== Firefox on Linux ====================
+
         BrowserProfile(
             userAgent = "Mozilla/5.0 (X11; Linux x86_64; rv:133.0) Gecko/20100101 Firefox/133.0",
             platform = "Linux x86_64", vendor = "",
@@ -165,7 +165,7 @@ object FingerprintGenerator {
             webglVendor = "Mozilla", webglRenderer = "Mozilla -- NVIDIA Corporation NVIDIA GeForce RTX 3070/PCIe/SSE2 -- OpenGL",
             maxTouchPoints = 0, colorDepth = 24, browserType = BrowserType.FIREFOX
         ),
-        // ==================== Safari on macOS ====================
+
         BrowserProfile(
             userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Safari/605.1.15",
             platform = "MacIntel", vendor = "Apple Computer, Inc.",
@@ -184,7 +184,7 @@ object FingerprintGenerator {
             webglVendor = "Apple Inc.", webglRenderer = "Apple M1",
             maxTouchPoints = 0, colorDepth = 30, browserType = BrowserType.SAFARI
         ),
-        // ==================== Edge on Windows ====================
+
         BrowserProfile(
             userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.2903.70",
             platform = "Win32", vendor = "Google Inc.",
@@ -207,7 +207,7 @@ object FingerprintGenerator {
             webglVendor = "Google Inc. (NVIDIA)", webglRenderer = "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 Direct3D11 vs_5_0 ps_5_0, D3D11)",
             maxTouchPoints = 0, colorDepth = 24, browserType = BrowserType.EDGE
         ),
-        // ==================== Edge on macOS ====================
+
         BrowserProfile(
             userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.2903.70",
             platform = "MacIntel", vendor = "Google Inc.",
@@ -221,7 +221,7 @@ object FingerprintGenerator {
         )
     )
 
-    // ==================== Languages ====================
+
     private val languages = listOf(
         "zh-CN,zh;q=0.9,en;q=0.8",
         "zh-TW,zh;q=0.9,en;q=0.8",
@@ -236,7 +236,7 @@ object FingerprintGenerator {
         "ru-RU,ru;q=0.9,en;q=0.8"
     )
 
-    // ==================== Timezones ====================
+
     private val timezones = listOf(
         "Asia/Shanghai", "Asia/Tokyo", "Asia/Seoul", "Asia/Singapore",
         "Asia/Hong_Kong", "Asia/Taipei", "Asia/Kolkata",
@@ -246,7 +246,7 @@ object FingerprintGenerator {
         "Australia/Sydney", "Pacific/Auckland"
     )
 
-    // ==================== Screen Resolutions ====================
+
     private val screenResolutions = listOf(
         Pair(1920, 1080), Pair(2560, 1440), Pair(3840, 2160),
         Pair(1366, 768), Pair(1536, 864), Pair(1440, 900),
@@ -254,16 +254,16 @@ object FingerprintGenerator {
         Pair(3440, 1440), Pair(1280, 800), Pair(1680, 1050)
     )
 
-    // ==================== Hardware configs ====================
+
     private val hardwareConcurrencyOptions = listOf(4, 6, 8, 10, 12, 16, 20, 24)
     private val deviceMemoryOptions = listOf(4, 8, 16, 32)
 
-    // ==================== Public API ====================
 
-    /**
-     * 生成完整一致的浏览器指纹
-     * 同一 seed 保证每次生成完全相同的结果
-     */
+
+
+
+
+
     fun generateFingerprint(seed: String? = null): GeneratedFingerprint {
         val random = if (seed != null) Random(seed.hashCode().toLong()) else Random
 
@@ -289,7 +289,7 @@ object FingerprintGenerator {
             audioNoiseSeed = random.nextLong(),
             webglVendor = profile.webglVendor,
             webglRenderer = profile.webglRenderer,
-            // Client Hints
+
             chUa = profile.chUa,
             chUaPlatform = profile.chUaPlatform,
             chUaMobile = profile.chUaMobile,
@@ -302,7 +302,7 @@ object FingerprintGenerator {
         )
     }
 
-    // ==================== IP Generation ====================
+
 
     fun generateRandomIp(range: IpRange = IpRange.USA, searchKeyword: String? = null): String {
         return when (range) {
@@ -325,7 +325,7 @@ object FingerprintGenerator {
         "巴西", "印度", "澳大利亚", "加拿大", "新加坡", "香港", "台湾", "欧洲", "亚洲"
     )
 
-    // ==================== IP Ranges (corrected, region-specific) ====================
+
 
     private data class IpBlock(val first: Int, val secondStart: Int, val secondEnd: Int)
 
@@ -351,7 +351,7 @@ object FingerprintGenerator {
         IpBlock(208, 0, 255), IpBlock(209, 0, 255), IpBlock(216, 0, 255)
     )
 
-    // Country keyword → IP ranges map (corrected region-specific allocations)
+
     private val COUNTRY_IP_RANGES: Map<Set<String>, List<IpBlock>> = mapOf(
         setOf("中国", "china", "cn") to listOf(
             IpBlock(1, 80, 83), IpBlock(14, 0, 31), IpBlock(27, 0, 31),
@@ -552,9 +552,9 @@ object FingerprintGenerator {
     private fun generateGlobalIp(): String = generateIpFromRanges(GLOBAL_IP_RANGES)
 }
 
-/**
- * 生成的指纹数据 — 完整一致的浏览器身份
- */
+
+
+
 data class GeneratedFingerprint(
     val userAgent: String,
     val platform: String,
@@ -568,13 +568,13 @@ data class GeneratedFingerprint(
     val hardwareConcurrency: Int,
     val deviceMemory: Int,
     val maxTouchPoints: Int,
-    // Noise seeds (deterministic per session, not random per call)
+
     val canvasNoiseSeed: Long,
     val audioNoiseSeed: Long,
-    // WebGL
+
     val webglVendor: String,
     val webglRenderer: String,
-    // Client Hints (empty for Firefox/Safari which don't support CH)
+
     val chUa: String,
     val chUaPlatform: String,
     val chUaMobile: String,
@@ -583,10 +583,10 @@ data class GeneratedFingerprint(
     val chUaModel: String,
     val chUaArch: String,
     val chUaBitness: String,
-    // Browser type
+
     val browserType: String
 ) {
-    // Backward compat: old code used canvasNoise/audioNoise as Float
+
     val canvasNoise: Float get() = (canvasNoiseSeed % 10000) / 100000000f
     val audioNoise: Float get() = (audioNoiseSeed % 10000) / 100000000f
 }

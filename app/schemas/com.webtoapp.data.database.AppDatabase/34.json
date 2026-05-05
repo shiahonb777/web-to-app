@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 34,
-    "identityHash": "7a5894e4e97fbc54f978ebed92fe8584",
+    "identityHash": "4adb8af471e7df990858d457ef662264",
     "entities": [
       {
         "tableName": "web_apps",
@@ -336,6 +336,27 @@
             ],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_web_apps_isActivated` ON `${TABLE_NAME}` (`isActivated`)"
+          },
+          {
+            "name": "index_web_apps_appType_url",
+            "unique": false,
+            "columnNames": [
+              "appType",
+              "url"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_web_apps_appType_url` ON `${TABLE_NAME}` (`appType`, `url`)"
+          },
+          {
+            "name": "index_web_apps_appType_iconPath_url",
+            "unique": false,
+            "columnNames": [
+              "appType",
+              "iconPath",
+              "url"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_web_apps_appType_iconPath_url` ON `${TABLE_NAME}` (`appType`, `iconPath`, `url`)"
           }
         ],
         "foreignKeys": []
@@ -583,7 +604,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7a5894e4e97fbc54f978ebed92fe8584')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4adb8af471e7df990858d457ef662264')"
     ]
   }
 }

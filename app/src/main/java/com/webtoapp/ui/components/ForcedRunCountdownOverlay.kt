@@ -22,11 +22,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.webtoapp.core.i18n.Strings
 
-/**
- * 强制运行倒计时覆盖层
- * 
- * 显示剩余时间，并提供密码退出功能
- */
+
+
+
+
+
 @Composable
 fun ForcedRunCountdownOverlay(
     remainingMs: Long,
@@ -37,8 +37,8 @@ fun ForcedRunCountdownOverlay(
 ) {
     var showPasswordDialog by remember { mutableStateOf(false) }
     var passwordError by remember { mutableStateOf(false) }
-    
-    // 格式化剩余时间
+
+
     val formattedTime = remember(remainingMs) {
         val totalSeconds = (remainingMs.coerceAtLeast(0) / 1000).toInt()
         val hours = totalSeconds / 3600
@@ -50,7 +50,7 @@ fun ForcedRunCountdownOverlay(
             String.format(java.util.Locale.getDefault(), "%02d:%02d", minutes, seconds)
         }
     }
-    
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -74,15 +74,15 @@ fun ForcedRunCountdownOverlay(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // 锁图标（可点击退出时显示不同图标）
+
                 Icon(
-                    imageVector = if (allowEmergencyExit && !emergencyPassword.isNullOrEmpty()) 
+                    imageVector = if (allowEmergencyExit && !emergencyPassword.isNullOrEmpty())
                         Icons.Filled.LockOpen else Icons.Filled.Lock,
                     contentDescription = if (allowEmergencyExit) Strings.tapToEnterPasswordToExit else null,
                     tint = MaterialTheme.colorScheme.onErrorContainer,
                     modifier = Modifier.size(20.dp)
                 )
-                
+
                 Column {
                     Text(
                         text = Strings.forcedRunActive,
@@ -95,8 +95,8 @@ fun ForcedRunCountdownOverlay(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onErrorContainer
                     )
-                    
-                    // 提示文字
+
+
                     if (allowEmergencyExit && !emergencyPassword.isNullOrEmpty()) {
                         Text(
                             text = Strings.tapToEnterPasswordToExit,
@@ -109,13 +109,13 @@ fun ForcedRunCountdownOverlay(
             }
         }
     }
-    
-    // Password输入对话框
+
+
     if (showPasswordDialog) {
         EmergencyExitPasswordDialog(
             correctPassword = emergencyPassword ?: "",
-            onDismiss = { 
-                showPasswordDialog = false 
+            onDismiss = {
+                showPasswordDialog = false
                 passwordError = false
             },
             onPasswordCorrect = {
@@ -129,9 +129,9 @@ fun ForcedRunCountdownOverlay(
     }
 }
 
-/**
- * 紧急退出密码对话框
- */
+
+
+
 @Composable
 private fun EmergencyExitPasswordDialog(
     correctPassword: String,
@@ -143,7 +143,7 @@ private fun EmergencyExitPasswordDialog(
     var showError by remember { mutableStateOf(false) }
     var attempts by remember { mutableIntStateOf(0) }
     val maxAttempts = 5
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = {
@@ -169,10 +169,10 @@ private fun EmergencyExitPasswordDialog(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                
+
                 OutlinedTextField(
                     value = inputPassword,
-                    onValueChange = { 
+                    onValueChange = {
                         inputPassword = it
                         showError = false
                     },
@@ -207,7 +207,7 @@ private fun EmergencyExitPasswordDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
-                
+
                 if (attempts >= maxAttempts) {
                     Text(
                         text = Strings.tooManyAttemptsTryLater,

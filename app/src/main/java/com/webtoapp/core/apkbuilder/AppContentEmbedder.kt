@@ -5,45 +5,45 @@ import com.webtoapp.core.crypto.EncryptionConfig
 import java.io.File
 import java.util.zip.ZipOutputStream
 
-/**
- * 应用内容嵌入策略接口
- *
- * 将 modifyApk 中按 AppType 分支的嵌入逻辑拆分为独立策略，
- * 每种 AppType 实现自己的 embed() 方法，消除 modifyApk 中的长 if-else 链。
- *
- * 设计原则：
- * - 每个策略只关注自己类型的资源嵌入
- * - 公共资源（splash、BGM、status bar bg）由调用方统一处理，不在策略内
- * - 策略通过 EmbedContext 获取所有需要的依赖和函数引用
- */
+
+
+
+
+
+
+
+
+
+
+
 interface AppContentEmbedder {
-    
-    /**
-     * 将应用特定内容嵌入到 APK 的 ZipOutputStream 中
-     *
-     * @param zipOut APK 输出流
-     * @param ctx 嵌入上下文（包含所有可能需要的资源引用和 ApkBuilder 委托函数）
-     * @return 嵌入结果
-     */
+
+
+
+
+
+
+
+
     fun embed(zipOut: ZipOutputStream, ctx: EmbedContext): EmbedResult
 }
 
-/**
- * 嵌入上下文 — 传递给策略的数据和 ApkBuilder 委托函数
- *
- * 函数引用（fn*）指向 ApkBuilder 的 private 方法，避免暴露 ApkBuilder 内部实现。
- */
+
+
+
+
+
 class EmbedContext(
     val config: ApkConfig,
     val logger: BuildLogger,
     val encryptor: AssetEncryptor?,
     val encryptionConfig: EncryptionConfig,
-    // App-type-specific resources
+
     val mediaContentPath: String?,
     val htmlFiles: List<com.webtoapp.data.model.HtmlFile>,
     val galleryItems: List<com.webtoapp.data.model.GalleryItem>,
     val projectDir: File?,
-    // Delegated ApkBuilder functions (avoid leaking ApkBuilder internals)
+
     val fnAddMediaContent: (ZipOutputStream, String, Boolean, AssetEncryptor?, EncryptionConfig) -> Unit,
     val fnAddHtmlFiles: (ZipOutputStream, List<com.webtoapp.data.model.HtmlFile>, AssetEncryptor?, EncryptionConfig) -> Int,
     val fnAddGalleryItems: (ZipOutputStream, List<com.webtoapp.data.model.GalleryItem>, AssetEncryptor?, EncryptionConfig) -> Unit,
@@ -55,20 +55,20 @@ class EmbedContext(
     val fnAddGoAppFiles: (ZipOutputStream, File) -> Unit
 )
 
-/**
- * 嵌入结果
- */
+
+
+
 data class EmbedResult(
     val success: Boolean,
     val itemCount: Int = 0,
     val message: String = ""
 )
 
-/**
- * 策略工厂 — 根据 AppType 选择对应的嵌入策略
- */
+
+
+
 object AppContentEmbedderFactory {
-    
+
     fun create(appType: String): AppContentEmbedder? {
         return when (appType) {
             "IMAGE", "VIDEO" -> MediaContentEmbedder()
@@ -80,17 +80,17 @@ object AppContentEmbedderFactory {
             "PHP_APP" -> PhpAppContentEmbedder()
             "PYTHON_APP" -> PythonAppContentEmbedder()
             "GO_APP" -> GoAppContentEmbedder()
-            "WEB" -> null  // WEB type has no app-specific content to embed
+            "WEB" -> null
             else -> null
         }
     }
 }
 
-// ==================== Concrete Embedders ====================
 
-/**
- * 媒体内容嵌入（IMAGE/VIDEO 类型）
- */
+
+
+
+
 class MediaContentEmbedder : AppContentEmbedder {
     override fun embed(zipOut: ZipOutputStream, ctx: EmbedContext): EmbedResult {
         val mediaPath = ctx.mediaContentPath ?: return EmbedResult(false, message = "No media content path")
@@ -101,9 +101,9 @@ class MediaContentEmbedder : AppContentEmbedder {
     }
 }
 
-/**
- * HTML 文件嵌入
- */
+
+
+
 class HtmlContentEmbedder : AppContentEmbedder {
     override fun embed(zipOut: ZipOutputStream, ctx: EmbedContext): EmbedResult {
         if (ctx.htmlFiles.isEmpty()) {
@@ -116,7 +116,7 @@ class HtmlContentEmbedder : AppContentEmbedder {
         if (count == 0) {
             ctx.logger.warn("HTML app failed to embed any files!")
         } else {
-            // Validate that the configured entry file was actually embedded
+
             val entryFile = ctx.config.htmlEntryFile
             val embeddedNames = ctx.htmlFiles.map { it.name }
             val entryFound = embeddedNames.any { it.equals(entryFile, ignoreCase = true) }
@@ -133,9 +133,9 @@ class HtmlContentEmbedder : AppContentEmbedder {
     }
 }
 
-/**
- * Gallery 内容嵌入
- */
+
+
+
 class GalleryContentEmbedder : AppContentEmbedder {
     override fun embed(zipOut: ZipOutputStream, ctx: EmbedContext): EmbedResult {
         if (ctx.galleryItems.isEmpty()) {
@@ -149,9 +149,9 @@ class GalleryContentEmbedder : AppContentEmbedder {
     }
 }
 
-/**
- * WordPress 项目嵌入
- */
+
+
+
 class WordPressContentEmbedder : AppContentEmbedder {
     override fun embed(zipOut: ZipOutputStream, ctx: EmbedContext): EmbedResult {
         val dir = ctx.projectDir
@@ -165,9 +165,9 @@ class WordPressContentEmbedder : AppContentEmbedder {
     }
 }
 
-/**
- * Node.js 项目嵌入
- */
+
+
+
 class NodeJsContentEmbedder : AppContentEmbedder {
     override fun embed(zipOut: ZipOutputStream, ctx: EmbedContext): EmbedResult {
         val dir = ctx.projectDir
@@ -181,9 +181,9 @@ class NodeJsContentEmbedder : AppContentEmbedder {
     }
 }
 
-/**
- * Frontend 项目嵌入
- */
+
+
+
 class FrontendContentEmbedder : AppContentEmbedder {
     override fun embed(zipOut: ZipOutputStream, ctx: EmbedContext): EmbedResult {
         val dir = ctx.projectDir
@@ -192,7 +192,7 @@ class FrontendContentEmbedder : AppContentEmbedder {
             ctx.fnAddFrontendFiles(zipOut, dir, ctx.htmlFiles)
             return EmbedResult(true, message = "Frontend files embedded")
         }
-        // Fallback: use htmlFiles list if projectDir not set
+
         if (ctx.htmlFiles.isNotEmpty()) {
             ctx.logger.section("Embed Frontend Files (from file list)")
             val count = ctx.fnAddHtmlFiles(zipOut, ctx.htmlFiles, ctx.encryptor, ctx.encryptionConfig)
@@ -203,9 +203,9 @@ class FrontendContentEmbedder : AppContentEmbedder {
     }
 }
 
-/**
- * PHP 应用嵌入
- */
+
+
+
 class PhpAppContentEmbedder : AppContentEmbedder {
     override fun embed(zipOut: ZipOutputStream, ctx: EmbedContext): EmbedResult {
         val dir = ctx.projectDir
@@ -219,9 +219,9 @@ class PhpAppContentEmbedder : AppContentEmbedder {
     }
 }
 
-/**
- * Python 应用嵌入
- */
+
+
+
 class PythonAppContentEmbedder : AppContentEmbedder {
     override fun embed(zipOut: ZipOutputStream, ctx: EmbedContext): EmbedResult {
         val dir = ctx.projectDir
@@ -235,9 +235,9 @@ class PythonAppContentEmbedder : AppContentEmbedder {
     }
 }
 
-/**
- * Go 应用嵌入
- */
+
+
+
 class GoAppContentEmbedder : AppContentEmbedder {
     override fun embed(zipOut: ZipOutputStream, ctx: EmbedContext): EmbedResult {
         val dir = ctx.projectDir

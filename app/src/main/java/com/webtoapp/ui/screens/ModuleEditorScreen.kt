@@ -42,31 +42,38 @@ import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.PremiumTextField
 
 import com.webtoapp.ui.components.PremiumSwitch
-/**
- * 模块编辑器页面
- */
+import com.webtoapp.ui.design.WtaCapabilityLevel
+import com.webtoapp.ui.design.WtaSection
+import com.webtoapp.ui.design.WtaSectionDivider
+import com.webtoapp.ui.design.WtaSettingCard
+import com.webtoapp.ui.design.WtaSettingRow
+import com.webtoapp.ui.design.WtaScreen
+import com.webtoapp.ui.design.WtaRadius
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ModuleEditorScreen(
-    moduleId: String?,  // null 表示新建
+    moduleId: String?,
     onNavigateBack: () -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val extensionManager = remember { ExtensionManager.getInstance(context) }
-    
-    // Decode moduleId in case it was URL-encoded during navigation
+
+
     val decodedModuleId = remember(moduleId) {
-        moduleId?.let { 
+        moduleId?.let {
             try {
                 java.net.URLDecoder.decode(it, "UTF-8")
             } catch (e: Exception) {
-                it // Use original if decoding fails
+                it
             }
         }
     }
-    
-    // Load现有模块或创建新模块（需要加载完整代码）
+
+
     val existingModule = remember(decodedModuleId) {
         decodedModuleId?.let { id ->
             try {
@@ -79,8 +86,8 @@ fun ModuleEditorScreen(
             }
         }
     }
-    
-    // Edit state
+
+
     var name by remember { mutableStateOf(existingModule?.name ?: "") }
     var description by remember { mutableStateOf(existingModule?.description ?: "") }
     var icon by remember { mutableStateOf(existingModule?.icon ?: "extension") }
@@ -96,8 +103,7 @@ fun ModuleEditorScreen(
     var authorName by remember { mutableStateOf(existingModule?.author?.name ?: "") }
     var uiConfig by remember { mutableStateOf(existingModule?.uiConfig ?: ModuleUiConfig()) }
     var runMode by remember { mutableStateOf(existingModule?.runMode ?: ModuleRunMode.INTERACTIVE) }
-    
-    var currentTab by remember { mutableIntStateOf(0) }
+
     var showCategoryDialog by remember { mutableStateOf(false) }
     var showRunAtDialog by remember { mutableStateOf(false) }
     var showRunModeDialog by remember { mutableStateOf(false) }
@@ -106,150 +112,76 @@ fun ModuleEditorScreen(
     var showConfigItemDialog by remember { mutableStateOf(false) }
     var showIconPicker by remember { mutableStateOf(false) }
     var showTemplateDialog by remember { mutableStateOf(false) }
-    
-    val tabs = listOf(Strings.basicInfo, Strings.code, Strings.advancedSettings)
-    
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            TopAppBar(
-                title = { Text(if (moduleId == null) Strings.createModule else Strings.editModule) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.Close, contentDescription = Strings.close)
+
+    WtaScreen(
+        title = if (moduleId == null) Strings.createModule else Strings.editModule,
+        onBack = onNavigateBack,
+        actions = {
+            if (moduleId == null) {
+                IconButton(onClick = { showTemplateDialog = true }) {
+                    Icon(Icons.Default.AutoAwesome, contentDescription = Strings.useTemplate)
+                }
+            }
+            TextButton(
+                onClick = {
+                    if (name.isBlank()) {
+                        Toast.makeText(context, Strings.pleaseEnterModuleName, Toast.LENGTH_SHORT).show()
+                        return@TextButton
                     }
-                },
-                actions = {
-                    // 模板按钮（仅新建时显示）
-                    if (moduleId == null) {
-                        IconButton(onClick = { showTemplateDialog = true }) {
-                            Icon(Icons.Default.AutoAwesome, contentDescription = Strings.useTemplate)
-                        }
+                    if (code.isBlank() && cssCode.isBlank()) {
+                        Toast.makeText(context, Strings.pleaseEnterCodeContent, Toast.LENGTH_SHORT).show()
+                        return@TextButton
                     }
-                    TextButton(
-                        onClick = {
-                            // Verify并保存
-                            if (name.isBlank()) {
-                                Toast.makeText(context, Strings.pleaseEnterModuleName, Toast.LENGTH_SHORT).show()
-                                return@TextButton
-                            }
-                            if (code.isBlank() && cssCode.isBlank()) {
-                                Toast.makeText(context, Strings.pleaseEnterCodeContent, Toast.LENGTH_SHORT).show()
-                                return@TextButton
-                            }
-                            
-                            val module = ExtensionModule(
-                                id = existingModule?.id ?: java.util.UUID.randomUUID().toString(),
-                                name = name,
-                                description = description,
-                                icon = icon,
-                                category = category,
-                                tags = tags.split(",").map { it.trim() }.filter { it.isNotBlank() },
-                                version = ModuleVersion(
-                                    code = (existingModule?.version?.code ?: 0) + 1,
-                                    name = versionName
-                                ),
-                                author = if (authorName.isNotBlank()) ModuleAuthor(authorName) else null,
-                                code = code,
-                                cssCode = cssCode,
-                                runAt = runAt,
-                                urlMatches = urlMatches,
-                                permissions = permissions.toList(),
-                                configItems = configItems,
-                                enabled = existingModule?.enabled ?: true,
-                                builtIn = false,
-                                createdAt = existingModule?.createdAt ?: System.currentTimeMillis(),
-                                uiConfig = uiConfig,
-                                runMode = runMode
-                            )
-                            
-                            scope.launch {
-                                extensionManager.addModule(module).onSuccess {
-                                    Toast.makeText(context, Strings.saveSuccess, Toast.LENGTH_SHORT).show()
-                                    onNavigateBack()
-                                }.onFailure { e ->
-                                    Toast.makeText(context, "${Strings.saveFailed}: ${e.message}", Toast.LENGTH_SHORT).show()
-                                }
-                            }
+
+                    val module = ExtensionModule(
+                        id = existingModule?.id ?: java.util.UUID.randomUUID().toString(),
+                        name = name,
+                        description = description,
+                        icon = icon,
+                        category = category,
+                        tags = tags.split(",").map { it.trim() }.filter { it.isNotBlank() },
+                        version = ModuleVersion(
+                            code = (existingModule?.version?.code ?: 0) + 1,
+                            name = versionName
+                        ),
+                        author = if (authorName.isNotBlank()) ModuleAuthor(authorName) else null,
+                        code = code,
+                        cssCode = cssCode,
+                        runAt = runAt,
+                        urlMatches = urlMatches,
+                        permissions = permissions.toList(),
+                        configItems = configItems,
+                        enabled = existingModule?.enabled ?: true,
+                        builtIn = false,
+                        createdAt = existingModule?.createdAt ?: System.currentTimeMillis(),
+                        uiConfig = uiConfig,
+                        runMode = runMode
+                    )
+
+                    scope.launch {
+                        extensionManager.addModule(module).onSuccess {
+                            Toast.makeText(context, Strings.saveSuccess, Toast.LENGTH_SHORT).show()
+                            onNavigateBack()
+                        }.onFailure { e ->
+                            Toast.makeText(context, "${Strings.saveFailed}: ${e.message}", Toast.LENGTH_SHORT).show()
                         }
-                    ) {
-                        Text(Strings.save)
                     }
                 }
-            )
+            ) { Text(Strings.save) }
         }
-    ) { padding ->
-        ThemedBackgroundBox(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
+    ) {
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // 美化的 Tab 栏
-            val tabIcons = listOf(
-                Icons.Outlined.Info to Icons.Filled.Info,
-                Icons.Outlined.Code to Icons.Filled.Code,
-                Icons.Outlined.Settings to Icons.Filled.Settings
-            )
-            
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.15f)
+
+            WtaSection(
+                title = Strings.basicInfo,
+                headerStyle = com.webtoapp.ui.design.WtaSectionHeaderStyle.Hidden,
+                level = WtaCapabilityLevel.Common,
+                collapsible = false
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    tabs.forEachIndexed { index, title ->
-                        val isSelected = currentTab == index
-                        Surface(
-                            onClick = { currentTab = index },
-                            shape = RoundedCornerShape(10.dp),
-                            color = if (isSelected) {
-                                MaterialTheme.colorScheme.surface
-                            } else {
-                                Color.Transparent
-                            },
-                            shadowElevation = if (isSelected) 1.dp else 0.dp,
-                            modifier = Modifier.weight(weight = 1f, fill = true)
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(vertical = 10.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(3.dp)
-                            ) {
-                                Icon(
-                                    if (isSelected) tabIcons[index].second else tabIcons[index].first,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(20.dp),
-                                    tint = if (isSelected) {
-                                        MaterialTheme.colorScheme.primary
-                                    } else {
-                                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                                    }
-                                )
-                                Text(
-                                    title,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                                    color = if (isSelected) {
-                                        MaterialTheme.colorScheme.onSurface
-                                    } else {
-                                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-            
-            when (currentTab) {
-                0 -> BasicInfoTab(
+                WtaSettingCard {
+                    BasicInfoTab(
                     name = name,
                     onNameChange = { name = it },
                     description = description,
@@ -264,14 +196,35 @@ fun ModuleEditorScreen(
                     onVersionNameChange = { versionName = it },
                     authorName = authorName,
                     onAuthorNameChange = { authorName = it }
-                )
-                1 -> CodeTab(
+                    )
+                }
+            }
+
+            WtaSection(
+                title = Strings.code,
+                headerStyle = com.webtoapp.ui.design.WtaSectionHeaderStyle.Hidden,
+                level = WtaCapabilityLevel.Common,
+                collapsible = false
+            ) {
+                WtaSettingCard {
+                    CodeTab(
                     code = code,
                     onCodeChange = { code = it },
                     cssCode = cssCode,
                     onCssCodeChange = { cssCode = it }
-                )
-                2 -> AdvancedTab(
+                    )
+                }
+            }
+
+            WtaSection(
+                title = Strings.advancedSettings,
+                headerStyle = com.webtoapp.ui.design.WtaSectionHeaderStyle.Hidden,
+                level = WtaCapabilityLevel.Advanced,
+                collapsible = true,
+                initiallyExpanded = false
+            ) {
+                WtaSettingCard {
+                    AdvancedTab(
                     runAt = runAt,
                     onRunAtClick = { showRunAtDialog = true },
                     runMode = runMode,
@@ -282,12 +235,13 @@ fun ModuleEditorScreen(
                     onUrlMatchesClick = { showUrlMatchDialog = true },
                     configItems = configItems,
                     onConfigItemsClick = { showConfigItemDialog = true }
-                )
+                    )
+                }
             }
         }
     }
-    
-    // 分类选择对话框
+
+
     if (showCategoryDialog) {
         AlertDialog(
             onDismissRequest = { showCategoryDialog = false },
@@ -298,16 +252,20 @@ fun ModuleEditorScreen(
                 ) {
                     items(ModuleCategory.values().toList()) { cat ->
                         val isSelected = category == cat
-                        Surface(
-                            onClick = {
-                                category = cat
-                                showCategoryDialog = false
-                            },
-                            shape = RoundedCornerShape(14.dp),
-                            color = if (isSelected)
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
-                            else
-                                MaterialTheme.colorScheme.surfaceContainerLow
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(WtaRadius.Button))
+                                .background(
+                                    if (isSelected)
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
+                                    else
+                                        MaterialTheme.colorScheme.surfaceContainerLow
+                                )
+                                .clickable {
+                                    category = cat
+                                    showCategoryDialog = false
+                                }
                         ) {
                             Row(
                                 modifier = Modifier
@@ -319,7 +277,7 @@ fun ModuleEditorScreen(
                                 Box(
                                     modifier = Modifier
                                         .size(36.dp)
-                                        .clip(RoundedCornerShape(10.dp))
+                                        .clip(RoundedCornerShape(WtaRadius.Button))
                                         .background(
                                             Brush.linearGradient(
                                                 listOf(
@@ -365,8 +323,8 @@ fun ModuleEditorScreen(
             confirmButton = {}
         )
     }
-    
-    // Execute时机选择对话框
+
+
     if (showRunAtDialog) {
         AlertDialog(
             onDismissRequest = { showRunAtDialog = false },
@@ -385,16 +343,20 @@ fun ModuleEditorScreen(
                             ModuleRunTime.CONTEXT_MENU -> "menu"
                             ModuleRunTime.BEFORE_UNLOAD -> "exit_to_app"
                         }
-                        Surface(
-                            onClick = {
-                                runAt = time
-                                showRunAtDialog = false
-                            },
-                            shape = RoundedCornerShape(14.dp),
-                            color = if (isSelected)
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
-                            else
-                                MaterialTheme.colorScheme.surfaceContainerLow
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(WtaRadius.Button))
+                                .background(
+                                    if (isSelected)
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
+                                    else
+                                        MaterialTheme.colorScheme.surfaceContainerLow
+                                )
+                                .clickable {
+                                    runAt = time
+                                    showRunAtDialog = false
+                                }
                         ) {
                             Row(
                                 modifier = Modifier
@@ -406,7 +368,7 @@ fun ModuleEditorScreen(
                                 Box(
                                     modifier = Modifier
                                         .size(36.dp)
-                                        .clip(RoundedCornerShape(10.dp))
+                                        .clip(RoundedCornerShape(WtaRadius.Button))
                                         .background(
                                             Brush.linearGradient(
                                                 listOf(
@@ -455,8 +417,8 @@ fun ModuleEditorScreen(
             confirmButton = {}
         )
     }
-    
-    // 运行模式选择对话框
+
+
     if (showRunModeDialog) {
         AlertDialog(
             onDismissRequest = { showRunModeDialog = false },
@@ -468,16 +430,20 @@ fun ModuleEditorScreen(
                 ) {
                     ModuleRunMode.values().forEach { mode ->
                         val isSelected = runMode == mode
-                        Surface(
-                            onClick = {
-                                runMode = mode
-                                showRunModeDialog = false
-                            },
-                            shape = RoundedCornerShape(14.dp),
-                            color = if (isSelected)
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
-                            else
-                                MaterialTheme.colorScheme.surfaceContainerLow
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(WtaRadius.Button))
+                                .background(
+                                    if (isSelected)
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
+                                    else
+                                        MaterialTheme.colorScheme.surfaceContainerLow
+                                )
+                                .clickable {
+                                    runMode = mode
+                                    showRunModeDialog = false
+                                }
                         ) {
                             Row(
                                 modifier = Modifier
@@ -489,7 +455,7 @@ fun ModuleEditorScreen(
                                 Box(
                                     modifier = Modifier
                                         .size(36.dp)
-                                        .clip(RoundedCornerShape(10.dp))
+                                        .clip(RoundedCornerShape(WtaRadius.Button))
                                         .background(
                                             Brush.linearGradient(
                                                 listOf(
@@ -538,8 +504,8 @@ fun ModuleEditorScreen(
             confirmButton = {}
         )
     }
-    
-    // Permission选择对话框
+
+
     if (showPermissionsDialog) {
         AlertDialog(
             onDismissRequest = { showPermissionsDialog = false },
@@ -575,15 +541,19 @@ fun ModuleEditorScreen(
                             isChecked -> MaterialTheme.colorScheme.primary
                             else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                         }
-                        Surface(
-                            onClick = {
-                                permissions = if (isChecked) permissions - perm else permissions + perm
-                            },
-                            shape = RoundedCornerShape(14.dp),
-                            color = if (isChecked)
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
-                            else
-                                MaterialTheme.colorScheme.surfaceContainerLow
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(WtaRadius.Button))
+                                .background(
+                                    if (isChecked)
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
+                                    else
+                                        MaterialTheme.colorScheme.surfaceContainerLow
+                                )
+                                .clickable {
+                                    permissions = if (isChecked) permissions - perm else permissions + perm
+                                }
                         ) {
                             Row(
                                 modifier = Modifier
@@ -595,7 +565,7 @@ fun ModuleEditorScreen(
                                 Box(
                                     modifier = Modifier
                                         .size(34.dp)
-                                        .clip(RoundedCornerShape(9.dp))
+                                        .clip(RoundedCornerShape(WtaRadius.Button))
                                         .background(
                                             Brush.linearGradient(
                                                 listOf(
@@ -623,7 +593,7 @@ fun ModuleEditorScreen(
                                         if (perm.dangerous) {
                                             Box(
                                                 modifier = Modifier
-                                                    .clip(RoundedCornerShape(4.dp))
+                                                    .clip(RoundedCornerShape(WtaRadius.Button))
                                                     .background(MaterialTheme.colorScheme.error.copy(alpha = 0.10f))
                                                     .padding(horizontal = 6.dp, vertical = 1.dp)
                                             ) {
@@ -661,8 +631,8 @@ fun ModuleEditorScreen(
             }
         )
     }
-    
-    // Icon选择对话框
+
+
     if (showIconPicker) {
         IconPickerDialog(
             currentIcon = icon,
@@ -673,8 +643,8 @@ fun ModuleEditorScreen(
             onDismiss = { showIconPicker = false }
         )
     }
-    
-    // URL 匹配规则对话框
+
+
     if (showUrlMatchDialog) {
         UrlMatchDialog(
             urlMatches = urlMatches,
@@ -682,8 +652,8 @@ fun ModuleEditorScreen(
             onDismiss = { showUrlMatchDialog = false }
         )
     }
-    
-    // Configure项对话框
+
+
     if (showConfigItemDialog) {
         ConfigItemsDialog(
             configItems = configItems,
@@ -691,12 +661,12 @@ fun ModuleEditorScreen(
             onDismiss = { showConfigItemDialog = false }
         )
     }
-    
-    // 模板选择对话框
+
+
     if (showTemplateDialog) {
          TemplateSelectionDialog(
             onTemplateSelected = { template ->
-                // App模板
+
                 name = template.name
                 description = template.description
                 icon = template.icon
@@ -709,8 +679,6 @@ fun ModuleEditorScreen(
             onDismiss = { showTemplateDialog = false }
         )
     }
-    
-        }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -738,58 +706,60 @@ private fun BasicInfoTab(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        // Module标识卡片
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
-            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(WtaRadius.Card))
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f))
         ) {
             Row(
                 modifier = Modifier.padding(20.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Icon选择器
-                Surface(
-                    onClick = onIconClick,
-                    shape = RoundedCornerShape(16.dp),
-                    color = MaterialTheme.colorScheme.surface,
-                    border = BorderStroke(
-                        2.dp,
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-                    ),
-                    modifier = Modifier.size(72.dp)
+
+                Box(
+                    modifier = Modifier
+                        .size(72.dp)
+                        .clip(RoundedCornerShape(WtaRadius.Control))
+                        .background(MaterialTheme.colorScheme.surface)
+                        .border(
+                            BorderStroke(
+                                2.dp,
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                            ),
+                            RoundedCornerShape(WtaRadius.Control)
+                        )
+                        .clickable(onClick = onIconClick),
+                    contentAlignment = Alignment.Center
                 ) {
+                    com.webtoapp.ui.components.ModuleIcon(
+                        iconId = icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(36.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+
                     Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .offset(x = 4.dp, y = 4.dp)
+                            .size(24.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary),
                         contentAlignment = Alignment.Center
                     ) {
-                        com.webtoapp.ui.components.ModuleIcon(
-                            iconId = icon,
+                        Icon(
+                            Icons.Default.Edit,
                             contentDescription = null,
-                            modifier = Modifier.size(36.dp),
-                            tint = MaterialTheme.colorScheme.primary
+                            modifier = Modifier.size(14.dp),
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
-                        // 编辑指示器
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.BottomEnd)
-                                .offset(x = 4.dp, y = 4.dp)
-                                .size(24.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                Icons.Default.Edit,
-                                contentDescription = null,
-                                modifier = Modifier.size(14.dp),
-                                tint = MaterialTheme.colorScheme.onPrimary
-                            )
-                        }
                     }
                 }
-                
-                // Name输入
+
+
                 Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
                     Text(
                         Strings.moduleNameRequired,
@@ -800,24 +770,25 @@ private fun BasicInfoTab(
                         value = name,
                         onValueChange = onNameChange,
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = { 
+                        placeholder = {
                             Text(
                                 Strings.inputModuleName,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                            ) 
+                            )
                         },
                         singleLine = true,
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(WtaRadius.Button)
                     )
                 }
             }
         }
-        
-        // Description输入
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            color = MaterialTheme.colorScheme.surfaceContainerLow
+
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(WtaRadius.Card))
+                .background(MaterialTheme.colorScheme.surfaceContainerLow)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(
@@ -827,7 +798,7 @@ private fun BasicInfoTab(
                     Box(
                         modifier = Modifier
                             .size(28.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(WtaRadius.Button))
                             .background(
                                 Brush.linearGradient(
                                     listOf(
@@ -859,12 +830,12 @@ private fun BasicInfoTab(
                     placeholder = { Text(Strings.briefModuleDescription) },
                     minLines = 3,
                     maxLines = 5,
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(WtaRadius.Button)
                 )
             }
         }
-        
-        // 分类选择
+
+
         Surface(
             onClick = onCategoryClick,
             modifier = Modifier.fillMaxWidth(),
@@ -912,8 +883,8 @@ private fun BasicInfoTab(
                 )
             }
         }
-        
-        // 标签输入
+
+
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
@@ -927,7 +898,7 @@ private fun BasicInfoTab(
                     Box(
                         modifier = Modifier
                             .size(28.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(WtaRadius.Button))
                             .background(
                                 Brush.linearGradient(
                                     listOf(
@@ -958,10 +929,10 @@ private fun BasicInfoTab(
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = { Text(Strings.tagsHint) },
                     singleLine = true,
-                    shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(WtaRadius.Button)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                // 标签预览
+
                 if (tags.isNotBlank()) {
                     LazyRow(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -986,8 +957,8 @@ private fun BasicInfoTab(
                 }
             }
         }
-        
-        // Version和作者信息
+
+
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
@@ -1045,7 +1016,7 @@ private fun BasicInfoTab(
                             )
                         }
                     )
-                    
+
                     PremiumTextField(
                         value = authorName,
                         onValueChange = onAuthorNameChange,
@@ -1065,8 +1036,8 @@ private fun BasicInfoTab(
                 }
             }
         }
-        
-        // 底部间距
+
+
         Spacer(modifier = Modifier.height(16.dp))
     }
 }
@@ -1082,13 +1053,13 @@ private fun CodeTab(
 ) {
     var showJsTab by remember { mutableStateOf(true) }
     var showCodeSnippetSelector by remember { mutableStateOf(false) }
-    
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // JS/CSS 切换 + 代码块按钮
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -1112,8 +1083,8 @@ private fun CodeTab(
                     } else null
                 )
             }
-            
-            // 代码块库按钮
+
+
             if (showJsTab) {
                 FilledTonalButton(
                     onClick = { showCodeSnippetSelector = true },
@@ -1129,14 +1100,15 @@ private fun CodeTab(
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
-        // 代码提示
-        Surface(
-            shape = RoundedCornerShape(12.dp),
-            color = MaterialTheme.colorScheme.surfaceContainerLow,
-            modifier = Modifier.fillMaxWidth()
+
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(WtaRadius.Button))
+                .background(MaterialTheme.colorScheme.surfaceContainerLow)
         ) {
             Row(
                 modifier = Modifier.padding(12.dp),
@@ -1145,7 +1117,7 @@ private fun CodeTab(
                 Box(
                     modifier = Modifier
                         .size(28.dp)
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(RoundedCornerShape(WtaRadius.Button))
                         .background(
                             Brush.linearGradient(
                                 listOf(
@@ -1180,10 +1152,10 @@ private fun CodeTab(
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
-        // 代码编辑器
+
+
         PremiumTextField(
             value = if (showJsTab) code else cssCode,
             onValueChange = { if (showJsTab) onCodeChange(it) else onCssCodeChange(it) },
@@ -1202,13 +1174,13 @@ private fun CodeTab(
             )
         )
     }
-    
-    // 代码块选择器对话框
+
+
     if (showCodeSnippetSelector) {
         com.webtoapp.ui.components.CodeSnippetSelectorDialog(
             onDismiss = { showCodeSnippetSelector = false },
             onSelect = { snippet ->
-                // 插入代码到当前位置
+
                 val newCode = if (code.isBlank()) {
                     snippet.code
                 } else {
@@ -1234,7 +1206,7 @@ private fun AdvancedTab(
     configItems: List<ModuleConfigItem>,
     onConfigItemsClick: () -> Unit,
 ) {
-    // Helper composable for advanced option rows
+
     @Composable
     fun AdvancedOptionCard(
         title: String,
@@ -1304,7 +1276,7 @@ private fun AdvancedTab(
         val primaryColor = MaterialTheme.colorScheme.primary
         val secondaryColor = MaterialTheme.colorScheme.secondary
 
-        // 运行模式
+
         AdvancedOptionCard(
             title = Strings.runModeLabel,
             subtitle = "${runMode.getDisplayName()} · ${runMode.getDescription()}",
@@ -1314,8 +1286,8 @@ private fun AdvancedTab(
             iconTint = primaryColor,
             onClick = onRunModeClick
         )
-        
-        // Execute时机
+
+
         AdvancedOptionCard(
             title = Strings.runTime,
             subtitle = runAt.getDisplayName(),
@@ -1325,8 +1297,8 @@ private fun AdvancedTab(
             iconTint = secondaryColor,
             onClick = onRunAtClick
         )
-        
-        // Permission
+
+
         AdvancedOptionCard(
             title = Strings.requiredPermissions,
             subtitle = if (permissions.isEmpty()) Strings.noSpecialPermissions
@@ -1337,8 +1309,8 @@ private fun AdvancedTab(
             iconTint = MaterialTheme.colorScheme.error.copy(alpha = 0.8f),
             onClick = onPermissionsClick
         )
-        
-        // URL 匹配
+
+
         AdvancedOptionCard(
             title = Strings.urlMatchRules,
             subtitle = if (urlMatches.isEmpty()) Strings.matchAllWebsites
@@ -1349,8 +1321,8 @@ private fun AdvancedTab(
             iconTint = primaryColor,
             onClick = onUrlMatchesClick
         )
-        
-        // Configure项
+
+
         AdvancedOptionCard(
             title = Strings.userConfigItems,
             subtitle = if (configItems.isEmpty()) Strings.noConfigItems
@@ -1361,8 +1333,8 @@ private fun AdvancedTab(
             iconTint = secondaryColor,
             onClick = onConfigItemsClick
         )
-        
-        // Hairline divider
+
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1370,11 +1342,12 @@ private fun AdvancedTab(
                 .height(0.5.dp)
                 .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
         )
-        
-        // 帮助信息
-        Surface(
-            shape = RoundedCornerShape(14.dp),
-            color = MaterialTheme.colorScheme.surfaceContainerLow
+
+
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(WtaRadius.Button))
+                .background(MaterialTheme.colorScheme.surfaceContainerLow)
         ) {
             Row(
                 modifier = Modifier.padding(14.dp),
@@ -1420,9 +1393,9 @@ private fun AdvancedTab(
     }
 }
 
-/**
- * 图标选择对话框
- */
+
+
+
 @Composable
 fun IconPickerDialog(
     currentIcon: String,
@@ -1435,7 +1408,7 @@ fun IconPickerDialog(
         "target", "lightbulb", "wrench", "settings", "gaming", "music_note", "phone_android", "computer", "star",
         "fire", "diamond", "gift", "trophy", "festival", "theater_comedy", "palette", "movie", "camera"
     )
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(Strings.selectIcon) },
@@ -1495,9 +1468,9 @@ fun IconPickerDialog(
     )
 }
 
-/**
- * URL 匹配规则对话框
- */
+
+
+
 @Composable
 fun UrlMatchDialog(
     urlMatches: List<UrlMatchRule>,
@@ -1507,13 +1480,13 @@ fun UrlMatchDialog(
     var newPattern by remember { mutableStateOf("") }
     var isRegex by remember { mutableStateOf(false) }
     var isExclude by remember { mutableStateOf(false) }
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(Strings.urlMatchRules) },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                // 现有规则
+
                 if (urlMatches.isNotEmpty()) {
                     urlMatches.forEachIndexed { index, rule ->
                         val ruleTint = if (rule.exclude) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
@@ -1591,14 +1564,14 @@ fun UrlMatchDialog(
                             }
                         }
                     }
-                    // Hairline divider
+
                     Box(
                         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).height(0.5.dp)
                             .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                     )
                 }
-                
-                // 添加新规则
+
+
                 PremiumTextField(
                     value = newPattern,
                     onValueChange = { newPattern = it },
@@ -1607,7 +1580,7 @@ fun UrlMatchDialog(
                     placeholder = { Text("*.example.com/*") },
                     singleLine = true
                 )
-                
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -1646,9 +1619,9 @@ fun UrlMatchDialog(
     )
 }
 
-/**
- * 配置项管理对话框
- */
+
+
+
 @Composable
 fun ConfigItemsDialog(
     configItems: List<ModuleConfigItem>,
@@ -1656,7 +1629,7 @@ fun ConfigItemsDialog(
     onDismiss: () -> Unit
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(Strings.userConfigItems) },
@@ -1735,7 +1708,7 @@ fun ConfigItemsDialog(
             }
         }
     )
-    
+
     if (showAddDialog) {
         AddConfigItemDialog(
             onAdd = { item ->
@@ -1759,7 +1732,7 @@ fun AddConfigItemDialog(
     var type by remember { mutableStateOf(ConfigItemType.TEXT) }
     var defaultValue by remember { mutableStateOf("") }
     var required by remember { mutableStateOf(false) }
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(Strings.addConfigItem) },
@@ -1773,7 +1746,7 @@ fun AddConfigItemDialog(
                     placeholder = { Text(Strings.keyNamePlaceholder) },
                     singleLine = true
                 )
-                
+
                 PremiumTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -1782,7 +1755,7 @@ fun AddConfigItemDialog(
                     placeholder = { Text(Strings.displayNamePlaceholder) },
                     singleLine = true
                 )
-                
+
                 PremiumTextField(
                     value = description,
                     onValueChange = { description = it },
@@ -1791,8 +1764,8 @@ fun AddConfigItemDialog(
                     placeholder = { Text(Strings.configExplanationPlaceholder) },
                     singleLine = true
                 )
-                
-                // Class型选择
+
+
                 var expanded by remember { mutableStateOf(false) }
                 ExposedDropdownMenuBox(
                     expanded = expanded,
@@ -1823,7 +1796,7 @@ fun AddConfigItemDialog(
                         }
                     }
                 }
-                
+
                 PremiumTextField(
                     value = defaultValue,
                     onValueChange = { defaultValue = it },
@@ -1831,7 +1804,7 @@ fun AddConfigItemDialog(
                     label = { Text(Strings.defaultValueLabel) },
                     singleLine = true
                 )
-                
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = required, onCheckedChange = { required = it })
                     Text(Strings.requiredField)
@@ -1864,16 +1837,16 @@ fun AddConfigItemDialog(
 }
 
 
-/**
- * 模板选择对话框
- */
+
+
+
 @Composable
 fun TemplateSelectionDialog(
     onTemplateSelected: (ModuleTemplate) -> Unit,
     onDismiss: () -> Unit
 ) {
     val templates = remember { ModuleTemplates.getAll() }
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(Strings.selectTemplate) },
@@ -1956,4 +1929,3 @@ fun TemplateSelectionDialog(
         }
     )
 }
-

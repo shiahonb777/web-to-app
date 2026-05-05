@@ -5,25 +5,25 @@ import org.junit.Test
 
 class AppUsageStatsTest {
 
-    // ═══════════════════════════════════════════
-    // formattedTotalUsage
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `formattedTotalUsage shows less than 1m for under 60 seconds`() {
-        val stats = AppUsageStats(appId = 1, totalUsageMs = 30_000) // 30s
+        val stats = AppUsageStats(appId = 1, totalUsageMs = 30_000)
         assertThat(stats.formattedTotalUsage).isEqualTo("<1m")
     }
 
     @Test
     fun `formattedTotalUsage shows minutes only for under 1 hour`() {
-        val stats = AppUsageStats(appId = 1, totalUsageMs = 25 * 60 * 1000L) // 25m
+        val stats = AppUsageStats(appId = 1, totalUsageMs = 25 * 60 * 1000L)
         assertThat(stats.formattedTotalUsage).isEqualTo("25m")
     }
 
     @Test
     fun `formattedTotalUsage shows hours and minutes for over 1 hour`() {
-        val stats = AppUsageStats(appId = 1, totalUsageMs = 90 * 60 * 1000L) // 1h 30m
+        val stats = AppUsageStats(appId = 1, totalUsageMs = 90 * 60 * 1000L)
         assertThat(stats.formattedTotalUsage).isEqualTo("1h 30m")
     }
 
@@ -35,13 +35,13 @@ class AppUsageStatsTest {
 
     @Test
     fun `formattedTotalUsage handles large values`() {
-        val stats = AppUsageStats(appId = 1, totalUsageMs = 10 * 3600 * 1000L) // 10h
+        val stats = AppUsageStats(appId = 1, totalUsageMs = 10 * 3600 * 1000L)
         assertThat(stats.formattedTotalUsage).isEqualTo("10h 0m")
     }
 
-    // ═══════════════════════════════════════════
-    // HealthStatus enum
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `HealthStatus has all expected values`() {
@@ -53,9 +53,9 @@ class AppUsageStatsTest {
         )
     }
 
-    // ═══════════════════════════════════════════
-    // AppHealthRecord defaults
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `AppHealthRecord default status is UNKNOWN`() {
@@ -65,9 +65,9 @@ class AppUsageStatsTest {
         assertThat(record.httpStatusCode).isEqualTo(0)
     }
 
-    // ═══════════════════════════════════════════
-    // AppHealthSummary
-    // ═══════════════════════════════════════════
+
+
+
 
     @Test
     fun `AppHealthSummary holds all fields`() {

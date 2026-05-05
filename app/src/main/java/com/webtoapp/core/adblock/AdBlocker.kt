@@ -11,22 +11,22 @@ import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 
-/**
- * Ad Blocker — production-grade ABP/uBlock-compatible filter engine
- *
- * Supports:
- * - ABP / EasyList / AdGuard network filter syntax (||, @@, $modifiers)
- * - Cosmetic element hiding (## / #@#)
- * - Resource-type–aware blocking ($script, $image, $stylesheet, …)
- * - $third-party / $first-party / $domain modifiers
- * - Exception rules (@@) to prevent page breakage
- * - Anti-anti-adblock scriptlet injection (abort-on-property-read, etc.)
- * - Comprehensive safelist for critical infrastructure domains
- * - Hosts file import (standard, AdGuard DNS, ABP)
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
 class AdBlocker {
 
-    // ==================== Resource type enum ====================
+
     enum class ResourceType {
         DOCUMENT, SUBDOCUMENT, SCRIPT, STYLESHEET, IMAGE, FONT,
         XMLHTTPREQUEST, MEDIA, WEBSOCKET, OBJECT, PING, OTHER;
@@ -49,40 +49,40 @@ class AdBlocker {
         }
     }
 
-    // ==================== Parsed filter data classes ====================
-    /**
-     * A parsed network filter rule.
-     * Compiled once, matched many times — hot path is simple string/set operations.
-     */
+
+
+
+
+
     private data class NetworkFilter(
         val pattern: String,
         val regex: Regex?,
         val isException: Boolean,
         val matchCase: Boolean,
-        // Domain constraints: block only on these domains (empty = all)
+
         val domains: Set<String>,
         val excludedDomains: Set<String>,
-        // Resource type constraints
-        val allowedTypes: Set<ResourceType>?,   // null = all types
+
+        val allowedTypes: Set<ResourceType>?,
         val excludedTypes: Set<ResourceType>,
-        // Party constraints
+
         val thirdPartyOnly: Boolean,
         val firstPartyOnly: Boolean,
-        // Raw host anchor for fast O(1) pre-check (||domain^ → "domain")
+
         val anchorDomain: String?,
-        // Original rule string for removal
+
         val rawRule: String = ""
     )
 
-    /**
-     * A parsed cosmetic filter (element hiding rule).
-     */
+
+
+
     data class CosmeticFilter(
         val selector: String,
         val isException: Boolean,
-        val domains: Set<String>,       // apply only on these domains (empty = all)
+        val domains: Set<String>,
         val excludedDomains: Set<String>,
-        // Original rule string for removal
+
         val rawRule: String = ""
     )
 
@@ -92,11 +92,11 @@ class AdBlocker {
         private val WHITESPACE_REGEX = Regex("\\s+")
         private val ABP_SEPARATOR_REGEX = Regex("[^\\w%.\\-]")
 
-        // Critical infrastructure — NEVER block these or pages will break
+
         private val SAFELIST_HOSTS = setOf(
-            // Translation
+
             "translate.googleapis.com", "translate.google.com", "translation.googleapis.com",
-            // CDNs serving first-party content / JS libraries
+
             "cdn.jsdelivr.net", "cdnjs.cloudflare.com", "unpkg.com",
             "ajax.googleapis.com", "fonts.googleapis.com", "fonts.gstatic.com",
             "code.jquery.com", "cdn.bootcdn.net", "cdn.bootcss.com",
@@ -104,13 +104,13 @@ class AdBlocker {
             "cdn.npmmirror.com", "registry.npmmirror.com",
             "stackpath.bootstrapcdn.com", "maxcdn.bootstrapcdn.com",
             "cdn.tailwindcss.com",
-            // Cloud / API services — essential for SaaS apps
+
             "firebaseapp.com", "firebaseio.com", "firebase.googleapis.com",
             "cloudfunctions.net", "cloudflare.com", "workers.dev",
             "vercel.app", "netlify.app", "pages.dev",
             "amazonaws.com", "cloudfront.net",
             "azureedge.net", "azurewebsites.net",
-            // Login / OAuth — all providers from OAuthCompatEngine
+
             "accounts.google.com", "accounts.youtube.com", "myaccount.google.com",
             "login.microsoftonline.com", "login.live.com", "login.windows.net", "login.microsoft.com",
             "appleid.apple.com",
@@ -124,40 +124,45 @@ class AdBlocker {
             "www.linkedin.com", "linkedin.com",
             "accounts.spotify.com",
             "id.twitch.tv",
-            // Payment
+
             "js.stripe.com", "checkout.stripe.com", "www.paypal.com",
             "pay.google.com", "applepay.cdn-apple.com",
             "alipay.com", "mapi.alipay.com",
-            // reCAPTCHA / hCaptcha / Cloudflare Turnstile
+
             "www.google.com", "www.gstatic.com",
             "hcaptcha.com", "js.hcaptcha.com",
             "challenges.cloudflare.com",
             "recaptcha.net", "www.recaptcha.net",
-            // Map tiles / Geo
+
             "maps.googleapis.com", "maps.gstatic.com",
             "api.mapbox.com", "tiles.mapbox.com",
             "tile.openstreetmap.org", "api.amap.com", "webapi.amap.com",
             "api.map.baidu.com", "maponline0.bdimg.com",
-            // Essential media / streaming
+
             "i.ytimg.com", "www.youtube.com", "youtube.com",
             "player.vimeo.com",
-            // Error monitoring (essential for app developers)
+
             "sentry.io", "browser.sentry-cdn.com",
             "bugsnag.com", "sessions.bugsnag.com",
-            // Push / Notification services
+
             "onesignal.com", "cdn.onesignal.com",
             "fcm.googleapis.com", "mtalk.google.com",
-            // Shopping / E-commerce essentials
+
             "www.taobao.com", "www.tmall.com", "www.jd.com",
             "www.amazon.com", "www.ebay.com",
-            // WebSocket / Real-time services
+
+
+
+            "aliexpress.com", "aliexpress.ru", "aliexpress-media.com",
+            "alicdn.com",
+
             "wss.pusher.com", "realtime-cloud.ably.io",
             "sockjs.pusher.com"
         )
 
-        // Popular hosts file / filter list sources — International focus
+
         fun getPopularHostsSources() = listOf(
-            // ── Core (enabled by default for all users) ──
+
             HostsSource(
                 name = "EasyList",
                 url = "https://easylist.to/easylist/easylist.txt",
@@ -193,7 +198,7 @@ class AdBlocker {
                 url = "https://filters.adtidy.org/extension/ublock/filters/14.txt",
                 description = "Blocks cookie notices, newsletter popups, and other annoyances"
             ),
-            // ── Host-level lists ──
+
             HostsSource(
                 name = "StevenBlack Hosts",
                 url = "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts",
@@ -214,7 +219,7 @@ class AdBlocker {
                 url = "https://o0.pages.dev/Lite/hosts.txt",
                 description = com.webtoapp.core.i18n.Strings.hosts1HostsLiteDesc
             ),
-            // ── Regional lists (Europe) ──
+
             HostsSource(
                 name = "EasyList Germany",
                 url = "https://easylist.to/easylistgermany/easylistgermany.txt",
@@ -245,7 +250,7 @@ class AdBlocker {
                 url = "https://easylist-downloads.adblockplus.org/easylistportuguese.txt",
                 description = "Portuguese/Brazilian websites — blocks ads on PT/BR domains"
             ),
-            // ── Regional lists (Asia-Pacific) ──
+
             HostsSource(
                 name = "AdGuard Japanese",
                 url = "https://filters.adtidy.org/extension/ublock/filters/7.txt",
@@ -281,16 +286,16 @@ class AdBlocker {
         @Deprecated("Use getPopularHostsSources() instead for i18n support")
         val POPULAR_HOSTS_SOURCES get() = getPopularHostsSources()
 
-        // ==================== Comprehensive default ad/tracker domains ====================
+
         private val DEFAULT_AD_HOSTS = setOf(
-            // Google Ads
+
             "googleadservices.com", "googlesyndication.com", "doubleclick.net",
             "googletagmanager.com", "googletagservices.com",
             "pagead2.googlesyndication.com", "adservice.google.com",
             "afs.googlesyndication.com", "partner.googleadservices.com",
-            // Facebook / Meta
+
             "an.facebook.com", "pixel.facebook.com",
-            // Major ad exchanges
+
             "adnxs.com", "advertising.com", "taboola.com", "outbrain.com",
             "criteo.com", "criteo.net", "pubmatic.com", "rubiconproject.com",
             "casalemedia.com", "openx.net", "bidswitch.net", "adsrvr.org",
@@ -301,28 +306,28 @@ class AdBlocker {
             "zedo.com", "undertone.com", "conversantmedia.com",
             "indexexchange.com", "spotxchange.com", "districtm.io",
             "triplelift.com", "gumgum.com", "nativo.com",
-            // Programmatic / header bidding
+
             "prebid.org", "id5-sync.com", "liveintent.com",
             "intentiq.com", "33across.com",
             "kargo.com", "brightcom.com", "nextmillennium.io",
             "emxdgt.com", "rhythmone.com", "improvedigital.com",
-            // Video ad platforms
+
             "springserve.com", "spotx.tv", "teads.tv",
             "viralize.com", "unruly.co", "connatix.com",
             "vidoomy.com", "primis.tech",
-            // Tracking / analytics (ad-serving related)
+
             "moatads.com", "doubleverify.com", "adsafeprotected.com",
             "scorecardresearch.com", "imrworldwide.com", "quantserve.com",
             "demdex.net", "krxd.net", "exelator.com", "bluekai.com",
             "eyeota.net", "rlcdn.com", "pippio.com",
             "addthis.com", "sharethis.com",
-            // Pop-ups / redirectors
+
             "popads.net", "popcash.net", "propellerads.com",
             "clickadu.com", "trafficjunky.com", "exoclick.com",
             "juicyads.com", "plugrush.com", "hilltopads.com",
             "a-ads.com", "admaven.com", "evadav.com",
             "richpush.com", "pushground.com", "megapush.com",
-            // Chinese ad networks
+
             "cpro.baidu.com", "pos.baidu.com", "cbjs.baidu.com",
             "eclick.baidu.com", "hm.baidu.com",
             "tanx.com", "alimama.com", "mmstat.com",
@@ -339,39 +344,39 @@ class AdBlocker {
             "aduu.cn", "baidustatic.com",
             "e.qq.com", "gdt.qq.com", "mi.gdt.qq.com",
             "biddingx.com", "dsp.baidu.com",
-            // Japanese ad networks
+
             "i-mobile.co.jp", "microad.net", "adlantis.jp",
             "adjust.com", "ad-stir.com", "impact-ad.jp",
             "fluct.jp", "geniee.co.jp", "logly.co.jp",
-            // Korean ad networks
+
             "adcreative.naver.com", "dn.adpnut.com",
             "ad.daum.net", "adfurikun.jp",
             "cauly.co.kr", "mobon.net",
-            // Indian / Southeast Asian ad networks
+
             "vserv.com", "inmobi.com", "madgicx.com",
             "adcolony.com", "vungle.com", "ironsource.com",
             "applovin.com", "unity3d.com",
-            // European ad networks
+
             "adform.net", "adform.com", "serving.adform.net",
             "smartadserver.com", "www6.smartadserver.com", "ww392.smartadserver.com",
             "teads.tv", "a.teads.tv", "cdn.teads.tv",
             "adtrue.com", "strossle.com", "plista.com",
             "meetrics.net", "adition.com", "yieldlab.net",
             "ligatus.com", "audience.network",
-            // Turkish ad networks
+
             "reklamstore.com", "hurriyet.com.tr/reklam",
             "ilanjet.com", "adnow.com",
-            // Russian ad networks
+
             "yandex-adv.com", "an.yandex.ru", "awaps.yandex.ru",
             "adfox.yandex.ru", "bs.yandex.ru",
             "mc.yandex.ru", "adfox.ru",
-            // Latin American ad networks
+
             "publicidade.uol.com.br", "bol.uol.com.br",
             "publitas.com", "adsmovil.com",
-            // Southeast Asian ad specific
+
             "adtima.vn", "admicro.vn",
             "accesstrade.vn", "eclick.vn",
-            // Mobile SDK ad networks (global)
+
             "ads.mopub.com", "mopub.com",
             "fyber.com", "inner-active.mobi",
             "startapp.com", "is.com",
@@ -382,15 +387,15 @@ class AdBlocker {
             "pangle.io", "pangleglobal.biz",
             "liftoff.io", "smaato.net",
             "mobilefuse.com", "verve.com",
-            // Generic ad-serving patterns
+
             "revive-adserver.com", "adzerk.net", "buysellads.com"
         )
 
-        // ==================== Built-in ABP Network Filter Rules ====================
-        // These fire immediately without downloading external lists.
-        // Curated for international coverage (EN/EU/JP/KR/SEA markets).
+
+
+
         private val DEFAULT_NETWORK_RULES = listOf(
-            // ── Google Ads / DoubleClick ──
+
             "||pagead2.googlesyndication.com^",
             "||adservice.google.com^",
             "||www.googleadservices.com/pagead/conversion*",
@@ -401,18 +406,18 @@ class AdBlocker {
             "||ad.doubleclick.net^",
             "||static.doubleclick.net/instream/ad_status.js",
             "||fundingchoicesmessages.google.com^",
-            // ── Meta / Facebook Ads ──
+
             "||an.facebook.com^",
             "||pixel.facebook.com^",
             "||tr.facebook.com^",
             "||ad.atdmt.com^",
             "||connect.facebook.net/*/fbevents.js\$script",
-            // ── Amazon Ads ──
+
             "||s.amazon-adsystem.com^",
             "||aax.amazon-adsystem.com^",
             "||fls-na.amazon.com^",
             "||unagi.amazon.com/1/events^",
-            // ── Major SSPs & Exchanges ──
+
             "||ib.adnxs.com^",
             "||prebid.adnxs.com^",
             "||ads.pubmatic.com^",
@@ -430,7 +435,7 @@ class AdBlocker {
             "||gum.criteo.com^",
             "||ssp.yahoo.com^",
             "||ads.yahoo.com^",
-            // ── Native / Content Recommendation ──
+
             "||cdn.taboola.com/libtrc^",
             "||trc.taboola.com^",
             "||widgets.outbrain.com/outbrain.js",
@@ -440,7 +445,7 @@ class AdBlocker {
             "||nativo.com/ad^",
             "||assets.nativo.com^",
             "||ads.yieldmo.com^",
-            // ── Pop-under / Aggressive Ad Networks ──
+
             "||propellerads.com^",
             "||cdn.propellerads.com^",
             "||popads.net^",
@@ -458,7 +463,7 @@ class AdBlocker {
             "||ad.admaven.com^",
             "||richpush.com^",
             "||evadav.com^",
-            // ── Video Ads ──
+
             "||imasdk.googleapis.com/js/sdkloader/ima3.js",
             "||vid.springserve.com^",
             "||ads.stickyadstv.com^",
@@ -466,7 +471,7 @@ class AdBlocker {
             "||a.teads.tv^",
             "||cdn.teads.tv^",
             "||s.innovid.com^",
-            // ── Ad Verification / Viewability (3rd-party tracking) ──
+
             "||pixel.moatads.com^",
             "||z.moatads.com^",
             "||cdn.doubleverify.com/dvbs_src.js",
@@ -477,7 +482,7 @@ class AdBlocker {
             "||b.scorecardresearch.com^",
             "||pixel.quantserve.com^",
             "||imrworldwide.com/cgi-bin/m^",
-            // ── Data Brokers / Audience Targeting ──
+
             "||dpm.demdex.net^",
             "||tags.bluekai.com^",
             "||stags.bluekai.com^",
@@ -488,23 +493,23 @@ class AdBlocker {
             "||rlcdn.com^",
             "||pippio.com^",
             "||hb.yahoo.net^",
-            // ── Cookie Consent / GDPR Banners ──
-            // Exception: allow CMP frameworks to load but hide their UI via cosmetic rules
+
+
             "||cdn.cookielaw.org^\$third-party",
             "||consent.cookiebot.com^\$third-party",
             "||consent.cookiefirst.com^\$third-party",
             "||cdn.consentmanager.net^\$third-party",
-            // ── Newsletter / Subscription Popups ──
+
             "||cdn.optinmonster.com^",
             "||api.convertkit.com/forms^\$third-party",
             "||js.hsforms.net^\$third-party",
             "||js.hscollectedforms.net^\$third-party",
             "||sumo.com/sumo.min.js\$third-party",
-            // ── Anti-adblock bypass (common detectors) ──
+
             "||btloader.com^",
             "||fundingchoicesmessages.google.com^",
             "||pagead2.googlesyndication.com/pagead/managed/js/ump/",
-            // ── Mobile Specific ──
+
             "||sdk.iad-01.braze.com^",
             "||sdk.iad-03.braze.com^",
             "||logs.applovin.com^",
@@ -513,7 +518,7 @@ class AdBlocker {
             "||config.uca.cloud.unity3d.com^\$third-party",
             "||ads.mopub.com^",
             "||art.mopub.com^",
-            // ── Exception rules — NEVER block these ──
+
             "@@||sentry.io^",
             "@@||browser.sentry-cdn.com^",
             "@@||challenges.cloudflare.com^",
@@ -533,10 +538,10 @@ class AdBlocker {
             "@@||firebase.googleapis.com^"
         )
 
-        // ==================== Built-in Cosmetic (Element Hiding) Rules ====================
-        // Universal selectors that hide common ad containers across international sites.
+
+
         private val DEFAULT_COSMETIC_RULES = listOf(
-            // ── Generic ad containers (by ID) ──
+
             "###ad-banner",
             "###ad-container",
             "###ad-wrapper",
@@ -552,7 +557,7 @@ class AdBlocker {
             "###google_ads",
             "###dfp-ad-top",
             "###dfp-ad-right",
-            // ── Generic ad containers (by class) ──
+
             "##.ad-banner",
             "##.ad-container",
             "##.ad-wrapper",
@@ -573,7 +578,7 @@ class AdBlocker {
             "##.sponsored-post",
             "##.native-ad",
             "##.promoted-content",
-            // ── Taboola / Outbrain / Native ──
+
             "##.taboola-widget",
             "##.trc_rbox",
             "##.trc_related_container",
@@ -583,7 +588,7 @@ class AdBlocker {
             "##.ob-widget",
             "##.ob-smartfeed-wrapper",
             "##.revcontent-widget",
-            // ── Cookie consent / GDPR banners ──
+
             "##.cookie-banner",
             "##.cookie-consent",
             "##.cookie-notice",
@@ -606,7 +611,7 @@ class AdBlocker {
             "##div[class*=\"cookie-notice\"]",
             "##div[id*=\"cookie-law\"]",
             "##div[aria-label=\"Cookie consent\"]",
-            // ── Newsletter / Subscription popups ──
+
             "##.newsletter-popup",
             "##.newsletter-modal",
             "##.subscribe-popup",
@@ -615,13 +620,13 @@ class AdBlocker {
             "##.exit-intent-popup",
             "##div[class*=\"newsletter-popup\"]",
             "##div[class*=\"email-signup\"]",
-            // ── Interstitials / Overlays ──
+
             "##.modal-backdrop[style*=\"z-index\"]",
             "##.interstitial-ad",
             "##.overlay-ad",
             "##.lightbox-ad",
             "##div[class*=\"interstitial\"]",
-            // ── Common data attributes ──
+
             "##div[data-ad]",
             "##div[data-ad-slot]",
             "##div[data-ad-unit]",
@@ -630,7 +635,7 @@ class AdBlocker {
             "##ins.adsbygoogle",
             "##div[data-native-ad]",
             "##div[data-sponsored]",
-            // ── Social tracking widgets (hidden embeds, not visible widgets) ──
+
             "##img[src*=\"/pixel.gif?\"]",
             "##img[src*=\"/beacon?\"]",
             "##img[src*=\"/track?\"]",
@@ -638,7 +643,7 @@ class AdBlocker {
             "##img[src*=\"facebook.com/tr?\"]"
         )
 
-        // Resource type modifier name → enum
+
         private val TYPE_MODIFIERS = mapOf(
             "script" to ResourceType.SCRIPT,
             "stylesheet" to ResourceType.STYLESHEET,
@@ -657,8 +662,8 @@ class AdBlocker {
             "other" to ResourceType.OTHER
         )
 
-        // First-party ad paths — match ads served from the page's own domain
-        // These paths are common across ad-serving platforms
+
+
         private val FIRST_PARTY_AD_PATH_PATTERNS = listOf(
             "/ads/", "/ad/", "/adserver/", "/adservice/",
             "/adsense/", "/admanager/", "/adx/",
@@ -673,78 +678,78 @@ class AdBlocker {
             "/ad_unit/", "/adunit/"
         )
 
-        // ★ Pre-compiled regex — single-pass matching replaces 17× String.contains() calls
+
         private val FIRST_PARTY_AD_PATH_REGEX: Regex by lazy {
             val escaped = FIRST_PARTY_AD_PATH_PATTERNS.joinToString("|") { Regex.escape(it) }
             Regex(escaped, RegexOption.IGNORE_CASE)
         }
 
-        // Essential resource URL patterns — NEVER block these regardless of other rules
-        // Prevents breaking core page functionality
+
+
         private val ESSENTIAL_RESOURCE_PATTERNS = listOf(
-            // Core framework files
+
             "/jquery", "/react", "/vue", "/angular",
             "/bootstrap", "/tailwind",
             "/lodash", "/underscore", "/axios",
             "/moment", "/dayjs",
-            // Web component / UI libraries
+
             "/element-ui/", "/element-plus/", "/ant-design/", "/antd/",
             "/material-ui/", "/mui/",
             "/swiper/", "/slick/", "/owl.carousel/",
-            // Essential web APIs
+
             "/api/", "/graphql", "/rest/",
             "/auth/", "/login", "/oauth",
             "/checkout/", "/payment/", "/pay/",
             "/cart/", "/order/",
-            // Service worker / manifest
+
             "/sw.js", "/service-worker", "/manifest.json", "/manifest.webmanifest"
         )
 
-        // ★ Pre-compiled regex — single-pass matching replaces 18× String.contains() calls
+
         private val ESSENTIAL_RESOURCE_REGEX: Regex by lazy {
             val escaped = ESSENTIAL_RESOURCE_PATTERNS.joinToString("|") { Regex.escape(it) }
             Regex(escaped, RegexOption.IGNORE_CASE)
         }
 
-        // 预分配的阻止响应字节数组 (减少 GC 压力)
-        // 每页可能阻止 30-100 个广告请求, 预分配避免重复创建 ByteArray
+
+
         val EMPTY_BYTES = ByteArray(0)
         val BLOCKED_JS_BYTES = "/* blocked */".toByteArray()
         val BLOCKED_CSS_BYTES = "/* blocked */".toByteArray()
         val BLOCKED_JSON_BYTES = "{}".toByteArray()
     }
 
-    // ==================== Storage ====================
-    // Fast domain lookup sets
+
+
     private val exactHosts = mutableSetOf<String>()
     private val hostsFileHosts = mutableSetOf<String>()
     private val enabledHostsSources = mutableSetOf<String>()
 
-    // Parsed ABP filters — split for performance
+
     private val networkBlockFilters = mutableListOf<NetworkFilter>()
     private val networkExceptionFilters = mutableListOf<NetworkFilter>()
-    // Anchor-domain index: domain → list of filter indices — O(1) lookup
+
     private val anchorDomainIndex = HashMap<String, MutableList<Int>>()
-    // ★ Exception filter anchor-domain index — mirrors anchorDomainIndex for @@rules
+
     private val exceptionAnchorDomainIndex = HashMap<String, MutableList<Int>>()
 
-    // ★ LRU 缓存 — 避免相同 URL 重复计算 shouldBlock
-    // 每页面 iframe/重复资源请求很常见, 缓存命中率 30-50%
+
+
     @Suppress("serial")
     private val blockResultCache = object : LinkedHashMap<Int, Boolean>(256, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Int, Boolean>?): Boolean = size > 512
     }
 
-    // Cosmetic filters
+
     private val cosmeticBlockFilters = mutableListOf<CosmeticFilter>()
     private val cosmeticExceptionFilters = mutableListOf<CosmeticFilter>()
 
-    // Anti-anti-adblock scriptlets
-    private val scriptletRules = mutableListOf<Pair<Set<String>, String>>() // domains → scriptlet call
+
+    private val scriptletRules = mutableListOf<Pair<Set<String>, String>>()
 
     private var enabled = false
 
-    // ==================== Public API ====================
+
 
     fun setEnabled(enable: Boolean) {
         enabled = enable
@@ -752,14 +757,14 @@ class AdBlocker {
     }
     fun isEnabled(): Boolean = enabled
 
-    /** Invalidate the LRU cache — call on page navigation */
+
     fun invalidateCache() {
         synchronized(blockResultCache) { blockResultCache.clear() }
     }
 
-    /**
-     * Initialize blocker with custom rules and optional defaults.
-     */
+
+
+
     fun initialize(customRules: List<String> = emptyList(), useDefaultRules: Boolean = true) {
         exactHosts.clear()
         networkBlockFilters.clear()
@@ -773,24 +778,24 @@ class AdBlocker {
 
         if (useDefaultRules) {
             exactHosts.addAll(DEFAULT_AD_HOSTS)
-            // ★ Built-in ABP network filter rules — instant protection without external lists
+
             DEFAULT_NETWORK_RULES.forEach { parseAndAddRule(it) }
-            // ★ Built-in cosmetic (element hiding) rules — hide ad containers, cookie banners, popups
+
             DEFAULT_COSMETIC_RULES.forEach { parseAndAddRule(it) }
         }
 
         customRules.forEach { parseAndAddRule(it) }
     }
 
-    /**
-     * Full-featured blocking check.
-     *
-     * @param url             Request URL
-     * @param pageHost        Host of the top-level page (for $third-party / $domain)
-     * @param resourceType    Resource type string from WebView (e.g. "script", "image")
-     * @param isThirdParty    Whether the request is third-party
-     * @return true if the request should be blocked
-     */
+
+
+
+
+
+
+
+
+
     fun shouldBlock(
         url: String,
         pageHost: String? = null,
@@ -802,23 +807,23 @@ class AdBlocker {
         val lowerUrl = url.lowercase()
         val urlHost = extractHost(lowerUrl)
 
-        // Safelist — critical infrastructure never blocked (HashSet O(1))
+
         if (urlHost != null && matchesHostSet(urlHost, SAFELIST_HOSTS)) return false
 
         val resType = resourceType?.let { ResourceType.fromWebViewType(it) } ?: ResourceType.OTHER
 
-        // Never block main document / subdocument navigations — prevents page breakage
+
         if (resType == ResourceType.DOCUMENT) return false
 
-        // Essential resource protection — fonts, main stylesheets should never be blocked
-        // as they cause severe visual breakage (invisible text, missing layout)
+
+
         if (resType == ResourceType.FONT) return false
         if (resType == ResourceType.STYLESHEET && !isThirdParty) return false
 
-        // ★ Essential resource URL pattern protection — pre-compiled single-pass regex
+
         if (ESSENTIAL_RESOURCE_REGEX.containsMatchIn(lowerUrl)) return false
 
-        // ★ LRU 缓存查询 — 避免相同 URL 重复做 Regex 扫描
+
         val cacheKey = lowerUrl.hashCode() xor (if (isThirdParty) 0x9e3779b9.toInt() else 0)
         synchronized(blockResultCache) {
             blockResultCache[cacheKey]?.let { return it }
@@ -831,9 +836,9 @@ class AdBlocker {
         return result
     }
 
-    /**
-     * Internal blocking logic — separated from shouldBlock for LRU cache wrapping.
-     */
+
+
+
     private fun shouldBlockInternal(
         lowerUrl: String,
         urlHost: String?,
@@ -841,7 +846,7 @@ class AdBlocker {
         resType: ResourceType,
         isThirdParty: Boolean
     ): Boolean {
-        // Phase 1: Exact host match (HashSet O(1) — 最快检查)
+
         val hostMatched = urlHost != null && (matchesHostSet(urlHost, exactHosts) || matchesHostSet(urlHost, hostsFileHosts))
 
         if (hostMatched) {
@@ -851,17 +856,17 @@ class AdBlocker {
             return true
         }
 
-        // Phase 2: Check exception filters
+
         if (matchesAnyNetworkFilter(lowerUrl, urlHost, pageHost, resType, isThirdParty, networkExceptionFilters)) {
             return false
         }
 
-        // Phase 3: ABP network filters (block rules)
+
         if (matchesAnyNetworkFilter(lowerUrl, urlHost, pageHost, resType, isThirdParty, networkBlockFilters)) {
             return true
         }
 
-        // Phase 4: First-party ad path detection — ★ pre-compiled single-pass regex
+
         if (!isThirdParty && FIRST_PARTY_AD_PATH_REGEX.containsMatchIn(lowerUrl)) {
             if (resType == ResourceType.SCRIPT || resType == ResourceType.XMLHTTPREQUEST ||
                 resType == ResourceType.SUBDOCUMENT) {
@@ -874,17 +879,17 @@ class AdBlocker {
         return false
     }
 
-    // Backward-compatible overload (existing call sites)
-    // Enhanced: extracts resource type from request headers for better filtering
+
+
     fun shouldBlock(request: WebResourceRequest): Boolean {
         val url = request.url.toString()
         val resType = inferResourceTypeFromRequest(request)
         return shouldBlock(url, resourceType = resType)
     }
 
-    /**
-     * Infer resource type from WebResourceRequest Accept header and URL extension.
-     */
+
+
+
     private fun inferResourceTypeFromRequest(request: WebResourceRequest): String {
         val accept = request.requestHeaders?.get("Accept") ?: ""
         return when {
@@ -895,7 +900,7 @@ class AdBlocker {
             accept.contains("application/javascript") || accept.contains("text/javascript") -> "script"
             accept.contains("application/json") -> "xmlhttprequest"
             else -> {
-                // Fallback: check URL extension
+
                 val path = request.url.path?.lowercase() ?: ""
                 when {
                     path.endsWith(".js") -> "script"
@@ -913,37 +918,37 @@ class AdBlocker {
         }
     }
 
-    /**
-     * Get cosmetic CSS selectors to hide on a given page.
-     * Returns a CSS string ready for injection as a <style> element.
-     */
+
+
+
+
     fun getCosmeticFilterCss(pageHost: String): String {
         if (!enabled) return ""
 
-        // Collect exception selectors for this page
+
         val exceptionSelectors = cosmeticExceptionFilters
             .filter { matchesCosmeticDomain(it, pageHost) }
             .map { it.selector }
             .toSet()
 
-        // Collect block selectors, minus exceptions
+
         val selectors = cosmeticBlockFilters
             .filter { matchesCosmeticDomain(it, pageHost) && it.selector !in exceptionSelectors }
             .map { it.selector }
             .distinct()
             .toMutableList()
 
-        // Built-in universal cosmetic selectors — target common ad containers
-        // These work out-of-the-box without requiring imported filter lists
+
+
         val builtInSelectors = listOf(
-            // Google Ads / AdSense
+
             "ins.adsbygoogle",
             "[id^=\"google_ads_\"]",
             "[id^=\"div-gpt-ad\"]",
             "[data-ad-slot]",
             "[data-ad-client]",
             "[data-google-query-id]",
-            // Generic ad markers
+
             "[class*=\"ad-banner\"]",
             "[class*=\"ad-container\"]",
             "[class*=\"ad-wrapper\"]",
@@ -953,18 +958,18 @@ class AdBlocker {
             "[data-ad]",
             "[data-adunit]",
             "[data-ad-unit]",
-            // Ad iframes
+
             "iframe[src*=\"doubleclick\"]",
             "iframe[src*=\"googlesyndication\"]",
             "iframe[src*=\"adservice\"]",
             "iframe[src*=\"ad.php\"]",
             "iframe[id*=\"google_ads\"]",
-            // Taboola / Outbrain native ads
+
             "[id^=\"taboola-\"]",
             "[class*=\"taboola\"]",
             "[class*=\"outbrain\"]",
             "[data-widget-type=\"taboola\"]",
-            // Common Chinese ad elements
+
             "[class*=\"ad-box\"]",
             "[class*=\"ad-slot\"]",
             "[id*=\"J_ad\"]",
@@ -980,16 +985,16 @@ class AdBlocker {
 
         if (selectors.isEmpty()) return ""
 
-        // Batch selectors (avoid CSS selector list length limits in older WebViews)
+
         val batchSize = 50
         return selectors.chunked(batchSize).joinToString("\n") { batch ->
             batch.joinToString(",\n") + " { display: none !important; visibility: hidden !important; height: 0 !important; min-height: 0 !important; overflow: hidden !important; }"
         }
     }
 
-    /**
-     * Generate anti-anti-adblock scriptlet JS for a given page.
-     */
+
+
+
     fun getAntiAdblockScript(pageHost: String): String {
         if (!enabled) return ""
 
@@ -1009,7 +1014,7 @@ class AdBlocker {
             sb.appendLine(scriptlet)
         }
 
-        // Built-in universal anti-anti-adblock measures
+
         sb.appendLine(UNIVERSAL_ANTI_ADBLOCK_SCRIPT)
 
         sb.appendLine("})();")
@@ -1017,17 +1022,17 @@ class AdBlocker {
     }
 
 
-    /**
-     * Return empty response (used to block ad requests)
-     */
+
+
+
     fun createEmptyResponse(): WebResourceResponse {
         return WebResourceResponse("text/plain", "UTF-8", ByteArrayInputStream(EMPTY_BYTES))
     }
 
-    /**
-     * Create a type-specific empty response to avoid page errors
-     * 使用预分配的字节数组, 仅创建 InputStream 包装器 (最小 GC 压力)
-     */
+
+
+
+
     fun createEmptyResponse(resourceType: String): WebResourceResponse {
         return when (resourceType) {
             "script" -> WebResourceResponse("application/javascript", "UTF-8",
@@ -1042,7 +1047,7 @@ class AdBlocker {
         }
     }
 
-    // ==================== Rule counts ====================
+
     fun getRuleCount(): Int = exactHosts.size + hostsFileHosts.size +
         networkBlockFilters.size + networkExceptionFilters.size +
         cosmeticBlockFilters.size + cosmeticExceptionFilters.size
@@ -1060,7 +1065,7 @@ class AdBlocker {
         "scriptlets" to scriptletRules.size
     )
 
-    // ==================== Rule management ====================
+
     fun addRule(rule: String) {
         parseAndAddRule(rule)
         synchronized(blockResultCache) { blockResultCache.clear() }
@@ -1096,16 +1101,16 @@ class AdBlocker {
     fun getEnabledHostsSources(): Set<String> = enabledHostsSources.toSet()
     fun isHostsSourceEnabled(url: String): Boolean = enabledHostsSources.contains(url)
 
-    // ==================== ABP Filter Parser ====================
 
-    /**
-     * Parse a single filter rule in ABP / AdGuard / hosts format.
-     */
+
+
+
+
     private fun parseAndAddRule(rawRule: String) {
         val rule = rawRule.trim()
         if (rule.isEmpty() || rule.startsWith("!") || rule.startsWith("[")) return
 
-        // Cosmetic filter: domain##selector or domain#@#selector
+
         val cosmeticExIdx = rule.indexOf("#@#")
         val cosmeticIdx = if (cosmeticExIdx < 0) rule.indexOf("##") else -1
 
@@ -1118,18 +1123,18 @@ class AdBlocker {
             return
         }
 
-        // Scriptlet: domain#%#//scriptlet(...)
+
         if (rule.contains("#%#//scriptlet(")) {
             parseScriptletRule(rule)
             return
         }
-        // AG scriptlet shorthand: domain##+js(...)
+
         if (rule.contains("##+js(")) {
             parseScriptletRule(rule)
             return
         }
 
-        // Network filter
+
         parseNetworkFilter(rule)
     }
 
@@ -1157,7 +1162,7 @@ class AdBlocker {
         val domainPart = if (domainEnd > 0) rule.substring(0, domainEnd) else ""
         val (domains, _) = parseDomainList(domainPart)
 
-        // Extract scriptlet name & args
+
         val scriptletMatch = Regex("(?:scriptlet|js)\\((.+)\\)").find(rule) ?: return
         val args = scriptletMatch.groupValues[1].split(",").map { it.trim().removeSurrounding("'").removeSurrounding("\"") }
         if (args.isEmpty()) return
@@ -1173,12 +1178,12 @@ class AdBlocker {
         val isException = raw.startsWith("@@")
         if (isException) raw = raw.removePrefix("@@")
 
-        // Split off $ modifiers
+
         val dollarIdx = raw.lastIndexOf('$')
         var patternPart = raw
         var modifierPart = ""
         if (dollarIdx > 0) {
-            // Make sure $ is not inside a regex
+
             val beforeDollar = raw.substring(0, dollarIdx)
             if (!beforeDollar.contains('/') || beforeDollar.count { it == '/' } % 2 == 0) {
                 patternPart = beforeDollar
@@ -1186,7 +1191,7 @@ class AdBlocker {
             }
         }
 
-        // Parse modifiers
+
         var thirdPartyOnly = false
         var firstPartyOnly = false
         var matchCase = false
@@ -1202,7 +1207,7 @@ class AdBlocker {
                     m == "third-party" || m == "3p" -> thirdPartyOnly = true
                     m == "~third-party" || m == "first-party" || m == "1p" -> firstPartyOnly = true
                     m == "match-case" -> matchCase = true
-                    m == "important" -> { /* priority — we already prioritize exceptions */ }
+                    m == "important" -> {  }
                     m.startsWith("domain=") -> {
                         m.removePrefix("domain=").split("|").forEach { d ->
                             if (d.startsWith("~")) excludedDomainConstraints.add(d.removePrefix("~"))
@@ -1219,7 +1224,7 @@ class AdBlocker {
             }
         }
 
-        // Detect anchor domain: ||domain^ or ||domain/
+
         var anchorDomain: String? = null
         if (patternPart.startsWith("||")) {
             val domainEnd = patternPart.indexOfFirst { it == '^' || it == '/' || it == '*' || it == '$' }
@@ -1227,7 +1232,7 @@ class AdBlocker {
             else patternPart.removePrefix("||").removeSuffix("^").removeSuffix("$").lowercase()
         }
 
-        // Simple host-only rule: ||domain^ with no modifiers → fast path
+
         if (anchorDomain != null && !anchorDomain.contains('*') &&
             (patternPart == "||$anchorDomain^" || patternPart == "||$anchorDomain" ||
              patternPart == "||$anchorDomain^|") &&
@@ -1236,7 +1241,7 @@ class AdBlocker {
             return
         }
 
-        // Compile pattern to regex
+
         val regex = compileAbpPattern(patternPart, matchCase)
 
         val filter = NetworkFilter(
@@ -1257,38 +1262,38 @@ class AdBlocker {
         if (isException) {
             val idx = networkExceptionFilters.size
             networkExceptionFilters.add(filter)
-            // ★ Index exception filters by anchor domain for O(1) lookup
+
             if (anchorDomain != null && !anchorDomain.contains('*')) {
                 exceptionAnchorDomainIndex.getOrPut(anchorDomain) { mutableListOf() }.add(idx)
             }
         } else {
             val idx = networkBlockFilters.size
             networkBlockFilters.add(filter)
-            // Index by anchor domain for fast lookup
+
             if (anchorDomain != null && !anchorDomain.contains('*')) {
                 anchorDomainIndex.getOrPut(anchorDomain) { mutableListOf() }.add(idx)
             }
         }
     }
 
-    /**
-     * Compile ABP filter pattern to Regex.
-     * ||  = domain anchor
-     * |   = string start/end anchor
-     * ^   = separator (anything except alphanumeric, %, -, .)
-     * *   = wildcard
-     */
+
+
+
+
+
+
+
     private fun compileAbpPattern(pattern: String, matchCase: Boolean): Regex? {
         if (pattern.isEmpty()) return null
         return try {
             var p = pattern
-            // Regex filter: /regex/
+
             if (p.startsWith("/") && p.endsWith("/") && p.length > 2) {
                 val options = if (matchCase) emptySet() else setOf(RegexOption.IGNORE_CASE)
                 return Regex(p.substring(1, p.length - 1), options)
             }
 
-            // Escape regex special chars (except ABP special chars we handle)
+
             p = p.replace("\\", "\\\\")
                 .replace(".", "\\.")
                 .replace("+", "\\+")
@@ -1300,15 +1305,15 @@ class AdBlocker {
                 .replace("[", "\\[")
                 .replace("]", "\\]")
 
-            // ABP special: || → domain anchor
+
             p = p.replace("||", "^(?:https?|wss?)://(?:[^/]*\\.)?")
-            // ABP special: | at start → string start
+
             if (p.startsWith("|")) p = "^" + p.removePrefix("|")
-            // ABP special: | at end → string end
+
             if (p.endsWith("|")) p = p.removeSuffix("|") + "$"
-            // ABP special: ^ → separator
+
             p = p.replace("^", "[^\\w%.\\-]")
-            // ABP special: * → wildcard
+
             p = p.replace("*", ".*")
 
             val options = if (matchCase) emptySet() else setOf(RegexOption.IGNORE_CASE)
@@ -1330,7 +1335,7 @@ class AdBlocker {
         return include to exclude
     }
 
-    // ==================== Network filter matching ====================
+
 
     private fun matchesAnyNetworkFilter(
         url: String,
@@ -1340,14 +1345,14 @@ class AdBlocker {
         isThirdParty: Boolean,
         filters: List<NetworkFilter>
     ): Boolean {
-        // ★ Determine which domain index to use based on filter list identity
+
         val domainIndex = when {
             filters === networkBlockFilters -> anchorDomainIndex
             filters === networkExceptionFilters -> exceptionAnchorDomainIndex
             else -> null
         }
 
-        // Fast path: check anchor domain index first (O(1) per domain level)
+
         if (urlHost != null && domainIndex != null) {
             var domain: String = urlHost
             while (domain.contains('.')) {
@@ -1367,7 +1372,7 @@ class AdBlocker {
             }
         }
 
-        // Full scan for non-indexed filters (those without anchor domain)
+
         for (filter in filters) {
             if (filter.anchorDomain != null && domainIndex != null) continue
             if (matchesNetworkFilter(filter, url, urlHost, pageHost, resType, isThirdParty)) {
@@ -1385,15 +1390,15 @@ class AdBlocker {
         resType: ResourceType,
         isThirdParty: Boolean
     ): Boolean {
-        // Resource type check
+
         if (filter.allowedTypes != null && resType !in filter.allowedTypes) return false
         if (resType in filter.excludedTypes) return false
 
-        // Party check
+
         if (filter.thirdPartyOnly && !isThirdParty) return false
         if (filter.firstPartyOnly && isThirdParty) return false
 
-        // Domain constraint check
+
         if (filter.domains.isNotEmpty() && pageHost != null) {
             if (!filter.domains.any { pageHost == it || pageHost.endsWith(".$it") }) return false
         }
@@ -1401,12 +1406,12 @@ class AdBlocker {
             if (filter.excludedDomains.any { pageHost == it || pageHost.endsWith(".$it") }) return false
         }
 
-        // Pattern match
+
         val regex = filter.regex ?: return false
         return regex.containsMatchIn(url)
     }
 
-    // ==================== Cosmetic filter matching ====================
+
 
     private fun matchesCosmeticDomain(filter: CosmeticFilter, pageHost: String): Boolean {
         if (filter.excludedDomains.any { pageHost == it || pageHost.endsWith(".$it") }) return false
@@ -1414,7 +1419,7 @@ class AdBlocker {
         return filter.domains.any { pageHost == it || pageHost.endsWith(".$it") }
     }
 
-    // ==================== Host matching ====================
+
 
     private fun matchesHostSet(host: String, hostSet: Set<String>): Boolean {
         var domain = host
@@ -1425,13 +1430,13 @@ class AdBlocker {
         return hostSet.contains(domain)
     }
 
-    /**
-     * C 级 URL host 提取 (零分配指针遍历)
-     * 替换 Uri.parse(url).host 避免创建 URI 对象 + JVM GC 压力
-     * shouldBlock 每次子资源请求都调用, 累计 GC 减少显著
-     */
+
+
+
+
+
     private fun extractHost(url: String): String? {
-        // C 级提取 → 回退到 Uri.parse
+
         val host = com.webtoapp.core.perf.NativePerfEngine.extractHost(url)
         if (host != null) return host.lowercase()
         return try {
@@ -1441,12 +1446,12 @@ class AdBlocker {
         }
     }
 
-    // ==================== Scriptlet generator ====================
 
-    /**
-     * Generate JS code for common anti-anti-adblock scriptlets.
-     * Compatible with uBlock Origin / AdGuard scriptlet names.
-     */
+
+
+
+
+
     private fun generateScriptlet(name: String, args: List<String>): String {
         return when (name) {
             "abort-on-property-read", "aopr" -> {
@@ -1539,7 +1544,8 @@ class AdBlocker {
                         });
                     }
                     clean();
-                    new MutationObserver(function(){clean();}).observe(document.documentElement,{childList:true,subtree:true,attributes:true});
+                    var target=document.documentElement||document.body;
+                    if(target instanceof Node)new MutationObserver(function(){clean();}).observe(target,{childList:true,subtree:true,attributes:true});
                 })();
                 """.trimIndent()
             }
@@ -1555,7 +1561,8 @@ class AdBlocker {
                         });
                     }
                     clean();
-                    new MutationObserver(function(){clean();}).observe(document.documentElement,{childList:true,subtree:true,attributes:true});
+                    var target=document.documentElement||document.body;
+                    if(target instanceof Node)new MutationObserver(function(){clean();}).observe(target,{childList:true,subtree:true,attributes:true});
                 })();
                 """.trimIndent()
             }
@@ -1645,7 +1652,7 @@ class AdBlocker {
         }
     }
 
-    // ==================== Hosts File Support ====================
+
 
     suspend fun importHostsFromFile(context: Context, uri: Uri): Result<Int> = withContext(Dispatchers.IO) {
         try {
@@ -1662,14 +1669,14 @@ class AdBlocker {
 
     suspend fun importHostsFromUrl(url: String, context: Context? = null): Result<Int> = withContext(Dispatchers.IO) {
         try {
-            // Try URL content cache first (avoid re-downloading within TTL)
+
             var content: String? = null
             if (context != null) {
                 content = AdBlockFilterCache.getCachedUrlContent(context, url)
             }
-            
+
             if (content == null) {
-                // Download from network
+
                 val connection = URL(url).openConnection() as HttpURLConnection
                 connection.connectTimeout = 15000
                 connection.readTimeout = 30000
@@ -1681,13 +1688,13 @@ class AdBlocker {
                 }
                 content = connection.inputStream.use { it.bufferedReader().readText() }
                 connection.disconnect()
-                
-                // Cache the downloaded content
+
+
                 if (context != null) {
                     AdBlockFilterCache.cacheUrlContent(context, url, content)
                 }
             }
-            
+
             val count = parseFilterContent(content)
             enabledHostsSources.add(url)
             Result.success(count)
@@ -1696,10 +1703,10 @@ class AdBlocker {
         }
     }
 
-    /**
-     * Parse filter list content — supports both hosts format and ABP filter syntax.
-     * Auto-detects format: if lines start with [Adblock or contain ## / || / @@, treat as ABP.
-     */
+
+
+
+
     private fun parseFilterContent(content: String): Int {
         var count = 0
         val isAbpFormat = content.lineSequence().take(20).any { line ->
@@ -1711,7 +1718,7 @@ class AdBlocker {
         content.lineSequence().forEach { line ->
             val trimmed = line.trim()
             if (trimmed.isEmpty() || trimmed.startsWith("!") || trimmed.startsWith("[") || trimmed.startsWith("#")) {
-                // For hosts format, # is comment; for ABP, lines starting with only # are ignored
+
                 if (!trimmed.startsWith("##") && !trimmed.startsWith("#@#") && !trimmed.startsWith("#%#") && !trimmed.startsWith("##+")) {
                     return@forEach
                 }
@@ -1764,15 +1771,15 @@ class AdBlocker {
 
     suspend fun saveHostsRules(context: Context): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            // Legacy format (backward compat)
+
             val file = File(context.filesDir, "adblock_hosts.txt")
             file.writeText(hostsFileHosts.joinToString("\n"))
             val sourcesFile = File(context.filesDir, "adblock_hosts_sources.txt")
             sourcesFile.writeText(enabledHostsSources.joinToString("\n"))
-            
-            // Save full compiled state cache
+
+
             saveCompiledStateToCache(context)
-            
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -1781,16 +1788,16 @@ class AdBlocker {
 
     suspend fun loadHostsRules(context: Context): Result<Int> = withContext(Dispatchers.IO) {
         try {
-            // Try loading from compiled cache first (fast path)
+
             val cachedState = AdBlockFilterCache.loadCompiledState(context)
             if (cachedState != null) {
                 restoreFromCompiledState(cachedState)
-                com.webtoapp.core.logging.AppLogger.i("AdBlocker", 
+                com.webtoapp.core.logging.AppLogger.i("AdBlocker",
                     "Restored from compiled cache: ${getRuleCount()} rules")
                 return@withContext Result.success(hostsFileHosts.size)
             }
-            
-            // Fallback to legacy format
+
+
             val file = File(context.filesDir, "adblock_hosts.txt")
             if (file.exists()) {
                 hostsFileHosts.addAll(file.readLines().filter { it.isNotBlank() })
@@ -1805,7 +1812,7 @@ class AdBlocker {
         }
     }
 
-    // ==================== Compiled State Cache Helpers ====================
+
 
     private suspend fun saveCompiledStateToCache(context: Context) {
         val blockPatterns = networkBlockFilters.map { it.toSerializable() }
@@ -1841,7 +1848,7 @@ class AdBlocker {
         hostsFileHosts.addAll(state.hostsFileHosts)
         enabledHostsSources.addAll(state.enabledSources)
 
-        // Recompile network filters (pattern → regex)
+
         state.networkBlockFilters.forEachIndexed { idx, sf ->
             val filter = sf.toNetworkFilter()
             networkBlockFilters.add(filter)
@@ -1849,7 +1856,7 @@ class AdBlocker {
                 anchorDomainIndex.getOrPut(filter.anchorDomain) { mutableListOf() }.add(idx)
             }
         }
-        // ★ Index exception filters on restore
+
         state.networkExceptionFilters.forEachIndexed { idx, sf ->
             val filter = sf.toNetworkFilter()
             networkExceptionFilters.add(filter)
@@ -1895,9 +1902,9 @@ class AdBlocker {
     )
 }
 
-// ==================== Constants ====================
 
-/** 1×1 transparent GIF — returned for blocked image requests to avoid broken-image icons */
+
+
 private val TRANSPARENT_GIF = byteArrayOf(
     0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x01, 0x00, 0x01, 0x00,
     0x00, 0x00, 0x00, 0x21, 0xF9.toByte(), 0x04, 0x01, 0x00, 0x00, 0x00,
@@ -1905,10 +1912,10 @@ private val TRANSPARENT_GIF = byteArrayOf(
     0x00, 0x02, 0x01, 0x00, 0x00
 )
 
-/**
- * Universal anti-anti-adblock measures.
- * These defuse the most common adblock detection patterns without targeting specific sites.
- */
+
+
+
+
 private const val UNIVERSAL_ANTI_ADBLOCK_SCRIPT = """
 // 1. Fake ad element — many detectors create a div with ad classes and check visibility
 (function(){
@@ -1998,7 +2005,8 @@ private const val UNIVERSAL_ANTI_ADBLOCK_SCRIPT = """
         }
     }
     var obs=new MutationObserver(function(){removeWalls();});
-    if(document.documentElement)obs.observe(document.documentElement,{childList:true,subtree:true});
+    var obsTarget=document.documentElement||document.body;
+    if(obsTarget instanceof Node)obs.observe(obsTarget,{childList:true,subtree:true});
     setTimeout(function(){obs.disconnect();},15000);
 })();
 
@@ -2081,9 +2089,9 @@ private const val UNIVERSAL_ANTI_ADBLOCK_SCRIPT = """
 })();
 """
 
-/**
- * Hosts source info
- */
+
+
+
 data class HostsSource(
     val name: String,
     val url: String,

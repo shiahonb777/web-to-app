@@ -24,24 +24,24 @@ import com.webtoapp.core.i18n.Strings
 import com.webtoapp.core.backup.DataBackupManager
 import kotlinx.coroutines.launch
 
-/**
- * Data backup card组件
- * 提供一键导出和导入所有应用数据的功能
- */
+
+
+
+
 @Composable
 fun DataBackupCard() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val backupManager = remember { DataBackupManager(context) }
     val repository = remember { WebToAppApplication.repository }
-    
-    // 状态
+
+
     var isExporting by remember { mutableStateOf(false) }
     var isImporting by remember { mutableStateOf(false) }
     var progressMessage by remember { mutableStateOf("") }
     var showProgress by remember { mutableStateOf(false) }
-    
-    // Export文件选择器
+
+
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/zip")
     ) { uri ->
@@ -49,7 +49,7 @@ fun DataBackupCard() {
             scope.launch {
                 isExporting = true
                 showProgress = true
-                
+
                 val result = backupManager.exportAllData(
                     repository = repository,
                     outputUri = uri,
@@ -57,10 +57,10 @@ fun DataBackupCard() {
                         progressMessage = message
                     }
                 )
-                
+
                 isExporting = false
                 showProgress = false
-                
+
                 result.onSuccess { exportResult ->
                     Toast.makeText(
                         context,
@@ -77,8 +77,8 @@ fun DataBackupCard() {
             }
         }
     }
-    
-    // Import文件选择器
+
+
     val importLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
@@ -86,7 +86,7 @@ fun DataBackupCard() {
             scope.launch {
                 isImporting = true
                 showProgress = true
-                
+
                 val result = backupManager.importAllData(
                     repository = repository,
                     inputUri = uri,
@@ -94,10 +94,10 @@ fun DataBackupCard() {
                         progressMessage = message
                     }
                 )
-                
+
                 isImporting = false
                 showProgress = false
-                
+
                 result.onSuccess { importResult ->
                     Toast.makeText(
                         context,
@@ -114,13 +114,13 @@ fun DataBackupCard() {
             }
         }
     }
-    
+
     EnhancedElevatedCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // 标题
+
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
@@ -143,18 +143,18 @@ fun DataBackupCard() {
                     fontWeight = FontWeight.SemiBold
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Text(
                 Strings.dataBackupDesc,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
-            // 进度显示
+
+
             if (showProgress) {
                 LinearProgressIndicator(
                     modifier = Modifier.fillMaxWidth()
@@ -167,13 +167,13 @@ fun DataBackupCard() {
                 )
                 Spacer(modifier = Modifier.height(16.dp))
             }
-            
-            // 按钮行
+
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Export按钮
+
                 PremiumOutlinedButton(
                     onClick = {
                         val fileName = backupManager.generateBackupFileName()
@@ -197,8 +197,8 @@ fun DataBackupCard() {
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(Strings.exportData)
                 }
-                
-                // Import按钮
+
+
                 PremiumButton(
                     onClick = {
                         importLauncher.launch(arrayOf("application/zip"))
@@ -223,10 +223,10 @@ fun DataBackupCard() {
                     Text(Strings.importData)
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
-            // 提示信息
+
+
             Surface(
                 color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
                 shape = RoundedCornerShape(8.dp)

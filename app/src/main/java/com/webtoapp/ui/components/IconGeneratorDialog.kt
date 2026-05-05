@@ -38,46 +38,46 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/**
- * AI 图标生成对话框
- */
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IconGeneratorDialog(
     onDismiss: () -> Unit,
-    onIconGenerated: (String) -> Unit // Icon文件路径（已保存到图标库）
+    onIconGenerated: (String) -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val configManager = remember { AiConfigManager(context) }
     val aiClient = remember { AiApiClient(context) }
-    
-    // 模型和密钥
+
+
     val savedModels by configManager.savedModelsFlow.collectAsState(initial = emptyList())
     val apiKeys by configManager.apiKeysFlow.collectAsState(initial = emptyList())
-    
-    // 筛选支持图标生成功能的模型
+
+
     val imageGenModels = savedModels.filter { model ->
         model.supportsFeature(AiFeature.ICON_GENERATION)
     }
-    
-    // 状态
+
+
     var selectedModel by remember { mutableStateOf<SavedModel?>(null) }
     var prompt by remember { mutableStateOf("") }
     var referenceImages by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var isGenerating by remember { mutableStateOf(false) }
-    var generatedIcon by remember { mutableStateOf<String?>(null) }  // Base64 数据
-    var savedIconPath by remember { mutableStateOf<String?>(null) }  // Save后的文件路径
+    var generatedIcon by remember { mutableStateOf<String?>(null) }
+    var savedIconPath by remember { mutableStateOf<String?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    
-    // Auto选择第一个模型
+
+
     LaunchedEffect(imageGenModels) {
         if (selectedModel == null && imageGenModels.isNotEmpty()) {
             selectedModel = imageGenModels.first()
         }
     }
-    
-    // Image选择器
+
+
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetMultipleContents()
     ) { uris ->
@@ -85,7 +85,7 @@ fun IconGeneratorDialog(
             referenceImages = (referenceImages + uris).take(3)
         }
     }
-    
+
     AlertDialog(
         onDismissRequest = { if (!isGenerating) onDismiss() },
         title = {
@@ -115,7 +115,7 @@ fun IconGeneratorDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // 模型选择
+
                 if (imageGenModels.isEmpty()) {
                     Surface(
                         shape = MaterialTheme.shapes.small,
@@ -137,7 +137,7 @@ fun IconGeneratorDialog(
                     }
                 } else {
                     Text(Strings.selectModel, style = MaterialTheme.typography.labelMedium)
-                    
+
                     var expanded by remember { mutableStateOf(false) }
                     ExposedDropdownMenuBox(
                         expanded = expanded,
@@ -168,8 +168,8 @@ fun IconGeneratorDialog(
                         }
                     }
                 }
-                
-                // 提示词输入
+
+
                 Text(Strings.describeIcon, style = MaterialTheme.typography.labelMedium)
                 OutlinedTextField(
                     value = prompt,
@@ -179,13 +179,13 @@ fun IconGeneratorDialog(
                     minLines = 2,
                     maxLines = 4
                 )
-                
-                // 参考图片
+
+
                 Text(
                     Strings.referenceImages,
                     style = MaterialTheme.typography.labelMedium
                 )
-                
+
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -217,7 +217,7 @@ fun IconGeneratorDialog(
                             }
                         }
                     }
-                    
+
                     if (referenceImages.size < 3) {
                         item {
                             Box(
@@ -241,8 +241,8 @@ fun IconGeneratorDialog(
                         }
                     }
                 }
-                
-                // Generate结果预览
+
+
                 generatedIcon?.let { base64 ->
                     Text(Strings.generationResult, style = MaterialTheme.typography.labelMedium)
                     Box(
@@ -268,8 +268,8 @@ fun IconGeneratorDialog(
                         }
                     }
                 }
-                
-                // Error信息
+
+
                 errorMessage?.let {
                     Text(
                         it,
@@ -277,8 +277,8 @@ fun IconGeneratorDialog(
                         color = MaterialTheme.colorScheme.error
                     )
                 }
-                
-                // Generate中提示
+
+
                 if (isGenerating) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -296,7 +296,7 @@ fun IconGeneratorDialog(
                     Text(Strings.useThisIcon)
                 }
             } else if (generatedIcon != null) {
-                // 正在保存中
+
                 PremiumButton(enabled = false, onClick = {}) {
                     CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
                     Spacer(modifier = Modifier.width(8.dp))
@@ -307,25 +307,25 @@ fun IconGeneratorDialog(
                     onClick = {
                         val model = selectedModel ?: return@PremiumButton
                         val apiKey = apiKeys.find { it.id == model.apiKeyId } ?: return@PremiumButton
-                        
+
                         isGenerating = true
                         errorMessage = null
-                        
+
                         scope.launch {
                             val imagePaths = referenceImages.map { it.toString() }
                             val result = aiClient.generateAppIcon(
                                 context, prompt, imagePaths, apiKey, model
                             )
-                            
+
                             withContext(Dispatchers.Main) {
                                 isGenerating = false
                                 result.fold(
                                     onSuccess = { base64 ->
                                         generatedIcon = base64
-                                        // Auto保存到图标库
+
                                         scope.launch {
                                             val item = IconLibraryStorage.saveFromBase64(
-                                                context, base64, 
+                                                context, base64,
                                                 prompt.take(20).ifBlank { "AI图标" }
                                             )
                                             savedIconPath = item?.path
@@ -344,8 +344,8 @@ fun IconGeneratorDialog(
         },
         dismissButton = {
             if (generatedIcon != null) {
-                TextButton(onClick = { 
-                    generatedIcon = null 
+                TextButton(onClick = {
+                    generatedIcon = null
                     savedIconPath = null
                 }) {
                     Text(Strings.regenerate)
