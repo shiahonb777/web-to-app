@@ -45,10 +45,11 @@ object NodeDependencyManager {
     enum class MirrorRegion { CN, GLOBAL }
 
 
+    // CN mirror proxies verified reachable on 2026-05-05. ghproxy.cc was removed
+    // because its DNS no longer resolves.
     private val GITHUB_CN_PROXIES = listOf(
         "https://ghfast.top/",
-        "https://gh-proxy.com/",
-        "https://ghproxy.cc/"
+        "https://gh-proxy.com/"
     )
 
 
@@ -63,9 +64,12 @@ object NodeDependencyManager {
 
 
 
-    private val CN_MIRROR = MirrorConfig(
-        nodeUrls = GITHUB_CN_PROXIES.map { proxy -> "${proxy}${NODE_GITHUB_URL}" } + NODE_GITHUB_URL
-    )
+    private fun buildCnMirror(): MirrorConfig {
+        val orderedProxies = com.webtoapp.core.network.CnMirrorProbe.getOrderedProxies(GITHUB_CN_PROXIES)
+        return MirrorConfig(
+            nodeUrls = orderedProxies.map { proxy -> "${proxy}${NODE_GITHUB_URL}" } + NODE_GITHUB_URL
+        )
+    }
 
 
 
@@ -123,7 +127,7 @@ object NodeDependencyManager {
 
     fun getMirrorConfig(): MirrorConfig {
         return when (getMirrorRegion()) {
-            MirrorRegion.CN -> CN_MIRROR
+            MirrorRegion.CN -> buildCnMirror()
             MirrorRegion.GLOBAL -> GLOBAL_MIRROR
         }
     }

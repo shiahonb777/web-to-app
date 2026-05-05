@@ -44,7 +44,7 @@ object PythonDependencyManager {
     private const val PYTHON_BUILD_TAG = "20260211"
 
 
-    private const val MUSL_VERSION = "1.2.5-r9"
+    private const val MUSL_VERSION = "1.2.5-r11"
     private const val MUSL_ALPINE_BRANCH = "v3.21"
 
 
@@ -52,10 +52,12 @@ object PythonDependencyManager {
     enum class MirrorRegion { CN, GLOBAL }
 
 
+    // CN mirror proxies verified reachable on 2026-05-05. ghproxy.cc was removed
+    // because its DNS no longer resolves. If you add more proxies, preserve the
+    // trailing slash: `${proxy}${original_github_url}`.
     private val GITHUB_CN_PROXIES = listOf(
         "https://ghfast.top/",
-        "https://gh-proxy.com/",
-        "https://ghproxy.cc/"
+        "https://gh-proxy.com/"
     )
 
 
@@ -117,8 +119,9 @@ object PythonDependencyManager {
 
     private fun getCnMirror(abi: String): MirrorConfig {
         val baseUrl = getPythonUrl(abi)
+        val orderedProxies = com.webtoapp.core.network.CnMirrorProbe.getOrderedProxies(GITHUB_CN_PROXIES)
         return MirrorConfig(
-            pythonUrls = GITHUB_CN_PROXIES.map { proxy -> "${proxy}${baseUrl}" } + baseUrl,
+            pythonUrls = orderedProxies.map { proxy -> "${proxy}${baseUrl}" } + baseUrl,
             muslLinkerUrl = getMuslLinkerUrl(abi)
         )
     }

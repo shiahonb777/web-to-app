@@ -4,6 +4,8 @@
 *.aab
 *.dex
 *.class
+*.so
+*.tar.gz
 bin/
 gen/
 out/

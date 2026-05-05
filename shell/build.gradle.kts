@@ -129,6 +129,9 @@ val syncShellRuntimeSources by tasks.registering(Sync::class) {
     group = "build"
 
     from("../app/src/main/java")
+    from("../app/src/full/java") {
+        include("**/core/engine/GeckoViewEngine.kt")
+    }
 
 
     include(

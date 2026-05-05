@@ -88,6 +88,24 @@ android {
         }
     }
 
+    flavorDimensions += "distribution"
+
+    productFlavors {
+        create("slim") {
+            dimension = "distribution"
+            versionNameSuffix = "-slim"
+            buildConfigField("boolean", "BUNDLED_SHELL_TEMPLATE", "false")
+            buildConfigField("boolean", "BUNDLED_PHP_RUNTIME", "false")
+            buildConfigField("boolean", "BUNDLED_GECKOVIEW", "false")
+        }
+        create("full") {
+            dimension = "distribution"
+            buildConfigField("boolean", "BUNDLED_SHELL_TEMPLATE", "true")
+            buildConfigField("boolean", "BUNDLED_PHP_RUNTIME", "true")
+            buildConfigField("boolean", "BUNDLED_GECKOVIEW", "true")
+        }
+    }
+
 
 
     splits {
@@ -147,16 +165,18 @@ android {
 val shellTemplateOutput = project(":shell").layout.buildDirectory.file("outputs/apk/release/shell-release.apk")
 
 tasks.register<Copy>("syncShellTemplateApk") {
-    description = "Builds the dedicated shell template APK and copies it into app assets."
+    description = "Builds the dedicated shell template APK and copies it into the full flavor assets."
     group = "build"
     dependsOn(":shell:assembleRelease")
     from(shellTemplateOutput)
-    into(file("src/main/assets/template"))
+    into(file("src/full/assets/template"))
     rename { "webview_shell.apk" }
 }
 
-tasks.named("preBuild").configure {
-    dependsOn("syncShellTemplateApk")
+tasks.configureEach {
+    if (name.startsWith("preFull") && name.endsWith("Build")) {
+        dependsOn("syncShellTemplateApk")
+    }
 }
 
 tasks.register("testClasses") {
@@ -239,7 +259,7 @@ dependencies {
     implementation("com.android.tools.build:apksig:8.3.0")
 
 
-    implementation("org.mozilla.geckoview:geckoview-arm64-v8a:137.0.20250414091429")
+    "fullImplementation"("org.mozilla.geckoview:geckoview-arm64-v8a:137.0.20250414091429")
 
 
     implementation("com.google.zxing:core:3.5.2")
@@ -281,7 +301,7 @@ tasks.register("downloadPhpBinary") {
     group = "setup"
 
     val phpVersion = "8.4"
-    val jniLibsDir = file("src/main/jniLibs/arm64-v8a")
+    val jniLibsDir = file("src/full/jniLibs/arm64-v8a")
     val outputFile = File(jniLibsDir, "libphp.so")
 
     onlyIf { !outputFile.exists() }

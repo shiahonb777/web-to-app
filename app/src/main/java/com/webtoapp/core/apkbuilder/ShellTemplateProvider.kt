@@ -163,7 +163,14 @@ class CompositeTemplateProvider(
         fun default(context: Context): CompositeTemplateProvider {
             return CompositeTemplateProvider(
                 listOf(
+                    // Fast path: embedded asset (present in `full` flavor).
                     AssetTemplateProvider(context),
+                    // Slim flavor path: fetch the real template APK from the
+                    // cloud server and cache it locally. Returns null silently
+                    // when the server is unreachable so the chain can continue.
+                    RemoteTemplateProvider(context),
+                    // Last-resort fallback: use the running APK as the template
+                    // (only useful for very simple app types).
                     SelfAsTemplateProvider(context)
                 )
             )

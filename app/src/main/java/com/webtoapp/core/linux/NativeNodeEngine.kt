@@ -37,17 +37,41 @@ object NativeNodeEngine {
 
 
 
+    // Direct GitHub URLs. For CN users we prefix a proxy at call time, see getNodeDownloadUrls().
     private val NODE_DOWNLOAD_URLS = mapOf(
         "arm64-v8a" to "https://github.com/nicolo-ribaudo/pnpm-prebuilt-android/releases/download/v8.15.4/pnpm-android-arm64",
         "armeabi-v7a" to "https://github.com/nicolo-ribaudo/pnpm-prebuilt-android/releases/download/v8.15.4/pnpm-android-arm"
     )
 
 
+    // npmmirror is reachable globally (including EN/AR locales) and is the canonical
+    // fast source for esbuild prebuilt binaries. No mirror split needed.
     private val ESBUILD_DOWNLOAD_URLS = mapOf(
         "arm64-v8a" to "https://registry.npmmirror.com/@esbuild/android-arm64/-/android-arm64-0.20.0.tgz",
         "armeabi-v7a" to "https://registry.npmmirror.com/@esbuild/android-arm/-/android-arm-0.20.0.tgz",
         "x86_64" to "https://registry.npmmirror.com/@esbuild/android-x64/-/android-x64-0.20.0.tgz"
     )
+
+
+    // CN mirror proxies verified reachable on 2026-05-05.
+    private val GITHUB_CN_PROXIES = listOf(
+        "https://ghfast.top/",
+        "https://gh-proxy.com/"
+    )
+
+
+    // Resolve pnpm download URLs with region-aware mirrors. Chinese (zh) locale
+    // gets CN proxies first then a direct GitHub fallback; all other locales,
+    // including English (en) and Arabic (ar), hit GitHub directly.
+    private fun getNodeDownloadUrls(abi: String): List<String> {
+        val direct = NODE_DOWNLOAD_URLS[abi] ?: return emptyList()
+        return if (java.util.Locale.getDefault().language == "zh") {
+            val ordered = com.webtoapp.core.network.CnMirrorProbe.getOrderedProxies(GITHUB_CN_PROXIES)
+            ordered.map { proxy -> "$proxy$direct" } + direct
+        } else {
+            listOf(direct)
+        }
+    }
 
 
     private val _state = MutableStateFlow<NodeEngineState>(NodeEngineState.NotInitialized)
