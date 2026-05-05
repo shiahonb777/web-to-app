@@ -2,171 +2,106 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    
+    <!--
+    ==========================================================================
+    权限声明策略（2026 年修订）
+    ==========================================================================
+    本 manifest 只声明「宿主 app 本体」运行需要的权限。用户打包的子 APK
+    如需 SMS / 通话 / 通讯录 / 日历 / 定位 / 传感器 / NFC / USB / 后台服务
+    等高危能力，由 ApkBuilder 在打包时按用户勾选动态注入到**子包**的
+    manifest，**不能**也**不应该**预先声明在宿主 manifest 里。
+
+    此前宿主 manifest 把所有可能被子 APK 用到的权限都声明了一遍，导致：
+      - 权限聚合特征命中多家国产安全引擎的木马家族特征码
+      - 用户安装宿主时系统弹出密集权限清单（印象分极差）
+      - 宿主自己并没有代码在用这些权限（grep 已核验）
+
+    若有新的宿主功能真的需要某个高危权限，请：
+      1. 在本文件添加该权限并注释"宿主使用：xxx 功能"
+      2. 在代码里能被 grep 到对应 API 调用
+    禁止再把"给子 APK 准备"的权限写进本文件。
+    ==========================================================================
+    -->
+
+    <!-- ====== 网络（宿主必需：加载网页、下载运行时、推送请求）====== -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-    
+    <!-- ====== 存储 / 媒体（宿主必需：选择图标、导入 HTML、素材库）====== -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="29"
         tools:ignore="ScopedStorage" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-
-    
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
-
-    
-    <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
-
-    
-    <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
-
-    
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    
-    
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-feature android:name="android.hardware.camera" android:required="false" />
-    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
-    
-    
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    
-    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-    
-    
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
-    
-    
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
     <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
-    
-    
+
+    <!-- ====== APK 安装 / 桌面快捷方式（宿主必需：打包完成后一键安装子 APK）====== -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
+
+    <!-- ====== 通知（宿主必需：打包任务前台通知）====== -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- ====== 相机（宿主使用：扫码导入网址）====== -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- ====== 音频（宿主使用：ForcedRun 模式强制音量控制）====== -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+
+    <!-- ====== WiFi（宿主使用：ForcedRunHardwareController WiFi 控制、热点）====== -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+
+    <!-- ====== 蓝牙（宿主使用：ForcedRun 模式蓝牙开关控制）====== -->
     <uses-permission android:name="android.permission.BLUETOOTH"
         android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"
         android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
-    
-    
-    <uses-permission android:name="android.permission.NFC" />
-    
-    
-    <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES" />
-    
-    
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
-    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
-    
-    
-    <uses-permission android:name="android.permission.BODY_SENSORS" />
-    <uses-permission android:name="android.permission.BODY_SENSORS_BACKGROUND" />
-    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
-    <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS" />
-    
-    
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <uses-permission android:name="android.permission.CALL_PHONE" />
-    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
-    <uses-permission android:name="android.permission.ANSWER_PHONE_CALLS" />
-    <uses-permission android:name="android.permission.READ_CALL_LOG" />
-    
-    
-    <uses-permission android:name="android.permission.READ_CONTACTS" />
-    <uses-permission android:name="android.permission.WRITE_CONTACTS" />
-    
-    
-    <uses-permission android:name="android.permission.READ_CALENDAR" />
-    <uses-permission android:name="android.permission.WRITE_CALENDAR" />
-    
-    
-    <uses-permission android:name="android.permission.SEND_SMS" />
-    <uses-permission android:name="android.permission.RECEIVE_SMS" />
-    <uses-permission android:name="android.permission.READ_SMS" />
-    
-    
+
+    <!-- ====== 生物识别（宿主使用：应用锁、隐私保护）====== -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
-    <uses-permission android:name="android.permission.USE_FINGERPRINT" />
-    
-    
-    <uses-permission android:name="android.permission.USB_PERMISSION" 
-        tools:ignore="ProtectedPermissions" />
-    
-    
+
+    <!-- ====== 悬浮窗（宿主使用：FloatingWindowService 悬浮小窗模式）====== -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    
-    
+
+    <!-- ====== 电池 / 勿扰（宿主使用：打包任务防杀后台、ForcedRun 勿扰模式）====== -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-    
-    
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
-    
-    
+
+    <!-- ====== 前台服务（宿主必需：打包任务 + 悬浮窗服务）====== -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_REMOTE_MESSAGING" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SYSTEM_EXEMPTED"
-        tools:ignore="ProtectedPermissions" />
-    
-    
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+
+    <!-- ====== 硬件控制（宿主使用：ForcedRun 模式振动、闪光灯、亮度、热点）====== -->
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.FLASHLIGHT" />
-    <uses-permission android:name="android.permission.WRITE_SETTINGS" 
+    <uses-permission android:name="android.permission.WRITE_SETTINGS"
         tools:ignore="ProtectedPermissions" />
-    
-    
+
+    <!-- ====== 系统运行（宿主必需：打包 / 启动等长任务保持唤醒）====== -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    
-    
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
-    
-    
+
+    <!-- ====== 自启动（宿主使用：BootReceiver 开机拉起用户指定的子应用）====== -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    
-    
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
-    
-    
+
+    <!-- ====== uses-feature（标注设备能力，全部 required=false 不限制安装）====== -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.flash" android:required="false" />
+    <uses-feature android:name="android.hardware.microphone" android:required="false" />
     <uses-feature android:name="android.hardware.bluetooth" android:required="false" />
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
-    <uses-feature android:name="android.hardware.nfc" android:required="false" />
     <uses-feature android:name="android.hardware.wifi" android:required="false" />
-    <uses-feature android:name="android.hardware.wifi.direct" android:required="false" />
-    <uses-feature android:name="android.hardware.location" android:required="false" />
-    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
-    <uses-feature android:name="android.hardware.location.network" android:required="false" />
-    <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="false" />
-    <uses-feature android:name="android.hardware.sensor.gyroscope" android:required="false" />
-    <uses-feature android:name="android.hardware.sensor.compass" android:required="false" />
-    <uses-feature android:name="android.hardware.sensor.proximity" android:required="false" />
-    <uses-feature android:name="android.hardware.sensor.barometer" android:required="false" />
-    <uses-feature android:name="android.hardware.sensor.light" android:required="false" />
-    <uses-feature android:name="android.hardware.sensor.stepcounter" android:required="false" />
-    <uses-feature android:name="android.hardware.sensor.stepdetector" android:required="false" />
-    <uses-feature android:name="android.hardware.sensor.heartrate" android:required="false" />
-    <uses-feature android:name="android.hardware.camera.flash" android:required="false" />
-    <uses-feature android:name="android.hardware.telephony" android:required="false" />
-    <uses-feature android:name="android.hardware.microphone" android:required="false" />
-    <uses-feature android:name="android.hardware.usb.host" android:required="false" />
-    <uses-feature android:name="android.hardware.usb.accessory" android:required="false" />
-    <uses-feature android:name="android.hardware.fingerprint" android:required="false" />
     <uses-feature android:name="android.hardware.screen.portrait" android:required="false" />
     <uses-feature android:name="android.hardware.screen.landscape" android:required="false" />
     
