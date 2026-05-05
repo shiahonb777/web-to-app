@@ -1,6 +1,4 @@
 /build
-# 同步的源码（由 syncShellRuntimeSources 任务生成）
-# 逐包忽略同步生成的目录
 /src/main/java/com/webtoapp/data/
 /src/main/java/com/webtoapp/di/
 /src/main/java/com/webtoapp/core/activation/
@@ -46,5 +44,4 @@
 /src/main/java/com/webtoapp/core/kernel/
 /src/main/java/com/webtoapp/ui/
 /src/main/java/com/webtoapp/util/
-# 保留手动创建的 shell 专用覆盖文件（不受 Sync 任务影响）
 !/src/main/java-overrides/
