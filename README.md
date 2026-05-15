@@ -20,9 +20,9 @@ No IDE. No build server. No PC.
   <a href="#highlights">Highlights</a> ·
   <a href="#module-market">Module Market</a> ·
   <a href="#feature-catalog">Feature catalog</a> ·
-  <a href="#build-from-source">Build from source</a> ·
-  <a href="#contributing">Contributing</a> ·
-  <a href="#contact">Contact</a>
+  <a href="#tech-stack">Tech stack</a> ·
+  <a href="#build-from-source">Build</a> ·
+  <a href="#contributing">Contributing</a>
 </p>
 
 ---
@@ -40,51 +40,66 @@ WebToApp turns websites, HTML projects, media libraries, and even server-side
 applications into installable Android APKs — entirely on the device.
 
 Drop in a URL, pick the bits you want, and you walk away with an APK you can
-install, share, or sideload to friends. Behind the scenes the app stitches
-together a hardened WebView, optional native runtimes (Node.js, PHP, Python,
-Go), and an APK builder that signs and packages everything in-process.
+install, share, or sideload. Behind the scenes the app stitches together a
+hardened WebView, optional native runtimes (Node.js, PHP, Python, Go), and an
+APK builder that signs and packages everything in-process via
+[`com.android.tools.build:apksig`](https://mvnrepository.com/artifact/com.android.tools.build/apksig).
+No remote build server is ever contacted.
 
-**Supported types:** Website · HTML · React · Vue · WordPress · Node.js · PHP ·
-Python · Go · Image · Video · Gallery · Multi-Web
+**Supported app types:** Website · HTML · React · Vue · WordPress · Node.js ·
+PHP · Python · Go · Image · Video · Gallery · Multi-Web
 
 ## Highlights
 
-- **One-tap APK builds** — sign and install on the same device
-- **Two browser engines** — system WebView plus an optional GeckoView (Firefox) backend
-- **GitHub-backed Module Market** — install JS/CSS modules vetted on this repo, no app update needed
-- **AI assistants** — generate icons, modules, and HTML on demand
-- **App Modifier** — clone an installed APK, swap its icon, name, and package
-- **Deeply customisable WebView** — desktop UA spoofing, fingerprint disguise, ad blocking, DNS-over-HTTPS, JS/CSS injection
-- **Server-side runtimes** — Node.js, PHP, Python, and Go execute locally with no remote server
+- **One-tap on-device APK builds** — packaged, signed, and installed without
+  leaving the phone.
+- **Two browser engines** — system WebView plus an optional GeckoView
+  (Firefox) backend.
+- **GitHub-backed Module Market** — install community JS/CSS modules without
+  shipping an app update; the catalog lives in this repository.
+- **Bundled Chrome extension support** — runs unmodified MV3 extensions
+  inside the WebView. Ships with the BewlyCat extension as a working example.
+- **Local server runtimes** — Node.js, PHP, Python, and Go execute on-device
+  via a local HTTP server. WordPress runs against the bundled PHP.
+- **Deeply customisable WebView** — UA spoofing, 28-vector fingerprint
+  disguise, ad blocking, DNS-over-HTTPS, JS/CSS injection, payment scheme
+  handlers.
+- **App Modifier** — clone an installed APK and re-brand it (icon, name,
+  package) by patching its binary AXML manifest and re-signing.
+- **AI assistants** — generate extension modules, HTML projects, and app
+  icons; build entire web pages with the agent-based AI Coding V2 runtime.
+- **Per-app usage analytics** — Stats screen with health monitoring and Vico
+  charts.
+- **Trilingual UI** — Chinese, English, Arabic out of the box.
 
 ---
 
 ## Module Market
 
 The Module Market lets users install community-built JS/CSS extension modules
-in one tap — and the entire catalog lives **in this repository**. There's no
+in one tap, and the entire catalog **lives in this repository**. There's no
 backend, no submission portal, no review queue beyond a regular GitHub PR.
 
 ```
 modules/                                    ← published catalog
-├── registry.json                           ← index the app downloads first
-├── README.md                               ← contributor's guide
-├── hello-world/                            ← example module (banner)
+├── registry.json                           ← index the app fetches first
+├── README.md                               ← contributor guide
+├── hello-world/                            ← example: floating banner
 │   ├── module.json
 │   └── main.js
-└── night-shift/                            ← example module (amber overlay)
+└── night-shift/                            ← example: amber overlay
     ├── module.json
     ├── main.js
     └── style.css
 ```
 
-**For users:** open the app, navigate to *Extension Modules* and tap the
-storefront icon in the top bar. Modules update automatically when you publish a
-new version.
+**For users:** open the app, navigate to *Extension Modules*, tap the
+storefront icon in the top bar. Modules update automatically when new
+versions are published.
 
-**For contributors:** fork the repo, drop a folder into `modules/`, add an
+**For contributors:** fork the repo, drop a folder under `modules/`, add an
 entry to `registry.json`, and open a PR. Once it's merged, every WebToApp
-client sees it on the next refresh.
+client picks up the module on its next refresh (default cache is one hour).
 
 → [Full contributor guide](modules/README.md)
 → [General contributing guide](CONTRIBUTING.md)
@@ -93,157 +108,288 @@ client sees it on the next refresh.
 
 ## Feature catalog
 
-WebToApp has grown a wide configuration surface. Click a section to expand.
+Click any section to expand. Every claim below is backed by a class or enum
+in this repository.
 
 <details>
 <summary><b>Browser engine &amp; networking</b></summary>
 
 - Desktop mode, custom User-Agent, JS/CSS injection at `DOCUMENT_START` /
-  `END` / `IDLE`
-- Popup blocker, configurable new-window behaviour (same tab / external /
-  popup / blocked)
-- HTTP, SOCKS5, and PAC proxies
-- DNS-over-HTTPS with seven providers plus custom endpoints
-- Cross-origin isolation, PWA offline support, custom error pages
-- 22-vector browser fingerprint spoof (Canvas, WebGL, AudioContext, fonts,
-  GPU, screen…) with consistent cross-vector values
-- Chrome extension runtime polyfill (`chrome.runtime`, `storage`, `tabs`,
-  `messaging`) so unmodified Chrome extensions can run inside the WebView
-- 30+ in-app OAuth providers (Google, Facebook, GitHub, Discord, WeChat,
-  Alipay, PayPal…) via per-provider anti-detection scripts; Google falls back
-  to a Chrome Custom Tab with shared cookies
+  `END` / `IDLE`.
+- Popup blocker; new-window behaviour selectable as `SAME_WINDOW` /
+  `EXTERNAL_BROWSER` / `POPUP_WINDOW` / `BLOCK`.
+- HTTP, SOCKS5, and PAC proxies with optional authentication and bypass
+  rules.
+- DNS-over-HTTPS with seven providers (Cloudflare, Google, AdGuard, NextDNS,
+  CleanBrowsing, Quad9, Mullvad) plus custom endpoints.
+- PWA offline support with selectable caching strategy; custom error pages.
+- Per-app hosts file overrides; payment scheme handlers (`alipay://`,
+  `weixin://`, `paypal://`, etc.).
+- A WebView compatibility suite that ships on-by-default: GPC header, cookie
+  consent blocker, tracker blocker, blob download interception, scroll
+  memory, image repair, HTTPS upgrade, kernel disguise, clipboard /
+  orientation polyfills, Native Bridge, private-network bridge, Referrer
+  Policy enforcement.
 
 </details>
 
 <details>
-<summary><b>Look &amp; feel</b></summary>
+<summary><b>Browser fingerprint disguise (28 vectors)</b></summary>
 
-- Aurora theme system with dynamic colour generation
-- Custom splash screens (image or video, click-to-skip, trim range, fixed
-  orientation)
-- Background music playlists with LRC lyric sync, 7 lyric animations
-  (fade / slide / scale / typewriter / karaoke), 3 positions, custom theme
-- Status bar theming (colour, dark/light icons, alpha, height, separate dark
-  mode config)
-- Floating window mode with adjustable size, opacity, corner radius, edge
-  snap, position lock, auto-hide title bar
-- 10 announcement template styles (Minimal, Xiaohongshu, Gradient,
-  Glassmorphism, Neon, Cute, Elegant, Festive, Dark, Nature) triggered on
-  launch / interval / no-network
-- 7 screen orientation modes, screen-on lock with brightness control
+Five preset levels (`Stealth` → `Ghost` → `Phantom` → `Specter` → `Custom`).
+The disguise engine spoofs all of:
+
+| Group | Vectors |
+| --- | --- |
+| Anti-detection baseline | `X-Requested-With` removal, UA sanitisation, hide `webdriver`, emulate Chrome `window`, fake plugins, fake vendor |
+| Hardware fingerprints | Canvas noise, WebGL renderer (7 GPU profiles), AudioContext noise, Screen profile (7 device-class presets), ClientRects noise |
+| Environment fingerprints | Timezone, language, platform, `hardwareConcurrency`, `deviceMemory` |
+| Privacy fingerprints | MediaDevices, WebRTC IP shield, font enumeration block, battery shield |
+| Network fingerprints | Connection, Permissions, Performance Timing, Storage Estimate, Notification, CSS Media |
+| Hardening | `Native.toString` protection, iframe disguise propagation, error-stack cleaning |
+
+Coverage levels: `OFF` → `BASIC` → `MODERATE` → `ADVANCED` → `DEEP` →
+`MAXIMUM`.
+
+</details>
+
+<details>
+<summary><b>OAuth in-WebView (30+ providers)</b></summary>
+
+Per-provider anti-detection scripts let unmodified Chrome OAuth flows
+complete inside the WebView. Recognised providers:
+
+Google, Facebook, Apple, Microsoft, Amazon, Twitter / X, GitHub, Discord,
+Reddit, LinkedIn, Spotify, Twitch, LINE, Kakao, Naver, WeChat, QQ, Alipay,
+TikTok / Douyin, Yahoo Japan, Yahoo, VK, Yandex, Mail.ru, Shopify, Dropbox,
+Notion, Slack, Zoom, PayPal, Stripe, Square, plus reCAPTCHA / hCaptcha /
+Cloudflare Turnstile compatibility.
+
+Google flows fall back to a Chrome Custom Tab with shared cookies (via
+`androidx.browser`) when in-WebView completion is blocked.
 
 </details>
 
 <details>
 <summary><b>Extension modules</b></summary>
 
-- 10 built-in modules (video downloader, Bilibili / Douyin / Xiaohongshu
-  extractors, video enhancer, web analyzer, dark mode, privacy protection,
-  content enhancer, element blocker)
-- Custom modules from three sources: plain JS, userscripts (`.user.js`),
-  Chrome extensions (`manifest.json`)
-- Full Greasemonkey / Tampermonkey `GM_*` bridge
-- MV3 `declarativeNetRequest` engine — block, allow, redirect, modify headers
-- Module sharing via export codes
-- **Module Market** powered by this repository — see above
+- **11 built-in JS modules:** Video Downloader, Bilibili / Douyin /
+  Xiaohongshu extractors, Video Enhancer, Web Analyzer, Find-in-Page, Dark
+  Mode, Privacy Protection, Content Enhancer, Element Blocker.
+- **1 built-in Chrome extension** (`assets/extensions/bewlycat/`): BewlyCat
+  for Bilibili. Demonstrates the MV3 runtime working with a real-world
+  extension.
+- **3 module sources** for user-submitted modules: plain JavaScript,
+  Greasemonkey/Tampermonkey userscripts (`.user.js`), and Chrome MV3
+  extensions (`manifest.json`).
+- Full `GM_*` API bridge for Tampermonkey scripts; per-script grants
+  (`GM_setValue`, `GM_xmlhttpRequest`, etc.).
+- MV3 `chrome.declarativeNetRequest` engine — block, allow, redirect, modify
+  headers.
+- Module sharing via export codes and QR codes (ZXing).
+- AI Module Developer screen — write modules from a prompt, get the source
+  back ready to install.
+- The community **Module Market** described above.
 
 </details>
 
 <details>
-<summary><b>Security &amp; privacy</b></summary>
+<summary><b>Look &amp; feel</b></summary>
 
-- APK encryption (PBKDF2, 100 000 iterations, custom passwords supported)
-- App isolation with a separate data directory
-- Browser and device fingerprint disguise
-- Ad blocker (hosts rules + cosmetic MutationObserver filtering)
-- Activation code gating (per-launch or persistent)
-- App hardening: DEX encryption + splitting + VMP + control flow flattening,
-  native SO encryption + ELF obfuscation + symbol strip + anti-dump
-- Anti-Frida, Xposed, Magisk, debug, memory dump, screen capture
-- Detection of emulators, VirtualApp, VPN, USB debugging
-- String encryption, class name obfuscation, opaque predicates, multi-point
-  signature verification, certificate pinning, threat response, honeypot,
-  self-destruct
-
-</details>
-
-<details>
-<summary><b>Forced run, BlackTech, device disguise</b></summary>
-
-- **Forced run** in three modes (fixed period, countdown, access window).
-  Blocks system UI, back/home/recents, and notifications. Countdown survives
-  process kills. Emergency exit with a password and pre-end warning
-- **BlackTech**: volume control (force max / mute / block keys), flashlight
-  modes (strobe, SOS, Morse, heartbeat, breathing, emergency, custom alarm
-  with vibe sync), system control (block power key, max performance), screen
-  control (black screen, rotation, block touch), network control (WiFi
-  hotspot SSID/password, disable WiFi / Bluetooth / mobile data), nuclear and
-  stealth modes
-- **Device disguise**: phone/tablet/desktop, OS spoofing
-  (Android/iOS/HarmonyOS/macOS/Windows/Linux), brand and model presets,
-  resolution, pixel ratio, timezone, locale
+- Aurora theme system with dynamic colour generation.
+- Custom splash screens — image or video, click-to-skip, video trim range,
+  fixed orientation.
+- Background music playlists with LRC sync, 6 lyric animations (fade,
+  slide-up, slide-left, scale, typewriter, karaoke), 3 positions, custom
+  font/colour/stroke/shadow theme. Online music search with 20+ tags.
+- Status bar theming — colour, dark/light icons, alpha, height, separate
+  dark-mode config.
+- Floating window mode with adjustable size, opacity, corner radius, edge
+  snap, position lock, auto-hide title bar, "start minimised" option.
+- 10 announcement template styles (Minimal, Xiaohongshu, Gradient,
+  Glassmorphism, Neon, Cute, Elegant, Festive, Dark, Nature) triggered on
+  launch / interval / no-network.
+- 7 screen orientation modes; screen-on lock with brightness control.
+- 5 long-press menu styles (Simple, Full, iOS, Floating, Context).
 
 </details>
 
 <details>
-<summary><b>Server-side runtimes</b></summary>
+<summary><b>Per-app usage analytics</b></summary>
 
-- **Node.js** — 4 build modes (Static, SSR, API backend, Fullstack) with env vars
-- **PHP** — Composer support, custom document root
-- **Python** — Flask / Django / built-in server, pip dependencies
-- **Go** — binary compilation and static file serving
-- **WordPress** — themes + plugins, ships with bundled PHP
+- Stats screen with charts powered by Vico Compose.
+- Tracks open count, total time, last open, and per-day usage per packaged
+  app.
+- App Health Monitor periodically `HEAD` s every app's URL and surfaces
+  unreachable hosts.
 
-All runtimes execute on-device behind a local HTTP server. No remote backend.
+</details>
+
+<details>
+<summary><b>Server-side runtimes (on-device)</b></summary>
+
+- **Node.js** — 4 build modes (Static / SSR / API Backend / Fullstack), env
+  vars, npm dependency manager, sample project gallery. Wraps a native
+  `node_launcher` C++ executable.
+- **PHP** — 8.4 binary downloaded once at build time from
+  [`pmmp/PHP-Binaries`](https://github.com/pmmp/PHP-Binaries), Composer
+  support, custom document root.
+- **Python** — Flask, Django, or built-in HTTP server with pip dependency
+  resolution.
+- **Go** — on-device binary compilation and static file serving via the
+  `go_exec_loader` C++ wrapper.
+- **WordPress** — runs against the bundled PHP, theme + plugin support.
+- **Linux environment** — bundled toolchain plus a screen for managing
+  builds, dependencies, and ports across all five runtimes.
+- **Port Manager** — cross-app port coordination via broadcast receivers, so
+  multiple packaged apps don't fight for the same port.
 
 </details>
 
 <details>
 <summary><b>App-type specific features</b></summary>
 
-- **Gallery app** — categorised images and videos, grid / list / timeline
-  views, sequential / shuffle / single-loop, thumbnail bar, media info,
-  video auto-next, remember playback position
-- **Multi-Web app** — tabs / cards / feed / drawer layout, per-site icon and
-  CSS selector, auto-refresh interval
-- **Website Scraper** — offline pack creator: crawl entire frontend
-  (HTML / CSS / JS / images / fonts), concurrent download, recursive CSS
-  `url()` resolution, absolute-to-relative path rewriting, same-domain
-  restriction, depth/size limits
-- **App Modifier** — clone and rebrand installed APKs (icon, name, package)
-  via binary manifest patching
+- **Gallery app** — categorised images and videos; grid / list / timeline
+  views; sequential / shuffle / single-loop playback; sort by custom / name /
+  date / type; thumbnail bar, media info overlay, video auto-next, remember
+  playback position.
+- **Multi-Web app** — sites in tabs / cards / feed / drawer layouts;
+  per-site icon, theme colour, CSS selectors for content extraction;
+  configurable refresh interval.
+- **Website Scraper** — offline pack creator that crawls the entire
+  frontend (HTML / CSS / JS / images / fonts), 6 concurrent downloads,
+  recursive CSS `url()` / `srcset` / `@import` resolution, absolute-to-
+  relative path rewriting, same-domain restriction, depth and size limits.
+- **App Modifier** — two flavours: a launcher-shortcut disguise, or a real
+  binary clone that patches AXML manifest, replaces icon resources via
+  ARSC, and re-signs with `JarSigner` before installing through
+  `FileProvider`.
 
 </details>
 
 <details>
-<summary><b>Translation, notifications, deep linking</b></summary>
+<summary><b>Translation, notifications, deep linking, lifecycle</b></summary>
 
-- In-page translation overlay with 20 target languages and 5 engines
-  (Google, MyMemory, LibreTranslate, Lingva, Auto), floating button toggle,
-  auto-translate on load
-- Web API `Notification` polyfill plus URL-polling foreground service with
-  configurable interval and JSON parsing
-- Custom URL schemes with configurable host patterns
-- Boot auto-start, scheduled launch at a specific time
-- Background-run foreground service with custom notification, CPU wake lock,
-  battery optimisation bypass
+- **Translation overlay** — 20 target languages and 5 engines (Google,
+  MyMemory, LibreTranslate, Lingva, Auto); floating button toggle;
+  auto-translate on load.
+- **Web Notification polyfill** plus a URL-polling foreground service with
+  configurable interval (5 min minimum), JSON parsing, and GET / POST with
+  custom headers.
+- Custom URL schemes with configurable host patterns.
+- Boot auto-start (`BOOT_COMPLETED`, `QUICKBOOT_POWERON`,
+  `MY_PACKAGE_REPLACED`, time / timezone change).
+- Scheduled launch at a specific time via `SCHEDULE_EXACT_ALARM`.
+- Background-run foreground service with custom notification, CPU wake
+  lock, and a battery-optimisation bypass prompt.
 
 </details>
 
 <details>
-<summary><b>APK export &amp; ads</b></summary>
+<summary><b>Generated-APK security &amp; hardening</b></summary>
 
-- Custom package name and version
-- Architecture targeting (Universal, ARM64, ARM32)
-- Performance optimisations: image compression, WebP conversion, code
-  minification, lazy loading, DNS prefetch, preload hints
-- Granular runtime permissions (camera, mic, location, storage, Bluetooth,
-  NFC, SMS, contacts, calendar, sensors, foreground service, wake lock,
-  install packages, system alert window)
-- Banner, interstitial, and splash ads with configurable IDs and durations
-- Full app data backup and restore, project export/import
+The features below apply to the apps **WebToApp generates**. The host
+itself ships with a minimal permission set (see `AndroidManifest.xml`).
+
+- **APK encryption** — PBKDF2 with 100 000 iterations, custom passwords
+  supported.
+- **App isolation** — separate data directory, separate process for the
+  packaged WebView.
+- **Browser and device fingerprint disguise** — see above.
+- **Ad blocker** — hosts-rule engine plus a cosmetic MutationObserver
+  filter, with built-in support for 12 community filter lists (EasyList,
+  EasyPrivacy, uBlock, AdGuard family, StevenBlack, Peter Lowe, 1Hosts Lite,
+  regional lists, etc.).
+- **Activation code gating** — per-launch or persistent; codes can be
+  unlimited, time-limited, or device-bound.
+- **App hardening pipeline** — DEX encryption + splitting, control-flow
+  flattening, native SO encryption, ELF obfuscation, symbol strip,
+  anti-dump.
+- **Anti-reverse engineering** — anti-Frida / Xposed / Magisk / debug /
+  memory dump / screen capture; emulator / VirtualApp / VPN / USB-debugging
+  detection.
+- **Code obfuscation** — string encryption, class name mangling, opaque
+  predicates, multi-point signature verification, certificate pinning.
+- **Threat response** — runtime shield with honeypot and self-destruct
+  modes.
 
 </details>
+
+<details>
+<summary><b>Forced run, BlackTech, multi-icon disguise</b></summary>
+
+These exist for technical demonstration of Android's surface area. They
+must be used with informed user consent.
+
+- **Forced run** — three modes (`FIXED_TIME`, `COUNTDOWN`, `DURATION`).
+  Blocks system UI, back / home / recents, and notifications. Countdown
+  survives process kills. Optional emergency-exit password and a
+  pre-end warning.
+- **BlackTech** — every toggle declared in `BlackTechConfig`:
+  - Volume control (force max / mute / block volume keys)
+  - Flashlight modes — strobe, SOS, Morse code (with custom text and unit
+    duration), heartbeat, breathing, emergency, custom alarm pattern with
+    vibration sync
+  - System control (block power key, max performance, airplane mode)
+  - Screen control (black screen, force rotation, block touch, force awake)
+  - Network control (WiFi hotspot with SSID/password, disable WiFi /
+    Bluetooth / mobile data)
+  - Pre-baked profiles: `SILENT_MODE`, `ALARM_MODE`, `SOS_SIGNAL`,
+    `NUCLEAR_MODE`, `STEALTH_MODE`
+- **Device disguise** — 6 device types (Phone / Tablet / Desktop / Laptop /
+  Watch / TV) × 10 OSes (Android, iOS, HarmonyOS, Windows, macOS, Linux,
+  ChromeOS, watchOS, Wear OS, tvOS); 28 brand-specific device presets
+  including iPhone 17 Pro Max, Galaxy S26 Ultra, Pixel 10 Pro XL,
+  Mate 70 Pro+, OnePlus 15, MacBook Pro M5, Surface Pro 11, Apple Watch
+  Ultra 3, etc.
+- **Icon Storm** — multi-launcher icon disguise. A packaged app can ship
+  anywhere from `2` (Subtle) to `5000` (Research) launcher aliases. Modes:
+  `Subtle Flood (25)`, `Icon Flood (100)`, `Icon Storm (500)`,
+  `Extreme Storm (1000)`, `Research (5000)`, plus a custom count. Each
+  alias adds roughly 520 bytes of manifest overhead — the screen estimates
+  the impact for you.
+
+</details>
+
+<details>
+<summary><b>APK export options</b></summary>
+
+- Custom package name, `versionName`, and `versionCode`.
+- Architecture targeting: Universal, ARM64, ARM32.
+- Performance optimisations — image compression, WebP conversion, code
+  minification, lazy loading, DNS prefetch, preload hints.
+- Granular runtime permissions injected per-APK at build time (camera, mic,
+  location, storage, Bluetooth, NFC, SMS, contacts, calendar, sensors,
+  foreground service, wake lock, install packages, system alert window).
+  These are **not** declared in the host manifest.
+- Banner, interstitial, and splash ads with configurable IDs and durations.
+- Full app data backup and restore; project export/import.
+
+</details>
+
+---
+
+## Tech stack
+
+The pieces that distinguish this from a basic Compose app:
+
+- **Kotlin** + **Jetpack Compose** + **Material 3**
+- **Koin** for dependency injection
+- **Room 2.7.2** + **KSP** for persistence
+- **OkHttp 4.12.0** + `okhttp-dnsoverhttps` for networking
+- **`com.android.tools.build:apksig` 8.3.0** — the on-device signer
+- **GeckoView** (Firefox engine) as an optional WebView replacement
+- **Coil** (`compose` + `video` + `gif`) for images
+- **AndroidX Security Crypto** + **AndroidX DataStore** for stored secrets
+- **Vico** Compose-M3 for the Stats charts
+- **ZXing** for QR-code module sharing
+- **Apache Commons Compress** + **xz** for the website scraper and project
+  imports
+- **Native C++ via JNI** — `node_launcher` and `go_exec_loader` are real
+  CMake targets compiled per-ABI
+- **Robolectric** for the unit-test layer
+
+See [`app/build.gradle.kts`](app/build.gradle.kts) for the full list.
 
 ---
 
@@ -257,22 +403,21 @@ cd web-to-app
 ./gradlew assembleDebug
 ```
 
-For release builds, set up signing in `app/build.gradle.kts`.
+For release builds, configure signing in `app/build.gradle.kts`. The first
+release build will download the PHP binary; you can pre-fetch it with
+`./gradlew :app:downloadPhpBinary`.
 
-## Tech stack
-
-Kotlin · Jetpack Compose · Material Design 3 · Room · GeckoView · OkHttp · KSP
-· Native C++ (JNI)
+---
 
 ## Contributing
 
-Three ways to help, listed roughly in increasing scope:
+Three lanes, in increasing scope:
 
-| Where | What | Guide |
+| Lane | What you do | Guide |
 | --- | --- | --- |
 | `modules/` | Publish a community module to the in-app market | [`modules/README.md`](modules/README.md) |
-| Issues | File a bug or request a feature | GitHub Issues |
-| Code | Pick up something from the issue tracker or propose a change | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
+| Issues | Report a bug or request a feature | [GitHub Issues](https://github.com/shiahonb777/web-to-app/issues) |
+| Code | Fix a bug or build a feature in the Android client | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
 
 ## Contact
 
@@ -288,8 +433,9 @@ Developed by **shiaho**.
 
 ## License
 
-[The Unlicense](LICENSE). Advanced features (e.g. forced run) are intended for
-technical demonstration and must only be used with informed user consent.
+[The Unlicense](LICENSE). Advanced features (e.g. forced run, BlackTech,
+icon storm) are intended for technical demonstration and must only be used
+with informed user consent.
 
 <div align="center">
 
