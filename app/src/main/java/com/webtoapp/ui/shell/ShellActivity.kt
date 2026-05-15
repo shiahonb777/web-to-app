@@ -26,7 +26,6 @@ import com.webtoapp.data.model.KeyboardAdjustMode
 import com.webtoapp.core.forcedrun.ForcedRunConfig
 import com.webtoapp.core.forcedrun.ForcedRunManager
 import com.webtoapp.core.floatingwindow.FloatingWindowService
-import com.webtoapp.core.shell.CloudSdkManager
 import com.webtoapp.ui.shared.WindowHelper
 
 
@@ -79,10 +78,6 @@ class ShellActivity : AppCompatActivity() {
 
 
     private var webViewStateBundle: Bundle? = null
-
-
-    internal var cloudSdkManager: CloudSdkManager? = null
-
     private fun applyStatusBarColor(
         colorMode: String,
         customColor: String?,
@@ -258,14 +253,6 @@ class ShellActivity : AppCompatActivity() {
 
         com.webtoapp.core.shell.ShellLogger.i("ShellActivity", "配置加载成功: ${config.appName}")
         AppLogger.d("ShellActivity", "WebView UA config from shell: userAgentMode=${config.webViewConfig.userAgentMode}, customUserAgent=${config.webViewConfig.customUserAgent}, userAgent=${config.webViewConfig.userAgent}")
-
-
-        if (config.cloudSdkConfig.isValid()) {
-            cloudSdkManager = CloudSdkManager(this, config.cloudSdkConfig).also {
-                it.initialize(this)
-                AppLogger.i("ShellActivity", "Cloud SDK initialized for runtime: ${config.cloudSdkConfig.resolvedRuntimeKey()}")
-            }
-        }
 
         forcedRunConfig = config.forcedRunConfig
 
@@ -666,10 +653,6 @@ class ShellActivity : AppCompatActivity() {
         com.webtoapp.core.shell.ShellLogger.logLifecycle("ShellActivity", "onDestroy")
 
 
-        cloudSdkManager?.destroy()
-        cloudSdkManager = null
-
-
         android.webkit.CookieManager.getInstance().flush()
 
         webView?.let { wv ->
@@ -678,7 +661,6 @@ class ShellActivity : AppCompatActivity() {
 
 
             wv.onPause()
-            wv.pauseTimers()
             wv.webChromeClient = null
 
             (wv.parent as? ViewGroup)?.removeView(wv)

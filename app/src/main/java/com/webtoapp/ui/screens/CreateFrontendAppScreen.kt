@@ -3,7 +3,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.webtoapp.ui.components.PremiumButton
 import com.webtoapp.ui.components.PremiumOutlinedButton
 
-import com.webtoapp.ui.theme.AppColors
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -285,7 +284,7 @@ fun CreateFrontendAppScreen(
                                         Text(
                                             projectName,
                                             style = MaterialTheme.typography.titleSmall,
-                                            fontWeight = FontWeight.Bold
+                                            fontWeight = FontWeight.SemiBold
                                         )
                                         Text(
                                             projectPath ?: "",
@@ -318,7 +317,7 @@ fun CreateFrontendAppScreen(
                             RuntimeSectionHeader(
                                 icon = Icons.Outlined.Analytics,
                                 title = Strings.projectAnalysis,
-                                brandColor = MaterialTheme.colorScheme.secondary
+                                brandColor = MaterialTheme.colorScheme.onSurface
                             ) {
                                 if (isDetecting) {
                                     CircularProgressIndicator(
@@ -336,7 +335,7 @@ fun CreateFrontendAppScreen(
                                     icon = Icons.Outlined.Code,
                                     label = Strings.frameworkLabel,
                                     value = getFrameworkDisplayName(detectionResult!!.framework),
-                                    valueColor = getFrameworkColor(detectionResult!!.framework)
+                                    valueColor = getAccentColor(detectionResult!!.framework)
                                 )
 
                                 DetectionInfoRow(
@@ -354,12 +353,12 @@ fun CreateFrontendAppScreen(
                                 }
 
                                 if (detectionResult!!.hasTypeScript) {
-                                    DetectionInfoRow(
-                                        icon = Icons.Outlined.Code,
-                                        label = "TypeScript",
-                                        value = Strings.enabled,
-                                        valueColor = Color(0xFF3178C6)
-                                    )
+                                DetectionInfoRow(
+                                    icon = Icons.Outlined.Code,
+                                    label = "TypeScript",
+                                    value = Strings.enabled,
+                                    valueColor = MaterialTheme.colorScheme.onSurface
+                                )
                                 }
 
 
@@ -418,7 +417,7 @@ fun CreateFrontendAppScreen(
                                 RuntimeSectionHeader(
                                     icon = Icons.Outlined.Settings,
                                     title = Strings.appConfig,
-                                    brandColor = MaterialTheme.colorScheme.tertiary
+                                    brandColor = MaterialTheme.colorScheme.onSurface
                                 )
 
                                 Spacer(modifier = Modifier.height(16.dp))
@@ -654,7 +653,7 @@ private fun BuildModeSelector(
                     Text(
                         Strings.importFrontendProject,
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.SemiBold
                     )
                     Text(
                         Strings.supportVueReactVite,
@@ -728,9 +727,9 @@ private fun DetectionInfoRow(
 @Composable
 private fun IssueItem(issue: ProjectIssue) {
     val (icon, color) = when (issue.severity) {
-        IssueSeverity.ERROR -> Icons.Filled.Error to AppColors.Error
-        IssueSeverity.WARNING -> Icons.Filled.Warning to Color(0xFFFFA726)
-        IssueSeverity.INFO -> Icons.Filled.Info to Color(0xFF42A5F5)
+        IssueSeverity.ERROR -> Icons.Filled.Error to MaterialTheme.colorScheme.onSurface
+        IssueSeverity.WARNING -> Icons.Filled.Warning to MaterialTheme.colorScheme.onSurface
+        IssueSeverity.INFO -> Icons.Filled.Info to MaterialTheme.colorScheme.onSurface
     }
 
     Row(
@@ -774,11 +773,7 @@ private fun BuildStatusCard(
 ) {
     EnhancedElevatedCard(
         modifier = Modifier.fillMaxWidth(),
-        containerColor = when (state) {
-            is BuildState.Success -> AppColors.Success.copy(alpha = 0.1f)
-            is BuildState.Error -> AppColors.Error.copy(alpha = 0.1f)
-            else -> MaterialTheme.colorScheme.surfaceVariant
-        }
+        containerColor = MaterialTheme.colorScheme.surfaceVariant
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -869,12 +864,12 @@ private fun BuildStatusCard(
                         Icon(
                             Icons.Filled.CheckCircle,
                             null,
-                            tint = AppColors.Success,
+                            tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
-                            Text(Strings.completed, color = AppColors.Success)
+                            Text(Strings.completed, color = MaterialTheme.colorScheme.onSurface)
                             Text(
                                 Strings.totalFiles.replace("%d", state.fileCount.toString()),
                                 style = MaterialTheme.typography.bodySmall,
@@ -886,12 +881,12 @@ private fun BuildStatusCard(
                         Icon(
                             Icons.Filled.Error,
                             null,
-                            tint = AppColors.Error,
+                            tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                            Text(Strings.failed, color = AppColors.Error)
+                            Text(Strings.failed, color = MaterialTheme.colorScheme.onSurface)
                             Text(
                                 state.message,
                                 style = MaterialTheme.typography.bodySmall,
@@ -934,8 +929,8 @@ private fun BuildLogsDialog(
             ) {
                 items(logs) { entry ->
                     val color = when (entry.level) {
-                        LogLevel.ERROR -> AppColors.Error
-                        LogLevel.WARNING -> Color(0xFFFFA726)
+                        LogLevel.ERROR -> MaterialTheme.colorScheme.onSurface
+                        LogLevel.WARNING -> MaterialTheme.colorScheme.onSurface
                         LogLevel.INFO -> MaterialTheme.colorScheme.onSurface
                         LogLevel.DEBUG -> MaterialTheme.colorScheme.onSurfaceVariant
                     }
@@ -1078,17 +1073,10 @@ private fun getFrameworkDisplayName(framework: FrontendFramework): String {
 
 
 
-private fun getFrameworkColor(framework: FrontendFramework): Color {
-    return when (framework) {
-        FrontendFramework.VUE -> Color(0xFF42B883)
-        FrontendFramework.REACT -> Color(0xFF61DAFB)
-        FrontendFramework.NEXT -> Color(0xFF000000)
-        FrontendFramework.NUXT -> Color(0xFF00DC82)
-        FrontendFramework.ANGULAR -> Color(0xFFDD0031)
-        FrontendFramework.SVELTE -> Color(0xFFFF3E00)
-        FrontendFramework.VITE -> Color(0xFF646CFF)
-        FrontendFramework.UNKNOWN -> Color.Gray
-    }
+private fun getAccentColor(framework: FrontendFramework): Color {
+    // All frameworks share the same neutral accent in the monochrome theme.
+    // Call sites rely on the presence of an accent hook, not a specific color.
+    return com.webtoapp.ui.theme.AppColors.NeutralAccent
 }
 
 
@@ -1140,7 +1128,7 @@ private fun GitHubImportCard(
             RuntimeSectionHeader(
                 icon = Icons.Outlined.CloudDownload,
                 title = Strings.githubImportTitle,
-                brandColor = MaterialTheme.colorScheme.tertiary
+                brandColor = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -1153,7 +1141,7 @@ private fun GitHubImportCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            OutlinedTextField(
+            PremiumTextField(
                 value = url,
                 onValueChange = { url = it },
                 label = { Text(Strings.githubUrlLabel) },
@@ -1170,7 +1158,7 @@ private fun GitHubImportCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                OutlinedTextField(
+                PremiumTextField(
                     value = branch,
                     onValueChange = { branch = it },
                     label = { Text(Strings.githubBranchLabel) },
@@ -1179,7 +1167,7 @@ private fun GitHubImportCard(
                     enabled = !isFetching,
                     modifier = Modifier.weight(1f)
                 )
-                OutlinedTextField(
+                PremiumTextField(
                     value = subPath,
                     onValueChange = { subPath = it },
                     label = { Text(Strings.githubSubPathLabel) },
@@ -1210,7 +1198,7 @@ private fun GitHubImportCard(
                     Text(
                         Strings.githubFetchSuccess,
                         style = MaterialTheme.typography.bodySmall,
-                        color = AppColors.Success
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                 }
@@ -1218,7 +1206,7 @@ private fun GitHubImportCard(
                     Text(
                         Strings.githubFetchFailed.format(state.message),
                         style = MaterialTheme.typography.bodySmall,
-                        color = AppColors.Error
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                 }

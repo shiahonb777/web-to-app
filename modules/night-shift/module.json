@@ -1,0 +1,32 @@
+{
+  "id": "wta-night-shift",
+  "name": "Night Shift",
+  "description": "Applies a soft amber overlay across every page to cut blue light. Adjustable opacity through the module config.",
+  "icon": "dark_mode",
+  "category": "STYLE_MODIFIER",
+  "tags": ["theme", "dark", "eye-care", "filter"],
+  "version": {
+    "code": 1,
+    "name": "1.0.0",
+    "changelog": "Initial release."
+  },
+  "author": {
+    "name": "shiaho",
+    "url": "https://github.com/shiahonb777"
+  },
+  "runAt": "DOCUMENT_START",
+  "urlMatches": [
+    { "pattern": "*", "isRegex": false, "exclude": false }
+  ],
+  "permissions": ["CSS_INJECT", "DOM_ACCESS"],
+  "configItems": [
+    {
+      "key": "opacity",
+      "name": "Overlay opacity (0-100)",
+      "description": "Higher values produce a warmer, dimmer screen.",
+      "type": "NUMBER",
+      "defaultValue": "20",
+      "required": false
+    }
+  ]
+}

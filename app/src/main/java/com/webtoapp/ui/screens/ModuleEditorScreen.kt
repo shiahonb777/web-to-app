@@ -37,11 +37,11 @@ import androidx.compose.material3.LocalTextStyle
 import com.webtoapp.core.extension.*
 import com.webtoapp.core.i18n.Strings
 import kotlinx.coroutines.launch
-import com.webtoapp.ui.components.ThemedBackgroundBox
+import com.webtoapp.ui.design.WtaBackground
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.components.PremiumTextField
 
-import com.webtoapp.ui.components.PremiumSwitch
+import com.webtoapp.ui.design.WtaSwitch
 import com.webtoapp.ui.design.WtaCapabilityLevel
 import com.webtoapp.ui.design.WtaSection
 import com.webtoapp.ui.design.WtaSectionDivider
@@ -103,6 +103,7 @@ fun ModuleEditorScreen(
     var authorName by remember { mutableStateOf(existingModule?.author?.name ?: "") }
     var uiConfig by remember { mutableStateOf(existingModule?.uiConfig ?: ModuleUiConfig()) }
     var runMode by remember { mutableStateOf(existingModule?.runMode ?: ModuleRunMode.INTERACTIVE) }
+    val existingAuthor = existingModule?.author
 
     var showCategoryDialog by remember { mutableStateOf(false) }
     var showRunAtDialog by remember { mutableStateOf(false) }
@@ -141,21 +142,46 @@ fun ModuleEditorScreen(
                         category = category,
                         tags = tags.split(",").map { it.trim() }.filter { it.isNotBlank() },
                         version = ModuleVersion(
-                            code = (existingModule?.version?.code ?: 0) + 1,
+                            code = if (existingModule != null) {
+                                (existingModule.version.code + 1).coerceAtLeast(1)
+                            } else {
+                                1
+                            },
                             name = versionName
                         ),
-                        author = if (authorName.isNotBlank()) ModuleAuthor(authorName) else null,
+                        author = if (authorName.isNotBlank()) {
+                            ModuleAuthor(
+                                name = authorName,
+                                email = existingAuthor?.email,
+                                url = existingAuthor?.url,
+                                qq = existingAuthor?.qq
+                            )
+                        } else null,
                         code = code,
                         cssCode = cssCode,
+                        codeFiles = existingModule?.codeFiles ?: emptyMap(),
                         runAt = runAt,
                         urlMatches = urlMatches,
                         permissions = permissions.toList(),
                         configItems = configItems,
+                        configValues = existingModule?.configValues?.filterKeys { key ->
+                            configItems.any { it.key == key }
+                        } ?: configItems.associate { it.key to it.defaultValue },
+                        dependencies = existingModule?.dependencies ?: emptyList(),
                         enabled = existingModule?.enabled ?: true,
                         builtIn = false,
                         createdAt = existingModule?.createdAt ?: System.currentTimeMillis(),
                         uiConfig = uiConfig,
-                        runMode = runMode
+                        runMode = runMode,
+                        sourceType = existingModule?.sourceType ?: ModuleSourceType.CUSTOM,
+                        chromeExtId = existingModule?.chromeExtId ?: "",
+                        world = existingModule?.world ?: "ISOLATED",
+                        backgroundScript = existingModule?.backgroundScript ?: "",
+                        gmGrants = existingModule?.gmGrants ?: emptyList(),
+                        requireUrls = existingModule?.requireUrls ?: emptyList(),
+                        resources = existingModule?.resources ?: emptyMap(),
+                        noframes = existingModule?.noframes ?: false,
+                        updatedAt = System.currentTimeMillis()
                     )
 
                     scope.launch {
@@ -171,7 +197,10 @@ fun ModuleEditorScreen(
         }
     ) {
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 24.dp)
         ) {
 
             WtaSection(
@@ -699,10 +728,10 @@ private fun BasicInfoTab(
     authorName: String,
     onAuthorNameChange: (String) -> Unit
 ) {
+
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .fillMaxWidth()
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
@@ -1056,7 +1085,7 @@ private fun CodeTab(
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .padding(16.dp)
     ) {
 
@@ -1161,7 +1190,7 @@ private fun CodeTab(
             onValueChange = { if (showJsTab) onCodeChange(it) else onCssCodeChange(it) },
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(weight = 1f, fill = true),
+                .heightIn(min = 260.dp),
             label = { Text(if (showJsTab) Strings.javascriptCode else Strings.cssCode) },
             placeholder = {
                 Text(
@@ -1266,10 +1295,10 @@ private fun AdvancedTab(
         }
     }
 
+
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .fillMaxWidth()
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {

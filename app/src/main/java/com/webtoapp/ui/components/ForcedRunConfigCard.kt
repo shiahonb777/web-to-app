@@ -1,6 +1,7 @@
 package com.webtoapp.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import com.webtoapp.ui.design.WtaSwitch
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -124,13 +125,11 @@ fun ForcedRunConfigCard(
                             Strings.forcedRunSettings,
                             style = MaterialTheme.typography.titleMedium
                         )
-                        if (!enabled) {
-                            Text(
-                                Strings.notEnabled,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                        Text(
+                            if (enabled) Strings.enabled else Strings.notEnabled,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
                 Icon(
@@ -158,7 +157,7 @@ fun ForcedRunConfigCard(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        PremiumSwitch(
+                        WtaSwitch(
                             checked = enabled,
                             onCheckedChange = {
                                 enabled = it
@@ -465,7 +464,7 @@ fun ForcedRunConfigCard(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(Strings.blockSystemUI, style = MaterialTheme.typography.bodyMedium)
-                                PremiumSwitch(
+                                WtaSwitch(
                                     checked = blockSystemUI,
                                     onCheckedChange = {
                                         blockSystemUI = it
@@ -481,7 +480,7 @@ fun ForcedRunConfigCard(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(Strings.blockBackButton, style = MaterialTheme.typography.bodyMedium)
-                                PremiumSwitch(
+                                WtaSwitch(
                                     checked = blockBackButton,
                                     onCheckedChange = {
                                         blockBackButton = it
@@ -497,7 +496,7 @@ fun ForcedRunConfigCard(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(Strings.blockHomeButton, style = MaterialTheme.typography.bodyMedium)
-                                PremiumSwitch(
+                                WtaSwitch(
                                     checked = blockHomeButton,
                                     onCheckedChange = {
                                         blockHomeButton = it
@@ -513,7 +512,7 @@ fun ForcedRunConfigCard(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(Strings.showCountdownTimer, style = MaterialTheme.typography.bodyMedium)
-                                PremiumSwitch(
+                                WtaSwitch(
                                     checked = showCountdown,
                                     onCheckedChange = {
                                         showCountdown = it
@@ -538,7 +537,7 @@ fun ForcedRunConfigCard(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
-                                PremiumSwitch(
+                                WtaSwitch(
                                     checked = allowEmergencyExit,
                                     onCheckedChange = {
                                         allowEmergencyExit = it

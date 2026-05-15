@@ -1,6 +1,7 @@
 package com.webtoapp.ui.screens
 
 import android.net.Uri
+import com.webtoapp.ui.design.WtaSwitch
 import com.webtoapp.ui.components.PremiumOutlinedButton
 import android.provider.DocumentsContract
 import com.webtoapp.core.logging.AppLogger
@@ -914,7 +915,7 @@ fun CreateHtmlAppScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        PremiumSwitch(
+                        WtaSwitch(
                             checked = enableJavaScript,
                             onCheckedChange = { enableJavaScript = it }
                         )
@@ -938,7 +939,7 @@ fun CreateHtmlAppScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        PremiumSwitch(
+                        WtaSwitch(
                             checked = enableLocalStorage,
                             onCheckedChange = { enableLocalStorage = it }
                         )
@@ -963,7 +964,7 @@ fun CreateHtmlAppScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        PremiumSwitch(
+                        WtaSwitch(
                             checked = landscapeMode,
                             onCheckedChange = { landscapeMode = it }
                         )
@@ -1012,7 +1013,7 @@ fun CreateHtmlAppScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        PremiumSwitch(
+                        WtaSwitch(
                             checked = enableOptimize,
                             onCheckedChange = { enableOptimize = it }
                         )
@@ -1307,7 +1308,7 @@ private fun ProjectAnalysisDialog(
                             Icon(
                                 Icons.Outlined.Lightbulb,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.tertiary,
+                                tint = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
@@ -1408,18 +1409,18 @@ private fun IssueCard(issue: HtmlProjectProcessor.ProjectIssue) {
     val (icon, containerColor, contentColor) = when (issue.severity) {
         HtmlProjectProcessor.IssueSeverity.ERROR -> Triple(
             Icons.Outlined.Error,
-            MaterialTheme.colorScheme.errorContainer,
-            MaterialTheme.colorScheme.onErrorContainer
+            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+            MaterialTheme.colorScheme.onSurface
         )
         HtmlProjectProcessor.IssueSeverity.WARNING -> Triple(
             Icons.Outlined.Warning,
-            MaterialTheme.colorScheme.tertiaryContainer,
-            MaterialTheme.colorScheme.onTertiaryContainer
+            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+            MaterialTheme.colorScheme.onSurface
         )
         HtmlProjectProcessor.IssueSeverity.INFO -> Triple(
             Icons.Outlined.Info,
-            MaterialTheme.colorScheme.secondaryContainer,
-            MaterialTheme.colorScheme.onSecondaryContainer
+            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+            MaterialTheme.colorScheme.onSurface
         )
     }
 
@@ -1500,12 +1501,7 @@ private fun CodeEditorDialog(
     }
 
 
-    val accentColor = when (fileType) {
-        HtmlFileType.HTML -> Color(0xFFE44D26)
-        HtmlFileType.CSS -> Color(0xFF264DE4)
-        HtmlFileType.JS -> Color(0xFFF7DF1E)
-        else -> MaterialTheme.colorScheme.primary
-    }
+    val accentColor = MaterialTheme.colorScheme.onSurface
 
     Dialog(
         onDismissRequest = {
@@ -1521,13 +1517,13 @@ private fun CodeEditorDialog(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(0.dp),
-            color = Color(0xFF1E1E1E),
+            color = com.webtoapp.ui.theme.AppColors.EditorDark.copy(alpha = 0.98f),
             shape = RoundedCornerShape(0.dp)
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
 
                 Surface(
-                    color = Color(0xFF252526),
+                    color = com.webtoapp.ui.theme.AppColors.EditorDark,
                     tonalElevation = 2.dp
                 ) {
                     Row(
@@ -1547,7 +1543,7 @@ private fun CodeEditorDialog(
                             Icon(
                                 Icons.Default.Close,
                                 contentDescription = Strings.close,
-                                tint = Color(0xFFCCCCCC)
+                                tint = com.webtoapp.ui.theme.AppColors.CodeForeground
                             )
                         }
 
@@ -1569,18 +1565,18 @@ private fun CodeEditorDialog(
                         Text(
                             text = Strings.codeEditorTitle,
                             style = MaterialTheme.typography.titleSmall,
-                            color = Color(0xFFCCCCCC),
+                            color = com.webtoapp.ui.theme.AppColors.CodeForeground,
                             modifier = Modifier.weight(1f)
                         )
 
                         if (isModified) {
                             Surface(
-                                color = Color(0xFF4EC9B0).copy(alpha = 0.15f),
+                                color = com.webtoapp.ui.theme.AppColors.CodeForeground.copy(alpha = 0.15f),
                                 shape = RoundedCornerShape(4.dp)
                             ) {
                                 Text(
                                     text = "●",
-                                    color = Color(0xFF4EC9B0),
+                                    color = com.webtoapp.ui.theme.AppColors.CodeForeground,
                                     fontSize = 10.sp,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                 )
@@ -1596,20 +1592,20 @@ private fun CodeEditorDialog(
                             Icon(
                                 Icons.Outlined.Save,
                                 contentDescription = null,
-                                tint = if (codeText.isNotBlank()) Color(0xFF4EC9B0) else Color(0xFF666666),
+                                tint = if (codeText.isNotBlank()) com.webtoapp.ui.theme.AppColors.CodeForeground else com.webtoapp.ui.theme.AppColors.CodeMuted,
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(Modifier.width(4.dp))
                             Text(
                                 text = Strings.saveFile,
-                                color = if (codeText.isNotBlank()) Color(0xFF4EC9B0) else Color(0xFF666666)
+                                color = if (codeText.isNotBlank()) com.webtoapp.ui.theme.AppColors.CodeForeground else com.webtoapp.ui.theme.AppColors.CodeMuted
                             )
                         }
                     }
                 }
 
 
-                val scrollState = rememberScrollState()
+                val verticalScrollState = rememberScrollState()
                 val horizontalScrollState = rememberScrollState()
 
                 Box(
@@ -1617,15 +1613,20 @@ private fun CodeEditorDialog(
                         .fillMaxWidth()
                         .weight(1f)
                 ) {
-                    Row(modifier = Modifier.fillMaxSize()) {
+                    // 关键：把 verticalScroll 唯一地放在外层 Row 上。
+                    // 行号 Column 与 BasicTextField 都不再各自套 scroll、也不再 fillMaxHeight/fillMaxSize，
+                    // 子组件在垂直方向自然按内容撑开，由父 Row 统一滚动。
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(verticalScrollState)
+                    ) {
 
                         val lineCount = maxOf(codeText.count { it == '\n' } + 1, 1)
                         Column(
                             modifier = Modifier
                                 .width(44.dp)
-                                .fillMaxHeight()
-                                .background(Color(0xFF1E1E1E))
-                                .verticalScroll(scrollState)
+                                .background(com.webtoapp.ui.theme.AppColors.EditorDark)
                                 .padding(end = 8.dp, top = 8.dp),
                             horizontalAlignment = Alignment.End
                         ) {
@@ -1636,20 +1637,14 @@ private fun CodeEditorDialog(
                                         fontFamily = FontFamily.Monospace,
                                         fontSize = 13.sp,
                                         lineHeight = 20.sp,
-                                        color = Color(0xFF858585)
+                                        color = com.webtoapp.ui.theme.AppColors.CodeGutter
                                     )
                                 )
                             }
                         }
 
-
-                        Box(
-                            modifier = Modifier
-                                .width(1.dp)
-                                .fillMaxHeight()
-                                .background(Color(0xFF333333))
-                        )
-
+                        // 1dp 分隔条改为 BasicTextField 左侧 padding 模拟，
+                        // 避免在无界高度的 verticalScroll 容器中 fillMaxHeight 塌缩。
 
                         BasicTextField(
                             value = codeText,
@@ -1658,13 +1653,12 @@ private fun CodeEditorDialog(
                                 fontFamily = FontFamily.Monospace,
                                 fontSize = 13.sp,
                                 lineHeight = 20.sp,
-                                color = Color(0xFFD4D4D4)
+                                color = com.webtoapp.ui.theme.AppColors.CodeForeground
                             ),
                             modifier = Modifier
-                                .fillMaxSize()
-                                .verticalScroll(scrollState)
+                                .fillMaxWidth()
                                 .horizontalScroll(horizontalScrollState)
-                                .padding(start = 8.dp, top = 8.dp, end = 8.dp, bottom = 8.dp),
+                                .padding(start = 9.dp, top = 8.dp, end = 8.dp, bottom = 8.dp),
                             decorationBox = { innerTextField ->
                                 Box {
                                     if (codeText.isEmpty()) {
@@ -1674,7 +1668,7 @@ private fun CodeEditorDialog(
                                                 fontFamily = FontFamily.Monospace,
                                                 fontSize = 13.sp,
                                                 lineHeight = 20.sp,
-                                                color = Color(0xFF555555)
+                                                color = com.webtoapp.ui.theme.AppColors.CodeMuted
                                             )
                                         )
                                     }
@@ -1687,7 +1681,7 @@ private fun CodeEditorDialog(
 
 
                 Surface(
-                    color = Color(0xFF007ACC)
+                    color = com.webtoapp.ui.theme.AppColors.EditorDarkAlt
                 ) {
                     Row(
                         modifier = Modifier
@@ -1702,7 +1696,7 @@ private fun CodeEditorDialog(
                         Text(
                             text = "$lineCount ${if (lineCount == 1) "line" else "lines"}, $charCount chars",
                             style = MaterialTheme.typography.labelSmall,
-                            color = Color.White.copy(alpha = 0.9f)
+                            color = com.webtoapp.ui.theme.AppColors.CodeForeground.copy(alpha = 0.9f)
                         )
                         Spacer(modifier = Modifier.weight(1f))
                         Text(
@@ -1968,7 +1962,7 @@ private fun ZipImportSection(
             EnhancedElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
                 )
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
@@ -1980,14 +1974,14 @@ private fun ZipImportSection(
                             Icon(
                                 Icons.Outlined.Warning,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                                tint = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = warning,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -2429,7 +2423,7 @@ private fun FolderImportSection(
             EnhancedElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
                 )
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
@@ -2441,14 +2435,14 @@ private fun FolderImportSection(
                             Icon(
                                 Icons.Outlined.Warning,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                                tint = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = warning,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }

@@ -2,6 +2,7 @@ package com.webtoapp.core.apkbuilder
 
 import com.webtoapp.data.model.GalleryItem
 import com.webtoapp.data.model.HtmlFile
+import com.webtoapp.data.model.MultiWebSite
 import com.webtoapp.data.model.NetworkTrustConfig
 import com.webtoapp.util.NetworkTrustStorage
 import java.io.File
@@ -12,12 +13,14 @@ data class BuildInputPreflightRequest(
     val mediaContentPath: String? = null,
     val htmlFiles: List<HtmlFile> = emptyList(),
     val galleryItems: List<GalleryItem> = emptyList(),
+    val multiWebSites: List<MultiWebSite> = emptyList(),
     val wordPressProjectDir: File? = null,
     val nodejsProjectDir: File? = null,
     val phpAppProjectDir: File? = null,
     val pythonAppProjectDir: File? = null,
     val goAppProjectDir: File? = null,
     val frontendProjectDir: File? = null,
+    val multiWebProjectDir: File? = null,
     val networkTrustConfig: NetworkTrustConfig = NetworkTrustConfig(),
 
 
@@ -26,7 +29,8 @@ data class BuildInputPreflightRequest(
     val phpBinaryPath: String? = null,
     val nodeBinaryPath: String? = null,
     val pythonBinaryPath: String? = null,
-    val muslLinkerPath: String? = null
+    val muslLinkerPath: String? = null,
+    val builderMuslLinkerPath: String? = null
 )
 
 data class BuildInputPreflightResult(
@@ -136,12 +140,41 @@ object BuildInputPreflight {
                     minSize = 1024L,
                     hint = "Python musl linker missing; re-download Python runtime in Settings → Runtime Engines"
                 )
+                if (request.pythonAppProjectDir.requiresPythonDependencyPrebundle()) {
+                    issues.requireNativeBinary(
+                        key = "pythonPrebundleMuslLinker",
+                        label = "build-time musl linker (executable)",
+                        path = request.builderMuslLinkerPath,
+                        minSize = 1024L,
+                        hint = "This Python project still needs requirements pre-bundling; the current builder app cannot execute pip safely. Pre-populate .pypackages or use a build with bundled Python runtime."
+                    )
+                }
             }
             "GO_APP" -> {
                 issues.requireReadableDirectory(
                     key = "goAppProjectDir",
                     label = "Go app project directory",
                     dir = request.goAppProjectDir
+                )
+                request.goAppProjectDir?.let { dir ->
+                    val binaryName = detectGoBinaryName(dir)
+                    val binaryPath = binaryName?.let {
+                        com.webtoapp.core.golang.GoDependencyManager.findBinaryPath(dir, it)
+                    } ?: com.webtoapp.core.golang.GoDependencyManager.detectAnyCompatibleBinary(dir)?.absolutePath
+
+                    issues.requireNativeBinary(
+                        key = "goBinary",
+                        label = "Go executable binary",
+                        path = binaryPath,
+                        minSize = 1024L,
+                        hint = "GO_APP export now requires a prebuilt binary. Build the target-ABI binary first, then export."
+                    )
+                }
+            }
+            "MULTI_WEB" -> {
+                issues.requireMultiWebSites(
+                    items = request.multiWebSites,
+                    projectDir = request.multiWebProjectDir
                 )
             }
         }
@@ -212,6 +245,77 @@ object BuildInputPreflight {
         }
     }
 
+    private fun MutableList<BuildInputIssue>.requireMultiWebSites(
+        items: List<MultiWebSite>,
+        projectDir: File?
+    ) {
+        val enabledSites = items.filter { it.enabled }
+        if (enabledSites.isEmpty()) {
+            add(BuildInputIssue("multiWebSites", "Multi-web app has no enabled sites"))
+            return
+        }
+
+        var requiresLocalProject = false
+        enabledSites.forEachIndexed { index, site ->
+            val siteType = site.type.uppercase()
+            when {
+                siteType == "URL" -> {
+                    if (site.url.isBlank()) {
+                        add(BuildInputIssue("multiWebSites[$index]", "Multi-web URL site is missing its URL"))
+                    }
+                }
+                site.localFilePath.isBlank() -> {
+                    add(BuildInputIssue("multiWebSites[$index]", "Multi-web local site is missing its file path"))
+                }
+                else -> {
+                    requiresLocalProject = true
+                }
+            }
+        }
+
+        if (!requiresLocalProject) return
+
+        if (projectDir == null) {
+            add(BuildInputIssue("multiWebProjectDir", "Multi-web local site directory was not resolved"))
+            return
+        }
+
+        enabledSites.forEachIndexed { index, site ->
+            if (site.type.uppercase() == "URL" || site.localFilePath.isBlank()) return@forEachIndexed
+            val expectedFile = File(projectDir, site.localFilePath.trimStart('/'))
+            when {
+                !expectedFile.exists() -> add(
+                    BuildInputIssue(
+                        "multiWebSites[$index]",
+                        "Multi-web local site file does not exist",
+                        expectedFile.absolutePath
+                    )
+                )
+                !expectedFile.isFile -> add(
+                    BuildInputIssue(
+                        "multiWebSites[$index]",
+                        "Multi-web local site path is not a file",
+                        expectedFile.absolutePath
+                    )
+                )
+                !expectedFile.canRead() -> add(
+                    BuildInputIssue(
+                        "multiWebSites[$index]",
+                        "Multi-web local site file cannot be read",
+                        expectedFile.absolutePath
+                    )
+                )
+                expectedFile.length() == 0L -> add(
+                    BuildInputIssue(
+                        "multiWebSites[$index]",
+                        "Multi-web local site file is empty",
+                        expectedFile.absolutePath
+                    )
+                )
+            }
+        }
+    }
+
     private fun MutableList<BuildInputIssue>.requireReadableFile(
         key: String,
         label: String,
@@ -272,6 +376,26 @@ object BuildInputPreflight {
             !dir.isDirectory -> add(BuildInputIssue(key, "$label is not a directory", dir.absolutePath))
             !dir.canRead() -> add(BuildInputIssue(key, "$label cannot be read", dir.absolutePath))
         }
+    }
+
+    private fun File?.requiresPythonDependencyPrebundle(): Boolean {
+        if (this == null || !exists() || !isDirectory) return false
+        val requirements = File(this, "requirements.txt")
+        if (!requirements.exists() || !requirements.isFile || !requirements.canRead()) return false
+        return !com.webtoapp.core.python.PythonDependencyManager.hasInstalledPackages(File(this, ".pypackages"))
+    }
+
+    private fun detectGoBinaryName(projectDir: File): String? {
+        val goMod = File(projectDir, "go.mod")
+        if (goMod.exists()) {
+            goMod.readLines().firstOrNull { it.startsWith("module ") }
+                ?.substringAfter("module ")
+                ?.trim()
+                ?.substringAfterLast('/')
+                ?.takeIf { it.isNotBlank() }
+                ?.let { return it }
+        }
+        return projectDir.name.takeIf { it.isNotBlank() }
     }
 
     private fun normalizeAssetPath(value: String): String {

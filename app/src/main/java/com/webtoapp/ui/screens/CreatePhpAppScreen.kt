@@ -66,7 +66,8 @@ fun CreatePhpAppScreen(
         phpAppConfig: PhpAppConfig,
         iconUri: Uri?,
         themeType: String
-    ) -> Unit
+    ) -> Unit,
+    onOpenLinuxEnv: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -368,15 +369,7 @@ fun CreatePhpAppScreen(
     val canCreate = projectId != null
 
 
-    val frameworkColor = remember(detectedFramework) {
-        when (detectedFramework?.lowercase()) {
-            "laravel" -> Color(0xFFFF2D20)
-            "thinkphp" -> Color(0xFF6190E8)
-            "codeigniter" -> Color(0xFFDD4814)
-            "slim" -> Color(0xFF74B72E)
-            else -> Color(0xFF777BB4)
-        }
-    }
+    val accentColor = MaterialTheme.colorScheme.onSurface
 
     WtaCreateFlowScaffold(
         title = Strings.createPhpApp,
@@ -415,7 +408,7 @@ fun CreatePhpAppScreen(
             WtaCreateFlowSection(title = Strings.importProject) {
                 PhpHeroSection(
                     detectedFramework = detectedFramework,
-                    frameworkColor = frameworkColor,
+                    accentColor = accentColor,
                     frameworkVersion = frameworkVersion
                 )
 
@@ -504,16 +497,16 @@ fun CreatePhpAppScreen(
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             shape = MaterialTheme.shapes.small,
-                            color = frameworkColor.copy(alpha = 0.08f)
+                            color = accentColor.copy(alpha = 0.08f)
                         ) {
                             Column(modifier = Modifier.padding(12.dp)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Default.CheckCircle, null, tint = frameworkColor, modifier = Modifier.size(20.dp))
+                                    Icon(Icons.Default.CheckCircle, null, tint = accentColor, modifier = Modifier.size(20.dp))
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text(Strings.phpProjectReady, style = MaterialTheme.typography.bodyMedium, color = frameworkColor)
+                                    Text(Strings.phpProjectReady, style = MaterialTheme.typography.bodyMedium, color = accentColor)
                                 }
                                 Spacer(modifier = Modifier.height(4.dp))
-                                Text(selectedProjectDir!!.substringAfterLast("/"), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                                Text(selectedProjectDir!!.substringAfterLast("/"), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
                                 if (detectedFramework != null && detectedFramework != "raw") {
                                     Text("${Strings.phpFrameworkDetected}: $detectedFramework", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
@@ -562,7 +555,17 @@ fun CreatePhpAppScreen(
                         showAllDevDeps = showAllDevDeps,
                         onToggleDeps = { showAllDeps = !showAllDeps },
                         onToggleDevDeps = { showAllDevDeps = !showAllDevDeps },
-                        frameworkColor = frameworkColor
+                        accentColor = accentColor
+                    )
+                }
+
+                // 在 App 内一键 composer install——只在项目有 composer.json 时显示
+                if (selectedProjectDir != null && File(selectedProjectDir!!, "composer.json").exists()) {
+                    InstallProjectDepsCard(
+                        kind = DepsKind.PHP,
+                        projectDir = selectedProjectDir,
+                        accentColor = accentColor,
+                        onOpenBuildEnvScreen = onOpenLinuxEnv,
                     )
                 }
 
@@ -680,7 +683,7 @@ fun CreatePhpAppScreen(
 @Composable
 private fun PhpHeroSection(
     detectedFramework: String?,
-    frameworkColor: Color,
+    accentColor: Color,
     frameworkVersion: String?
 ) {
     val title = if (detectedFramework != null && detectedFramework != "raw")
@@ -688,14 +691,14 @@ private fun PhpHeroSection(
     else Strings.phpHeroTitle
 
     val tags = buildList {
-        frameworkVersion?.let { add("PHP $it" to frameworkColor) }
+        frameworkVersion?.let { add("PHP $it" to accentColor) }
     }
 
     RuntimeHeroSection(
         icon = Icons.Outlined.Code,
         title = title,
         subtitle = Strings.phpHeroDesc,
-        brandColor = frameworkColor,
+        brandColor = accentColor,
         tags = tags
     )
 }
@@ -711,25 +714,25 @@ private fun PhpComposerDepsCard(
     showAllDevDeps: Boolean,
     onToggleDeps: () -> Unit,
     onToggleDevDeps: () -> Unit,
-    frameworkColor: Color
+    accentColor: Color
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             RuntimeSectionHeader(
                 icon = Icons.Outlined.Extension,
                 title = Strings.phpComposerDeps,
-                brandColor = frameworkColor
+                brandColor = accentColor
             ) {
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = frameworkColor.copy(alpha = 0.1f)
+                    color = accentColor.copy(alpha = 0.1f)
                 ) {
                     Text(
                         text = "${deps.size + devDeps.size}",
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelMedium,
-                        color = frameworkColor,
-                        fontWeight = FontWeight.Bold
+                        color = accentColor,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
             }
@@ -886,7 +889,7 @@ private fun PhpExtensionsCard(
             RuntimeSectionHeader(
                 icon = Icons.Outlined.Extension,
                 title = Strings.phpExtensions,
-                brandColor = MaterialTheme.colorScheme.tertiary
+                brandColor = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(Strings.phpExtensionsHint, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -925,17 +928,17 @@ private fun PhpDatabaseCard(
             RuntimeSectionHeader(
                 icon = Icons.Outlined.Storage,
                 title = Strings.phpDatabaseConfig,
-                brandColor = MaterialTheme.colorScheme.secondary
+                brandColor = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(8.dp))
 
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
-                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f)
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
             ) {
                 Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Outlined.CheckCircle, null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Outlined.CheckCircle, null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text("${Strings.phpDbDetected} (${detectedDbFiles.size})", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
@@ -972,13 +975,7 @@ private fun PhpFrameworkTipCard(framework: String?) {
     }
 
     if (tip != null) {
-        val tipColor = when (framework?.lowercase()) {
-            "laravel" -> Color(0xFFFF2D20)
-            "thinkphp" -> Color(0xFF6190E8)
-            "codeigniter" -> Color(0xFFDD4814)
-            "slim" -> Color(0xFF74B72E)
-            else -> Color(0xFF777BB4)
-        }
+        val tipColor = MaterialTheme.colorScheme.onSurface
 
         Surface(
             modifier = Modifier.fillMaxWidth(),

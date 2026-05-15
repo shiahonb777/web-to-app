@@ -1,6 +1,7 @@
 package com.webtoapp.ui.screens
 
 import androidx.compose.animation.*
+import com.webtoapp.ui.design.WtaSwitch
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -95,7 +96,7 @@ fun CreateOfflinePackScreen(
             ) {
                 Text(
                     Strings.startScraping,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.SemiBold
                 )
             }
         }
@@ -212,7 +213,7 @@ fun CreateOfflinePackScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                            PremiumSwitch(
+                            WtaSwitch(
                                 checked = followLinks,
                                 onCheckedChange = { followLinks = it }
                             )
@@ -237,7 +238,7 @@ fun CreateOfflinePackScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                            PremiumSwitch(
+                            WtaSwitch(
                                 checked = downloadCdn,
                                 onCheckedChange = { downloadCdn = it }
                             )
@@ -269,7 +270,7 @@ fun CreateOfflinePackScreen(
                                     fontWeight = FontWeight.SemiBold
                                 )
                             }
-                            PremiumSwitch(
+                            WtaSwitch(
                                 checked = showAdvanced,
                                 onCheckedChange = { showAdvanced = it }
                             )
@@ -544,7 +545,7 @@ private fun StatChip(label: String, value: String, color: androidx.compose.ui.gr
             Text(
                 value,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
                 color = color
             )
             Text(

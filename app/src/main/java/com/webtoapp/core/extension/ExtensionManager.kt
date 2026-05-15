@@ -19,6 +19,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import android.os.Environment
 import com.webtoapp.core.i18n.Strings
@@ -111,6 +112,14 @@ class ExtensionManager private constructor(private val context: Context) {
 
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    /**
+     * Suspends until the async module loading has completed.
+     * Safe to call multiple times — returns immediately if already loaded.
+     */
+    suspend fun awaitLoaded() {
+        isLoading.first { !it }
+    }
 
 
     private val _loadError = MutableStateFlow<ExtensionLoadError?>(null)

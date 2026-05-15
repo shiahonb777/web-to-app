@@ -3,6 +3,7 @@ package com.webtoapp.core.apkbuilder
 import com.webtoapp.data.model.GalleryItem
 import com.webtoapp.data.model.GalleryItemType
 import com.webtoapp.data.model.HtmlFile
+import com.webtoapp.data.model.MultiWebSite
 import java.io.File
 import java.util.zip.ZipFile
 
@@ -12,12 +13,14 @@ internal data class ApkArtifactVerificationRequest(
     val encryptionEnabled: Boolean,
     val htmlFiles: List<HtmlFile> = emptyList(),
     val galleryItems: List<GalleryItem> = emptyList(),
+    val multiWebSites: List<MultiWebSite> = emptyList(),
     val wordPressProjectDir: File? = null,
     val nodejsProjectDir: File? = null,
     val phpAppProjectDir: File? = null,
     val pythonAppProjectDir: File? = null,
     val goAppProjectDir: File? = null,
-    val frontendProjectDir: File? = null
+    val frontendProjectDir: File? = null,
+    val multiWebProjectDir: File? = null
 )
 
 internal data class ApkArtifactVerificationResult(
@@ -180,7 +183,9 @@ internal object ApkArtifactVerifier {
                         key = "pythonAppProject",
                         label = "Python app project",
                         projectDir = request.pythonAppProjectDir,
-                        config = RuntimeAssetEmbedder.pythonConfig()
+                        assetPrefix = RuntimeAssetEmbedder.pythonConfig().assetPrefix,
+                        excludeDirs = RuntimeAssetEmbedder.pythonConfig().excludeDirs,
+                        allowEmptyAssetPaths = PYTHON_ALLOWED_EMPTY_ASSET_PATHS
                     )
                     "GO_APP" -> issues.requireProjectAssets(
                         entries = entries,
@@ -189,6 +194,12 @@ internal object ApkArtifactVerifier {
                         label = "Go app project",
                         projectDir = request.goAppProjectDir,
                         config = RuntimeAssetEmbedder.goConfig()
+                    )
+                    "MULTI_WEB" -> issues.requireMultiWebAssets(
+                        entries = entries,
+                        checkedEntries = checkedEntries,
+                        sites = request.multiWebSites,
+                        projectDir = request.multiWebProjectDir
                     )
                 }
 
@@ -280,13 +291,16 @@ internal object ApkArtifactVerifier {
         }
 
         expectedPaths.forEachIndexed { index, path ->
+            val sourceFile = resolveSourceFileForAssetPath(projectDir, assetPrefix, path)
             requireEntry(
                 entries = entries,
                 checkedEntries = checkedEntries,
                 key = "$key[$index]",
                 path = path,
                 label = "$label file",
-                allowEmpty = path in allowEmptyAssetPaths
+                allowEmpty = path in allowEmptyAssetPaths ||
+                    isAllowedEmptyPythonAssetPath(path) ||
+                    sourceFile?.length() == 0L
             )
         }
     }
@@ -309,8 +323,68 @@ internal object ApkArtifactVerifier {
             .toList()
     }
 
+    private fun resolveSourceFileForAssetPath(
+        projectDir: File,
+        assetPrefix: String,
+        assetPath: String
+    ): File? {
+        val prefix = assetPrefix.trimEnd('/') + "/"
+        if (!assetPath.startsWith(prefix)) return null
+        val relativePath = assetPath.removePrefix(prefix)
+        if (relativePath.isBlank()) return null
+        return File(projectDir, relativePath)
+    }
+
+    private fun MutableList<ApkArtifactIssue>.requireMultiWebAssets(
+        entries: Map<String, java.util.zip.ZipEntry>,
+        checkedEntries: MutableSet<String>,
+        sites: List<MultiWebSite>,
+        projectDir: File?
+    ) {
+        val localSites = sites.filter {
+            it.enabled && it.type.uppercase() != "URL" && it.localFilePath.isNotBlank()
+        }
+        if (localSites.isEmpty()) return
+
+        if (projectDir == null) {
+            add(ApkArtifactIssue("multiWebProject", "Multi-web project directory was not resolved"))
+            return
+        }
+
+        localSites.forEachIndexed { index, site ->
+            val relativePath = normalizeAssetPath(site.localFilePath)
+            val expectedSource = File(projectDir, relativePath)
+            if (!expectedSource.exists() || !expectedSource.isFile) {
+                add(
+                    ApkArtifactIssue(
+                        key = "multiWebSites[$index]",
+                        message = "Multi-web local site source file is missing",
+                        path = expectedSource.absolutePath
+                    )
+                )
+                return@forEachIndexed
+            }
+
+            requireEntry(
+                entries = entries,
+                checkedEntries = checkedEntries,
+                key = "multiWebSites[$index]",
+                path = "assets/html_projects/$relativePath",
+                label = "multi-web local site file"
+            )
+        }
+    }
+
     private fun normalizeAssetPath(value: String): String {
         return value.trim().replace('\\', '/').trimStart('/')
+    }
+
+    private fun isAllowedEmptyPythonAssetPath(path: String): Boolean {
+        if (!path.startsWith("assets/python_app/.pypackages/")) return false
+        return path.endsWith("/__init__.py") ||
+            path.endsWith("/__init__.py-tpl") ||
+            path.endsWith("/py.typed") ||
+            path.endsWith("/REQUESTED")
     }
 
     private val WORDPRESS_ALLOWED_EMPTY_ASSET_PATHS = setOf(
@@ -319,5 +393,41 @@ internal object ApkArtifactVerifier {
         "assets/wordpress/wp-includes/js/swfupload/handlers.min.js",
         "assets/wordpress/wp-includes/js/swfupload/license.txt",
         "assets/wordpress/wp-includes/js/swfupload/swfupload.js"
+    )
+
+    private val PYTHON_ALLOWED_EMPTY_ASSET_PATHS = setOf(
+        "assets/python_app/.pypackages/anyio/_backends/__init__.py",
+        "assets/python_app/.pypackages/anyio/_core/__init__.py",
+        "assets/python_app/.pypackages/anyio/py.typed",
+        "assets/python_app/.pypackages/blinker/py.typed",
+        "assets/python_app/.pypackages/click/py.typed",
+        "assets/python_app/.pypackages/exceptiongroup/py.typed",
+        "assets/python_app/.pypackages/fastapi-0.99.1.dist-info/REQUESTED",
+        "assets/python_app/.pypackages/fastapi/dependencies/__init__.py",
+        "assets/python_app/.pypackages/fastapi/openapi/__init__.py",
+        "assets/python_app/.pypackages/fastapi/py.typed",
+        "assets/python_app/.pypackages/flask/py.typed",
+        "assets/python_app/.pypackages/idna/py.typed",
+        "assets/python_app/.pypackages/itsdangerous/py.typed",
+        "assets/python_app/.pypackages/jinja2/py.typed",
+        "assets/python_app/.pypackages/Django-5.0.dist-info/REQUESTED",
+        "assets/python_app/.pypackages/asgiref/py.typed",
+        "assets/python_app/.pypackages/markupsafe/py.typed",
+        "assets/python_app/.pypackages/packaging/py.typed",
+        "assets/python_app/.pypackages/pydantic-1.10.16.dist-info/REQUESTED",
+        "assets/python_app/.pypackages/pydantic/py.typed",
+        "assets/python_app/.pypackages/sqlparse/py.typed",
+        "assets/python_app/.pypackages/starlette/py.typed",
+        "assets/python_app/.pypackages/gunicorn-21.2.0.dist-info/REQUESTED",
+        "assets/python_app/.pypackages/uvicorn-0.23.2.dist-info/REQUESTED",
+        "assets/python_app/.pypackages/uvicorn/lifespan/__init__.py",
+        "assets/python_app/.pypackages/uvicorn/loops/__init__.py",
+        "assets/python_app/.pypackages/uvicorn/middleware/__init__.py",
+        "assets/python_app/.pypackages/uvicorn/protocols/__init__.py",
+        "assets/python_app/.pypackages/uvicorn/protocols/http/__init__.py",
+        "assets/python_app/.pypackages/uvicorn/protocols/websockets/__init__.py",
+        "assets/python_app/.pypackages/werkzeug/middleware/__init__.py",
+        "assets/python_app/.pypackages/werkzeug/py.typed",
+        "assets/python_app/.pypackages/werkzeug/sansio/__init__.py"
     )
 }

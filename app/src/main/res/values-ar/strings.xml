@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_description">تحويل أي موقع إلى تطبيق مستقل</string>
 
@@ -111,48 +111,12 @@
     <string name="module_disabled">معطل</string>
     <string name="ai_module_developer">مطور وحدات AI</string>
 
-    <string name="store_get_download_link_failed">فشل الحصول على رابط التنزيل: %1$s</string>
-    <string name="store_network_error">خطأ في الشبكة: %1$s</string>
-    <string name="store_report_failed">فشل الإبلاغ: %1$s</string>
-
     <string name="njs_package_json_not_found">لم يتم العثور على package.json. يرجى اختيار مجلد مشروع Node.js صالح.</string>
 
-
-    <string name="community_recipe_json_supporting">الصق JSON لإعدادات المشروع ليتمكن الآخرون من استيراده بنقرة واحدة.</string>
-    <string name="community_tutorial_title_placeholder">عنوان الدرس *</string>
-    <string name="community_difficulty_label">الصعوبة</string>
-    <string name="community_question_title_placeholder">عنوان السؤال *</string>
-    <string name="community_showcase_content_placeholder">عرّف بعملك...</string>
-    <string name="community_tutorial_content_placeholder">اكتب محتوى الدرس...</string>
-    <string name="community_question_content_placeholder">صف سؤالك بالتفصيل...</string>
-
-    <string name="community_post_type_showcase">عرض</string>
-    <string name="community_post_type_tutorial">درس</string>
-    <string name="community_post_type_question">سؤال</string>
-    <string name="community_post_type_update">تحديث</string>
-    <string name="community_difficulty_beginner">مبتدئ</string>
-    <string name="community_difficulty_intermediate">متوسط</string>
-    <string name="community_difficulty_advanced">متقدم</string>
-    <string name="community_resolved">تم الحل</string>
-    <string name="community_work_default">عمل</string>
-    <string name="community_source_website">موقع ويب</string>
-    <string name="community_source_html">HTML</string>
-    <string name="community_source_media">وسائط</string>
-    <string name="community_source_frontend">إطار عمل للواجهة الأمامية</string>
-    <string name="community_source_server">الخادم</string>
-    <string name="community_source_format">المصدر: %1$s</string>
-    <string name="community_recipe_imported">تم استيراد الوصفة</string>
-    <string name="community_import_recipe_one_tap">استيراد الوصفة بنقرة واحدة</string>
-    <string name="community_import_count">%1$d مرة استيراد</string>
-    <string name="community_import">استيراد</string>
 
     <string name="theme_dark">الوضع الداكن</string>
     <string name="theme_light">الوضع الفاتح</string>
 
-    <string name="community_developer_role">مطوّر</string>
-
-
-    
     <string name="ai_generating">AI يولد…</string>
     <string name="ai_analyzing">تحليل المتطلبات…</string>
     <string name="ai_planning">تخطيط خطوات التطوير…</string>
@@ -519,30 +483,13 @@
     
     <string name="about">حول</string>
     <string name="independent_developer">مطور مستقل · متحمس للذكاء الاصطناعي</string>
-    <string name="check_update">التحقق من التحديثات</string>
     <string name="checking">جاري التحقق…</string>
     <string name="downloading">جاري التحميل…</string>
     <string name="current_version">الإصدار الحالي</string>
     <string name="about_this_app">حول هذا التطبيق</string>
     <string name="about_app_description">WebToApp هي أداة طورتها بشكل مستقل يمكنها تحويل المواقع والصور ومقاطع الفيديو بسرعة إلى تطبيقات Android مستقلة.\n\nإذا كان لديك أي أسئلة أو اقتراحات أو أفكار، لا تتردد في الاتصال بي!</string>
-    <string name="social_media">وسائل التواصل الاجتماعي</string>
-    <string name="exchange_group">مجموعة المجتمع</string>
-    <string name="video_tutorial">فيديو تعليمي</string>
-    <string name="open_source_repo">مستودع مفتوح المصدر</string>
-    <string name="join_exchange_group">انضم إلى المجتمع</string>
-    <string name="learn_progress_together">تعلم معًا، احصل على آخر الأخبار 🚀</string>
-    <string name="exchange_learning">تبادل التعلم، تحديث الأخبار</string>
-    <string name="international_group">مجموعة المستخدمين الدوليين</string>
-    <string name="contact_author">الاتصال بالمؤلف</string>
-    <string name="feedback_cooperation">ملاحظات، تعاون، اقتراحات الميزات 💬</string>
-    <string name="feedback_cooperation_short">ملاحظات، تعاون</string>
-    <string name="email_contact">الاتصال بالبريد الإلكتروني</string>
-    <string name="international_email">البريد الإلكتروني الدولي</string>
     <string name="update_later">التحديث لاحقًا</string>
     <string name="download_complete">اكتمل التحميل، جاري التثبيت…</string>
-    <string name="check_update_failed">فشل التحقق من التحديثات</string>
-
-    
     <string name="ai_generating_status">AI يولد…</string>
     <string name="ai_analyzing_status">تحليل المتطلبات…</string>
     <string name="ai_completed_status">اكتمل التوليد</string>

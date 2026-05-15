@@ -46,7 +46,7 @@ import com.webtoapp.core.extension.*
 import com.webtoapp.core.extension.agent.*
 import com.webtoapp.core.i18n.Strings
 import kotlinx.coroutines.launch
-import com.webtoapp.ui.components.ThemedBackgroundBox
+import com.webtoapp.ui.design.WtaBackground
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
 
@@ -177,7 +177,7 @@ fun AiModuleDeveloperScreen(
                         )
                         Text(
                             Strings.aiModuleDevelopment,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.SemiBold
                         )
 
 
@@ -210,7 +210,7 @@ fun AiModuleDeveloperScreen(
             )
         }
     ) { padding ->
-        ThemedBackgroundBox(
+        WtaBackground(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
@@ -485,7 +485,7 @@ private fun WelcomeCard() {
             Text(
                 Strings.aiAssistant,
                 style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center
             )
@@ -566,7 +566,7 @@ private fun ExampleRequirements(onSelect: (String) -> Unit) {
             Text(
                 Strings.tryTheseExamples,
                 style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
             )
         }
@@ -851,7 +851,7 @@ private fun ThoughtCard(thought: AgentThought) {
                     Text(
                         thought.type.displayName,
                         style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(4.dp))
@@ -872,7 +872,7 @@ private fun ThoughtCard(thought: AgentThought) {
                         "${thought.step}",
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                         style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
@@ -905,7 +905,7 @@ private fun ToolResultCard(result: ToolCallResult) {
                 Text(
                     tool?.type?.displayName ?: result.toolName,
                     style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.SemiBold
                 )
                 Spacer(modifier = Modifier.weight(weight = 1f, fill = true))
                 if (result.success) {
@@ -1014,7 +1014,7 @@ private fun GeneratedModuleCard(
                     Text(
                         Strings.moduleGeneratedSuccess,
                         style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
@@ -1048,7 +1048,7 @@ private fun GeneratedModuleCard(
                         Text(
                             module.name,
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.SemiBold
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
@@ -1234,7 +1234,7 @@ private fun CodePreviewSection(
 
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = Color(0xFF1E1E1E)
+                color = com.webtoapp.ui.theme.AppColors.EditorDark
             ) {
                 val displayCode = if (expanded) {
                     code
@@ -1250,7 +1250,7 @@ private fun CodePreviewSection(
                         .then(if (expanded) Modifier.horizontalScroll(rememberScrollState()) else Modifier),
                     style = MaterialTheme.typography.bodySmall.copy(
                         fontFamily = FontFamily.Monospace,
-                        color = Color(0xFFD4D4D4),
+                        color = com.webtoapp.ui.theme.AppColors.CodeForeground,
                         lineHeight = 18.sp
                     ),
                     maxLines = if (expanded) Int.MAX_VALUE else 6
@@ -1292,7 +1292,7 @@ private fun ErrorCard(message: String, onRetry: () -> Unit) {
                     Text(
                         Strings.developmentFailed,
                         style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onErrorContainer
                     )
                     Spacer(modifier = Modifier.height(4.dp))
@@ -1516,7 +1516,7 @@ private fun HelpSection(icon: String, title: String, content: String) {
             Text(
                 title,
                 style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.SemiBold
             )
         }
         Spacer(modifier = Modifier.height(6.dp))

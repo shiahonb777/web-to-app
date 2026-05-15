@@ -51,13 +51,18 @@ class GoRuntime(private val context: Context) {
 
     fun getProjectDir(projectId: String): File = File(getProjectsDir(), projectId)
 
+    suspend fun ensureBinaryReady(
+        projectDir: File,
+        binaryName: String
+    ): String? = withContext(Dispatchers.IO) {
+        val explicitName = binaryName.trim()
+        if (explicitName.isNotEmpty()) {
+            GoDependencyManager.findBinaryPath(projectDir, explicitName)?.let { return@withContext it }
+        }
 
-
-
-
-
-
-
+        GoDependencyManager.detectAnyCompatibleBinary(projectDir)?.let { return@withContext it.absolutePath }
+        null
+    }
 
 
     suspend fun startServer(
@@ -72,8 +77,12 @@ class GoRuntime(private val context: Context) {
 
             val projDir = File(projectDir)
 
-
-            val binaryPath = GoDependencyManager.prepareBinary(context, projDir, binaryName)
+            val readyBinaryPath = ensureBinaryReady(
+                projectDir = projDir,
+                binaryName = binaryName
+            )
+            val runnableBinaryName = readyBinaryPath?.let { File(it).name } ?: binaryName
+            val binaryPath = GoDependencyManager.prepareBinary(context, projDir, runnableBinaryName)
             if (binaryPath == null) {
                 _serverState.value = ServerState.Error("Go 二进制无效或 ABI 不兼容")
                 return@withContext -1
@@ -88,23 +97,31 @@ class GoRuntime(private val context: Context) {
             }
             currentPort = serverPort
 
-            val command = listOf(binaryPath)
+            if (!GoDependencyManager.isGoExecLoaderReady(context)) {
+                _serverState.value = ServerState.Error("Go executable loader 未就绪")
+                return@withContext -1
+            }
+
+            val command = GoDependencyManager.buildBinaryCommand(context, binaryPath, emptyList())
 
             AppLogger.i(TAG, "启动 Go 服务器: $binaryPath")
             AppLogger.i(TAG, "工作目录: $projectDir, 端口: $serverPort")
-            ShellLogger.i(TAG, "启动 Go 服务器: $binaryPath, 端口: $serverPort")
+            ShellLogger.i(TAG, "启动 Go 服务器: ${command.joinToString(" ")}, 端口: $serverPort")
 
             val processBuilder = ProcessBuilder(command)
             processBuilder.directory(projDir)
 
 
             val env = processBuilder.environment()
+            GoDependencyManager.configureGoBinaryEnvironment(
+                context = context,
+                processEnv = env,
+                additionalPathEntries = listOf(File(context.filesDir, "go_bins").absolutePath)
+            )
             env["PORT"] = serverPort.toString()
             env["HOST"] = "127.0.0.1"
             env["ADDR"] = "127.0.0.1:$serverPort"
             env["GIN_MODE"] = "release"
-            env["HOME"] = context.filesDir.absolutePath
-            env["TMPDIR"] = context.cacheDir.absolutePath
 
 
             envVars.forEach { (k, v) -> env[k] = v }
@@ -198,24 +215,10 @@ class GoRuntime(private val context: Context) {
 
 
     fun detectBinary(projectDir: File): String? {
-        val searchDirs = listOf(
-            projectDir,
-            File(projectDir, "bin"),
-            File(projectDir, "build")
-        )
-        for (dir in searchDirs) {
-            if (!dir.isDirectory) continue
-            dir.listFiles()?.forEach { file ->
-                if (file.isFile && file.length() > 1000) {
-                    val elfInfo = GoDependencyManager.parseElf(file)
-                    if (elfInfo.isValid && GoDependencyManager.isCompatible(elfInfo)) {
-                        AppLogger.i(TAG, "检测到 Go 二进制: ${file.name} (${elfInfo.abiName})")
-                        return file.name
-                    }
-                }
-            }
-        }
-        return null
+        val binary = GoDependencyManager.detectAnyCompatibleBinary(projectDir) ?: return null
+        val elfInfo = GoDependencyManager.parseElf(binary)
+        AppLogger.i(TAG, "检测到 Go 二进制: ${binary.name} (${elfInfo.abiName})")
+        return binary.name
     }
 
 
@@ -318,17 +321,17 @@ class GoRuntime(private val context: Context) {
         val filesHtml = fileList.joinToString("\n") { "  <li>$it</li>" }
 
         val statusBadge = if (binaryDetected != null) {
-            """<span class="badge ready">二进制就绪: $binaryDetected</span>"""
+            """<span class="badge ready">可运行二进制已就绪: $binaryDetected</span>"""
         } else {
-            """<span class="badge warn">未检测到可执行二进制</span>"""
+            """<span class="badge warn">缺少预编译二进制</span>"""
         }
 
         val entryFileName = mainGo?.name ?: "main.go"
         val fileCount = "${fileList.size}${if (fileList.size >= 30) "+" else ""}"
         val tipText = if (binaryDetected != null) {
-            "已检测到预编译二进制 ($binaryDetected)，可直接启动服务器。"
+            "已检测到可运行二进制 ($binaryDetected)，可直接启动服务器。"
         } else {
-            "需要提供预编译的 ARM/ARM64 二进制文件才能运行。"
+            "当前 GO_APP 仅支持运行预编译二进制。请先为目标 ABI 构建可执行文件。"
         }
 
         return """<!DOCTYPE html>

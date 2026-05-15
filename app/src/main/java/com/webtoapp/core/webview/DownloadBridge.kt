@@ -76,8 +76,11 @@ class DownloadBridge(
                 const originalCreateObjectURL = URL.createObjectURL.bind(URL);
                 const originalRevokeObjectURL = URL.revokeObjectURL.bind(URL);
 
-                // Blob URL 映射表
-                const blobUrlMap = new Map();
+                // Blob URL 映射表 - 暴露到 window 以便原生回调注入的 JS 也能查到
+                // 页面内的 JS 常在 a.click() 之后立刻调用 URL.revokeObjectURL，
+                // 等原生 onDownloadStart 回调再注入 fetch(blobUrl) 时 URL 早已失效，
+                // 所以必须依赖这份缓存直接拿 Blob 对象（Blob 有引用就一直活着，不受 URL 撤销影响）
+                const blobUrlMap = window.__wtaBlobMap || (window.__wtaBlobMap = new Map());
 
                 // 拦截 URL.createObjectURL
                 URL.createObjectURL = function(blob) {
@@ -89,12 +92,12 @@ class DownloadBridge(
                     return url;
                 };
 
-                // 拦截 URL.revokeObjectURL
+                // 拦截 URL.revokeObjectURL - 延迟 30 秒再从缓存移除
+                // 这样即使页面同步 revoke 了，原生回调链路兜一圈后仍能取到 Blob
                 URL.revokeObjectURL = function(url) {
-                    // 延迟删除，给下载处理留时间
                     setTimeout(() => {
                         blobUrlMap.delete(url);
-                    }, 5000);
+                    }, 30000);
                     return originalRevokeObjectURL(url);
                 };
 
@@ -167,8 +170,9 @@ class DownloadBridge(
 
                 // 大文件阈值 (10MB) - 超过此大小使用分块处理
                 const LARGE_FILE_THRESHOLD = 10 * 1024 * 1024;
-                // 分块大小 (1MB)
-                const CHUNK_SIZE = 1024 * 1024;
+                // 分块大小 (512KB) - 比默认 1MB 更小，减少单块峰值内存
+                // 对 250MB+ 的导出来说，1MB 分块叠加 JS 字符串 + base64 临时内存会压垮 V8 heap
+                const CHUNK_SIZE = 512 * 1024;
 
                 // Handle Blob URL 下载 - 优化版本，支持大文件分块处理
                 async function handleBlobDownload(blobUrl, filename) {
@@ -476,32 +480,34 @@ class DownloadBridge(
 
     @JavascriptInterface
     fun appendChunk(downloadId: String, base64Chunk: String, chunkIndex: Int, totalChunks: Int) {
-        scope.launch(Dispatchers.IO) {
-            try {
-                val download = chunkedDownloads[downloadId] ?: run {
-                    AppLogger.e("DownloadBridge", "Download task not found: $downloadId")
-                    return@launch
-                }
+        // 同步执行 IO 写入：这里运行在 WebView 的 JS binder 线程，
+        // 这样 JS 端 setTimeout(next, 0) 只有等 appendChunk 返回后才发下一块，
+        // 形成天然背压，避免协程队列堆积大量 1MB+ base64 字符串导致 OOM。
+        try {
+            val download = chunkedDownloads[downloadId] ?: run {
+                AppLogger.e("DownloadBridge", "Download task not found: $downloadId")
+                return
+            }
 
-                download.totalChunks = totalChunks
+            download.totalChunks = totalChunks
 
+            val chunkBytes = Base64.decode(base64Chunk, Base64.DEFAULT)
+            download.outputStream.write(chunkBytes)
+            download.outputStream.flush()
+            download.receivedChunks++
 
-                val chunkBytes = Base64.decode(base64Chunk, Base64.DEFAULT)
-                download.outputStream.write(chunkBytes)
-                download.receivedChunks++
+            val progress = ((download.receivedChunks.toFloat() / totalChunks) * 100).toInt()
 
-
-                val progress = ((download.receivedChunks.toFloat() / totalChunks) * 100).toInt()
-                AppLogger.d("DownloadBridge", "Chunk progress: $chunkIndex/$totalChunks ($progress%)")
-
-
-                if (progress % 5 == 0 || progress == 100) {
+            // 进度通知放到协程里异步更新，不阻塞 JS 线程
+            if (progress % 5 == 0 || progress == 100) {
+                scope.launch(Dispatchers.Main) {
                     notificationManager.updateProgress(download.notificationId, download.filename, progress)
                 }
-
-            } catch (e: Exception) {
-                AppLogger.e("DownloadBridge", "Failed to write chunk", e)
-
+            }
+        } catch (e: Exception) {
+            AppLogger.e("DownloadBridge", "Failed to write chunk $chunkIndex/$totalChunks", e)
+            // 清理放到协程里，避免 JS 线程等锁
+            scope.launch(Dispatchers.IO) {
                 cleanupChunkedDownload(downloadId, false)
             }
         }
@@ -527,12 +533,12 @@ class DownloadBridge(
                 AppLogger.d("DownloadBridge", "Chunked download complete, saving file: ${download.filename}")
 
 
-                val fileBytes = download.file.readBytes()
-
+                // 流式保存：绝不把整个文件读进内存。
+                // 250MB+ 的 JSON/数据导出，readBytes() + saveFromBytes() 会直接 OOM。
                 if (com.webtoapp.util.MediaSaver.isMediaFile(download.mimeType, download.filename)) {
 
-                    val result = com.webtoapp.util.MediaSaver.saveFromBytes(
-                        context, fileBytes, download.filename, download.mimeType
+                    val result = com.webtoapp.util.MediaSaver.saveFromFile(
+                        context, download.file, download.mimeType
                     )
 
                     withContext(Dispatchers.Main) {
@@ -557,7 +563,7 @@ class DownloadBridge(
                     }
                 } else {
 
-                    val savedFile = saveToDownloadsInternal(fileBytes, download.filename)
+                    val savedFile = saveToDownloadsInternalFromFile(download.file, download.filename)
 
                     withContext(Dispatchers.Main) {
                         if (savedFile != null) {
@@ -570,7 +576,7 @@ class DownloadBridge(
                             )
                         } else {
                             Toast.makeText(context, Strings.saveFailed, Toast.LENGTH_SHORT).show()
-                            notificationManager.showSaveFailed(download.filename, "Cannot write file", download.notificationId)
+                            notificationManager.showSaveFailed(download.filename, Strings.cannotWriteFile, download.notificationId)
                         }
                     }
                 }
@@ -673,7 +679,7 @@ class DownloadBridge(
                             )
                         } else {
                             Toast.makeText(context, Strings.saveFailed, Toast.LENGTH_SHORT).show()
-                            notificationManager.showSaveFailed(safeFilename, "Cannot write file", progressNotificationId)
+                            notificationManager.showSaveFailed(safeFilename, Strings.cannotWriteFile, progressNotificationId)
                         }
                     }
                 }
@@ -682,7 +688,7 @@ class DownloadBridge(
                 AppLogger.e("DownloadBridge", "Failed to save file", e)
                 withContext(Dispatchers.Main) {
                     Toast.makeText(context, Strings.saveFailedWithReason.replace("%s", e.message ?: ""), Toast.LENGTH_SHORT).show()
-                    notificationManager.showSaveFailed(filename, e.message ?: "Unknown error", progressNotificationId)
+                    notificationManager.showSaveFailed(filename, e.message ?: Strings.unknownError, progressNotificationId)
                 }
             }
         }
@@ -703,6 +709,106 @@ class DownloadBridge(
         }
     }
 
+    /**
+     * 流式版保存：直接从临时文件拷贝到目标位置，不经过 ByteArray。
+     * 用于大文件（几十 MB ~ 几百 MB），避免 OutOfMemoryError。
+     */
+    private fun saveToDownloadsInternalFromFile(sourceFile: File, filename: String): File? {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            saveToDownloadsMediaStoreFromFile(sourceFile, filename)
+        } else {
+            saveToDownloadsLegacyFromFile(sourceFile, filename)
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private fun saveToDownloadsMediaStoreFromFile(sourceFile: File, filename: String): File? {
+        try {
+            val contentValues = android.content.ContentValues().apply {
+                put(android.provider.MediaStore.Downloads.DISPLAY_NAME, filename)
+                put(android.provider.MediaStore.Downloads.MIME_TYPE, getMimeType(filename))
+                put(android.provider.MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+                put(android.provider.MediaStore.Downloads.IS_PENDING, 1)
+            }
+
+            val uri = context.contentResolver.insert(
+                android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                contentValues
+            ) ?: return null
+
+            context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                java.io.FileInputStream(sourceFile).use { input ->
+                    input.copyTo(outputStream, bufferSize = 64 * 1024)
+                }
+            } ?: return null
+
+            contentValues.clear()
+            contentValues.put(android.provider.MediaStore.Downloads.IS_PENDING, 0)
+            context.contentResolver.update(uri, contentValues, null, null)
+
+            val downloadDir = getPublicDownloadsDir()
+            AppLogger.d("DownloadBridge", "流式保存到公共下载目录: ${downloadDir.absolutePath}/$filename")
+            return File(downloadDir, filename)
+        } catch (e: Exception) {
+            AppLogger.e("DownloadBridge", "MediaStore 流式保存失败，尝试备用方案", e)
+            return saveToAppPrivateDirFromFile(sourceFile, filename)
+        }
+    }
+
+    private fun saveToDownloadsLegacyFromFile(sourceFile: File, filename: String): File? {
+        val downloadDir = getPublicDownloadsDir()
+        if (!downloadDir.exists()) downloadDir.mkdirs()
+
+        var targetFile = File(downloadDir, filename)
+        var counter = 1
+        val nameWithoutExt = filename.substringBeforeLast(".")
+        val ext = if (filename.contains(".")) ".${filename.substringAfterLast(".")}" else ""
+        while (targetFile.exists()) {
+            targetFile = File(downloadDir, "${nameWithoutExt}_$counter$ext")
+            counter++
+        }
+
+        return try {
+            java.io.FileInputStream(sourceFile).use { input ->
+                FileOutputStream(targetFile).use { out ->
+                    input.copyTo(out, bufferSize = 64 * 1024)
+                }
+            }
+            AppLogger.d("DownloadBridge", "流式保存完成: ${targetFile.absolutePath}")
+            targetFile
+        } catch (e: Exception) {
+            AppLogger.e("DownloadBridge", "流式写入失败", e)
+            null
+        }
+    }
+
+    private fun saveToAppPrivateDirFromFile(sourceFile: File, filename: String): File? {
+        val downloadDir = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.filesDir
+        if (!downloadDir.exists()) downloadDir.mkdirs()
+
+        var targetFile = File(downloadDir, filename)
+        var counter = 1
+        val nameWithoutExt = filename.substringBeforeLast(".")
+        val ext = if (filename.contains(".")) ".${filename.substringAfterLast(".")}" else ""
+        while (targetFile.exists()) {
+            targetFile = File(downloadDir, "${nameWithoutExt}_$counter$ext")
+            counter++
+        }
+
+        return try {
+            java.io.FileInputStream(sourceFile).use { input ->
+                FileOutputStream(targetFile).use { out ->
+                    input.copyTo(out, bufferSize = 64 * 1024)
+                }
+            }
+            AppLogger.d("DownloadBridge", "流式保存到应用目录: ${targetFile.absolutePath}")
+            targetFile
+        } catch (e: Exception) {
+            AppLogger.e("DownloadBridge", "应用目录流式写入失败", e)
+            null
+        }
+    }
+
 
 
 
@@ -712,7 +818,7 @@ class DownloadBridge(
             val contentValues = android.content.ContentValues().apply {
                 put(android.provider.MediaStore.Downloads.DISPLAY_NAME, filename)
                 put(android.provider.MediaStore.Downloads.MIME_TYPE, getMimeType(filename))
-                put(android.provider.MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/WebToApp")
+                put(android.provider.MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
                 put(android.provider.MediaStore.Downloads.IS_PENDING, 1)
             }
 
@@ -730,11 +836,9 @@ class DownloadBridge(
             contentValues.put(android.provider.MediaStore.Downloads.IS_PENDING, 0)
             context.contentResolver.update(uri, contentValues, null, null)
 
-
-            val downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-            val appDir = File(downloadDir, "WebToApp")
-            AppLogger.d("DownloadBridge", "文件已保存到公共下载目录: ${appDir.absolutePath}/$filename")
-            return File(appDir, filename)
+            val downloadDir = getPublicDownloadsDir()
+            AppLogger.d("DownloadBridge", "文件已保存到公共下载目录: ${downloadDir.absolutePath}/$filename")
+            return File(downloadDir, filename)
 
         } catch (e: Exception) {
             AppLogger.e("DownloadBridge", "MediaStore 保存失败，尝试备用方案", e)
@@ -747,22 +851,21 @@ class DownloadBridge(
 
 
     private fun saveToDownloadsLegacy(bytes: ByteArray, filename: String): File? {
-        val downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-        val appDir = File(downloadDir, "WebToApp")
+        val downloadDir = getPublicDownloadsDir()
 
 
-        if (!appDir.exists()) {
-            appDir.mkdirs()
+        if (!downloadDir.exists()) {
+            downloadDir.mkdirs()
         }
 
 
-        var targetFile = File(appDir, filename)
+        var targetFile = File(downloadDir, filename)
         var counter = 1
         val nameWithoutExt = filename.substringBeforeLast(".")
         val ext = if (filename.contains(".")) ".${filename.substringAfterLast(".")}" else ""
 
         while (targetFile.exists()) {
-            targetFile = File(appDir, "${nameWithoutExt}_$counter$ext")
+            targetFile = File(downloadDir, "${nameWithoutExt}_$counter$ext")
             counter++
         }
 
@@ -876,14 +979,15 @@ class DownloadBridge(
 
     @JavascriptInterface
     fun getDownloadPath(): String {
-        val downloadDir = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
-                ?: context.filesDir
-        } else {
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-        }
-        return downloadDir.absolutePath
+        return getPublicDownloadsDir().absolutePath
     }
+
+
+
+
+    @Suppress("DEPRECATION")
+    private fun getPublicDownloadsDir(): File =
+        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
 
 
 

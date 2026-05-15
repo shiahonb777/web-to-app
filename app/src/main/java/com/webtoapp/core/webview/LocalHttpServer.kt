@@ -29,6 +29,7 @@ class LocalHttpServer(
 ) {
     companion object {
         private const val TAG = "LocalHttpServer"
+        private const val LOOPBACK_HOST = "127.0.0.1"
 
         @Volatile
         private var instance: LocalHttpServer? = null
@@ -55,6 +56,18 @@ class LocalHttpServer(
                         name.contains("worker")
                 }
         }
+
+        fun stablePortForPackageName(
+            packageName: String,
+            range: PortManager.PortRange = PortManager.PortRange.LOCAL_HTTP
+        ): Int {
+            val normalized = packageName.trim().lowercase()
+            if (normalized.isBlank()) return range.start
+            val offset = normalized.hashCode().toUInt().toInt() % range.size
+            return range.start + offset
+        }
+
+        fun buildLoopbackBaseUrl(port: Int): String = "http://$LOOPBACK_HOST:$port"
     }
 
     private var serverSocket: ServerSocket? = null
@@ -93,7 +106,7 @@ class LocalHttpServer(
     fun start(rootDir: File, enableCrossOriginIsolation: Boolean = false): String {
         if (isRunning.get() && rootDirectory == rootDir && crossOriginIsolationEnabled == enableCrossOriginIsolation) {
 
-            return "http://localhost:$actualPort"
+            return buildLoopbackBaseUrl(actualPort)
         }
 
 
@@ -112,13 +125,23 @@ class LocalHttpServer(
 
 
 
-            serverSocket = ServerSocket(allocatedPort, 50, InetAddress.getLoopbackAddress())
+            // 显式绑定到 IPv4 127.0.0.1，与 buildLoopbackBaseUrl 拼出的 URL 一致。
+            // InetAddress.getLoopbackAddress() 在某些设备/Emulator（开启 IPv6 优先）上会返回 ::1，
+            // ServerSocket 就只监听 IPv6 loopback，而 WebView 仍按 "http://127.0.0.1:..." 连接，
+            // 导致 ERR_CONNECTION_REFUSED——服务器启动成功却看似不可达。
+            val bindAddress = java.net.Inet4Address.getByName(LOOPBACK_HOST)
+            serverSocket = ServerSocket(allocatedPort, 50, bindAddress)
             actualPort = serverSocket?.localPort ?: allocatedPort
             isRunning.set(true)
 
             AppLogger.i(TAG, "服务器启动在端口 $actualPort, 根目录: ${rootDir.absolutePath}")
 
-
+            // ServerSocket 构造返回时，内核已经完成 bind()+listen()，
+            // 从同进程用 loopback 连接一定会进入 TCP backlog（默认 50），不会被 RST。
+            // accept 线程只是消费 backlog；即使它晚几毫秒开始 accept，客户端 connect 也不会失败。
+            //
+            // 关键约束：本方法常在主线程或 UI 调度器里被调用（Compose LaunchedEffect 默认 Main），
+            // 因此禁止在这里做任何阻塞式网络 IO（会抛 NetworkOnMainThreadException）。
             Thread({
                 while (isRunning.get()) {
                     try {
@@ -132,7 +155,7 @@ class LocalHttpServer(
                 }
             }, acceptThreadName).apply { isDaemon = true }.start()
 
-            return "http://localhost:$actualPort"
+            return buildLoopbackBaseUrl(actualPort)
         } catch (e: Exception) {
             AppLogger.e(TAG, "启动服务器失败", e)
             throw e
@@ -282,7 +305,7 @@ class LocalHttpServer(
             append("Content-Type: $mimeType\r\n")
             append("Content-Length: $fileLength\r\n")
 
-            append("Access-Control-Allow-Origin: http://localhost:$actualPort\r\n")
+            append("Access-Control-Allow-Origin: ${buildLoopbackBaseUrl(actualPort)}\r\n")
             append("Access-Control-Allow-Methods: GET, HEAD, OPTIONS\r\n")
             append("Access-Control-Allow-Headers: *\r\n")
             append("Vary: Origin\r\n")

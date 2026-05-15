@@ -1,0 +1,4 @@
+/* Night Shift companion CSS — kept minimal, the heavy lift is in main.js. */
+#wta-night-shift-overlay {
+  transition: opacity 0.3s ease;
+}

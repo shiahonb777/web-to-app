@@ -58,6 +58,13 @@ fun buildWebViewConfig(config: ShellConfig): WebViewConfig {
         statusBarBackgroundAlpha = config.webViewConfig.statusBarBackgroundAlpha,
         statusBarHeightDp = config.webViewConfig.statusBarHeightDp,
 
+        statusBarColorModeDark = try { com.webtoapp.data.model.StatusBarColorMode.valueOf(config.webViewConfig.statusBarColorModeDark) } catch (e: Exception) { com.webtoapp.data.model.StatusBarColorMode.THEME },
+        statusBarColorDark = config.webViewConfig.statusBarColorDark,
+        statusBarDarkIconsDark = config.webViewConfig.statusBarDarkIconsDark ?: false,
+        statusBarBackgroundTypeDark = try { com.webtoapp.data.model.StatusBarBackgroundType.valueOf(config.webViewConfig.statusBarBackgroundTypeDark) } catch (e: Exception) { com.webtoapp.data.model.StatusBarBackgroundType.COLOR },
+        statusBarBackgroundImageDark = config.webViewConfig.statusBarBackgroundImageDark,
+        statusBarBackgroundAlphaDark = config.webViewConfig.statusBarBackgroundAlphaDark,
+
         longPressMenuEnabled = config.webViewConfig.longPressMenuEnabled,
         longPressMenuStyle = try { com.webtoapp.data.model.LongPressMenuStyle.valueOf(config.webViewConfig.longPressMenuStyle) } catch (e: Exception) { com.webtoapp.data.model.LongPressMenuStyle.FULL },
         adBlockToggleEnabled = config.webViewConfig.adBlockToggleEnabled,
@@ -74,7 +81,35 @@ fun buildWebViewConfig(config: ShellConfig): WebViewConfig {
         enableCrossOriginIsolation = config.webViewConfig.enableCrossOriginIsolation,
         hideUrlPreview = config.webViewConfig.hideUrlPreview,
         disableShields = config.webViewConfig.disableShields,
+        decodeBase64DeepLinks = config.webViewConfig.decodeBase64DeepLinks,
+        mediaAutoplayEnabled = config.webViewConfig.mediaAutoplayEnabled,
+        acceptThirdPartyCookies = config.webViewConfig.acceptThirdPartyCookies,
+        enableKernelDisguise = config.webViewConfig.enableKernelDisguise,
+        enableImageRepair = config.webViewConfig.enableImageRepair,
+        enableScrollMemory = config.webViewConfig.enableScrollMemory,
+        enableHttpsUpgrade = config.webViewConfig.enableHttpsUpgrade,
+        enableOAuthExternalRedirect = config.webViewConfig.enableOAuthExternalRedirect,
+        enableClipboardPolyfill = config.webViewConfig.enableClipboardPolyfill,
+        enableNotificationPolyfill = config.webViewConfig.enableNotificationPolyfill,
+        safeBrowsingEnabled = config.webViewConfig.safeBrowsingEnabled,
+        geolocationEnabled = config.webViewConfig.geolocationEnabled,
+        enableOrientationPolyfill = config.webViewConfig.enableOrientationPolyfill,
+        enableCompatPolyfills = config.webViewConfig.enableCompatPolyfills,
+        enableNativeBridge = config.webViewConfig.enableNativeBridge,
+        javaScriptCanOpenWindows = config.webViewConfig.javaScriptCanOpenWindows,
+        databaseEnabled = config.webViewConfig.databaseEnabled,
+        enableCookiePersistence = config.webViewConfig.enableCookiePersistence,
+        enablePrivateNetworkBridge = config.webViewConfig.enablePrivateNetworkBridge,
+        allowMixedContent = config.webViewConfig.allowMixedContent,
+        enableGpc = config.webViewConfig.enableGpc,
+        enableCookieConsentBlock = config.webViewConfig.enableCookieConsentBlock,
+        enableReferrerPolicy = config.webViewConfig.enableReferrerPolicy,
+        enableTrackerBlocking = config.webViewConfig.enableTrackerBlocking,
+        enableBlobDownloadInterception = config.webViewConfig.enableBlobDownloadInterception,
         keepScreenOn = config.webViewConfig.keepScreenOn,
+        screenAwakeMode = try { com.webtoapp.data.model.ScreenAwakeMode.valueOf(config.webViewConfig.screenAwakeMode) } catch (e: Exception) { com.webtoapp.data.model.ScreenAwakeMode.OFF },
+        screenAwakeTimeoutMinutes = config.webViewConfig.screenAwakeTimeoutMinutes,
+        screenBrightness = config.webViewConfig.screenBrightness,
         showFloatingBackButton = config.webViewConfig.showFloatingBackButton,
 
         keyboardAdjustMode = try {
@@ -135,6 +170,13 @@ fun buildWebViewConfig(config: ShellConfig): WebViewConfig {
         proxyBypassRules = config.webViewConfig.proxyBypassRules,
         proxyUsername = config.webViewConfig.proxyUsername,
         proxyPassword = config.webViewConfig.proxyPassword,
+        hostsMappingEnabled = config.webViewConfig.hostsMappingEnabled,
+        hostsMappings = config.webViewConfig.hostsMappings.map { entry ->
+            com.webtoapp.data.model.HostMappingEntry(
+                host = entry.host,
+                ip = entry.ip
+            )
+        },
 
         dnsMode = config.webViewConfig.dnsMode,
         dnsConfig = com.webtoapp.data.model.DnsConfig(

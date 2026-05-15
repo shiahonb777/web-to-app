@@ -2,10 +2,6 @@ package com.webtoapp.ui
 
 import android.Manifest
 import android.content.Intent
-import com.webtoapp.core.auth.GoogleSignInHelper
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
@@ -66,9 +62,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         AppLogger.lifecycle("MainActivity", "onCreate", "savedInstanceState=${savedInstanceState != null}")
-
-
-        handleGoogleOAuthIfNeeded(intent)
 
 
         val isShell = try {
@@ -339,20 +332,6 @@ class MainActivity : ComponentActivity() {
         }
 
 
-        handleGoogleOAuthIfNeeded(intent)
-    }
-
-
-
-
-    private fun handleGoogleOAuthIfNeeded(intent: Intent?) {
-        if (GoogleSignInHelper.isOAuthCallback(intent)) {
-            val uri = intent?.data ?: return
-            AppLogger.i("MainActivity", "Handling Google OAuth callback: ${uri.scheme}://${uri.host}")
-            CoroutineScope(Dispatchers.Main).launch {
-                GoogleSignInHelper.handleOAuthCallback(uri)
-            }
-        }
     }
 
     override fun onDestroy() {

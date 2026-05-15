@@ -18,7 +18,6 @@ object NetworkModule {
 
     private const val DEFAULT_USER_AGENT = "WebToApp/1.0 (Android)"
 
-
     private val sharedConnectionPool = ConnectionPool(8, 60, TimeUnit.SECONDS)
 
 

@@ -15,13 +15,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.core.shell.ShellConfig
 import com.webtoapp.core.webview.WebViewCallbacks
-import com.webtoapp.data.model.KeyboardAdjustMode
 import com.webtoapp.data.model.WebViewConfig
 
 
@@ -76,22 +77,12 @@ fun BoxScope.ShellScaffoldLayout(
 
     val showToolbar = (!hideToolbar || config.webViewConfig.showToolbarInFullscreen) && !hideBrowserToolbar
 
-
-    val keyboardAdjustMode = remember {
-        try {
-            KeyboardAdjustMode.valueOf(config.webViewConfig.keyboardAdjustMode)
-        } catch (e: Exception) {
-            KeyboardAdjustMode.RESIZE
-        }
-    }
-
     Scaffold(
 
-
-        contentWindowInsets = when {
-            keyboardAdjustMode == KeyboardAdjustMode.RESIZE && hideToolbar -> WindowInsets.ime
-            else -> ScaffoldDefaults.contentWindowInsets
-        },
+        // 键盘适配由 WindowHelper.applyKeyboardMode 统一处理（通过 contentView padding），
+        // 此处不再重复设置 WindowInsets.ime，避免与 WindowHelper 以及网页自身的键盘适配代码
+        // 产生叠加，导致输入框被推到键盘两倍高度的位置。
+        contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
         modifier = Modifier,
         topBar = {
             if (showToolbar) {
@@ -142,40 +133,39 @@ fun BoxScope.ShellScaffoldLayout(
 
         Box(modifier = contentModifier) {
 
-            AnimatedVisibility(
+            // Thin Safari-style top progress. Sits flush at the top of the
+            // content area, grows with the page load, then fades out once
+            // loading finishes rather than abruptly disappearing.
+            WebViewLoadingBar(
                 visible = isLoading,
-                enter = fadeIn(),
-                exit = fadeOut()
-            ) {
-                LinearProgressIndicator(
-                    progress = { loadProgress / 100f },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
+                progress = loadProgress / 100f,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.TopCenter)
+            )
 
 
 
-            key(webViewRecreationKey) {
-                ShellContentArea(
-                    config = config,
-                    appType = appType,
-                    isActivationChecked = isActivationChecked,
-                    isActivated = isActivated,
-                    forcedRunBlocked = forcedRunBlocked,
-                    forcedRunBlockedMessage = forcedRunBlockedMessage,
-                    webViewConfig = webViewConfig,
-                    webViewCallbacks = webViewCallbacks,
-                    webViewManager = webViewManager,
-                    deepLinkUrl = deepLinkUrl,
-                    swipeRefreshEnabled = swipeRefreshEnabled,
-                    isRefreshing = isRefreshing,
-                    onRefresh = onRefresh,
-                    onWebViewCreated = onWebViewCreated,
-                    onWebViewRefUpdated = onWebViewRefUpdated,
-                    onShowActivationDialog = onShowActivationDialog,
-                    onActivityFinish = onActivityFinish
-                )
-            }
+            ShellContentArea(
+                config = config,
+                appType = appType,
+                isActivationChecked = isActivationChecked,
+                isActivated = isActivated,
+                forcedRunBlocked = forcedRunBlocked,
+                forcedRunBlockedMessage = forcedRunBlockedMessage,
+                webViewRecreationKey = webViewRecreationKey,
+                webViewConfig = webViewConfig,
+                webViewCallbacks = webViewCallbacks,
+                webViewManager = webViewManager,
+                deepLinkUrl = deepLinkUrl,
+                swipeRefreshEnabled = swipeRefreshEnabled,
+                isRefreshing = isRefreshing,
+                onRefresh = onRefresh,
+                onWebViewCreated = onWebViewCreated,
+                onWebViewRefUpdated = onWebViewRefUpdated,
+                onShowActivationDialog = onShowActivationDialog,
+                onActivityFinish = onActivityFinish
+            )
 
 
             ShellLyricsOverlay(config = config, bgmState = bgmState)
@@ -235,40 +225,65 @@ private fun ShellTopAppBar(
                 Text(
                     text = pageTitle.ifEmpty { appName },
                     style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 if (currentUrl.isNotEmpty()) {
                     Text(
-                        text = currentUrl,
-                        style = MaterialTheme.typography.bodySmall,
+                        text = currentUrl.shortenForShellToolbar(),
+                        style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                 }
             }
         },
         actions = {
-            IconButton(
+            com.webtoapp.ui.design.WtaIconButton(
                 onClick = {
                     (context as? AppCompatActivity)?.let { activity ->
                         ShellWebViewNavigation.goBackOrFinish(activity, webViewRef)
                     }
                 },
+                icon = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Back",
                 enabled = canGoBack
-            ) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
-            }
-            IconButton(
+            )
+            com.webtoapp.ui.design.WtaIconButton(
                 onClick = { webViewRef?.goForward() },
+                icon = Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = "Forward",
                 enabled = canGoForward
-            ) {
-                Icon(Icons.AutoMirrored.Filled.ArrowForward, "Forward")
-            }
-            IconButton(onClick = { webViewRef?.reload() }) {
-                Icon(Icons.Default.Refresh, "Refresh")
-            }
-        }
+            )
+            com.webtoapp.ui.design.WtaIconButton(
+                onClick = { webViewRef?.reload() },
+                icon = Icons.Default.Refresh,
+                contentDescription = "Refresh"
+            )
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = androidx.compose.ui.graphics.Color.Transparent,
+            scrolledContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+            titleContentColor = MaterialTheme.colorScheme.onSurface
+        )
     )
+}
+
+/**
+ * Hide the scheme + common tracking noise from the toolbar url label and
+ * truncate each segment softly so the URL stays readable.
+ */
+private fun String.shortenForShellToolbar(): String {
+    val withoutScheme = when {
+        startsWith("https://") -> substring(8)
+        startsWith("http://") -> substring(7)
+        else -> this
+    }
+    // Strip querystring for visual clarity; most URLs still identify well
+    // from the path alone.
+    return withoutScheme.substringBefore('?').substringBefore('#')
 }
 
 
@@ -282,6 +297,7 @@ private fun ShellContentArea(
     isActivated: Boolean,
     forcedRunBlocked: Boolean,
     forcedRunBlockedMessage: String,
+    webViewRecreationKey: Int,
     webViewConfig: WebViewConfig,
     webViewCallbacks: WebViewCallbacks,
     webViewManager: com.webtoapp.core.webview.WebViewManager,
@@ -346,6 +362,7 @@ private fun ShellContentArea(
         ShellContentRouter(
             appType = appType,
             config = config,
+            webViewRecreationKey = webViewRecreationKey,
             webViewConfig = webViewConfig,
             webViewCallbacks = webViewCallbacks,
             webViewManager = webViewManager,
@@ -356,6 +373,53 @@ private fun ShellContentArea(
             onWebViewCreated = onWebViewCreated,
             onWebViewRefUpdated = onWebViewRefUpdated,
             onActivityFinish = onActivityFinish
+        )
+    }
+}
+
+
+/**
+ * Safari-style thin loading indicator.
+ *
+ * Behaviour:
+ *  - Animates from 0 to the latest reported `progress` with the settle spring
+ *    so the fill always feels physical rather than snapping.
+ *  - When visibility flips off, the bar first finishes to full, then fades
+ *    over ~240ms. This avoids the "bar disappears halfway" feel of the raw
+ *    LinearProgressIndicator that was previously used.
+ *  - Height is 2dp, no trailing track (we draw only the fill), so it reads as
+ *    a restrained affordance rather than a loud control.
+ */
+@Composable
+private fun WebViewLoadingBar(
+    visible: Boolean,
+    progress: Float,
+    modifier: Modifier = Modifier
+) {
+    val animatedProgress by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (visible) progress.coerceIn(0f, 1f) else 1f,
+        animationSpec = com.webtoapp.ui.design.WtaMotion.settleSpring(),
+        label = "webviewProgress"
+    )
+    val alpha by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (visible) 1f else 0f,
+        animationSpec = com.webtoapp.ui.design.WtaMotion.exitTween(
+            durationMillis = com.webtoapp.ui.design.WtaMotion.DurationMedium
+        ),
+        label = "webviewProgressAlpha"
+    )
+    if (alpha <= 0f) return
+
+    val primary = MaterialTheme.colorScheme.primary
+    androidx.compose.foundation.Canvas(
+        modifier = modifier
+            .height(2.dp)
+            .graphicsLayer { this.alpha = alpha }
+    ) {
+        val fillWidth = size.width * animatedProgress
+        drawRect(
+            color = primary,
+            size = Size(fillWidth, size.height)
         )
     }
 }

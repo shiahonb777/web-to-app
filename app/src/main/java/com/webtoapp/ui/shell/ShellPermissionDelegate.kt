@@ -565,7 +565,7 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
                         const blobUrl = $safeBlobUrl;
                         const filename = $safeFilename;
                         const LARGE_FILE_THRESHOLD = 10 * 1024 * 1024;
-                        const CHUNK_SIZE = 1024 * 1024;
+                        const CHUNK_SIZE = 512 * 1024;
 
                         function uint8ToBase64(u8) {
                             const S = 8192; const p = [];
@@ -613,21 +613,28 @@ class ShellPermissionDelegate(private val activity: AppCompatActivity) {
                                 window.AndroidDownload.saveBase64File(base64Data, filename, mimeType);
                             }
                         } else if (blobUrl.startsWith('blob:')) {
-                            fetch(blobUrl)
-                                .then(function(r) { return r.blob(); })
-                                .then(function(blob) {
-                                    if (blob.size > LARGE_FILE_THRESHOLD) {
-                                        processChunked(blob, filename);
-                                    } else {
-                                        processSmall(blob, filename);
-                                    }
-                                })
-                                .catch(function(err) {
-                                    console.error('[DownloadHelper] Blob fetch failed:', err);
-                                    if (window.AndroidDownload && window.AndroidDownload.showToast) {
-                                        window.AndroidDownload.showToast('${Strings.downloadFailedPrefix}' + err.message);
-                                    }
-                                });
+                            // 先查 DownloadBridge 拦截时缓存的 Blob（页面可能已同步 revoke 了 URL）
+                            const cachedBlob = window.__wtaBlobMap && window.__wtaBlobMap.get(blobUrl);
+                            function dispatch(blob) {
+                                if (blob.size > LARGE_FILE_THRESHOLD) {
+                                    processChunked(blob, filename);
+                                } else {
+                                    processSmall(blob, filename);
+                                }
+                            }
+                            if (cachedBlob) {
+                                dispatch(cachedBlob);
+                            } else {
+                                fetch(blobUrl)
+                                    .then(function(r) { return r.blob(); })
+                                    .then(dispatch)
+                                    .catch(function(err) {
+                                        console.error('[DownloadHelper] Blob fetch failed:', err);
+                                        if (window.AndroidDownload && window.AndroidDownload.showToast) {
+                                            window.AndroidDownload.showToast('${Strings.downloadFailedPrefix}' + err.message);
+                                        }
+                                    });
+                            }
                         }
                     } catch(e) {
                         console.error('[DownloadHelper] Error:', e);

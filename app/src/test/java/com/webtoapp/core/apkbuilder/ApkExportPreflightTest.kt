@@ -11,6 +11,7 @@ import com.webtoapp.data.model.HtmlFileType
 import com.webtoapp.data.model.NetworkTrustConfig
 import com.webtoapp.data.model.WebApp
 import com.webtoapp.data.model.WordPressConfig
+import com.webtoapp.ui.shell.buildPackagedHtmlShellEntryUrl
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -69,7 +70,9 @@ class ApkExportPreflightTest {
 
         val config = app.toApkConfig("com.example.frontend", context)
 
-        assertThat(config.targetUrl).isEqualTo("file:///android_asset/html/index.html")
+        assertThat(config.targetUrl).isEqualTo(
+            buildPackagedHtmlShellEntryUrl("com.example.frontend", "index.html")
+        )
     }
 
     @Test
@@ -86,7 +89,25 @@ class ApkExportPreflightTest {
 
         val config = app.toApkConfig("com.example.frontend", context)
 
-        assertThat(config.targetUrl).isEqualTo("file:///android_asset/frontend_app/index.html")
+        assertThat(config.targetUrl).isEqualTo(
+            buildPackagedHtmlShellEntryUrl("com.example.frontend", "index.html")
+        )
+    }
+
+    @Test
+    fun `html app targets stable packaged loopback entry url`() {
+        val app = WebApp(
+            name = "Html",
+            url = "",
+            appType = AppType.HTML,
+            htmlConfig = HtmlConfig(entryFile = "main/index.html")
+        )
+
+        val config = app.toApkConfig("com.example.frontend", context)
+
+        assertThat(config.targetUrl).isEqualTo(
+            buildPackagedHtmlShellEntryUrl("com.example.frontend", "main/index.html")
+        )
     }
 
     @Test

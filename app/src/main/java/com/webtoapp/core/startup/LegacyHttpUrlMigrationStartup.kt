@@ -12,25 +12,8 @@ class LegacyHttpUrlMigrationStartup(
 ) {
 
     fun initialize(appScope: CoroutineScope) {
-        appScope.launch {
-            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            if (prefs.getBoolean(KEY_HTTP_URL_MIGRATED, false)) return@launch
-
-            runCatching {
-                val updatedCount = webAppRepository.upgradeLegacyRemoteHttpWebUrls()
-
-                if (updatedCount > 0) {
-                    AppLogger.i(
-                        "WebToAppApplication",
-                        "Migrated $updatedCount legacy insecure HTTP web URL(s) to HTTPS"
-                    )
-                }
-
-                prefs.edit().putBoolean(KEY_HTTP_URL_MIGRATED, true).apply()
-            }.onFailure { e ->
-                AppLogger.e("WebToAppApplication", "Failed to migrate legacy HTTP URLs", Exception(e))
-            }
-        }
+        // 不再强制迁移 HTTP URL 到 HTTPS。
+        // HTTP 是合法协议，用户保存什么就用什么。
     }
 
     private companion object {

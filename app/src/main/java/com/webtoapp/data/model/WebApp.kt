@@ -106,7 +106,6 @@ data class WebApp(
     val deviceDisguiseConfig: com.webtoapp.core.disguise.DeviceDisguiseConfig? = null,
     val activationDialogConfig: ActivationDialogConfig? = null,
     val categoryId: Long? = null,
-    val cloudConfig: CloudAppConfig? = null,
 
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
@@ -300,6 +299,33 @@ data class WebViewConfig(
     val enableCrossOriginIsolation: Boolean = false,
     val hideUrlPreview: Boolean = false,
     val disableShields: Boolean = true,
+
+    // 特殊设置
+    val decodeBase64DeepLinks: Boolean = false,
+    val mediaAutoplayEnabled: Boolean = true,
+    val acceptThirdPartyCookies: Boolean = true,
+    val enableKernelDisguise: Boolean = true,
+    val enableImageRepair: Boolean = true,
+    val enableScrollMemory: Boolean = true,
+    val enableHttpsUpgrade: Boolean = true,
+    val enableOAuthExternalRedirect: Boolean = true,
+    val enableClipboardPolyfill: Boolean = true,
+    val enableNotificationPolyfill: Boolean = true,
+    val safeBrowsingEnabled: Boolean = true,
+    val geolocationEnabled: Boolean = true,
+    val enableOrientationPolyfill: Boolean = true,
+    val enableCompatPolyfills: Boolean = true,
+    val enableNativeBridge: Boolean = true,
+    val javaScriptCanOpenWindows: Boolean = true,
+    val databaseEnabled: Boolean = true,
+    val enableCookiePersistence: Boolean = true,
+    val enablePrivateNetworkBridge: Boolean = true,
+    val allowMixedContent: Boolean = true,
+    val enableGpc: Boolean = true,
+    val enableCookieConsentBlock: Boolean = true,
+    val enableReferrerPolicy: Boolean = true,
+    val enableTrackerBlocking: Boolean = true,
+    val enableBlobDownloadInterception: Boolean = true,
     val keepScreenOn: Boolean = false,
     val screenAwakeMode: ScreenAwakeMode = ScreenAwakeMode.OFF,
     val screenAwakeTimeoutMinutes: Int = 30,
@@ -316,7 +342,7 @@ data class WebViewConfig(
     val performanceOptimization: Boolean = false,
     val pwaOfflineEnabled: Boolean = false,
     val pwaOfflineStrategy: String = "NETWORK_FIRST",
-    val showFloatingBackButton: Boolean = true,
+    val showFloatingBackButton: Boolean = false,
     val floatingWindowConfig: FloatingWindowConfig = FloatingWindowConfig(),
     val proxyMode: String = "NONE",
     val proxyHost: String = "",
@@ -326,10 +352,17 @@ data class WebViewConfig(
     val proxyBypassRules: List<String> = emptyList(),
     val proxyUsername: String = "",
     val proxyPassword: String = "",
+    val hostsMappingEnabled: Boolean = false,
+    val hostsMappings: List<HostMappingEntry> = emptyList(),
 
 
     val dnsMode: String = "SYSTEM",
     val dnsConfig: DnsConfig = DnsConfig()
+)
+
+data class HostMappingEntry(
+    val host: String = "",
+    val ip: String = ""
 )
 
 data class FloatingWindowConfig(
@@ -668,10 +701,10 @@ data class GoAppConfig(
     val projectName: String = "",
     val framework: String = "",
     val binaryName: String = "",
+    val targetArch: String = "arm64",
     val serverPort: Int = 0,
     val envVars: Map<String, String> = emptyMap(),
     val staticDir: String = "",
-    val hasBuildFromSource: Boolean = false,
     val landscapeMode: Boolean = false
 )
 
@@ -1136,52 +1169,6 @@ data class AutoStartConfig(
 )
 
 
-
-
-data class CloudAppConfig(
-    val enabled: Boolean = false,
-    val projectId: Int = 0,
-    val runtimeKey: String = "",
-    val projectKey: String = "",
-    val projectName: String = "",
-
-
-    val updateCheckEnabled: Boolean = true,
-    val announcementEnabled: Boolean = true,
-    val remoteConfigEnabled: Boolean = true,
-
-    val activationCodeEnabled: Boolean = false,
-    val statsReportEnabled: Boolean = true,
-    val fcmPushEnabled: Boolean = false,
-
-    val remoteScriptEnabled: Boolean = false,
-    val reportCrashes: Boolean = true,
-
-    val updateCheckInterval: Int = 3600,
-    val forceUpdateEnabled: Boolean = false,
-
-    val statsReportInterval: Int = 3600
-) {
-
-    fun toCloudSdkConfig(): com.webtoapp.core.shell.CloudSdkConfig {
-        return com.webtoapp.core.shell.CloudSdkConfig(
-            enabled = enabled && runtimeKey.isNotBlank(),
-            runtimeKey = runtimeKey,
-            projectKey = projectKey,
-            updateCheckEnabled = updateCheckEnabled,
-            announcementEnabled = announcementEnabled,
-            remoteConfigEnabled = remoteConfigEnabled,
-            activationCodeEnabled = activationCodeEnabled,
-            statsReportEnabled = statsReportEnabled,
-            fcmPushEnabled = fcmPushEnabled,
-            remoteScriptEnabled = remoteScriptEnabled,
-            updateCheckInterval = updateCheckInterval,
-            forceUpdateEnabled = forceUpdateEnabled,
-            statsReportInterval = statsReportInterval,
-            reportCrashes = reportCrashes
-        )
-    }
-}
 
 
 fun WebApp.toManifestJson(): String {

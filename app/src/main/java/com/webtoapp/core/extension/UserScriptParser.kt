@@ -47,7 +47,8 @@ object UserScriptParser {
                     code = scriptContent,
                     sourceType = ModuleSourceType.USERSCRIPT,
                     runAt = ModuleRunTime.DOCUMENT_END,
-                    category = ModuleCategory.FUNCTION_ENHANCE
+                    category = ModuleCategory.FUNCTION_ENHANCE,
+                    runMode = ModuleRunMode.AUTO
                 ),
                 isValid = false,
                 warnings = listOf("No ==UserScript== metadata block found, imported as plain JS")
@@ -168,6 +169,7 @@ object UserScriptParser {
             urlMatches = urlMatchRules,
             enabled = true,
             sourceType = ModuleSourceType.USERSCRIPT,
+            runMode = ModuleRunMode.AUTO,
             gmGrants = effectiveGrants,
             requireUrls = requires,
             resources = resources,

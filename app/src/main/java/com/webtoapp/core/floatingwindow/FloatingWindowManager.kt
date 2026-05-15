@@ -955,7 +955,6 @@ class FloatingWindowManager(private val context: Context) {
             webView?.let { wv ->
                 wv.stopLoading()
                 wv.onPause()
-                wv.pauseTimers()
                 (wv.parent as? ViewGroup)?.removeView(wv)
                 wv.removeAllViews()
                 wv.destroy()

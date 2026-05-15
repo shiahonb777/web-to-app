@@ -371,11 +371,4 @@ class Converters {
     @TypeConverter
     fun toMultiWebConfig(value: String): MultiWebConfig? = fromJson(value)
 
-
-    @TypeConverter
-    fun fromCloudAppConfig(value: com.webtoapp.data.model.CloudAppConfig?): String = toJson(value)
-
-    @TypeConverter
-    fun toCloudAppConfig(value: String): com.webtoapp.data.model.CloudAppConfig? = fromJson(value)
-
 }

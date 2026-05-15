@@ -1,0 +1,40 @@
+{
+  "id": "wta-hello-world",
+  "name": "Hello World",
+  "description": "A minimal example module. Shows a floating banner with a configurable greeting. Open the source on GitHub and use it as a template for your own modules.",
+  "icon": "auto_awesome",
+  "category": "OTHER",
+  "tags": ["demo", "example", "starter"],
+  "version": {
+    "code": 1,
+    "name": "1.0.0",
+    "changelog": "Initial release."
+  },
+  "author": {
+    "name": "shiaho",
+    "url": "https://github.com/shiahonb777"
+  },
+  "runAt": "DOCUMENT_END",
+  "urlMatches": [
+    { "pattern": "*", "isRegex": false, "exclude": false }
+  ],
+  "permissions": ["DOM_ACCESS", "CSS_INJECT"],
+  "configItems": [
+    {
+      "key": "greeting",
+      "name": "Greeting text",
+      "description": "Shown in the floating banner.",
+      "type": "TEXT",
+      "defaultValue": "Hello from WebToApp!",
+      "required": false
+    },
+    {
+      "key": "durationMs",
+      "name": "Banner duration (ms)",
+      "description": "How long the banner stays visible.",
+      "type": "NUMBER",
+      "defaultValue": "3000",
+      "required": false
+    }
+  ]
+}

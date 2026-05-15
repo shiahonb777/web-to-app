@@ -1,9 +1,8 @@
 package com.webtoapp.ui.design
 
 import androidx.compose.animation.AnimatedVisibility
+import com.webtoapp.ui.design.WtaSwitch
 import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -33,16 +32,13 @@ import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Science
 import androidx.compose.material.icons.outlined.Warning
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -62,10 +58,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.graphicsLayer
 import com.webtoapp.core.i18n.Strings
-import com.webtoapp.ui.components.EnhancedElevatedCard
-import com.webtoapp.ui.components.PremiumSwitch
-import com.webtoapp.ui.components.PremiumTextField
 
 @Composable
 fun WtaSection(
@@ -124,8 +118,8 @@ fun WtaSection(
 
         AnimatedVisibility(
             visible = isExpanded,
-            enter = fadeIn() + expandVertically(),
-            exit = fadeOut() + shrinkVertically()
+            enter = expandVertically(animationSpec = WtaMotion.settleSpring()),
+            exit = shrinkVertically(animationSpec = WtaMotion.snapSpring())
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -284,14 +278,12 @@ fun WtaSettingCard(
     contentPadding: PaddingValues = PaddingValues(vertical = 4.dp),
     content: @Composable ColumnScope.() -> Unit
 ) {
-    EnhancedElevatedCard(modifier = modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(contentPadding),
-            content = content
-        )
-    }
+    WtaCard(
+        modifier = modifier.fillMaxWidth(),
+        tone = WtaCardTone.Surface,
+        contentPadding = contentPadding,
+        content = content
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -303,18 +295,14 @@ fun WtaSettingCard(
     contentPadding: PaddingValues = PaddingValues(vertical = 4.dp),
     content: @Composable ColumnScope.() -> Unit
 ) {
-    EnhancedElevatedCard(
+    WtaCard(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
-        enabled = enabled
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(contentPadding),
-            content = content
-        )
-    }
+        tone = WtaCardTone.Surface,
+        enabled = enabled,
+        contentPadding = contentPadding,
+        content = content
+    )
 }
 
 @Composable
@@ -441,7 +429,7 @@ fun WtaToggleRow(
         modifier = modifier,
         onClick = { onCheckedChange(!checked) }
     ) {
-        PremiumSwitch(
+        WtaSwitch(
             checked = checked,
             onCheckedChange = onCheckedChange,
             enabled = enabled
@@ -457,6 +445,7 @@ fun WtaChoiceRow(
     subtitle: String? = null,
     icon: ImageVector? = null,
     enabled: Boolean = true,
+    isExpanded: Boolean? = null,
     onClick: () -> Unit
 ) {
     WtaSettingRow(
@@ -467,19 +456,29 @@ fun WtaChoiceRow(
         modifier = modifier,
         onClick = onClick
     ) {
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+        if (value.isNotBlank()) {
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+        }
+        // 当 isExpanded 被传入时，箭头带旋转动画（展开 180°）
+        val rotation by androidx.compose.animation.core.animateFloatAsState(
+            targetValue = if (isExpanded == true) 180f else 0f,
+            animationSpec = WtaMotion.settleSpring(),
+            label = "expandArrow"
         )
-        Spacer(modifier = Modifier.width(4.dp))
         Icon(
             Icons.Filled.ExpandMore,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(18.dp)
+            modifier = Modifier
+                .size(18.dp)
+                .graphicsLayer { rotationZ = rotation }
         )
     }
 }
@@ -513,12 +512,12 @@ fun WtaTextFieldRow(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        PremiumTextField(
+        WtaTextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
             enabled = enabled,
-            placeholder = placeholder?.let { { Text(it) } },
+            placeholder = placeholder,
             singleLine = singleLine,
             shape = RoundedCornerShape(WtaRadius.Control)
         )
@@ -648,13 +647,12 @@ fun WtaEmptyState(
                 )
             }
             if (actionLabel != null && onAction != null) {
-                FilledTonalButton(
+                WtaButton(
                     onClick = onAction,
-                    shape = RoundedCornerShape(WtaRadius.Button),
-                    contentPadding = ButtonDefaults.TextButtonContentPadding
-                ) {
-                    Text(actionLabel)
-                }
+                    text = actionLabel,
+                    variant = WtaButtonVariant.Tonal,
+                    size = WtaButtonSize.Small
+                )
             }
         }
     }
@@ -722,19 +720,13 @@ fun WtaStatusBanner(
             }
             if (actionLabel != null && onAction != null) {
                 Spacer(modifier = Modifier.width(8.dp))
-                OutlinedButton(
+                WtaButton(
                     onClick = onAction,
-                    modifier = Modifier.widthIn(max = WtaSize.BannerActionMaxWidth),
-                    shape = RoundedCornerShape(WtaRadius.Button),
-                    border = BorderStroke(1.dp, content.copy(alpha = 0.32f)),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = content)
-                ) {
-                    Text(
-                        text = actionLabel,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
+                    text = actionLabel,
+                    variant = WtaButtonVariant.Outlined,
+                    size = WtaButtonSize.Small,
+                    modifier = Modifier.widthIn(max = WtaSize.BannerActionMaxWidth)
+                )
             }
         }
     }

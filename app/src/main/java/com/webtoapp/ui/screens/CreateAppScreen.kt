@@ -1,5 +1,6 @@
 package com.webtoapp.ui.screens
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.webtoapp.ui.design.WtaSwitch
 
 import android.net.Uri
 import androidx.activity.compose.BackHandler
@@ -14,15 +15,12 @@ import com.webtoapp.ui.animation.CardExpandTransition
 import com.webtoapp.ui.animation.CardCollapseTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.relocation.BringIntoViewRequester
-import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -38,30 +36,21 @@ import com.webtoapp.core.i18n.Strings
 import com.webtoapp.data.model.*
 import com.webtoapp.ui.components.ActivationCodeCard
 import com.webtoapp.ui.components.AppNameTextField
-import com.webtoapp.ui.components.ThemedBackgroundBox
+import com.webtoapp.ui.design.WtaBackground
 import com.webtoapp.ui.components.AutoStartCard
 import com.webtoapp.ui.components.BgmCard
 import com.webtoapp.ui.components.*
 import com.webtoapp.ui.viewmodel.EditState
 import com.webtoapp.ui.viewmodel.MainViewModel
 import com.webtoapp.ui.viewmodel.UiState
-import com.webtoapp.util.AppConstants
 import androidx.compose.ui.platform.LocalContext
 import com.webtoapp.ui.webview.WebViewActivity
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import com.webtoapp.R
 import com.webtoapp.ui.components.EnhancedElevatedCard
 import com.webtoapp.ui.design.*
 import com.webtoapp.core.pwa.PwaAnalysisResult
 import com.webtoapp.core.pwa.PwaAnalysisState
 import com.webtoapp.core.pwa.PwaDataSource
-
-
-private val PACKAGE_NAME_REGEX = AppConstants.PACKAGE_NAME_REGEX
-
-
-
 
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
@@ -77,21 +66,6 @@ fun CreateAppScreen(
     val hasUnsavedChanges by viewModel.hasUnsavedChanges.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
     var showDiscardDialog by remember { mutableStateOf(false) }
-    var showCapabilitySearch by remember { mutableStateOf(false) }
-    var browserExpandedOverride by rememberSaveable { mutableStateOf<Boolean?>(null) }
-    var appearanceExpandedOverride by rememberSaveable { mutableStateOf<Boolean?>(null) }
-    var runExpandedOverride by rememberSaveable { mutableStateOf<Boolean?>(null) }
-    var securityExpandedOverride by rememberSaveable { mutableStateOf<Boolean?>(null) }
-    var labExpandedOverride by rememberSaveable { mutableStateOf<Boolean?>(null) }
-    var exportExpandedOverride by rememberSaveable { mutableStateOf<Boolean?>(null) }
-    var showPermissionConfig by rememberSaveable { mutableStateOf(false) }
-    val basicRequester = remember { BringIntoViewRequester() }
-    val browserRequester = remember { BringIntoViewRequester() }
-    val appearanceRequester = remember { BringIntoViewRequester() }
-    val runRequester = remember { BringIntoViewRequester() }
-    val securityRequester = remember { BringIntoViewRequester() }
-    val labRequester = remember { BringIntoViewRequester() }
-    val exportRequester = remember { BringIntoViewRequester() }
 
 
     LaunchedEffect(uiState) {
@@ -101,12 +75,7 @@ fun CreateAppScreen(
         }
     }
 
-
-    BackHandler(enabled = showPermissionConfig) {
-        showPermissionConfig = false
-    }
-
-    BackHandler(enabled = hasUnsavedChanges && !showPermissionConfig) {
+    BackHandler(enabled = hasUnsavedChanges) {
         showDiscardDialog = true
     }
 
@@ -140,118 +109,54 @@ fun CreateAppScreen(
     val coroutineScope = rememberCoroutineScope()
     var isPreviewSaving by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
-    val capabilities = remember(editState) { buildAppCapabilities(editState) }
 
-    fun focusCapability(capability: AppCapability) {
-        when (capability.section) {
-            AppCapabilitySection.Basic -> Unit
-            AppCapabilitySection.Browser -> browserExpandedOverride = true
-            AppCapabilitySection.Appearance -> appearanceExpandedOverride = true
-            AppCapabilitySection.Run -> runExpandedOverride = true
-            AppCapabilitySection.Security -> securityExpandedOverride = true
-            AppCapabilitySection.Lab -> labExpandedOverride = true
-            AppCapabilitySection.Export -> exportExpandedOverride = true
-        }
-        val requester = when (capability.section) {
-            AppCapabilitySection.Basic -> basicRequester
-            AppCapabilitySection.Browser -> browserRequester
-            AppCapabilitySection.Appearance -> appearanceRequester
-            AppCapabilitySection.Run -> runRequester
-            AppCapabilitySection.Security -> securityRequester
-            AppCapabilitySection.Lab -> labRequester
-            AppCapabilitySection.Export -> exportRequester
-        }
+    val canPreview = (editState.url.isNotBlank() || editState.name.isNotBlank()) &&
+        !isPreviewSaving &&
+        uiState !is UiState.Loading
+
+    fun launchPreview() {
+        if (!canPreview) return
+        isPreviewSaving = true
         coroutineScope.launch {
-            kotlinx.coroutines.delay(120)
-            requester.bringIntoView()
+            try {
+                val appId = viewModel.saveAndPreview()
+                if (appId != null && appId > 0) {
+                    WebViewActivity.start(context, appId)
+                } else {
+                    snackbarHostState.showSnackbar(Strings.saveFailed)
+                }
+            } catch (e: Exception) {
+                snackbarHostState.showSnackbar(Strings.saveFailed)
+            } finally {
+                isPreviewSaving = false
+            }
         }
     }
 
-    if (showPermissionConfig) {
-        PermissionConfigScreen(
-            permissions = editState.apkExportConfig.runtimePermissions,
-            onPermissionsChange = { permissions ->
-                viewModel.updateEditState {
-                    copy(
-                        apkExportConfig = apkExportConfig.copy(
-                            runtimePermissions = permissions
-                        )
-                    )
-                }
-            },
-            onBack = { showPermissionConfig = false }
-        )
-    } else WtaScreen(
+    WtaScreen(
         title = if (isEdit) Strings.editApp else Strings.createApp,
         snackbarHostState = snackbarHostState,
         onBack = {
             if (hasUnsavedChanges) showDiscardDialog = true else onBack()
         },
-        actions = {
-            IconButton(
-                onClick = { showCapabilitySearch = true }
-            ) {
-                Icon(
-                    Icons.Filled.Search,
-                    contentDescription = Strings.search
-                )
-            }
-            IconButton(
-                onClick = {
-                    if (isPreviewSaving) return@IconButton
-                    isPreviewSaving = true
-                    coroutineScope.launch {
-                        try {
-                            val appId = viewModel.saveAndPreview()
-                            if (appId != null && appId > 0) {
-                                WebViewActivity.start(context, appId)
-                            } else {
-                                snackbarHostState.showSnackbar(Strings.saveFailed)
-                            }
-                        } catch (e: Exception) {
-                            snackbarHostState.showSnackbar(Strings.saveFailed)
-                        } finally {
-                            isPreviewSaving = false
-                        }
-                    }
-                },
-                enabled = (editState.url.isNotBlank() || editState.name.isNotBlank()) && !isPreviewSaving
-            ) {
-                if (isPreviewSaving) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Icon(
-                        Icons.Filled.PlayArrow,
-                        contentDescription = Strings.btnPreview
-                    )
-                }
-            }
-            TextButton(
-                onClick = { viewModel.saveApp() },
-                enabled = uiState !is UiState.Loading
-            ) {
-                if (uiState is UiState.Loading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Text(Strings.btnSave)
-                }
-            }
+        bottomBar = {
+            CreateAppBottomBar(
+                canPreview = canPreview,
+                isPreviewSaving = isPreviewSaving,
+                isSaving = uiState is UiState.Loading,
+                onPreview = ::launchPreview,
+                onSave = { viewModel.saveApp() }
+            )
         }
-    ) {
+    ) { _ ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(scrollState)
                 .padding(
                     horizontal = WtaSpacing.ScreenHorizontal,
                     vertical = WtaSpacing.ScreenVertical
-                ),
+                )
+                .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(WtaSpacing.SectionGap)
         ) {
             if (uiState is UiState.Error) {
@@ -261,390 +166,300 @@ fun CreateAppScreen(
                 )
             }
 
-            WtaSection(
-                title = Strings.labelBasicInfo,
-                level = WtaCapabilityLevel.Common,
-                headerStyle = WtaSectionHeaderStyle.Hidden,
-                modifier = Modifier.bringIntoViewRequester(basicRequester)
-            ) {
-                BasicInfoCard(
-                    editState = editState,
-                    onNameChange = { viewModel.updateEditState { copy(name = it) } },
-                    onUrlChange = { viewModel.updateEditState { copy(url = it) } },
-                    onSelectIcon = { imagePickerLauncher.launch("image/*") },
-                    onSelectIconFromLibrary = { path ->
-                        viewModel.updateEditState { copy(savedIconPath = path, iconUri = null) }
-                    }
-                )
-
-
-                if (editState.appType == AppType.WEB) {
-                    PwaAnalysisSection(
-                        viewModel = viewModel,
-                        editState = editState
-                    )
+            BasicInfoCard(
+                editState = editState,
+                onNameChange = { viewModel.updateEditState { copy(name = it) } },
+                onUrlChange = { viewModel.updateEditState { copy(url = it) } },
+                onSelectIcon = { imagePickerLauncher.launch("image/*") },
+                onSelectIconFromLibrary = { path ->
+                    viewModel.updateEditState { copy(savedIconPath = path, iconUri = null) }
                 }
+            )
 
+            if (editState.appType == AppType.WEB) {
+                PwaAnalysisSection(
+                    viewModel = viewModel,
+                    editState = editState
+                )
             }
 
-            WtaSection(
-                title = Strings.tagBrowser,
-                level = WtaCapabilityLevel.Advanced,
-                headerStyle = WtaSectionHeaderStyle.Quiet,
-                modifier = Modifier.bringIntoViewRequester(browserRequester),
-                capabilityTags = listOf(
-                    Strings.capabilityAdBlock,
-                    Strings.capabilityExtension,
-                    Strings.fullscreenMode,
-                    Strings.landscapeModeLabel
-                ),
-                initiallyExpanded = editState.adBlockEnabled ||
-                    editState.extensionModuleEnabled ||
+            // ── 显示与交互 ──────────────────────────────────────────
+
+            ActivationCodeCard(
+                enabled = editState.activationEnabled,
+                activationCodes = editState.activationCodeList,
+                requireEveryTime = editState.activationRequireEveryTime,
+                dialogConfig = editState.activationDialogConfig,
+                onEnabledChange = { viewModel.updateEditState { copy(activationEnabled = it) } },
+                onCodesChange = { viewModel.updateEditState { copy(activationCodeList = it) } },
+                onRequireEveryTimeChange = { viewModel.updateEditState { copy(activationRequireEveryTime = it) } },
+                onDialogConfigChange = { viewModel.updateEditState { copy(activationDialogConfig = it) } }
+            )
+
+            HideBrowserToolbarCard(
+                enabled = editState.webViewConfig.hideBrowserToolbar,
+                onEnabledChange = {
+                    viewModel.updateEditState {
+                        copy(webViewConfig = webViewConfig.copy(hideBrowserToolbar = it))
+                    }
+                }
+            )
+
+            FullscreenModeCard(
+                enabled = editState.webViewConfig.hideToolbar,
+                showStatusBar = editState.webViewConfig.showStatusBarInFullscreen,
+                showNavigationBar = editState.webViewConfig.showNavigationBarInFullscreen,
+                hideBrowserToolbarInFullscreen =
                     editState.webViewConfig.hideBrowserToolbar ||
-                    editState.webViewConfig.hideToolbar ||
-                    editState.webViewConfig.landscapeMode ||
-                    editState.webViewConfig.longPressMenuEnabled ||
-                    hasConfiguredBrowserAdvancedConfig(editState.webViewConfig),
-                expanded = browserExpandedOverride,
-                onExpandedChange = { browserExpandedOverride = it }
-            ) {
-                if (hasConfiguredLegacyAds(editState)) {
-                    LegacyAdCapabilityWarningCard()
+                        !editState.webViewConfig.showToolbarInFullscreen,
+                webViewConfig = editState.webViewConfig,
+                onEnabledChange = {
+                    viewModel.updateEditState {
+                        copy(
+                            webViewConfig = webViewConfig.copy(
+                                hideToolbar = it
+                            )
+                        )
+                    }
+                },
+                onShowStatusBarChange = {
+                    viewModel.updateEditState {
+                        copy(webViewConfig = webViewConfig.copy(showStatusBarInFullscreen = it))
+                    }
+                },
+                onShowNavigationBarChange = {
+                    viewModel.updateEditState {
+                        copy(webViewConfig = webViewConfig.copy(showNavigationBarInFullscreen = it))
+                    }
+                },
+                onHideBrowserToolbarInFullscreenChange = {
+                    viewModel.updateEditState {
+                        copy(
+                            webViewConfig = webViewConfig.copy(
+                                showToolbarInFullscreen = !it
+                            )
+                        )
+                    }
+                },
+                onWebViewConfigChange = { newConfig ->
+                    viewModel.updateEditState {
+                        copy(webViewConfig = newConfig)
+                    }
                 }
+            )
 
-                AdBlockCard(
-                    editState = editState,
-                    onEnabledChange = { viewModel.updateEditState { copy(adBlockEnabled = it) } },
-                    onRulesChange = { viewModel.updateEditState { copy(adBlockRules = it) } },
-                    onToggleEnabledChange = {
-                        viewModel.updateEditState {
-                            copy(webViewConfig = webViewConfig.copy(adBlockToggleEnabled = it))
-                        }
+            LandscapeModeCard(
+                enabled = editState.webViewConfig.landscapeMode,
+                onEnabledChange = { enabled ->
+                    viewModel.updateEditState {
+                        copy(webViewConfig = webViewConfig.copy(
+                            landscapeMode = enabled,
+                            orientationMode = if (enabled) com.webtoapp.data.model.OrientationMode.LANDSCAPE
+                            else com.webtoapp.data.model.OrientationMode.PORTRAIT
+                        ))
                     }
-                )
-
-                com.webtoapp.ui.components.ExtensionModuleCard(
-                    enabled = editState.extensionModuleEnabled,
-                    selectedModuleIds = editState.extensionModuleIds,
-                    extensionFabIcon = editState.extensionFabIcon,
-                    onEnabledChange = { viewModel.updateEditState { copy(extensionModuleEnabled = it) } },
-                    onModuleIdsChange = { viewModel.updateEditState { copy(extensionModuleIds = it) } },
-                    onFabIconChange = { viewModel.updateEditState { copy(extensionFabIcon = it) } }
-                )
-
-
-                FullscreenModeCard(
-                    enabled = editState.webViewConfig.hideToolbar,
-                    showStatusBar = editState.webViewConfig.showStatusBarInFullscreen,
-                    showNavigationBar = editState.webViewConfig.showNavigationBarInFullscreen,
-                    hideBrowserToolbarInFullscreen =
-                        editState.webViewConfig.hideBrowserToolbar ||
-                            !editState.webViewConfig.showToolbarInFullscreen,
-                    webViewConfig = editState.webViewConfig,
-                    onEnabledChange = {
-                        viewModel.updateEditState {
-                            copy(
-                                webViewConfig = webViewConfig.copy(
-                                    hideToolbar = it,
-                                    hideBrowserToolbar = false
-                                )
+                },
+                orientationMode = editState.webViewConfig.orientationMode,
+                onOrientationModeChange = { mode ->
+                    viewModel.updateEditState {
+                        copy(webViewConfig = webViewConfig.copy(
+                            orientationMode = mode,
+                            landscapeMode = mode in listOf(
+                                com.webtoapp.data.model.OrientationMode.LANDSCAPE,
+                                com.webtoapp.data.model.OrientationMode.REVERSE_LANDSCAPE,
+                                com.webtoapp.data.model.OrientationMode.SENSOR_LANDSCAPE
                             )
-                        }
-                    },
-                    onShowStatusBarChange = {
-                        viewModel.updateEditState {
-                            copy(webViewConfig = webViewConfig.copy(showStatusBarInFullscreen = it))
-                        }
-                    },
-                    onShowNavigationBarChange = {
-                        viewModel.updateEditState {
-                            copy(webViewConfig = webViewConfig.copy(showNavigationBarInFullscreen = it))
-                        }
-                    },
-                    onHideBrowserToolbarInFullscreenChange = {
-                        viewModel.updateEditState {
-                            copy(
-                                webViewConfig = webViewConfig.copy(
-                                    showToolbarInFullscreen = !it,
-                                    hideBrowserToolbar = false
-                                )
-                            )
-                        }
-                    },
-                    onWebViewConfigChange = { newConfig ->
-                        viewModel.updateEditState {
-                            copy(webViewConfig = newConfig)
-                        }
+                        ))
                     }
-                )
+                }
+            )
 
-
-                LandscapeModeCard(
-                    enabled = editState.webViewConfig.landscapeMode,
-                    onEnabledChange = { enabled ->
-                        viewModel.updateEditState {
-                            copy(webViewConfig = webViewConfig.copy(
-                                landscapeMode = enabled,
-                                orientationMode = if (enabled) com.webtoapp.data.model.OrientationMode.LANDSCAPE
-                                                 else com.webtoapp.data.model.OrientationMode.PORTRAIT
-                            ))
-                        }
-                    },
-                    orientationMode = editState.webViewConfig.orientationMode,
-                    onOrientationModeChange = { mode ->
-                        viewModel.updateEditState {
-                            copy(webViewConfig = webViewConfig.copy(
-                                orientationMode = mode,
-                                landscapeMode = mode in listOf(
-                                    com.webtoapp.data.model.OrientationMode.LANDSCAPE,
-                                    com.webtoapp.data.model.OrientationMode.REVERSE_LANDSCAPE,
-                                    com.webtoapp.data.model.OrientationMode.SENSOR_LANDSCAPE
-                                )
-                            ))
-                        }
+            KeepScreenOnCard(
+                screenAwakeMode = editState.webViewConfig.screenAwakeMode,
+                onScreenAwakeModeChange = { mode ->
+                    viewModel.updateEditState {
+                        copy(webViewConfig = webViewConfig.copy(
+                            screenAwakeMode = mode,
+                            keepScreenOn = mode != com.webtoapp.data.model.ScreenAwakeMode.OFF
+                        ))
                     }
-                )
-
-                LongPressMenuCard(
-                    style = editState.webViewConfig.longPressMenuStyle,
-                    onStyleChange = {
-                        viewModel.updateEditState {
-                            copy(webViewConfig = webViewConfig.copy(
-                                longPressMenuEnabled = it != LongPressMenuStyle.DISABLED,
-                                longPressMenuStyle = it
-                            ))
-                        }
+                },
+                screenAwakeTimeoutMinutes = editState.webViewConfig.screenAwakeTimeoutMinutes,
+                onScreenAwakeTimeoutChange = { minutes ->
+                    viewModel.updateEditState {
+                        copy(webViewConfig = webViewConfig.copy(screenAwakeTimeoutMinutes = minutes))
                     }
-                )
+                },
+                screenBrightness = editState.webViewConfig.screenBrightness,
+                onScreenBrightnessChange = { brightness ->
+                    viewModel.updateEditState {
+                        copy(webViewConfig = webViewConfig.copy(screenBrightness = brightness))
+                    }
+                }
+            )
 
-                BrowserAdvancedConfigCard(
-                    config = editState.webViewConfig,
-                    onConfigChange = { viewModel.updateEditState { copy(webViewConfig = it) } }
-                )
+            FloatingWindowConfigCard(
+                config = editState.webViewConfig.floatingWindowConfig,
+                onConfigChange = { newConfig ->
+                    viewModel.updateEditState {
+                        copy(webViewConfig = webViewConfig.copy(floatingWindowConfig = newConfig))
+                    }
+                }
+            )
+
+            LongPressMenuCard(
+                style = editState.webViewConfig.longPressMenuStyle,
+                onStyleChange = {
+                    viewModel.updateEditState {
+                        copy(webViewConfig = webViewConfig.copy(
+                            longPressMenuEnabled = it != LongPressMenuStyle.DISABLED,
+                            longPressMenuStyle = it
+                        ))
+                    }
+                }
+            )
+
+            // ── 启动与多媒体 ────────────────────────────────────────
+
+            SplashScreenCard(
+                editState = editState,
+                onEnabledChange = { viewModel.updateEditState { copy(splashEnabled = it) } },
+                onSelectImage = { splashImagePickerLauncher.launch("image/*") },
+                onSelectVideo = { splashVideoPickerLauncher.launch("video/*") },
+                onDurationChange = {
+                    viewModel.updateEditState {
+                        copy(splashConfig = splashConfig.copy(duration = it))
+                    }
+                },
+                onClickToSkipChange = {
+                    viewModel.updateEditState {
+                        copy(splashConfig = splashConfig.copy(clickToSkip = it))
+                    }
+                },
+                onOrientationChange = {
+                    viewModel.updateEditState {
+                        copy(splashConfig = splashConfig.copy(orientation = it))
+                    }
+                },
+                onFillScreenChange = {
+                    viewModel.updateEditState {
+                        copy(splashConfig = splashConfig.copy(fillScreen = it))
+                    }
+                },
+                onEnableAudioChange = {
+                    viewModel.updateEditState {
+                        copy(splashConfig = splashConfig.copy(enableAudio = it))
+                    }
+                },
+                onVideoTrimChange = { startMs, endMs, totalDurationMs ->
+                    viewModel.updateEditState {
+                        copy(splashConfig = splashConfig.copy(
+                            videoStartMs = startMs,
+                            videoEndMs = endMs,
+                            videoDurationMs = totalDurationMs
+                        ))
+                    }
+                },
+                onClearMedia = { viewModel.clearSplashMedia() }
+            )
+
+            BgmCard(
+                enabled = editState.bgmEnabled,
+                config = editState.bgmConfig,
+                onEnabledChange = { viewModel.updateEditState { copy(bgmEnabled = it) } },
+                onConfigChange = { viewModel.updateEditState { copy(bgmConfig = it) } }
+            )
+
+            AnnouncementCard(
+                editState = editState,
+                onEnabledChange = { viewModel.updateEditState { copy(announcementEnabled = it) } },
+                onAnnouncementChange = { viewModel.updateEditState { copy(announcement = it) } }
+            )
+
+            // ── 内容增强 ────────────────────────────────────────────
+
+            TranslateCard(
+                enabled = editState.translateEnabled,
+                config = editState.translateConfig,
+                onEnabledChange = { viewModel.updateEditState { copy(translateEnabled = it) } },
+                onConfigChange = { viewModel.updateEditState { copy(translateConfig = it) } }
+            )
+
+            com.webtoapp.ui.components.ExtensionModuleCard(
+                enabled = editState.extensionModuleEnabled,
+                selectedModuleIds = editState.extensionModuleIds,
+                extensionFabIcon = editState.extensionFabIcon,
+                onEnabledChange = { viewModel.updateEditState { copy(extensionModuleEnabled = it) } },
+                onModuleIdsChange = { viewModel.updateEditState { copy(extensionModuleIds = it) } },
+                onFabIconChange = { viewModel.updateEditState { copy(extensionFabIcon = it) } }
+            )
+
+            if (hasConfiguredLegacyAds(editState)) {
+                LegacyAdCapabilityWarningCard()
             }
 
-            WtaSection(
-                title = Strings.appearance,
-                headerStyle = WtaSectionHeaderStyle.Quiet,
-                modifier = Modifier.bringIntoViewRequester(appearanceRequester),
-                capabilityTags = listOf(
-                    Strings.capabilitySplash,
-                    Strings.capabilityAnnouncement,
-                    Strings.bgmTitle,
-                    Strings.translateEngine
-                ),
-                collapsible = true,
-                initiallyExpanded = editState.splashEnabled ||
-                    editState.announcementEnabled ||
-                    editState.bgmEnabled ||
-                    editState.translateEnabled,
-                expanded = appearanceExpandedOverride,
-                onExpandedChange = { appearanceExpandedOverride = it }
-            ) {
-                SplashScreenCard(
-                    editState = editState,
-                    onEnabledChange = { viewModel.updateEditState { copy(splashEnabled = it) } },
-                    onSelectImage = { splashImagePickerLauncher.launch("image/*") },
-                    onSelectVideo = { splashVideoPickerLauncher.launch("video/*") },
-                    onDurationChange = {
-                        viewModel.updateEditState {
-                            copy(splashConfig = splashConfig.copy(duration = it))
-                        }
-                    },
-                    onClickToSkipChange = {
-                        viewModel.updateEditState {
-                            copy(splashConfig = splashConfig.copy(clickToSkip = it))
-                        }
-                    },
-                    onOrientationChange = {
-                        viewModel.updateEditState {
-                            copy(splashConfig = splashConfig.copy(orientation = it))
-                        }
-                    },
-                    onFillScreenChange = {
-                        viewModel.updateEditState {
-                            copy(splashConfig = splashConfig.copy(fillScreen = it))
-                        }
-                    },
-                    onEnableAudioChange = {
-                        viewModel.updateEditState {
-                            copy(splashConfig = splashConfig.copy(enableAudio = it))
-                        }
-                    },
-                    onVideoTrimChange = { startMs, endMs, totalDurationMs ->
-                        viewModel.updateEditState {
-                            copy(splashConfig = splashConfig.copy(
-                                videoStartMs = startMs,
-                                videoEndMs = endMs,
-                                videoDurationMs = totalDurationMs
-                            ))
-                        }
-                    },
-                    onClearMedia = { viewModel.clearSplashMedia() }
-                )
-
-                AnnouncementCard(
-                    editState = editState,
-                    onEnabledChange = { viewModel.updateEditState { copy(announcementEnabled = it) } },
-                    onAnnouncementChange = { viewModel.updateEditState { copy(announcement = it) } }
-                )
-
-                BgmCard(
-                    enabled = editState.bgmEnabled,
-                    config = editState.bgmConfig,
-                    onEnabledChange = { viewModel.updateEditState { copy(bgmEnabled = it) } },
-                    onConfigChange = { viewModel.updateEditState { copy(bgmConfig = it) } }
-                )
-
-                TranslateCard(
-                    enabled = editState.translateEnabled,
-                    config = editState.translateConfig,
-                    onEnabledChange = { viewModel.updateEditState { copy(translateEnabled = it) } },
-                    onConfigChange = { viewModel.updateEditState { copy(translateConfig = it) } }
-                )
-            }
-
-            WtaSection(
-                title = Strings.run,
-                level = WtaCapabilityLevel.Advanced,
-                headerStyle = WtaSectionHeaderStyle.Quiet,
-                modifier = Modifier.bringIntoViewRequester(runRequester),
-                capabilityTags = listOf(
-                    Strings.keepScreenOnLabel,
-                    Strings.screenBrightnessLabel,
-                    Strings.floatingWindowTitle,
-                    Strings.autoStartSettings
-                ),
-                expanded = runExpandedOverride,
-                onExpandedChange = { runExpandedOverride = it }
-            ) {
-                KeepScreenOnCard(
-                    screenAwakeMode = editState.webViewConfig.screenAwakeMode,
-                    onScreenAwakeModeChange = { mode ->
-                        viewModel.updateEditState {
-                            copy(webViewConfig = webViewConfig.copy(
-                                screenAwakeMode = mode,
-                                keepScreenOn = mode != com.webtoapp.data.model.ScreenAwakeMode.OFF
-                            ))
-                        }
-                    },
-                    screenAwakeTimeoutMinutes = editState.webViewConfig.screenAwakeTimeoutMinutes,
-                    onScreenAwakeTimeoutChange = { minutes ->
-                        viewModel.updateEditState {
-                            copy(webViewConfig = webViewConfig.copy(screenAwakeTimeoutMinutes = minutes))
-                        }
-                    },
-                    screenBrightness = editState.webViewConfig.screenBrightness,
-                    onScreenBrightnessChange = { brightness ->
-                        viewModel.updateEditState {
-                            copy(webViewConfig = webViewConfig.copy(screenBrightness = brightness))
-                        }
+            AdBlockCard(
+                editState = editState,
+                onEnabledChange = { viewModel.updateEditState { copy(adBlockEnabled = it) } },
+                onRulesChange = { viewModel.updateEditState { copy(adBlockRules = it) } },
+                onToggleEnabledChange = {
+                    viewModel.updateEditState {
+                        copy(webViewConfig = webViewConfig.copy(adBlockToggleEnabled = it))
                     }
-                )
+                }
+            )
 
-                FloatingWindowConfigCard(
-                    config = editState.webViewConfig.floatingWindowConfig,
-                    onConfigChange = { newConfig ->
-                        viewModel.updateEditState {
-                            copy(webViewConfig = webViewConfig.copy(floatingWindowConfig = newConfig))
-                        }
+            // ── 安全与访问控制 ──────────────────────────────────────
+
+            com.webtoapp.ui.components.DisguiseConfigCard(
+                config = editState.disguiseConfig,
+                onConfigChange = { viewModel.updateEditState { copy(disguiseConfig = it) } }
+            )
+
+            DeviceDisguiseCard(
+                config = editState.deviceDisguiseConfig,
+                onConfigChange = { newConfig ->
+                    viewModel.updateEditState {
+                        copy(deviceDisguiseConfig = newConfig)
                     }
-                )
+                }
+            )
 
-                AutoStartCard(
-                    config = editState.autoStartConfig,
-                    onConfigChange = { viewModel.updateEditState { copy(autoStartConfig = it) } }
-                )
-            }
+            // ── 系统控制 ────────────────────────────────────────────
 
-            WtaSection(
-                title = Strings.securityProtection,
-                level = WtaCapabilityLevel.Advanced,
-                headerStyle = WtaSectionHeaderStyle.Quiet,
-                modifier = Modifier.bringIntoViewRequester(securityRequester),
-                capabilityTags = listOf(
-                    Strings.capabilityActivation,
-                    Strings.activationCodeVerify
-                ),
-                initiallyExpanded = editState.activationEnabled,
-                expanded = securityExpandedOverride,
-                onExpandedChange = { securityExpandedOverride = it }
-            ) {
-                ActivationCodeCard(
-                    enabled = editState.activationEnabled,
-                    activationCodes = editState.activationCodeList,
-                    requireEveryTime = editState.activationRequireEveryTime,
-                    dialogConfig = editState.activationDialogConfig,
-                    onEnabledChange = { viewModel.updateEditState { copy(activationEnabled = it) } },
-                    onCodesChange = { viewModel.updateEditState { copy(activationCodeList = it) } },
-                    onRequireEveryTimeChange = { viewModel.updateEditState { copy(activationRequireEveryTime = it) } },
-                    onDialogConfigChange = { viewModel.updateEditState { copy(activationDialogConfig = it) } }
-                )
-            }
+            AutoStartCard(
+                config = editState.autoStartConfig,
+                onConfigChange = { viewModel.updateEditState { copy(autoStartConfig = it) } }
+            )
 
-            WtaSection(
-                title = "Lab",
-                level = WtaCapabilityLevel.Lab,
-                headerStyle = WtaSectionHeaderStyle.Quiet,
-                modifier = Modifier.bringIntoViewRequester(labRequester),
-                capabilityTags = listOf(
-                    Strings.forcedRunSettings,
-                    Strings.blackTechFeatures,
-                    Strings.enableDisguise,
-                    Strings.deviceDisguiseTitle
-                ),
-                expanded = labExpandedOverride,
-                onExpandedChange = { labExpandedOverride = it }
-            ) {
-                com.webtoapp.ui.components.ForcedRunConfigCard(
-                    config = editState.forcedRunConfig,
-                    onConfigChange = { viewModel.updateEditState { copy(forcedRunConfig = it) } }
-                )
+            com.webtoapp.ui.components.ForcedRunConfigCard(
+                config = editState.forcedRunConfig,
+                onConfigChange = { viewModel.updateEditState { copy(forcedRunConfig = it) } }
+            )
 
-                com.webtoapp.ui.components.BlackTechConfigCard(
-                    config = editState.blackTechConfig,
-                    onConfigChange = { viewModel.updateEditState { copy(blackTechConfig = it) } }
-                )
+            com.webtoapp.ui.components.BlackTechConfigCard(
+                config = editState.blackTechConfig,
+                onConfigChange = { viewModel.updateEditState { copy(blackTechConfig = it) } }
+            )
 
-                com.webtoapp.ui.components.DisguiseConfigCard(
-                    config = editState.disguiseConfig,
-                    onConfigChange = { viewModel.updateEditState { copy(disguiseConfig = it) } }
-                )
+            // ── 高级与导出 ──────────────────────────────────────────
 
-                DeviceDisguiseCard(
-                    config = editState.deviceDisguiseConfig,
-                    onConfigChange = { newConfig ->
-                        viewModel.updateEditState {
-                            copy(deviceDisguiseConfig = newConfig)
-                        }
-                    }
-                )
-            }
+            BrowserAdvancedConfigCard(
+                config = editState.webViewConfig,
+                onConfigChange = { viewModel.updateEditState { copy(webViewConfig = it) } }
+            )
 
-            WtaSection(
-                title = Strings.apkExportConfig,
-                level = WtaCapabilityLevel.Advanced,
-                headerStyle = WtaSectionHeaderStyle.Quiet,
-                modifier = Modifier.bringIntoViewRequester(exportRequester),
-                capabilityTags = listOf(
-                    Strings.customPackageName,
-                    Strings.versionName,
-                    Strings.apkArchitecture,
-                    Strings.customSigning,
-                    Strings.capabilityPermissions
-                ),
-                initiallyExpanded = editState.apkExportConfig.isMeaningful(),
-                expanded = exportExpandedOverride,
-                onExpandedChange = { exportExpandedOverride = it }
-            ) {
-                ApkExportSettingsCard(
-                    config = editState.apkExportConfig,
-                    onConfigChange = { viewModel.updateEditState { copy(apkExportConfig = it) } },
-                    onOpenPermissionConfig = { showPermissionConfig = true }
-                )
-            }
+            SpecialSettingsCard(
+                config = editState.webViewConfig,
+                onConfigChange = { viewModel.updateEditState { copy(webViewConfig = it) } }
+            )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            ExportAndPermissionDrawer(
+                exportConfig = editState.apkExportConfig,
+                onExportConfigChange = { viewModel.updateEditState { copy(apkExportConfig = it) } }
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 
@@ -676,15 +491,110 @@ fun CreateAppScreen(
         )
     }
 
-    if (showCapabilitySearch) {
-        CapabilitySearchDialog(
-            capabilities = capabilities,
-            onDismiss = { showCapabilitySearch = false },
-            onSelect = { capability ->
-                showCapabilitySearch = false
-                focusCapability(capability)
+}
+
+@Composable
+private fun ExportAndPermissionDrawer(
+    exportConfig: ApkExportConfig,
+    onExportConfigChange: (ApkExportConfig) -> Unit
+) {
+    var expanded by rememberSaveable { mutableStateOf(false) }
+
+    WtaSettingCard {
+        Column {
+            WtaChoiceRow(
+                title = Strings.apkExportConfig,
+                subtitle = null,
+                icon = Icons.Outlined.SettingsApplications,
+                value = "",
+                isExpanded = expanded,
+                onClick = { expanded = !expanded }
+            )
+
+            AnimatedVisibility(
+                visible = expanded,
+                enter = CardExpandTransition,
+                exit = CardCollapseTransition
+            ) {
+                Column(
+                    modifier = Modifier.padding(
+                        horizontal = WtaSpacing.RowHorizontal,
+                        vertical = WtaSpacing.ContentGap
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(WtaSpacing.SectionGap)
+                ) {
+                    ApkExportSettingsCard(
+                        config = exportConfig,
+                        onConfigChange = onExportConfigChange,
+                        onOpenPermissionConfig = null
+                    )
+
+                    PermissionConfigPanel(
+                        permissions = exportConfig.runtimePermissions,
+                        onPermissionsChange = { permissions ->
+                            onExportConfigChange(exportConfig.copy(runtimePermissions = permissions))
+                        },
+                        showDescription = false
+                    )
+                }
             }
-        )
+        }
+    }
+}
+
+@Composable
+private fun CreateAppBottomBar(
+    canPreview: Boolean,
+    isPreviewSaving: Boolean,
+    isSaving: Boolean,
+    onPreview: () -> Unit,
+    onSave: () -> Unit
+) {
+    Surface(
+        tonalElevation = 3.dp,
+        shadowElevation = 6.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            OutlinedButton(
+                onClick = onPreview,
+                enabled = canPreview,
+                modifier = Modifier.weight(1f)
+            ) {
+                if (isPreviewSaving) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Icon(Icons.Filled.PlayArrow, contentDescription = null)
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(Strings.btnPreview)
+            }
+
+            Button(
+                onClick = onSave,
+                enabled = !isSaving,
+                modifier = Modifier.weight(1f)
+            ) {
+                if (isSaving) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Icon(Icons.Outlined.Save, contentDescription = null)
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(Strings.btnSave)
+            }
+        }
     }
 }
 
@@ -694,32 +604,6 @@ private fun hasConfiguredLegacyAds(editState: EditState): Boolean {
         config.bannerId.isNotBlank() ||
         config.interstitialId.isNotBlank() ||
         config.splashId.isNotBlank()
-}
-
-private fun hasConfiguredBrowserAdvancedConfig(config: WebViewConfig): Boolean {
-    val defaultConfig = WebViewConfig()
-    return config.javaScriptEnabled != defaultConfig.javaScriptEnabled ||
-        config.domStorageEnabled != defaultConfig.domStorageEnabled ||
-        config.enableCrossOriginIsolation != defaultConfig.enableCrossOriginIsolation ||
-        config.zoomEnabled != defaultConfig.zoomEnabled ||
-        config.fullscreenEnabled != defaultConfig.fullscreenEnabled ||
-        config.swipeRefreshEnabled != defaultConfig.swipeRefreshEnabled ||
-        config.openExternalLinks != defaultConfig.openExternalLinks ||
-        config.popupBlockerEnabled != defaultConfig.popupBlockerEnabled ||
-        config.showFloatingBackButton != defaultConfig.showFloatingBackButton ||
-        config.pwaOfflineEnabled != defaultConfig.pwaOfflineEnabled ||
-        config.pwaOfflineStrategy != defaultConfig.pwaOfflineStrategy ||
-        config.errorPageConfig != defaultConfig.errorPageConfig ||
-        config.keyboardAdjustMode != defaultConfig.keyboardAdjustMode ||
-        config.injectScripts.isNotEmpty() ||
-        config.proxyMode != defaultConfig.proxyMode ||
-        config.proxyHost.isNotBlank() ||
-        config.proxyPort != defaultConfig.proxyPort ||
-        config.proxyType != defaultConfig.proxyType ||
-        config.pacUrl.isNotBlank() ||
-        config.proxyBypassRules.isNotEmpty() ||
-        config.proxyUsername.isNotBlank() ||
-        config.proxyPassword.isNotBlank()
 }
 
 @Composable
@@ -900,77 +784,6 @@ private fun BasicInfoSummaryRow(
         icon = icon,
         subtitleMaxLines = 1,
         contentPadding = PaddingValues(horizontal = 0.dp, vertical = WtaSpacing.ContentGap)
-    )
-}
-
-
-@Composable
-private fun CapabilitySearchDialog(
-    capabilities: List<AppCapability>,
-    onDismiss: () -> Unit,
-    onSelect: (AppCapability) -> Unit
-) {
-    var query by remember { mutableStateOf("") }
-    val filtered = remember(query, capabilities) {
-        capabilities.filter { it.matches(query) }
-    }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(Strings.capabilitySearchTitle) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(WtaSpacing.CardGap)) {
-                OutlinedTextField(
-                    value = query,
-                    onValueChange = { query = it },
-                    label = { Text(Strings.capabilitySearchLabel) },
-                    placeholder = { Text(Strings.capabilitySearchPlaceholder) },
-                    leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 420.dp)
-                        .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(WtaSpacing.CardGap)
-                ) {
-                    if (filtered.isEmpty()) {
-                        WtaEmptyState(
-                            title = Strings.capabilitySearchEmptyTitle,
-                            message = Strings.capabilitySearchEmptyMessage
-                        )
-                    } else {
-                        filtered.forEach { capability ->
-                            WtaSettingCard(onClick = { onSelect(capability) }) {
-                                WtaSettingRow(
-                                    title = capability.title,
-                                    subtitle = capability.subtitle,
-                                    icon = capability.icon
-                                ) {
-                                    Text(
-                                        text = if (capability.configured) Strings.configured else when (capability.level) {
-                                            WtaCapabilityLevel.Common -> Strings.common
-                                            WtaCapabilityLevel.Advanced -> Strings.advanced
-                                            WtaCapabilityLevel.Lab -> Strings.lab
-                                        },
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text(Strings.btnCancel)
-            }
-        }
     )
 }
 
@@ -1369,12 +1182,14 @@ fun TranslateCard(
                         )
                     }
                     Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = Strings.autoTranslate,
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                    Column {
+                        Text(
+                            text = Strings.autoTranslate,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
                 }
-                PremiumSwitch(
+                WtaSwitch(
                     checked = enabled,
                     onCheckedChange = onEnabledChange
                 )
@@ -1500,7 +1315,7 @@ fun TranslateCard(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    PremiumSwitch(
+                    WtaSwitch(
                         checked = config.showFloatingButton,
                         onCheckedChange = { onConfigChange(config.copy(showFloatingButton = it)) }
                     )
@@ -1520,7 +1335,7 @@ fun TranslateCard(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    PremiumSwitch(
+                    WtaSwitch(
                         checked = config.autoTranslateOnLoad,
                         onCheckedChange = { onConfigChange(config.copy(autoTranslateOnLoad = it)) }
                     )

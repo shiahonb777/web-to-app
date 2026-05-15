@@ -15,6 +15,8 @@ import okhttp3.Request
 import java.io.File
 import java.io.FileOutputStream
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 
 
@@ -89,6 +91,7 @@ object DependencyDownloadEngine {
 
 
     private val _paused = AtomicBoolean(false)
+    private val downloadMutex = Mutex()
 
 
     val isActive: Boolean get() = _state.value is State.Downloading || _state.value is State.Paused
@@ -113,23 +116,26 @@ object DependencyDownloadEngine {
 
 
 
-    private val speedSamples = mutableListOf<Pair<Long, Long>>()
+    private class SpeedTracker {
+        private val speedSamples = mutableListOf<Pair<Long, Long>>()
 
-    private fun recordSample(totalDownloaded: Long) {
-        val now = System.currentTimeMillis()
-        speedSamples.add(now to totalDownloaded)
+        fun recordSample(totalDownloaded: Long) {
+            val now = System.currentTimeMillis()
+            speedSamples.add(now to totalDownloaded)
+            while (speedSamples.isNotEmpty() && now - speedSamples.first().first > SPEED_WINDOW_MS) {
+                speedSamples.removeAt(0)
+            }
+        }
 
-        speedSamples.removeAll { now - it.first > SPEED_WINDOW_MS }
-    }
-
-    private fun calculateSpeed(): Long {
-        if (speedSamples.size < 2) return 0L
-        val oldest = speedSamples.first()
-        val newest = speedSamples.last()
-        val timeDelta = newest.first - oldest.first
-        if (timeDelta <= 0) return 0L
-        val bytesDelta = newest.second - oldest.second
-        return (bytesDelta * 1000 / timeDelta).coerceAtLeast(0)
+        fun calculateSpeed(): Long {
+            if (speedSamples.size < 2) return 0L
+            val oldest = speedSamples.first()
+            val newest = speedSamples.last()
+            val timeDelta = newest.first - oldest.first
+            if (timeDelta <= 0) return 0L
+            val bytesDelta = newest.second - oldest.second
+            return (bytesDelta * 1000 / timeDelta).coerceAtLeast(0)
+        }
     }
 
     private fun calculateEta(remaining: Long, speed: Long): Long {
@@ -172,7 +178,6 @@ object DependencyDownloadEngine {
 
     fun reset() {
         _paused.set(false)
-        speedSamples.clear()
         _state.value = State.Idle
     }
 
@@ -194,112 +199,117 @@ object DependencyDownloadEngine {
         displayName: String,
         context: Context? = null
     ): Boolean = withContext(Dispatchers.IO) {
-        val fileName = url.substringAfterLast("/")
-        val tempFile = File(destFile.parentFile, "${destFile.name}.tmp")
-        var downloadedBytes = 0L
-        val startTime = System.currentTimeMillis()
+        downloadMutex.withLock {
+            val fileName = url.substringAfterLast("/")
+            val tempFile = File(destFile.parentFile, "${destFile.name}.tmp")
+            var downloadedBytes = 0L
+            val startTime = System.currentTimeMillis()
+            val speedTracker = SpeedTracker()
 
-        speedSamples.clear()
-        _paused.set(false)
+            _paused.set(false)
 
-        try {
+            try {
 
-            if (tempFile.exists()) {
-                downloadedBytes = tempFile.length()
-            }
+                if (tempFile.exists()) {
+                    downloadedBytes = tempFile.length()
+                }
 
-            val requestBuilder = Request.Builder().url(url)
-            if (downloadedBytes > 0) {
-                requestBuilder.addHeader("Range", "bytes=$downloadedBytes-")
-                AppLogger.i(TAG, "断点续传: 从 $downloadedBytes 字节继续 ($displayName)")
-            }
+                val requestBuilder = Request.Builder().url(url)
+                if (downloadedBytes > 0) {
+                    requestBuilder.addHeader("Range", "bytes=$downloadedBytes-")
+                    AppLogger.i(TAG, "断点续传: 从 $downloadedBytes 字节继续 ($displayName)")
+                }
 
-            val response = httpClient.newCall(requestBuilder.build()).execute()
+                val response = httpClient.newCall(requestBuilder.build()).execute()
 
-            if (!response.isSuccessful && response.code != 206) {
-                AppLogger.e(TAG, "下载失败: HTTP ${response.code} - $url")
-                _state.value = State.Error(Strings.downloadFailedHttp.replace("%d", response.code.toString()))
-                response.close()
-                return@withContext false
-            }
+                if (!response.isSuccessful && response.code != 206) {
+                    AppLogger.e(TAG, "下载失败: HTTP ${response.code} - $url")
+                    _state.value = State.Error(Strings.downloadFailedHttp.replace("%d", response.code.toString()))
+                    response.close()
+                    return@withLock false
+                }
 
-            val body = response.body ?: run {
-                _state.value = State.Error(Strings.downloadReturnedEmpty)
-                response.close()
-                return@withContext false
-            }
+                val body = response.body ?: run {
+                    _state.value = State.Error(Strings.downloadReturnedEmpty)
+                    response.close()
+                    return@withLock false
+                }
 
-            val contentLength = body.contentLength()
-            val totalBytes = if (response.code == 206) {
-                downloadedBytes + contentLength
-            } else {
-                contentLength
-            }
-
-            val outputStream = if (response.code == 206) {
-                FileOutputStream(tempFile, true)
-            } else {
-                downloadedBytes = 0
-                FileOutputStream(tempFile)
-            }
-
-            var lastThrottleTime = 0L
-
-            outputStream.use { fos ->
-                val buffer = ByteArray(8192)
-                val inputStream = body.byteStream()
-                var bytesRead: Int
-
-                while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-
-                    while (_paused.get()) {
-                        delay(PAUSE_CHECK_MS)
-                        if (!isActive) return@withContext false
+                body.use { responseBody ->
+                    val contentLength = responseBody.contentLength()
+                    val totalBytes = if (response.code == 206) {
+                        downloadedBytes + contentLength
+                    } else {
+                        contentLength
                     }
 
-                    fos.write(buffer, 0, bytesRead)
-                    downloadedBytes += bytesRead
+                    val outputStream = if (response.code == 206) {
+                        FileOutputStream(tempFile, true)
+                    } else {
+                        downloadedBytes = 0
+                        FileOutputStream(tempFile)
+                    }
+
+                    var lastThrottleTime = 0L
+
+                    outputStream.use { fos ->
+                        val buffer = ByteArray(8192)
+                        responseBody.byteStream().use { inputStream ->
+                            var bytesRead: Int
+
+                            while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+
+                                while (_paused.get()) {
+                                    delay(PAUSE_CHECK_MS)
+                                    if (!isActive) return@withLock false
+                                }
+
+                                fos.write(buffer, 0, bytesRead)
+                                downloadedBytes += bytesRead
 
 
-                    recordSample(downloadedBytes)
+                                speedTracker.recordSample(downloadedBytes)
 
 
-                    val now = System.currentTimeMillis()
-                    if (now - lastThrottleTime >= THROTTLE_MS) {
-                        lastThrottleTime = now
+                                val now = System.currentTimeMillis()
+                                if (now - lastThrottleTime >= THROTTLE_MS) {
+                                    lastThrottleTime = now
 
-                        val speed = calculateSpeed()
-                        val remaining = if (totalBytes > 0) totalBytes - downloadedBytes else -1
-                        val eta = calculateEta(remaining, speed)
-                        val progress = if (totalBytes > 0) {
-                            (downloadedBytes.toFloat() / totalBytes).coerceIn(0f, 1f)
-                        } else 0f
+                                    val speed = speedTracker.calculateSpeed()
+                                    val remaining = if (totalBytes > 0) totalBytes - downloadedBytes else -1
+                                    val eta = calculateEta(remaining, speed)
+                                    val progress = if (totalBytes > 0) {
+                                        (downloadedBytes.toFloat() / totalBytes).coerceIn(0f, 1f)
+                                    } else 0f
 
-                        _state.value = State.Downloading(
-                            url = url,
-                            displayName = displayName,
-                            fileName = fileName,
-                            bytesDownloaded = downloadedBytes,
-                            totalBytes = totalBytes,
-                            progress = progress,
-                            speedBytesPerSec = speed,
-                            etaSeconds = eta,
-                            startTimeMillis = startTime,
-                            isPaused = false
-                        )
+                                    _state.value = State.Downloading(
+                                        url = url,
+                                        displayName = displayName,
+                                        fileName = fileName,
+                                        bytesDownloaded = downloadedBytes,
+                                        totalBytes = totalBytes,
+                                        progress = progress,
+                                        speedBytesPerSec = speed,
+                                        etaSeconds = eta,
+                                        startTimeMillis = startTime,
+                                        isPaused = false
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
+
+
+                tempFile.renameTo(destFile)
+                AppLogger.i(TAG, "$displayName 下载完成: ${destFile.length()} 字节")
+                true
+
+            } catch (e: Exception) {
+                AppLogger.e(TAG, "下载 $displayName 失败", e)
+                _state.value = State.Error(Strings.downloadNameFailed.replaceFirst("%s", displayName).replaceFirst("%s", e.message ?: ""))
+                false
             }
-
-
-            tempFile.renameTo(destFile)
-            AppLogger.i(TAG, "$displayName 下载完成: ${destFile.length()} 字节")
-            true
-
-        } catch (e: Exception) {
-            AppLogger.e(TAG, "下载 $displayName 失败", e)
-            _state.value = State.Error(Strings.downloadNameFailed.replaceFirst("%s", displayName).replaceFirst("%s", e.message ?: ""))
-            false
         }
     }
 

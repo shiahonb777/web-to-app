@@ -213,22 +213,37 @@ object ErrorPageStyles {
 
     private fun minimalCss() = """
         body { background: #fafafa; }
+        @media(prefers-color-scheme:dark){ body{background:#0a0a0c;} }
         .illustration svg { width:120px; height:120px; }
         .line-art { fill:none; stroke:#333; stroke-width:1.5; stroke-linecap:round; }
         .line-art-dot { fill:#333; }
+        @media(prefers-color-scheme:dark){
+            .line-art { stroke:#ebebee; }
+            .line-art-dot { fill:#ebebee; }
+        }
         .line-draw {
             stroke-dasharray: 200; stroke-dashoffset: 200;
-            animation: draw 2s ease forwards;
+            animation: draw 1.6s cubic-bezier(0.22,1,0.36,1) forwards;
         }
         @keyframes draw { to { stroke-dashoffset:0; } }
-        .error-title { color: #1a1a1a; font-weight:300; letter-spacing:2px; }
-        .error-subtitle { color: #888; font-weight:300; }
+        .error-title { color: #111113; font-weight:600; letter-spacing:-0.015em; }
+        @media(prefers-color-scheme:dark){ .error-title { color: #ebebee; } }
+        .error-subtitle { color: #55555a; font-weight:400; }
+        @media(prefers-color-scheme:dark){ .error-subtitle { color: #9b9ba0; } }
         .retry-btn {
-            background: #1a1a1a; color: #fff;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+            background: #111113; color: #fff;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.08);
+            border-radius: 10px;
         }
-        .retry-btn:active { transform:scale(0.96); background:#333; }
-        .game-link { color: #999 !important; }
+        @media(prefers-color-scheme:dark){
+            .retry-btn { background:#ebebee; color:#0a0a0c; box-shadow:none; }
+        }
+        .retry-btn:active { transform:scale(0.97); background:#29292c; }
+        @media(prefers-color-scheme:dark){
+            .retry-btn:active { background:#d4d4d8; }
+        }
+        .game-link { color: #7a7a7f !important; }
+        @media(prefers-color-scheme:dark){ .game-link { color:#9b9ba0 !important; } }
     """.trimIndent()
 
     private fun minimalBody(title: String, subtitle: String) = """

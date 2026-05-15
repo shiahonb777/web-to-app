@@ -1,6 +1,7 @@
 package com.webtoapp.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import com.webtoapp.ui.design.WtaSwitch
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.FlowRow
@@ -78,7 +79,7 @@ fun EncryptionConfigCard(
                     }
                 }
 
-                PremiumSwitch(
+                WtaSwitch(
                     checked = config.enabled,
                     onCheckedChange = { enabled ->
                         onConfigChange(config.copy(enabled = enabled))

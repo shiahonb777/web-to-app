@@ -1,6 +1,7 @@
 package com.webtoapp.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import com.webtoapp.ui.design.WtaSwitch
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -46,10 +47,10 @@ fun NotificationConfigCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(12.dp))
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(com.webtoapp.ui.design.WtaRadius.IconPlate))
                             .background(
-                                if (enabled) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                                if (enabled) MaterialTheme.colorScheme.primary.copy(alpha = com.webtoapp.ui.design.WtaAlpha.MutedContainer)
                                 else MaterialTheme.colorScheme.surfaceVariant
                             ),
                         contentAlignment = Alignment.Center
@@ -57,8 +58,9 @@ fun NotificationConfigCard(
                         Icon(
                             Icons.Outlined.Notifications,
                             contentDescription = null,
-                            modifier = Modifier.size(22.dp),
-                            tint = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                            modifier = Modifier.size(20.dp),
+                            tint = if (enabled) MaterialTheme.colorScheme.onSurface
+                            else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     Spacer(Modifier.width(12.dp))
@@ -76,7 +78,7 @@ fun NotificationConfigCard(
                         }
                     }
                 }
-                PremiumSwitch(
+                WtaSwitch(
                     checked = enabled,
                     onCheckedChange = onEnabledChange
                 )
@@ -193,16 +195,18 @@ fun NotificationConfigCard(
                                         Strings.notificationPollMethod,
                                         style = MaterialTheme.typography.bodyMedium
                                     )
-                                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                        FilterChip(
+                                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        com.webtoapp.ui.design.WtaChip(
                                             selected = config.pollMethod == "GET",
                                             onClick = { onConfigChange(config.copy(pollMethod = "GET")) },
-                                            label = { Text("GET") }
+                                            label = "GET",
+                                            showSelectedCheck = false
                                         )
-                                        FilterChip(
+                                        com.webtoapp.ui.design.WtaChip(
                                             selected = config.pollMethod == "POST",
                                             onClick = { onConfigChange(config.copy(pollMethod = "POST")) },
-                                            label = { Text("POST") }
+                                            label = "POST",
+                                            showSelectedCheck = false
                                         )
                                     }
                                 }
@@ -242,18 +246,9 @@ private fun NotificationTypeChip(
     label: String,
     onClick: () -> Unit
 ) {
-    FilterChip(
+    com.webtoapp.ui.design.WtaChip(
         selected = selected,
         onClick = onClick,
-        label = { Text(label, style = MaterialTheme.typography.labelMedium) },
-        leadingIcon = if (selected) {
-            {
-                Icon(
-                    Icons.Outlined.Notifications,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp)
-                )
-            }
-        } else null
+        label = label
     )
 }

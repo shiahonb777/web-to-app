@@ -111,12 +111,96 @@ class AxmlRebuilder {
 
 
     private fun ensureUsesPermissions(parsed: ParsedAxml, permissions: List<String>) {
+        // 已被 applyUsesPermissions 取代。保留为兼容别名，直接转发。
+        applyUsesPermissions(parsed, permissions)
+    }
+
+
+
+
+    /**
+     * 从 AXML 中移除所有 name 不在 allowed 集合内的 <uses-permission> 元素。
+     *
+     * 动机：shell 模板为了支持任意功能组合在 AndroidManifest 里预声明了 50+ 权限；
+     * 但如果用户只启用了一部分功能（比如只需要相机），留下的无关权限会：
+     *   - 在应用商店展示时形成"权限过多"警告
+     *   - 触发 Play Store/应用市场的合规审查
+     *   - 让终端用户在安装/使用过程中看到多余的权限提示
+     *
+     * 因此构建 APK 时必须根据用户勾选和功能开关做"减法"。
+     *
+     * 安全性：单独的 uses-permission 元素在 manifest 中是扁平的（start + end 紧邻，无子节点），
+     * 配对删除 start/end chunks 不会破坏其它 chunk 的结构。字符串池中残留的权限名字符串
+     * 无人引用时对 AXML 的正确性没有影响。
+     */
+    private fun pruneUsesPermissions(parsed: ParsedAxml, allowed: Collection<String>) {
         val resourceMap = parsed.resourceMap ?: return
         val nameAttrIndex = resourceMap.indexOf(ATTR_NAME)
         if (nameAttrIndex < 0) {
-            AppLogger.w(TAG, "android:name attribute not found in resource map, cannot add permissions")
+            AppLogger.w(TAG, "android:name attribute not found, skip prune")
             return
         }
+        val allowedSet = allowed.toHashSet()
+        val usesPermissionStrIndex = parsed.stringPool.strings.indexOf("uses-permission")
+        if (usesPermissionStrIndex < 0) {
+            // Manifest 根本没有 uses-permission，无事可做
+            return
+        }
+
+        val indicesToRemove = mutableListOf<Int>()
+        val removedNames = mutableListOf<String>()
+        var i = 0
+        while (i < parsed.chunks.size) {
+            val chunk = parsed.chunks[i]
+            if (chunk.type == CHUNK_START_ELEMENT) {
+                val permName = readUsesPermissionName(parsed, chunk, usesPermissionStrIndex, nameAttrIndex)
+                if (permName != null && permName !in allowedSet) {
+                    indicesToRemove += i
+                    // 紧邻的下一个 end element 属于它（uses-permission 是扁平元素，无子节点）
+                    val next = parsed.chunks.getOrNull(i + 1)
+                    if (next != null && next.type == CHUNK_END_ELEMENT) {
+                        indicesToRemove += (i + 1)
+                        i += 2
+                        removedNames += permName
+                        continue
+                    }
+                    // 如果结构不符合预期，退回保守策略：保留这条，避免破坏 manifest
+                    indicesToRemove.removeAt(indicesToRemove.lastIndex)
+                }
+            }
+            i++
+        }
+
+        if (indicesToRemove.isEmpty()) return
+
+        // 从后往前删除，避免索引失效
+        for (idx in indicesToRemove.sortedDescending()) {
+            parsed.chunks.removeAt(idx)
+        }
+        AppLogger.d(TAG, "Pruned ${removedNames.size} uses-permission entries: ${removedNames.joinToString()}")
+    }
+
+    /**
+     * 将 AXML 中的 <uses-permission> 集合同步到给定的 [permissions] 白名单：
+     *   1. 确保所有白名单中的权限都存在（缺失的会被追加）
+     *   2. 移除所有不在白名单中的权限
+     *
+     * 调用方传入的 [permissions] 必须是构建时最终想要的完整集合——包括基线权限
+     * (INTERNET/ACCESS_NETWORK_STATE) 和用户勾选的/功能依赖的权限。
+     *
+     * 这取代了之前仅"补齐缺失"的 ensureUsesPermissions，解决模板中预声明的
+     * 大量权限无法根据用户配置剔除的问题。
+     */
+    private fun applyUsesPermissions(parsed: ParsedAxml, permissions: List<String>) {
+        val resourceMap = parsed.resourceMap ?: return
+        val nameAttrIndex = resourceMap.indexOf(ATTR_NAME)
+        if (nameAttrIndex < 0) {
+            AppLogger.w(TAG, "android:name attribute not found in resource map, cannot apply permissions")
+            return
+        }
+
+        // 先裁剪不再需要的，再追加缺失的。
+        pruneUsesPermissions(parsed, permissions)
 
         val androidNsIndex = getOrAddString(parsed.stringPool, "http://schemas.android.com/apk/res/android")
         val usesPermissionNameIndex = getOrAddString(parsed.stringPool, "uses-permission")
@@ -137,6 +221,46 @@ class AxmlRebuilder {
         }
 
         parsed.chunks.addAll(insertIndex, newChunks)
+    }
+
+    /**
+     * 若 chunk 是 <uses-permission android:name="..."> 的 start element，返回其 name 字符串值；
+     * 否则返回 null。仅承认 TYPE_STRING (0x03) 类型的 name 属性——标准 manifest 里都是这个类型。
+     */
+    private fun readUsesPermissionName(
+        parsed: ParsedAxml,
+        chunk: Chunk,
+        usesPermissionStrIndex: Int,
+        nameAttrIndex: Int
+    ): String? {
+        if (chunk.data.size < 36) return null
+        val buffer = ByteBuffer.wrap(chunk.data).order(ByteOrder.LITTLE_ENDIAN)
+        buffer.position(16)
+        buffer.int // line number
+        val elementName = buffer.int
+        if (elementName != usesPermissionStrIndex) return null
+
+        buffer.short // namespace
+        val attrSize = buffer.short.toInt() and 0xFFFF
+        val attrCount = buffer.short.toInt() and 0xFFFF
+        if (attrSize == 0 || attrCount == 0) return null
+
+        for (idx in 0 until attrCount) {
+            val attrOffset = 36 + idx * attrSize
+            if (attrOffset + 20 > chunk.data.size) break
+            buffer.position(attrOffset)
+            buffer.int // ns
+            val attrName = buffer.int
+            buffer.int // raw value
+            buffer.short // size
+            buffer.get() // padding
+            val attrValueType = buffer.get().toInt() and 0xFF
+            val attrValueData = buffer.int
+            if (attrName == nameAttrIndex && attrValueType == 0x03) {
+                return parsed.stringPool.strings.getOrNull(attrValueData)
+            }
+        }
+        return null
     }
 
 

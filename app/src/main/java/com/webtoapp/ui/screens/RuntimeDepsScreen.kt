@@ -106,6 +106,7 @@ fun RuntimeDepsScreen(onBack: () -> Unit) {
     var sqliteReady by remember { mutableStateOf(WordPressDependencyManager.isSqlitePluginReady(context)) }
     var nodeReady by remember { mutableStateOf(NodeDependencyManager.isNodeReady(context)) }
     var pythonReady by remember { mutableStateOf(PythonDependencyManager.isPythonReady(context)) }
+    var goReady by remember { mutableStateOf(GoDependencyManager.isGoExecLoaderReady(context)) }
 
     var wpCacheSize by remember { mutableLongStateOf(0L) }
     var nodeCacheSize by remember { mutableLongStateOf(0L) }
@@ -178,11 +179,13 @@ fun RuntimeDepsScreen(onBack: () -> Unit) {
                 sqliteReady = WordPressDependencyManager.isSqlitePluginReady(context)
                 nodeReady = NodeDependencyManager.isNodeReady(context)
                 pythonReady = PythonDependencyManager.isPythonReady(context)
+                goReady = GoDependencyManager.isGoExecLoaderReady(context)
                 wpCacheSize = withContext(Dispatchers.IO) { WordPressDependencyManager.getCacheSize(context) }
                 phpCacheSize = wpCacheSize
                 sqliteCacheSize = wpCacheSize
                 nodeCacheSize = withContext(Dispatchers.IO) { NodeDependencyManager.getCacheSize(context) }
                 pythonCacheSize = withContext(Dispatchers.IO) { PythonDependencyManager.getCacheSize(context) }
+                goCacheSize = withContext(Dispatchers.IO) { GoDependencyManager.getCacheSize(context) }
             }
             is DependencyDownloadEngine.State.Error -> {
                 isDownloading = false
@@ -236,8 +239,8 @@ fun RuntimeDepsScreen(onBack: () -> Unit) {
     }
 
     val totalCacheSize = wpCacheSize + nodeCacheSize + pythonCacheSize + goCacheSize
-    val allRuntimesReady = phpReady && wpReady && sqliteReady && nodeReady && pythonReady
-    val readyCount = listOf(phpReady, wpReady, sqliteReady, nodeReady, pythonReady).count { it }
+    val allRuntimesReady = phpReady && wpReady && sqliteReady && nodeReady && pythonReady && goReady
+    val readyCount = listOf(phpReady, wpReady, sqliteReady, nodeReady, pythonReady, goReady).count { it }
 
     val installWpDeps: () -> Unit = {
         scope.launch {
@@ -283,6 +286,7 @@ fun RuntimeDepsScreen(onBack: () -> Unit) {
                             sqliteReady = false
                             nodeReady = false
                             pythonReady = false
+                            goReady = GoDependencyManager.isGoExecLoaderReady(context)
                             snackbarHostState.showSnackbar(Strings.depClearDone)
                         }
                     }
@@ -315,7 +319,7 @@ fun RuntimeDepsScreen(onBack: () -> Unit) {
         ) {
             StatusOverviewCard(
                 readyCount = readyCount,
-                totalCount = 5,
+                totalCount = 6,
                 allReady = allRuntimesReady,
                 totalCacheSize = totalCacheSize,
                 isDownloading = isDownloading,
@@ -329,27 +333,27 @@ fun RuntimeDepsScreen(onBack: () -> Unit) {
 
             WtaSection(title = Strings.depSectionRuntimes) {
                 WtaSettingCard {
-                        RuntimeItemRow(
-                            icon = Icons.Outlined.Code,
-                            iconColor = AppColors.Php,
+                    RuntimeItemRow(
+                        icon = Icons.Outlined.Code,
+                        iconColor = AppColors.Php,
                         title = Strings.depPhpRuntime,
                         description = Strings.depPhpDesc,
                         isReady = phpReady,
                         onInstall = installWpDeps
                     )
                     WtaSectionDivider()
-                        RuntimeItemRow(
-                            icon = Icons.Outlined.Language,
-                            iconColor = AppColors.WordPress,
+                    RuntimeItemRow(
+                        icon = Icons.Outlined.Language,
+                        iconColor = AppColors.WordPress,
                         title = Strings.depWpCore,
                         description = Strings.depWpCoreDesc,
                         isReady = wpReady,
                         onInstall = installWpDeps
                     )
                     WtaSectionDivider()
-                        RuntimeItemRow(
-                            icon = Icons.Outlined.Javascript,
-                            iconColor = AppColors.NodeJs,
+                    RuntimeItemRow(
+                        icon = Icons.Outlined.Javascript,
+                        iconColor = AppColors.NodeJs,
                         title = Strings.depNodeRuntime,
                         description = Strings.depNodeDesc,
                         isReady = nodeReady,
@@ -366,9 +370,9 @@ fun RuntimeDepsScreen(onBack: () -> Unit) {
                         }
                     )
                     WtaSectionDivider()
-                        RuntimeItemRow(
-                            icon = Icons.Outlined.Terminal,
-                            iconColor = AppColors.Python,
+                    RuntimeItemRow(
+                        icon = Icons.Outlined.Terminal,
+                        iconColor = AppColors.Python,
                         title = Strings.depPythonRuntime,
                         description = Strings.depPythonDesc,
                         isReady = pythonReady,
@@ -385,12 +389,12 @@ fun RuntimeDepsScreen(onBack: () -> Unit) {
                         }
                     )
                     WtaSectionDivider()
-                        RuntimeItemRow(
-                            icon = Icons.Outlined.RocketLaunch,
-                            iconColor = AppColors.Go,
-                        title = Strings.depGoInfo,
+                    RuntimeItemRow(
+                        icon = Icons.Outlined.RocketLaunch,
+                        iconColor = AppColors.Go,
+                        title = Strings.depGoRuntime,
                         description = Strings.depGoDesc,
-                        isReady = true,
+                        isReady = goReady,
                         onInstall = null
                     )
                 }
@@ -398,9 +402,9 @@ fun RuntimeDepsScreen(onBack: () -> Unit) {
 
             WtaSection(title = Strings.depSectionRuntimePlugins) {
                 WtaSettingCard {
-                        RuntimeItemRow(
-                            icon = Icons.Outlined.Storage,
-                            iconColor = AppColors.SQLite,
+                    RuntimeItemRow(
+                        icon = Icons.Outlined.Storage,
+                        iconColor = AppColors.SQLite,
                         title = Strings.depSqlitePlugin,
                         description = Strings.depSqliteDesc,
                         isReady = sqliteReady,
@@ -416,7 +420,7 @@ fun RuntimeDepsScreen(onBack: () -> Unit) {
                         ProjectEntry(Strings.depNodeProjects, nodeProjectCount, AppColors.NodeJs),
                         ProjectEntry(Strings.depPythonProjects, pythonProjectCount, AppColors.Python),
                         ProjectEntry(Strings.depGoProjects, goProjectCount, AppColors.Go),
-                        ProjectEntry(Strings.depDocsProjects, docsProjectCount, Color(0xFFE97627))
+                        ProjectEntry(Strings.depDocsProjects, docsProjectCount, AppColors.NeutralAccent)
                     )
                     items.forEachIndexed { index, entry ->
                         Row(
@@ -521,6 +525,7 @@ fun RuntimeDepsScreen(onBack: () -> Unit) {
                                             pythonCacheSize = withContext(Dispatchers.IO) { PythonDependencyManager.getCacheSize(context) }
                                         }
                                         isDownloading = false
+                                        goReady = GoDependencyManager.isGoExecLoaderReady(context)
                                         if (wpSuccess && nodeSuccess && pythonSuccess) {
                                             snackbarHostState.showSnackbar(Strings.depAllReady)
                                         }
@@ -566,49 +571,25 @@ fun RuntimeDepsScreen(onBack: () -> Unit) {
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     Spacer(modifier = Modifier.height(12.dp))
 
+                    var confirmClearTarget by remember { mutableStateOf<String?>(null) }
+
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         PremiumOutlinedButton(
-                            onClick = {
-                                scope.launch {
-                                    withContext(Dispatchers.IO) { WordPressDependencyManager.clearCache(context) }
-                                    wpCacheSize = 0L
-                                    phpCacheSize = 0L
-                                    sqliteCacheSize = 0L
-                                    phpReady = false
-                                    wpReady = false
-                                    sqliteReady = false
-                                }
-                            },
+                            onClick = { confirmClearTarget = "WordPress" },
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(WtaRadius.Control),
                             enabled = wpCacheSize > 0
                         ) { Text(Strings.depClearWpCache, maxLines = 1) }
 
                         PremiumOutlinedButton(
-                            onClick = {
-                                scope.launch {
-                                    withContext(Dispatchers.IO) { NodeDependencyManager.clearCache(context) }
-                                    nodeCacheSize = 0L
-                                    nodeReady = false
-                                }
-                            },
+                            onClick = { confirmClearTarget = "Node.js" },
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(WtaRadius.Control),
                             enabled = nodeCacheSize > 0
                         ) { Text(Strings.depClearNodeCache, maxLines = 1) }
 
                         PremiumOutlinedButton(
-                            onClick = {
-                                scope.launch {
-                                    withContext(Dispatchers.IO) { WordPressDependencyManager.clearCache(context) }
-                                    wpCacheSize = 0L
-                                    phpCacheSize = 0L
-                                    sqliteCacheSize = 0L
-                                    phpReady = false
-                                    wpReady = false
-                                    sqliteReady = false
-                                }
-                            },
+                            onClick = { confirmClearTarget = "PHP" },
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(WtaRadius.Control),
                             enabled = phpCacheSize > 0
@@ -618,45 +599,73 @@ fun RuntimeDepsScreen(onBack: () -> Unit) {
                     Spacer(modifier = Modifier.height(6.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         PremiumOutlinedButton(
-                            onClick = {
-                                scope.launch {
-                                    withContext(Dispatchers.IO) { PythonDependencyManager.clearCache(context) }
-                                    pythonCacheSize = 0L
-                                }
-                            },
+                            onClick = { confirmClearTarget = "Python" },
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(WtaRadius.Control),
                             enabled = pythonCacheSize > 0
                         ) { Text(Strings.depClearPythonCache, maxLines = 1) }
 
                         PremiumOutlinedButton(
-                            onClick = {
-                                scope.launch {
-                                    withContext(Dispatchers.IO) { GoDependencyManager.clearCache(context) }
-                                    goCacheSize = 0L
-                                }
-                            },
+                            onClick = { confirmClearTarget = "Go" },
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(WtaRadius.Control),
                             enabled = goCacheSize > 0
                         ) { Text(Strings.depClearGoCache, maxLines = 1) }
 
                         PremiumOutlinedButton(
-                            onClick = {
-                                scope.launch {
-                                    withContext(Dispatchers.IO) { WordPressDependencyManager.clearCache(context) }
-                                    wpCacheSize = 0L
-                                    phpCacheSize = 0L
-                                    sqliteCacheSize = 0L
-                                    phpReady = false
-                                    wpReady = false
-                                    sqliteReady = false
-                                }
-                            },
+                            onClick = { confirmClearTarget = "SQLite" },
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(WtaRadius.Control),
                             enabled = sqliteCacheSize > 0
                         ) { Text(Strings.depClearSqliteCache, maxLines = 1) }
+                    }
+
+                    if (confirmClearTarget != null) {
+                        AlertDialog(
+                            onDismissRequest = { confirmClearTarget = null },
+                            title = { Text(Strings.depConfirmClearCache(confirmClearTarget!!)) },
+                            confirmButton = {
+                                TextButton(onClick = {
+                                    val target = confirmClearTarget
+                                    confirmClearTarget = null
+                                    scope.launch {
+                                        withContext(Dispatchers.IO) {
+                                            when (target) {
+                                                "WordPress" -> WordPressDependencyManager.clearCache(context)
+                                                "Node.js" -> NodeDependencyManager.clearCache(context)
+                                                "PHP" -> WordPressDependencyManager.clearCache(context)
+                                                "Python" -> PythonDependencyManager.clearCache(context)
+                                                "Go" -> GoDependencyManager.clearCache(context)
+                                                "SQLite" -> WordPressDependencyManager.clearCache(context)
+                                            }
+                                        }
+                                        when (target) {
+                                            "WordPress" -> {
+                                                wpCacheSize = 0L; phpCacheSize = 0L; sqliteCacheSize = 0L
+                                                phpReady = false; wpReady = false; sqliteReady = false
+                                            }
+                                            "Node.js" -> { nodeCacheSize = 0L; nodeReady = false }
+                                            "PHP" -> {
+                                                wpCacheSize = 0L; phpCacheSize = 0L; sqliteCacheSize = 0L
+                                                phpReady = false; wpReady = false; sqliteReady = false
+                                            }
+                                            "Python" -> { pythonCacheSize = 0L; pythonReady = false }
+                                            "Go" -> {
+                                                goCacheSize = 0L
+                                                goReady = GoDependencyManager.isGoExecLoaderReady(context)
+                                            }
+                                            "SQLite" -> {
+                                                wpCacheSize = 0L; phpCacheSize = 0L; sqliteCacheSize = 0L
+                                                phpReady = false; wpReady = false; sqliteReady = false
+                                            }
+                                        }
+                                    }
+                                }) { Text(Strings.confirm) }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { confirmClearTarget = null }) { Text(Strings.btnCancel) }
+                            }
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -694,8 +703,14 @@ private fun onMirrorChange(
         "global" -> NodeDependencyManager.MirrorRegion.GLOBAL
         else -> null
     }
+    val pythonRegion = when (region) {
+        "cn" -> PythonDependencyManager.MirrorRegion.CN
+        "global" -> PythonDependencyManager.MirrorRegion.GLOBAL
+        else -> null
+    }
     WordPressDependencyManager.setMirrorRegion(wpRegion)
     NodeDependencyManager.setMirrorRegion(nodeRegion)
+    PythonDependencyManager.setMirrorRegion(pythonRegion)
     setUiRegion(WordPressDependencyManager.getMirrorRegion())
 }
 
@@ -714,7 +729,7 @@ private fun StatusOverviewCard(
     onResume: () -> Unit
 ) {
     val gradientColors = if (allReady) {
-        listOf(Color(0xFF34C759), Color(0xFF66BB6A))
+        listOf(com.webtoapp.ui.design.WtaColors.semantic.success, MaterialTheme.colorScheme.primary)
     } else {
         listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
     }
@@ -773,7 +788,7 @@ private fun StatusOverviewCard(
                             text = formatSize(totalCacheSize),
                             style = MaterialTheme.typography.titleLarge,
                             color = Color.White,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.SemiBold
                         )
                         Text(
                             text = Strings.depTotalStorage,
@@ -941,7 +956,7 @@ private fun StorageSummary(
 
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         Text(text = Strings.depTotalStorage, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
-        Text(text = formatSize(totalSize), style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+        Text(text = formatSize(totalSize), style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
     }
 
     if (totalSize > 0) {

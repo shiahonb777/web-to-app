@@ -1,6 +1,7 @@
 package com.webtoapp.ui.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
@@ -42,67 +43,39 @@ fun CategoryTabRow(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
 
         item {
-            PremiumFilterChip(
+            com.webtoapp.ui.design.WtaChip(
                 selected = selectedCategoryId == null,
                 onClick = { onCategorySelected(null) },
-                label = { Text(Strings.allApps) },
-                leadingIcon = {
-                    if (selectedCategoryId == null) {
-                        Icon(
-                            Icons.Default.Check,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                }
+                label = Strings.allApps,
+                showSelectedCheck = false
             )
         }
 
 
         item {
-            PremiumFilterChip(
+            com.webtoapp.ui.design.WtaChip(
                 selected = selectedCategoryId == -1L,
                 onClick = { onCategorySelected(-1L) },
-                label = { Text(Strings.uncategorized) },
-                leadingIcon = {
-                    if (selectedCategoryId == -1L) {
-                        Icon(
-                            Icons.Default.Check,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                }
+                label = Strings.uncategorized,
+                showSelectedCheck = false
             )
         }
 
 
         items(categories, key = { it.id }) { category ->
             Box {
-                PremiumFilterChip(
+                com.webtoapp.ui.design.WtaChip(
                     selected = selectedCategoryId == category.id,
                     onClick = { },
-                    label = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(com.webtoapp.util.SvgIconMapper.getIcon(category.icon), contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
-                            Spacer(Modifier.width(4.dp))
-                            Text(category.name)
-                        }
-                    },
-                    leadingIcon = {
-                        if (selectedCategoryId == category.id) {
-                            Icon(
-                                Icons.Default.Check,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                    }
-                )
+                    showSelectedCheck = false,
+                    leadingIcon = com.webtoapp.util.SvgIconMapper.getIcon(category.icon)
+                ) {
+                    Text(category.name, style = MaterialTheme.typography.labelLarge)
+                }
 
                 Box(
                     modifier = Modifier
@@ -147,26 +120,39 @@ fun CategoryTabRow(
 
 
         item {
-            AssistChip(
-                onClick = onAddCategory,
-                label = { Text(Strings.addCategory) },
-                leadingIcon = {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            )
+            // "Add category" tile blends into the neutral chip row but uses a
+            // muted tone so it reads as an action rather than a tag.
+            Row(
+                modifier = Modifier
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(com.webtoapp.ui.design.WtaRadius.Chip))
+                    .clickable(onClick = onAddCategory)
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = null,
+                    modifier = Modifier.size(14.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    Strings.addCategory,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 
 
     showDeleteConfirm?.let { category ->
-        AlertDialog(
+        com.webtoapp.ui.design.WtaAlertDialog(
             onDismissRequest = { showDeleteConfirm = null },
-            title = { Text(Strings.deleteCategory) },
-            text = { Text(Strings.deleteCategoryConfirm) },
+            icon = Icons.Outlined.Delete,
+            iconTint = MaterialTheme.colorScheme.error,
+            title = Strings.deleteCategory,
+            text = Strings.deleteCategoryConfirm,
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -202,64 +188,61 @@ fun CategoryEditorDialog(
     var name by remember(category) { mutableStateOf(category?.name ?: "") }
     var icon by remember(category) { mutableStateOf(category?.icon ?: "folder") }
 
-
     val presetIcons = listOf(
         "folder", "folder_open", "phone_android", "computer", "gaming", "music_note", "movie", "menu_book",
         "newspaper", "work", "shopping_bag", "heart", "star", "fire", "lightbulb", "auto_awesome",
         "home", "directions_car", "flight", "directions_boat", "public", "palette", "dark_mode", "light_mode"
     )
 
-    AlertDialog(
+    com.webtoapp.ui.design.WtaAlertDialog(
         onDismissRequest = onDismiss,
-        title = {
-            Text(
-                if (category == null) Strings.addCategory else Strings.editCategory
+        icon = if (category == null) Icons.Default.Add else Icons.Outlined.Edit,
+        title = if (category == null) Strings.addCategory else Strings.editCategory,
+        content = {
+            PremiumTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text(Strings.categoryName) },
+                placeholder = { Text(Strings.categoryNamePlaceholder) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
             )
-        },
-        text = {
+
+            Text(
+                Strings.categoryIcon,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text(Strings.categoryName) },
-                    placeholder = { Text(Strings.categoryNamePlaceholder) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-
-                Text(Strings.categoryIcon, style = MaterialTheme.typography.labelMedium)
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    presetIcons.chunked(8).forEach { rowIcons ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            rowIcons.forEach { presetIcon ->
-                                Surface(
-                                    shape = MaterialTheme.shapes.small,
-                                    color = if (icon == presetIcon)
-                                        MaterialTheme.colorScheme.primaryContainer
+                presetIcons.chunked(8).forEach { rowIcons ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        rowIcons.forEach { presetIcon ->
+                            val isSelected = icon == presetIcon
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(com.webtoapp.ui.design.WtaRadius.IconPlate))
+                                    .background(
+                                        if (isSelected)
+                                            MaterialTheme.colorScheme.primary.copy(alpha = com.webtoapp.ui.design.WtaAlpha.MutedContainer)
+                                        else
+                                            MaterialTheme.colorScheme.surfaceContainer
+                                    )
+                                    .clickable { icon = presetIcon },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    com.webtoapp.util.SvgIconMapper.getIcon(presetIcon),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp),
+                                    tint = if (isSelected)
+                                        MaterialTheme.colorScheme.primary
                                     else
-                                        MaterialTheme.colorScheme.surfaceVariant,
-                                    modifier = Modifier
-                                        .size(32.dp)
-                                        .clip(MaterialTheme.shapes.small)
-                                        .clickable { icon = presetIcon }
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Icon(
-                                            com.webtoapp.util.SvgIconMapper.getIcon(presetIcon),
-                                            contentDescription = null,
-                                            modifier = Modifier.size(20.dp),
-                                            tint = if (icon == presetIcon)
-                                                MaterialTheme.colorScheme.primary
-                                            else
-                                                MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                }
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         }
                     }
@@ -267,16 +250,17 @@ fun CategoryEditorDialog(
             }
         },
         confirmButton = {
-            PremiumButton(
+            com.webtoapp.ui.design.WtaButton(
                 onClick = {
                     if (name.isNotBlank()) {
                         onSave(name, icon)
                     }
                 },
-                enabled = name.isNotBlank()
-            ) {
-                Text(Strings.btnSave)
-            }
+                text = Strings.btnSave,
+                enabled = name.isNotBlank(),
+                variant = com.webtoapp.ui.design.WtaButtonVariant.Primary,
+                size = com.webtoapp.ui.design.WtaButtonSize.Small
+            )
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
@@ -297,87 +281,32 @@ fun MoveToCategoryDialog(
     onDismiss: () -> Unit,
     onMoveToCategory: (Long?) -> Unit
 ) {
-    AlertDialog(
+    com.webtoapp.ui.design.WtaAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(Strings.moveToCategory) },
-        text = {
-            Column(
-                modifier = Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    appName,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+        icon = Icons.Outlined.FolderOpen,
+        title = Strings.moveToCategory,
+        content = {
+            Text(
+                appName,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            com.webtoapp.ui.design.WtaSettingCard {
+                CategoryOptionRow(
+                    icon = Icons.Outlined.FolderOpen,
+                    name = Strings.uncategorized,
+                    selected = currentCategoryId == null,
+                    onClick = { onMoveToCategory(null) }
                 )
-
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-
-                Surface(
-                    shape = MaterialTheme.shapes.small,
-                    color = if (currentCategoryId == null)
-                        MaterialTheme.colorScheme.primaryContainer
-                    else
-                        MaterialTheme.colorScheme.surfaceVariant,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onMoveToCategory(null) }
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Outlined.FolderOpen,
-                            contentDescription = null,
-                            modifier = Modifier.size(22.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(Modifier.width(12.dp))
-                        Text(Strings.uncategorized)
-                        Spacer(Modifier.weight(weight = 1f, fill = true))
-                        if (currentCategoryId == null) {
-                            Icon(
-                                Icons.Default.Check,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
-                }
-
-
                 categories.forEach { category ->
-                    Surface(
-                        shape = MaterialTheme.shapes.small,
-                        color = if (currentCategoryId == category.id)
-                            MaterialTheme.colorScheme.primaryContainer
-                        else
-                            MaterialTheme.colorScheme.surfaceVariant,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onMoveToCategory(category.id) }
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(com.webtoapp.util.SvgIconMapper.getIcon(category.icon), contentDescription = null, modifier = Modifier.size(22.dp), tint = MaterialTheme.colorScheme.primary)
-                            Spacer(Modifier.width(12.dp))
-                            Text(category.name)
-                            Spacer(Modifier.weight(weight = 1f, fill = true))
-                            if (currentCategoryId == category.id) {
-                                Icon(
-                                    Icons.Default.Check,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                        }
-                    }
+                    com.webtoapp.ui.design.WtaSectionDivider()
+                    CategoryOptionRow(
+                        icon = com.webtoapp.util.SvgIconMapper.getIcon(category.icon),
+                        name = category.name,
+                        selected = currentCategoryId == category.id,
+                        onClick = { onMoveToCategory(category.id) }
+                    )
                 }
             }
         },
@@ -388,4 +317,27 @@ fun MoveToCategoryDialog(
             }
         }
     )
+}
+
+@Composable
+private fun CategoryOptionRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    name: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    com.webtoapp.ui.design.WtaSettingRow(
+        title = name,
+        icon = icon,
+        onClick = onClick
+    ) {
+        if (selected) {
+            Icon(
+                Icons.Default.Check,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
 }

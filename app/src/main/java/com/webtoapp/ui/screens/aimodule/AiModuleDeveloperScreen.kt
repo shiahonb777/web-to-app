@@ -124,7 +124,7 @@ fun AiModuleDeveloperScreen(
                             modifier = Modifier.size(24.dp),
                             tint = MaterialTheme.colorScheme.primary
                         )
-                        Text(Strings.aiModuleDeveloper, fontWeight = FontWeight.Bold)
+                        Text(Strings.aiModuleDeveloper, fontWeight = FontWeight.SemiBold)
 
                         if (uiState.isDeveloping) {
                             Spacer(modifier = Modifier.width(4.dp))
@@ -561,7 +561,7 @@ private fun ModuleInfoCard(module: GeneratedModuleData) {
                     Text(
                         Strings.moduleGeneratedSuccess,
                         style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
@@ -590,7 +590,7 @@ private fun ModuleInfoCard(module: GeneratedModuleData) {
                     Text(
                         module.name,
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.SemiBold
                     )
                     Text(
                         module.category,
@@ -882,7 +882,7 @@ private fun WelcomeCard() {
             Text(
                 Strings.aiAssistant,
                 style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center
             )
@@ -973,7 +973,7 @@ private fun ExampleRequirements(onSelect: (String) -> Unit) {
             Text(
                 Strings.tryTheseExamples,
                 style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
             )
         }
@@ -1259,7 +1259,7 @@ private fun HelpSection(iconVector: ImageVector, title: String, content: String)
             Text(
                 title,
                 style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.SemiBold
             )
         }
         Spacer(modifier = Modifier.height(6.dp))

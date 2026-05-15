@@ -62,6 +62,9 @@ import com.webtoapp.ui.components.LanguageSelectorButton
 import com.webtoapp.ui.components.MoveToCategoryDialog
 import com.webtoapp.ui.design.WtaScreen
 import com.webtoapp.ui.design.WtaRadius
+import com.webtoapp.ui.design.rememberHapticClick
+import com.webtoapp.ui.design.wtaPressScale
+import androidx.compose.ui.text.style.TextAlign
 import com.webtoapp.ui.theme.LocalAnimationSettings
 import com.webtoapp.ui.theme.AppColors
 import com.webtoapp.ui.theme.ThemeManager
@@ -128,6 +131,13 @@ fun HomeScreen(
     onOpenAiHtmlCoding: () -> Unit = {},
     onOpenExtensionModules: () -> Unit = {},
     onOpenLinuxEnvironment: () -> Unit = {},
+    onOpenBrowserKernel: () -> Unit = {},
+    onOpenHostsAdBlock: () -> Unit = {},
+    onOpenRuntimeDeps: () -> Unit = {},
+    onOpenPortManager: () -> Unit = {},
+    onOpenStats: () -> Unit = {},
+    onOpenAbout: () -> Unit = {},
+    onOpenMore: () -> Unit = {},
 ) {
     val apps by viewModel.filteredSummaries.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
@@ -193,18 +203,32 @@ fun HomeScreen(
         title = Strings.myApps,
         snackbarHostState = snackbarHostState,
         actions = {
-            if (isSearchActive) {
-                PremiumTextField(
-                    value = searchQuery,
-                    onValueChange = { viewModel.search(it) },
-                    placeholder = { Text(Strings.search, style = MaterialTheme.typography.bodyMedium) },
-                    singleLine = true,
-                    modifier = Modifier
-                        .widthIn(max = 180.dp)
-                        .height(48.dp),
-                    textStyle = MaterialTheme.typography.bodyMedium
+            androidx.compose.animation.AnimatedVisibility(
+                visible = isSearchActive,
+                enter = androidx.compose.animation.fadeIn(
+                    animationSpec = com.webtoapp.ui.design.WtaMotion.enterTween()
+                ) + androidx.compose.animation.expandHorizontally(
+                    expandFrom = androidx.compose.ui.Alignment.End,
+                    animationSpec = com.webtoapp.ui.design.WtaMotion.settleSpring()
+                ),
+                exit = androidx.compose.animation.fadeOut(
+                    animationSpec = com.webtoapp.ui.design.WtaMotion.exitTween()
+                ) + androidx.compose.animation.shrinkHorizontally(
+                    shrinkTowards = androidx.compose.ui.Alignment.End,
+                    animationSpec = com.webtoapp.ui.design.WtaMotion.exitTween()
                 )
-                Spacer(modifier = Modifier.width(4.dp))
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    com.webtoapp.ui.design.WtaTextField(
+                        value = searchQuery,
+                        onValueChange = { viewModel.search(it) },
+                        placeholder = Strings.search,
+                        singleLine = true,
+                        modifier = Modifier
+                            .widthIn(max = 220.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                }
             }
 
                     val context = LocalContext.current
@@ -256,7 +280,7 @@ fun HomeScreen(
                             }
                         },
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(44.dp)
                             .onGloballyPositioned { coords ->
                                 val bounds = coords.boundsInRoot()
                                 buttonCenter = androidx.compose.ui.geometry.Offset(
@@ -272,7 +296,8 @@ fun HomeScreen(
                             } else {
                                 stringResource(com.webtoapp.R.string.theme_light)
                             },
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(22.dp),
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
@@ -292,13 +317,92 @@ fun HomeScreen(
                             isSearchActive = !isSearchActive
                             if (!isSearchActive) viewModel.search("")
                         },
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.size(44.dp)
                     ) {
                         Icon(
                             imageVector = if (isSearchActive) Icons.Default.Close else Icons.Default.Search,
                             contentDescription = Strings.search,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(22.dp),
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
+                    }
+
+                    var showMoreMenu by remember { mutableStateOf(false) }
+                    Box {
+                        IconButton(
+                            onClick = { showMoreMenu = true },
+                            modifier = Modifier.size(44.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.MoreVert,
+                                contentDescription = null,
+                                modifier = Modifier.size(22.dp),
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = showMoreMenu,
+                            onDismissRequest = { showMoreMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(Strings.menuAiCoding) },
+                                onClick = { showMoreMenu = false; onOpenAiCoding() },
+                                leadingIcon = { Icon(Icons.Outlined.Code, null, Modifier.size(20.dp)) }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(Strings.menuAiSettings) },
+                                onClick = { showMoreMenu = false; onOpenAiSettings() },
+                                leadingIcon = { Icon(Icons.Outlined.AutoAwesome, null, Modifier.size(20.dp)) }
+                            )
+                            HorizontalDivider()
+                            DropdownMenuItem(
+                                text = { Text(Strings.menuExtensionModules) },
+                                onClick = { showMoreMenu = false; onOpenExtensionModules() },
+                                leadingIcon = { Icon(Icons.Outlined.Extension, null, Modifier.size(20.dp)) }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(Strings.menuAppModifier) },
+                                onClick = { showMoreMenu = false; onOpenAppModifier() },
+                                leadingIcon = { Icon(Icons.Outlined.AppShortcut, null, Modifier.size(20.dp)) }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(Strings.menuLinuxEnvironment) },
+                                onClick = { showMoreMenu = false; onOpenLinuxEnvironment() },
+                                leadingIcon = { Icon(Icons.Outlined.Terminal, null, Modifier.size(20.dp)) }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(Strings.menuRuntimeDeps) },
+                                onClick = { showMoreMenu = false; onOpenRuntimeDeps() },
+                                leadingIcon = { Icon(Icons.Outlined.Memory, null, Modifier.size(20.dp)) }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(Strings.menuPortManager) },
+                                onClick = { showMoreMenu = false; onOpenPortManager() },
+                                leadingIcon = { Icon(Icons.Outlined.Router, null, Modifier.size(20.dp)) }
+                            )
+                            HorizontalDivider()
+                            DropdownMenuItem(
+                                text = { Text(Strings.menuBrowserKernel) },
+                                onClick = { showMoreMenu = false; onOpenBrowserKernel() },
+                                leadingIcon = { Icon(Icons.Outlined.Public, null, Modifier.size(20.dp)) }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(Strings.menuHostsAdBlock) },
+                                onClick = { showMoreMenu = false; onOpenHostsAdBlock() },
+                                leadingIcon = { Icon(Icons.Outlined.Shield, null, Modifier.size(20.dp)) }
+                            )
+                            HorizontalDivider()
+                            DropdownMenuItem(
+                                text = { Text(Strings.menuStats) },
+                                onClick = { showMoreMenu = false; onOpenStats() },
+                                leadingIcon = { Icon(Icons.Outlined.BarChart, null, Modifier.size(20.dp)) }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(Strings.menuAbout) },
+                                onClick = { showMoreMenu = false; onOpenAbout() },
+                                leadingIcon = { Icon(Icons.Outlined.Info, null, Modifier.size(20.dp)) }
+                            )
+                        }
                     }
 
 
@@ -467,7 +571,12 @@ fun HomeScreen(
                         val previewSpec = previewSpecs[app.id] ?: AppPreviewSpec()
 
 
-                        StaggeredAnimatedItem(index = index) {
+                        StaggeredAnimatedItem(
+                            index = index,
+                            modifier = Modifier.animateItem(
+                                placementSpec = com.webtoapp.ui.design.WtaMotion.settleSpring()
+                            )
+                        ) {
 
 
                         val dismissState = rememberSwipeToDismissBoxState(
@@ -686,7 +795,9 @@ fun HomeScreen(
                                     }
                                 }
                             } else null,
-                            modifier = Modifier.animateItemPlacement()
+                            modifier = Modifier.animateItem(
+                                placementSpec = com.webtoapp.ui.design.WtaMotion.settleSpring()
+                            )
                         )
                         }
                         }
@@ -738,46 +849,32 @@ fun HomeScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(bottom = 8.dp),
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.85f)
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.92f)
                             ) {
                                 Column(
                                     modifier = Modifier
-                                        .heightIn(max = 280.dp)
+                                        .heightIn(max = 360.dp)
                                         .verticalScroll(createMenuScrollState)
-                                        .padding(8.dp),
-                                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                                        .padding(10.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    createActionItems.chunked(2).forEach { rowItems ->
+                                    createActionItems.chunked(3).forEach { rowItems ->
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                                         ) {
                                             rowItems.forEach { item ->
-                                                FilledTonalButton(
+                                                CreateActionTile(
+                                                    label = item.label,
+                                                    iconRes = item.iconRes,
                                                     onClick = {
                                                         showFabMenu = false
                                                         item.onClick()
                                                     },
-                                                    modifier = Modifier
-                                                        .weight(1f)
-                                                        .height(40.dp),
-                                                    colors = ButtonDefaults.filledTonalButtonColors(
-                                                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.65f),
-                                                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                                                    ),
-                                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
-                                                ) {
-                                                    Icon(painterResource(item.iconRes), null, modifier = Modifier.size(14.dp))
-                                                    Spacer(modifier = Modifier.width(4.dp))
-                                                    Text(
-                                                        item.label,
-                                                        maxLines = 1,
-                                                        overflow = TextOverflow.Ellipsis,
-                                                        style = MaterialTheme.typography.labelSmall
-                                                    )
-                                                }
+                                                    modifier = Modifier.weight(1f)
+                                                )
                                             }
-                                            if (rowItems.size == 1) {
+                                            repeat(3 - rowItems.size) {
                                                 Spacer(modifier = Modifier.weight(1f))
                                             }
                                         }
@@ -789,10 +886,7 @@ fun HomeScreen(
 
                         val fabRotation by animateFloatAsState(
                             targetValue = if (showFabMenu) 135f else 0f,
-                            animationSpec = spring(
-                                dampingRatio = 0.6f,
-                                stiffness = Spring.StiffnessMediumLow
-                            ),
+                            animationSpec = com.webtoapp.ui.design.WtaMotion.settleSpring(),
                             label = "fabRotation"
                         )
 
@@ -1110,11 +1204,12 @@ fun AppCard(
             }
 
             if (healthStatus != null && healthStatus != com.webtoapp.core.stats.HealthStatus.UNKNOWN) {
+                val semantic = com.webtoapp.ui.design.WtaColors.semantic
                 val dotColor = when (healthStatus) {
-                    com.webtoapp.core.stats.HealthStatus.ONLINE -> AppColors.Success
-                    com.webtoapp.core.stats.HealthStatus.SLOW -> AppColors.Warning
-                    com.webtoapp.core.stats.HealthStatus.OFFLINE -> AppColors.Error
-                    else -> AppColors.Gray
+                    com.webtoapp.core.stats.HealthStatus.ONLINE -> semantic.success
+                    com.webtoapp.core.stats.HealthStatus.SLOW -> semantic.warning
+                    com.webtoapp.core.stats.HealthStatus.OFFLINE -> semantic.error
+                    else -> semantic.neutral
                 }
                 Box(
                     modifier = Modifier
@@ -1174,13 +1269,13 @@ fun AppCard(
             }
 
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(12.dp))
             Box(
                 modifier = Modifier
-                    .width(30.dp)
-                    .height(54.dp)
+                    .width(40.dp)
+                    .height(60.dp)
                     .clip(RoundedCornerShape(WtaRadius.Card))
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                     .clickable(enabled = onCaptureScreenshot != null) {
                         val clickMessage = "thumbnail tapped: appId=${app.id}, hasHandler=${onCaptureScreenshot != null}, hasPath=${screenshotPath != null}, version=$screenshotVersion, loading=$isScreenshotLoading"
                         com.webtoapp.core.logging.AppLogger.i("ScreenshotFlow", clickMessage)
@@ -1213,7 +1308,7 @@ fun AppCard(
                                 contentAlignment = Alignment.Center
                             ) {
                                 CircularProgressIndicator(
-                                    modifier = Modifier.size(12.dp),
+                                    modifier = Modifier.size(14.dp),
                                     strokeWidth = 1.5.dp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -1227,7 +1322,7 @@ fun AppCard(
                     ) {
                         if (isScreenshotLoading) {
                             CircularProgressIndicator(
-                                modifier = Modifier.size(12.dp),
+                                modifier = Modifier.size(14.dp),
                                 strokeWidth = 1.5.dp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -1235,7 +1330,7 @@ fun AppCard(
                             Icon(
                                 imageVector = Icons.Outlined.Refresh,
                                 contentDescription = Strings.btnPreview,
-                                modifier = Modifier.size(16.dp),
+                                modifier = Modifier.size(18.dp),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         } else {
@@ -1255,7 +1350,7 @@ fun AppCard(
                                     com.webtoapp.data.model.AppType.MULTI_WEB -> R.drawable.ic_type_web
                                 }),
                                 contentDescription = Strings.btnPreview,
-                                modifier = Modifier.size(16.dp),
+                                modifier = Modifier.size(18.dp),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -1265,9 +1360,11 @@ fun AppCard(
 
 
             Box {
-                IconButton(onClick = { expanded = true }) {
-                    Icon(Icons.Default.MoreVert, contentDescription = Strings.more)
-                }
+                com.webtoapp.ui.design.WtaIconButton(
+                    onClick = { expanded = true },
+                    icon = Icons.Default.MoreVert,
+                    contentDescription = Strings.more
+                )
 
                 DropdownMenu(
                     expanded = expanded,
@@ -1276,87 +1373,82 @@ fun AppCard(
 
                     if (app.appType == com.webtoapp.data.model.AppType.WEB) {
 
-                        DropdownMenuItem(
-                            text = { Text(Strings.btnEdit) },
+                        com.webtoapp.ui.design.WtaDropdownMenuItem(
+                            text = Strings.btnEdit,
+                            leadingIcon = Icons.Outlined.Edit,
                             onClick = {
                                 expanded = false
                                 onEdit()
-                            },
-                            leadingIcon = { Icon(Icons.Outlined.Edit, null) }
+                            }
                         )
                     } else {
 
-                        DropdownMenuItem(
-                            text = { Text(Strings.editCoreConfig) },
+                        com.webtoapp.ui.design.WtaDropdownMenuItem(
+                            text = Strings.editCoreConfig,
+                            leadingIcon = Icons.Outlined.Tune,
                             onClick = {
                                 expanded = false
                                 onEditCore()
-                            },
-                            leadingIcon = { Icon(Icons.Outlined.Tune, null) }
+                            }
                         )
-                        DropdownMenuItem(
-                            text = { Text(Strings.editCommonConfig) },
+                        com.webtoapp.ui.design.WtaDropdownMenuItem(
+                            text = Strings.editCommonConfig,
+                            leadingIcon = Icons.Outlined.Settings,
                             onClick = {
                                 expanded = false
                                 onEdit()
-                            },
-                            leadingIcon = { Icon(Icons.Outlined.Settings, null) }
+                            }
                         )
                     }
                     HorizontalDivider()
-                    DropdownMenuItem(
-                        text = { Text(Strings.btnShortcut) },
+                    com.webtoapp.ui.design.WtaDropdownMenuItem(
+                        text = Strings.btnShortcut,
+                        leadingIcon = Icons.Outlined.AppShortcut,
                         onClick = {
                             expanded = false
                             onCreateShortcut()
-                        },
-                        leadingIcon = { Icon(Icons.Outlined.AppShortcut, null) }
+                        }
                     )
-                    DropdownMenuItem(
-                        text = { Text(Strings.buildDialogTitle) },
+                    com.webtoapp.ui.design.WtaDropdownMenuItem(
+                        text = Strings.buildDialogTitle,
+                        leadingIcon = Icons.Outlined.InstallMobile,
                         onClick = {
                             expanded = false
                             onBuildApk()
-                        },
-                        leadingIcon = { Icon(Icons.Outlined.InstallMobile, null) }
+                        }
                     )
-                    DropdownMenuItem(
-                        text = { Text(Strings.shareApk) },
+                    com.webtoapp.ui.design.WtaDropdownMenuItem(
+                        text = Strings.shareApk,
+                        leadingIcon = Icons.Outlined.Share,
                         onClick = {
                             expanded = false
                             onShareApk()
-                        },
-                        leadingIcon = { Icon(Icons.Outlined.Share, null) }
+                        }
                     )
-                    DropdownMenuItem(
-                        text = { Text(Strings.btnExport) },
+                    com.webtoapp.ui.design.WtaDropdownMenuItem(
+                        text = Strings.btnExport,
+                        leadingIcon = Icons.Outlined.FileDownload,
                         onClick = {
                             expanded = false
                             onExport()
-                        },
-                        leadingIcon = { Icon(Icons.Outlined.FileDownload, null) }
+                        }
                     )
-                    DropdownMenuItem(
-                        text = { Text(Strings.moveToCategory) },
+                    com.webtoapp.ui.design.WtaDropdownMenuItem(
+                        text = Strings.moveToCategory,
+                        leadingIcon = Icons.Outlined.Folder,
                         onClick = {
                             expanded = false
                             onMoveToCategory()
-                        },
-                        leadingIcon = { Icon(Icons.Outlined.Folder, null) }
+                        }
                     )
                     HorizontalDivider()
-                    DropdownMenuItem(
-                        text = { Text(Strings.btnDelete) },
+                    com.webtoapp.ui.design.WtaDropdownMenuItem(
+                        text = Strings.btnDelete,
+                        leadingIcon = Icons.Outlined.Delete,
+                        destructive = true,
                         onClick = {
                             expanded = false
                             onDelete()
-                        },
-                        leadingIcon = {
-                            Icon(
-                                Icons.Outlined.Delete,
-                                null,
-                                tint = MaterialTheme.colorScheme.error
-                            )
                         }
                     )
                 }
@@ -1455,39 +1547,105 @@ fun EmptyState(
     onCreateApp: () -> Unit
 ) {
     Column(
-        modifier = modifier.padding(32.dp),
+        modifier = modifier.padding(horizontal = 40.dp, vertical = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(
-            imageVector = Icons.Outlined.AppShortcut,
-            contentDescription = null,
+        // Illustration frame: a subtle circular plate holding the icon.
+        // No motion, no toy-feel. The restraint makes the UI feel considered.
+        Box(
             modifier = Modifier
-                .size(80.dp)
-                .breathingFloat(),
-            tint = MaterialTheme.colorScheme.outline
-        )
-        Spacer(modifier = Modifier.height(16.dp))
+                .size(88.dp)
+                .clip(androidx.compose.foundation.shape.CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.6f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.AppShortcut,
+                contentDescription = null,
+                modifier = Modifier.size(40.dp),
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+            )
+        }
+        Spacer(modifier = Modifier.height(20.dp))
         Text(
             text = Strings.msgNoApps,
             style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = Strings.emptyStateHint,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.outline
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
         )
         AnimatedVisibility(visible = showCreateButton) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Spacer(modifier = Modifier.height(24.dp))
-                PremiumButton(onClick = onCreateApp) {
-                    Icon(Icons.Default.Add, null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(Strings.createApp)
-                }
+                com.webtoapp.ui.design.WtaButton(
+                    onClick = onCreateApp,
+                    text = Strings.createApp,
+                    variant = com.webtoapp.ui.design.WtaButtonVariant.Primary,
+                    size = com.webtoapp.ui.design.WtaButtonSize.Medium,
+                    leadingIcon = Icons.Default.Add
+                )
             }
         }
+    }
+}
+
+/**
+ * A tile used in the "create new app" flyout. Renders as a square-ish card
+ * with a large icon plate on top and a small centered label below. Each tile
+ * is press-animated through Wta primitives so the grid feels like a mini
+ * SpringBoard rather than a list of text buttons.
+ */
+@Composable
+private fun CreateActionTile(
+    label: String,
+    iconRes: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val hapticClick = rememberHapticClick(onClick)
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(WtaRadius.Card))
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = hapticClick
+            )
+            .wtaPressScale(interactionSource, pressedScale = 0.94f)
+            .padding(vertical = 10.dp, horizontal = 6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(MaterialTheme.colorScheme.primaryContainer),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(iconRes),
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        }
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center
+        )
     }
 }
 
@@ -1677,7 +1835,7 @@ fun BuildApkDialog(
 
 
     var isolationConfig by remember {
-        mutableStateOf(webApp.apkExportConfig?.isolationConfig ?: com.webtoapp.core.isolation.IsolationConfig())
+        mutableStateOf(resolveBuildIsolationDefault(webApp.apkExportConfig?.isolationConfig))
     }
 
 
@@ -1732,6 +1890,42 @@ fun BuildApkDialog(
         )
     }
 
+    fun launchBuild() {
+        if (isBuilding) return
+        val webAppWithConfig = currentBuildConfig()
+        val nextPreflight = ApkExportPreflight.check(context, webAppWithConfig)
+        preflightReport = nextPreflight
+        if (nextPreflight.hasErrors) {
+            return
+        }
+
+        isBuilding = true
+        buildFailureReport = null
+        analysisReport = null
+        scope.launch {
+            val result = apkBuilder.buildApk(webAppWithConfig) { p, t ->
+                progress = p
+                progressText = t
+            }
+            when (result) {
+                is BuildResult.Success -> {
+                    analysisReport = result.analysisReport
+                    isBuilding = false
+
+                    val installStarted = apkBuilder.installApk(result.apkFile)
+                    onResult(
+                        if (installStarted) "APK 构建成功，正在启动安装..."
+                        else "APK 构建成功，但无法自动启动安装"
+                    )
+                }
+                is BuildResult.Error -> {
+                    buildFailureReport = buildBuildFailureReport(webAppWithConfig, result)
+                    isBuilding = false
+                }
+            }
+        }
+    }
+
     LaunchedEffect(
         webApp,
         encryptionConfig,
@@ -1760,16 +1954,20 @@ fun BuildApkDialog(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(WtaRadius.Control))
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(com.webtoapp.ui.design.WtaRadius.IconPlate))
+                            .background(
+                                MaterialTheme.colorScheme.primary.copy(
+                                    alpha = com.webtoapp.ui.design.WtaAlpha.MutedContainer
+                                )
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             Icons.Outlined.Android,
                             null,
-                            modifier = Modifier.size(22.dp),
-                            tint = MaterialTheme.colorScheme.primary
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                     Spacer(Modifier.width(12.dp))
@@ -1950,7 +2148,7 @@ fun BuildApkDialog(
                         Text(
                             report.totalSizeFormatted,
                             style = MaterialTheme.typography.titleSmall,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
                         )
                     }
 
@@ -2037,42 +2235,17 @@ fun BuildApkDialog(
         confirmButton = {
             if (!isBuilding) {
                 PremiumButton(
-                    onClick = {
-                        val webAppWithConfig = currentBuildConfig()
-                        val nextPreflight = ApkExportPreflight.check(context, webAppWithConfig)
-                        preflightReport = nextPreflight
-                        if (nextPreflight.hasErrors) {
-                            return@PremiumButton
-                        }
-
-                        isBuilding = true
-                        scope.launch {
-                            val result = apkBuilder.buildApk(webAppWithConfig) { p, t ->
-                                progress = p
-                                progressText = t
-                            }
-                            when (result) {
-                                is BuildResult.Success -> {
-                                    analysisReport = result.analysisReport
-                                    buildFailureReport = null
-                                    isBuilding = false
-
-                                    apkBuilder.installApk(result.apkFile)
-                                    if (result.analysisReport == null) {
-                                        onResult("APK 构建成功，正在启动安装...")
-                                    }
-                                }
-                                is BuildResult.Error -> {
-                                    buildFailureReport = buildBuildFailureReport(webAppWithConfig, result)
-                                    isBuilding = false
-                                }
-                            }
-                        }
-                    }
+                    onClick = { launchBuild() }
                 ) {
                     Icon(Icons.Outlined.Build, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text(Strings.btnStartBuild)
+                    Text(
+                        if (buildFailureReport != null || preflightReport?.hasErrors == true) {
+                            Strings.btnRetry
+                        } else {
+                            Strings.btnStartBuild
+                        }
+                    )
                 }
             } else {
                 CircularProgressIndicator(modifier = Modifier.size(24.dp))
@@ -2093,6 +2266,12 @@ fun BuildApkDialog(
             onDismiss = { buildFailureReport = null }
         )
     }
+}
+
+private fun resolveBuildIsolationDefault(
+    config: com.webtoapp.core.isolation.IsolationConfig?
+): com.webtoapp.core.isolation.IsolationConfig {
+    return config ?: com.webtoapp.core.isolation.IsolationConfig.DISABLED
 }
 
 

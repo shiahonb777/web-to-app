@@ -1,6 +1,10 @@
 package com.webtoapp.ui.screens
 
 import android.net.Uri
+import com.webtoapp.ui.design.WtaSwitch
+import com.webtoapp.ui.design.WtaSettingCard
+import com.webtoapp.ui.design.WtaSettingRow
+import com.webtoapp.ui.design.WtaSectionDivider
 import com.webtoapp.ui.components.PremiumOutlinedButton
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -40,68 +44,29 @@ fun UserScriptsSection(
     var editingScript by remember { mutableStateOf<UserScript?>(null) }
     var editingIndex by remember { mutableIntStateOf(-1) }
 
-    Column {
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+    WtaSettingCard {
+        WtaSettingRow(
+            title = Strings.userScripts,
+            subtitle = if (scripts.isEmpty()) Strings.userScriptsDesc
+            else "${scripts.size} ${Strings.userScriptsDesc}",
+            icon = Icons.Outlined.Code,
+            onClick = {
+                editingScript = null
+                editingIndex = -1
+                showEditorDialog = true
+            }
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Outlined.Code,
-                        null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Column {
-                    Text(
-                        text = Strings.userScripts,
-                        style = MaterialTheme.typography.titleSmall
-                    )
-                    Text(
-                        text = Strings.userScriptsDesc,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-            IconButton(
-                onClick = {
-                    editingScript = null
-                    editingIndex = -1
-                    showEditorDialog = true
-                }
-            ) {
-                Icon(
-                    Icons.Default.Add,
-                    Strings.addScript,
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
+            Icon(
+                Icons.Default.Add,
+                Strings.addScript,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
+            )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-
-        if (scripts.isEmpty()) {
-            Text(
-                text = Strings.noScripts,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
-        } else {
+        if (scripts.isNotEmpty()) {
             scripts.forEachIndexed { index, script ->
+                WtaSectionDivider()
                 UserScriptItem(
                     script = script,
                     onEdit = {
@@ -118,16 +83,9 @@ fun UserScriptsSection(
                         })
                     }
                 )
-                if (index < scripts.lastIndex) {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(vertical = 4.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                    )
-                }
             }
         }
     }
-
 
     if (showEditorDialog) {
         UserScriptEditorDialog(
@@ -135,12 +93,10 @@ fun UserScriptsSection(
             onDismiss = { showEditorDialog = false },
             onSave = { script ->
                 if (editingIndex >= 0) {
-
                     onScriptsChange(scripts.mapIndexed { i, s ->
                         if (i == editingIndex) script else s
                     })
                 } else {
-
                     onScriptsChange(scripts + script)
                 }
                 showEditorDialog = false
@@ -159,51 +115,26 @@ fun UserScriptItem(
     onDelete: () -> Unit,
     onToggle: (Boolean) -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onEdit() }
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+    WtaSettingRow(
+        title = script.name.ifBlank { Strings.userScripts },
+        subtitle = when (script.runAt) {
+            ScriptRunTime.DOCUMENT_START -> Strings.runTimeDocStart
+            ScriptRunTime.DOCUMENT_END -> Strings.runTimeDocEnd
+            ScriptRunTime.DOCUMENT_IDLE -> Strings.runTimeDocIdle
+        },
+        onClick = onEdit
     ) {
-        Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-            Text(
-                text = script.name.ifBlank { Strings.userScripts },
-                style = MaterialTheme.typography.bodyMedium
+        WtaSwitch(
+            checked = script.enabled,
+            onCheckedChange = onToggle
+        )
+        IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
+            Icon(
+                Icons.Outlined.Delete,
+                Strings.btnDelete,
+                tint = MaterialTheme.colorScheme.error,
+                modifier = Modifier.size(18.dp)
             )
-            Text(
-                text = when (script.runAt) {
-                    ScriptRunTime.DOCUMENT_START -> Strings.runTimeDocStart
-                    ScriptRunTime.DOCUMENT_END -> Strings.runTimeDocEnd
-                    ScriptRunTime.DOCUMENT_IDLE -> Strings.runTimeDocIdle
-                },
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            PremiumSwitch(
-                checked = script.enabled,
-                onCheckedChange = onToggle,
-                modifier = Modifier.padding(end = 4.dp)
-            )
-            IconButton(onClick = onEdit) {
-                Icon(
-                    Icons.Outlined.Edit,
-                    Strings.btnEdit,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-            IconButton(onClick = onDelete) {
-                Icon(
-                    Icons.Outlined.Delete,
-                    Strings.btnDelete,
-                    tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
         }
     }
 }
@@ -351,7 +282,7 @@ fun UserScriptEditorDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(Strings.scriptEnabled, style = MaterialTheme.typography.bodyMedium)
-                    PremiumSwitch(
+                    WtaSwitch(
                         checked = enabled,
                         onCheckedChange = { enabled = it }
                     )

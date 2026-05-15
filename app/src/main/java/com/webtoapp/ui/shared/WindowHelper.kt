@@ -206,7 +206,6 @@ object WindowHelper {
 
                     if (imeVisible) {
 
-
                         view.setPadding(
                             view.paddingLeft,
                             view.paddingTop,
@@ -216,10 +215,9 @@ object WindowHelper {
 
                         AppLogger.d(tag, "键盘弹出: IME bottom=${imeInsets.bottom}px")
 
-
-
+                        // 检测网页是否已自行处理键盘适配，避免重复滚动导致输入框跑到两倍高度
                         view.postDelayed({
-                            scrollWebViewToFocusedInput(activity)
+                            checkAndScrollWebViewToFocusedInput(activity)
                         }, 100)
                     } else {
 
@@ -265,6 +263,40 @@ object WindowHelper {
 
 
 
+
+
+    /**
+     * 检测网页是否已自行处理键盘适配，如果没有才执行 scrollIntoView。
+     * 
+     * 检测逻辑：判断当前聚焦元素是否已经在可视区域内（即网页自己已经做了上推）。
+     * 如果元素已经可见，则不再重复滚动，避免与网页自身的键盘适配代码冲突
+     * 导致输入框跑到键盘两倍高度的位置。
+     */
+    private fun checkAndScrollWebViewToFocusedInput(activity: Activity) {
+        try {
+            val webView = findWebViewInHierarchy(activity.window.decorView)
+            webView?.evaluateJavascript("""
+                (function() {
+                    var el = document.activeElement;
+                    if (!el || (el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA' && !el.isContentEditable)) {
+                        return 'no_input';
+                    }
+                    var rect = el.getBoundingClientRect();
+                    var viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+                    var viewportTop = window.visualViewport ? window.visualViewport.offsetTop : 0;
+                    // 如果元素已经在可视区域内，说明网页自己已经处理了上推
+                    if (rect.top >= viewportTop && rect.bottom <= (viewportTop + viewportHeight)) {
+                        return 'already_visible';
+                    }
+                    // 元素不在可视区域，执行滚动
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return 'scrolled';
+                })();
+            """.trimIndent(), null)
+        } catch (e: Exception) {
+            AppLogger.w("WindowHelper", "checkAndScrollWebViewToFocusedInput failed", e)
+        }
+    }
 
 
     private fun scrollWebViewToFocusedInput(activity: Activity) {

@@ -26,7 +26,6 @@ enum class AppCapabilitySection {
     Browser,
     Appearance,
     Run,
-    Security,
     Lab,
     Export
 }
@@ -111,7 +110,7 @@ fun buildAppCapabilities(editState: EditState): List<AppCapability> = listOf(
         id = "activation",
         title = Strings.capabilityActivation,
         subtitle = Strings.capabilityActivationHint,
-        section = AppCapabilitySection.Security,
+        section = AppCapabilitySection.Run,
         level = WtaCapabilityLevel.Advanced,
         icon = Icons.Outlined.Key,
         keywords = listOf("激活码", "密码", "授权", "验证", "安全"),

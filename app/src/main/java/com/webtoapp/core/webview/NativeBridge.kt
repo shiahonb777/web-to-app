@@ -16,6 +16,7 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import android.util.Base64
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.widget.Toast
@@ -32,6 +33,16 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.ConnectionSpec
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.TlsVersion
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.ByteArrayOutputStream
+import java.net.URI
+import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 
 
@@ -46,6 +57,13 @@ class NativeBridge(
 ) {
     companion object {
         const val JS_INTERFACE_NAME = "NativeBridge"
+        private const val PRIVATE_NETWORK_MAX_RESPONSE_BYTES = 16 * 1024 * 1024
+        private val SKIP_PROXY_HEADERS = setOf(
+            "host",
+            "connection",
+            "content-length",
+            "accept-encoding"
+        )
 
 
 
@@ -328,6 +346,57 @@ if (NativeBridge.isFullscreen()) {
 }
 ```
         """.trimIndent()
+
+        internal fun isPrivateNetworkHost(host: String?): Boolean {
+            val normalized = host
+                ?.trim()
+                ?.trim('[', ']')
+                ?.lowercase(Locale.ROOT)
+                ?: return false
+
+            if (normalized == "localhost" || normalized == "127.0.0.1" || normalized == "10.0.2.2") {
+                return true
+            }
+            if (normalized == "::1" || normalized == "0:0:0:0:0:0:0:1") return true
+            if (normalized.endsWith(".local")) return true
+
+            val parts = normalized.split('.')
+            if (parts.size != 4) return false
+            val octets = parts.map { it.toIntOrNull() ?: return false }
+            if (octets.any { it !in 0..255 }) return false
+
+            return when {
+                octets[0] == 10 -> true
+                octets[0] == 172 && octets[1] in 16..31 -> true
+                octets[0] == 192 && octets[1] == 168 -> true
+                octets[0] == 127 -> true
+                else -> false
+            }
+        }
+
+        internal fun isPrivateNetworkUrl(url: String): Boolean {
+            val uri = runCatching { URI(url) }.getOrNull() ?: return false
+            val scheme = uri.scheme?.lowercase(Locale.ROOT) ?: return false
+            if (scheme != "http" && scheme != "https") return false
+            return isPrivateNetworkHost(uri.host)
+        }
+    }
+
+    private val privateNetworkHttpClient: OkHttpClient by lazy {
+        OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(120, TimeUnit.SECONDS)
+            .writeTimeout(120, TimeUnit.SECONDS)
+            .connectionSpecs(
+                listOf(
+                    ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
+                        .tlsVersions(TlsVersion.TLS_1_2, TlsVersion.TLS_1_3)
+                        .build(),
+                    ConnectionSpec.CLEARTEXT
+                )
+            )
+            .retryOnConnectionFailure(true)
+            .build()
     }
 
 
@@ -555,7 +624,7 @@ if (NativeBridge.isFullscreen()) {
                 val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                 val channel = NotificationChannel(
                     channelId,
-                    "WebApp Notifications",
+                    Strings.webAppNotificationChannelName,
                     NotificationManager.IMPORTANCE_DEFAULT
                 )
                 manager.createNotificationChannel(channel)
@@ -738,6 +807,104 @@ if (NativeBridge.isFullscreen()) {
     @JavascriptInterface
     fun log(message: String) {
         AppLogger.d("NativeBridge", "[JS] $message")
+    }
+
+    @JavascriptInterface
+    fun httpRequest(requestJson: String): String {
+        return try {
+            val request = org.json.JSONObject(requestJson)
+            val url = request.optString("url").trim()
+            if (!isPrivateNetworkUrl(url)) {
+                AppLogger.w("NativeBridge", "Blocked private-network bridge request to non-private URL: $url")
+                return privateNetworkBridgeError("URL_NOT_ALLOWED", "Only private network HTTP(S) URLs are allowed")
+            }
+            val pageUrl = webViewProvider()?.url.orEmpty()
+            if (!isPrivateNetworkUrl(pageUrl)) {
+                AppLogger.w("NativeBridge", "Blocked private-network bridge request from non-local page: $pageUrl -> $url")
+                return privateNetworkBridgeError("CALLER_NOT_ALLOWED", "Only packaged local pages can use the private network bridge")
+            }
+
+            val method = request.optString("method", "GET").uppercase(Locale.ROOT)
+            if (method !in setOf("GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS")) {
+                return privateNetworkBridgeError("METHOD_NOT_ALLOWED", "Unsupported HTTP method: $method")
+            }
+
+            val bodyBase64 = request.optString("bodyBase64", "")
+            val bodyBytes = if (bodyBase64.isBlank()) {
+                ByteArray(0)
+            } else {
+                Base64.decode(bodyBase64, Base64.NO_WRAP)
+            }
+
+            val headers = request.optJSONObject("headers")
+            val contentType = headers?.optString("content-type")
+                ?.takeIf { it.isNotBlank() }
+                ?: headers?.optString("Content-Type")?.takeIf { it.isNotBlank() }
+                ?: "application/octet-stream"
+            val requestBody = if (method in setOf("POST", "PUT", "PATCH") || bodyBytes.isNotEmpty()) {
+                bodyBytes.toRequestBody(contentType.toMediaTypeOrNull())
+            } else {
+                null
+            }
+
+            val builder = Request.Builder().url(url)
+            headers?.keys()?.forEach { key ->
+                val normalizedKey = key.lowercase(Locale.ROOT)
+                if (normalizedKey !in SKIP_PROXY_HEADERS) {
+                    val value = headers.optString(key)
+                    if (value.isNotBlank()) builder.header(key, value)
+                }
+            }
+            builder.header("X-WebToApp-Private-Network-Bridge", "1")
+            builder.method(method, requestBody)
+
+            privateNetworkHttpClient.newCall(builder.build()).execute().use { response ->
+                val responseBody = response.body
+                val bytes = responseBody?.byteStream()?.use { input ->
+                    val out = ByteArrayOutputStream()
+                    val buffer = ByteArray(8192)
+                    var total = 0
+                    while (true) {
+                        val read = input.read(buffer)
+                        if (read == -1) break
+                        total += read
+                        if (total > PRIVATE_NETWORK_MAX_RESPONSE_BYTES) {
+                            return privateNetworkBridgeError(
+                                "RESPONSE_TOO_LARGE",
+                                "Private network response exceeds ${PRIVATE_NETWORK_MAX_RESPONSE_BYTES / 1024 / 1024}MB"
+                            )
+                        }
+                        out.write(buffer, 0, read)
+                    }
+                    out.toByteArray()
+                } ?: ByteArray(0)
+
+                val responseHeaders = org.json.JSONObject()
+                response.headers.names().forEach { name ->
+                    responseHeaders.put(name, response.headers.values(name).joinToString(", "))
+                }
+
+                org.json.JSONObject().apply {
+                    put("ok", true)
+                    put("status", response.code)
+                    put("statusText", response.message)
+                    put("url", response.request.url.toString())
+                    put("headers", responseHeaders)
+                    put("bodyBase64", Base64.encodeToString(bytes, Base64.NO_WRAP))
+                }.toString()
+            }
+        } catch (e: Exception) {
+            AppLogger.e("NativeBridge", "Private network HTTP bridge request failed", e)
+            privateNetworkBridgeError("REQUEST_FAILED", e.message ?: e::class.java.simpleName)
+        }
+    }
+
+    private fun privateNetworkBridgeError(code: String, message: String): String {
+        return org.json.JSONObject().apply {
+            put("ok", false)
+            put("error", code)
+            put("message", message)
+        }.toString()
     }
 
 

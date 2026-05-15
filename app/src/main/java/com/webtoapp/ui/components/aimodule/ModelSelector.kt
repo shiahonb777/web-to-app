@@ -380,7 +380,7 @@ fun ProviderIcon(
         Text(
             label,
             style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.SemiBold
         )
     }
 }

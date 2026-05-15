@@ -36,6 +36,7 @@ class GoProjectImportAnalyzer {
         val framework = detectFramework(projectDir, goModInfo.dependencies)
         val binaryName = detectBinary(projectDir)
         val binaryFile = binaryName?.let { findBinary(projectDir, it) }
+        val targetArch = normalizeArch(GoDependencyManager.getDeviceAbi())
 
         return GoProjectImportAnalysis(
             projectDir = projectDir,
@@ -50,9 +51,19 @@ class GoProjectImportAnalyzer {
             modulePath = goModInfo.modulePath,
             goVersion = goModInfo.goVersion,
             dependencies = goModInfo.dependencies,
-            targetArch = "arm64",
+            targetArch = targetArch,
             healthCheckEndpoint = "/health",
         )
+    }
+
+    private fun normalizeArch(abi: String): String {
+        return when (abi) {
+            "arm64-v8a" -> "arm64-v8a"
+            "armeabi-v7a" -> "armeabi-v7a"
+            "x86_64" -> "x86_64"
+            "x86" -> "x86"
+            else -> "arm64-v8a"
+        }
     }
 
     private fun parseGoMod(goMod: File): GoModInfo {

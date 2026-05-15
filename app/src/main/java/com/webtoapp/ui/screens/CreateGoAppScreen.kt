@@ -1,6 +1,5 @@
 package com.webtoapp.ui.screens
 
-import com.webtoapp.ui.theme.AppColors
 import com.webtoapp.ui.components.PremiumButton
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -120,6 +119,8 @@ fun CreateGoAppScreen(
                     detectedFramework = config.framework
                     projectId = config.projectId
                     selectedProjectDir = config.projectName
+                    targetArch = config.targetArch
+                    binaryDetected = config.binaryName.isNotBlank()
                 }
             }
         }
@@ -254,16 +255,7 @@ fun CreateGoAppScreen(
     val canCreate = projectId != null
 
 
-    val frameworkColor = remember(detectedFramework) {
-        when (detectedFramework?.lowercase()) {
-            "gin" -> Color(0xFF0090FF)
-            "fiber" -> Color(0xFF8B5CF6)
-            "echo" -> Color(0xFF00BCD4)
-            "chi" -> AppColors.Error
-            "net_http" -> Color(0xFF00ADD8)
-            else -> Color(0xFF00ADD8)
-        }
-    }
+    val accentColor = MaterialTheme.colorScheme.onSurface
 
     WtaCreateFlowScaffold(
         title = Strings.createGoApp,
@@ -279,9 +271,10 @@ fun CreateGoAppScreen(
                                 projectName = appName.ifBlank { Strings.createGoApp },
                                 framework = detectedFramework ?: "raw",
                                 binaryName = binaryName,
+                                targetArch = targetArch,
+                                serverPort = 0,
                                 envVars = envVars,
                                 staticDir = staticDir,
-                                hasBuildFromSource = binaryName.isEmpty(),
                                 landscapeMode = landscapeMode
                             ),
                             appIcon,
@@ -302,7 +295,7 @@ fun CreateGoAppScreen(
 
             GoHeroSection(
                 detectedFramework = detectedFramework,
-                frameworkColor = frameworkColor,
+                accentColor = accentColor,
                 goVersion = goVersion
             )
 
@@ -392,30 +385,30 @@ fun CreateGoAppScreen(
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             shape = MaterialTheme.shapes.small,
-                            color = frameworkColor.copy(alpha = 0.08f)
+                            color = accentColor.copy(alpha = 0.08f)
                         ) {
                             Column(modifier = Modifier.padding(12.dp)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Default.CheckCircle, null, tint = frameworkColor, modifier = Modifier.size(20.dp))
+                                    Icon(Icons.Default.CheckCircle, null, tint = accentColor, modifier = Modifier.size(20.dp))
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text(Strings.goProjectReady, style = MaterialTheme.typography.bodyMedium, color = frameworkColor)
+                                    Text(Strings.goProjectReady, style = MaterialTheme.typography.bodyMedium, color = accentColor)
                                 }
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
                                     selectedProjectDir!!.substringAfterLast("/"),
                                     style = MaterialTheme.typography.bodySmall,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.SemiBold
                                 )
-                                if (detectedFramework != null && detectedFramework != "raw") {
-                                    Text(
-                                        "${Strings.frameworkDetected}: $detectedFramework",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                                if (binaryName.isNotEmpty()) {
-                                    Text(
-                                        "${Strings.goSelectBinary}: $binaryName",
+                    if (detectedFramework != null && detectedFramework != "raw") {
+                        Text(
+                            "${Strings.frameworkDetected}: $detectedFramework",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    if (binaryName.isNotEmpty()) {
+                        Text(
+                            "${Strings.goSelectBinary}: $binaryName",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -448,7 +441,7 @@ fun CreateGoAppScreen(
                         modulePath = goModulePath!!,
                         goVersion = goVersion,
                         depCount = goDeps.size,
-                        frameworkColor = frameworkColor
+                        accentColor = accentColor
                     )
                 }
 
@@ -458,14 +451,14 @@ fun CreateGoAppScreen(
                     binaryName = binaryName,
                     binarySize = binarySize,
                     onBinaryNameChange = { binaryName = it },
-                    frameworkColor = frameworkColor
+                    accentColor = accentColor
                 )
 
 
                 GoTargetArchCard(
                     targetArch = targetArch,
                     onArchChange = { targetArch = it },
-                    frameworkColor = frameworkColor
+                    accentColor = accentColor
                 )
 
 
@@ -486,7 +479,7 @@ fun CreateGoAppScreen(
                         deps = goDeps,
                         showAll = showAllDeps,
                         onToggleShowAll = { showAllDeps = !showAllDeps },
-                        frameworkColor = frameworkColor
+                        accentColor = accentColor
                     )
                 }
 
@@ -535,7 +528,7 @@ fun CreateGoAppScreen(
 @Composable
 private fun GoHeroSection(
     detectedFramework: String?,
-    frameworkColor: Color,
+    accentColor: Color,
     goVersion: String?
 ) {
     val title = if (detectedFramework != null && detectedFramework != "raw" && detectedFramework != "net_http")
@@ -543,14 +536,14 @@ private fun GoHeroSection(
     else Strings.goHeroTitle
 
     val tags = buildList {
-        goVersion?.let { add("Go $it" to frameworkColor) }
+        goVersion?.let { add("Go $it" to accentColor) }
     }
 
     RuntimeHeroSection(
         icon = Icons.Outlined.Code,
         title = title,
         subtitle = Strings.goHeroDesc,
-        brandColor = frameworkColor,
+        brandColor = accentColor,
         tags = tags
     )
 }
@@ -563,21 +556,21 @@ private fun GoModuleInfoCard(
     modulePath: String,
     goVersion: String?,
     depCount: Int,
-    frameworkColor: Color
+    accentColor: Color
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             RuntimeSectionHeader(
                 icon = Icons.Outlined.Info,
                 title = Strings.goModuleInfo,
-                brandColor = frameworkColor
+                brandColor = accentColor
             )
             Spacer(modifier = Modifier.height(12.dp))
 
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
-                color = frameworkColor.copy(alpha = 0.06f)
+                color = accentColor.copy(alpha = 0.06f)
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Row(
@@ -603,7 +596,7 @@ private fun GoModuleInfoCard(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(Strings.goDependencyCount, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text("$depCount", style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, color = frameworkColor)
+                        Text("$depCount", style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.SemiBold, color = accentColor)
                     }
                 }
             }
@@ -620,7 +613,7 @@ private fun GoBinaryDetectionCard(
     binaryName: String,
     binarySize: Long?,
     onBinaryNameChange: (String) -> Unit,
-    frameworkColor: Color
+    accentColor: Color
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -633,14 +626,14 @@ private fun GoBinaryDetectionCard(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
-                color = if (binaryDetected) frameworkColor.copy(alpha = 0.06f)
+                color = if (binaryDetected) accentColor.copy(alpha = 0.06f)
                 else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
             ) {
                 Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         if (binaryDetected) Icons.Outlined.CheckCircle else Icons.Outlined.Warning,
                         null,
-                        tint = if (binaryDetected) frameworkColor else MaterialTheme.colorScheme.error,
+                        tint = if (binaryDetected) accentColor else MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -649,7 +642,7 @@ private fun GoBinaryDetectionCard(
                             if (binaryDetected) Strings.goBinaryFound else Strings.goBinaryNotFound,
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.SemiBold,
-                            color = if (binaryDetected) frameworkColor else MaterialTheme.colorScheme.error
+                            color = if (binaryDetected) accentColor else MaterialTheme.colorScheme.error
                         )
                         if (binaryDetected && binarySize != null) {
                             Text(
@@ -682,7 +675,7 @@ private fun GoBinaryDetectionCard(
 private fun GoTargetArchCard(
     targetArch: String,
     onArchChange: (String) -> Unit,
-    frameworkColor: Color
+    accentColor: Color
 ) {
     val architectures = listOf(
         "arm64" to "ARM64 (aarch64)",
@@ -785,25 +778,25 @@ private fun GoDepsCard(
     deps: List<Pair<String, String>>,
     showAll: Boolean,
     onToggleShowAll: () -> Unit,
-    frameworkColor: Color
+    accentColor: Color
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             RuntimeSectionHeader(
                 icon = Icons.Outlined.Extension,
                 title = Strings.goDirectDeps,
-                brandColor = frameworkColor
+                brandColor = accentColor
             ) {
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = frameworkColor.copy(alpha = 0.1f)
+                    color = accentColor.copy(alpha = 0.1f)
                 ) {
                     Text(
                         text = "${deps.size}",
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelMedium,
-                        color = frameworkColor,
-                        fontWeight = FontWeight.Bold
+                        color = accentColor,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
             }
@@ -850,11 +843,7 @@ private fun GoFrameworkTipCard(framework: String?) {
 
     val tipText = Strings.goFrameworkTip(framework)
     val tipColor = when (framework?.lowercase()) {
-        "gin" -> Color(0xFF0090FF)
-        "fiber" -> Color(0xFF8B5CF6)
-        "echo" -> Color(0xFF00BCD4)
-        "chi" -> AppColors.Error
-        "net_http" -> Color(0xFF00ADD8)
+        "gin", "fiber", "echo", "chi", "net_http" -> MaterialTheme.colorScheme.onSurface
         else -> null
     }
     val tipData = if (tipText != null && tipColor != null) Tip(tipText, tipColor) else null

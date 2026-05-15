@@ -2151,6 +2151,19 @@ object ExtensionPanelScript {
             }
         }
     };
+
+    window.__WTA_EXT_ACTIONS__ = {
+        openPopup(extensionId, popupPath) {
+            if (typeof WtaExtBridge !== 'undefined' && typeof WtaExtBridge.openPopup === 'function') {
+                WtaExtBridge.openPopup(String(extensionId || ''), String(popupPath || ''));
+            }
+        },
+        openOptions(extensionId, optionsPagePath) {
+            if (typeof WtaExtBridge !== 'undefined' && typeof WtaExtBridge.openOptionsPage === 'function') {
+                WtaExtBridge.openOptionsPage(String(extensionId || ''), String(optionsPagePath || ''));
+            }
+        }
+    };
 })();
 """.trimIndent()
 }

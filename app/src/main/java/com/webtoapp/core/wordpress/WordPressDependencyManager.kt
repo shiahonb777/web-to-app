@@ -167,14 +167,9 @@ object WordPressDependencyManager {
 
 
     fun isPhpReady(context: Context): Boolean {
-
-        val nativePhp = File(context.applicationInfo.nativeLibraryDir, "libphp.so")
-        if (nativePhp.exists()) return true
-
-        if (Build.VERSION.SDK_INT >= 35) return false
-
-        val phpBinary = File(getPhpDir(context), "php")
-        return phpBinary.exists() && phpBinary.canExecute()
+        return resolvePhpExecutable(context)?.let { phpBinary ->
+            phpBinary.exists() && phpBinary.canExecute()
+        } == true
     }
 
 
@@ -187,15 +182,13 @@ object WordPressDependencyManager {
 
 
     fun getPhpExecutablePath(context: Context): String {
-        val nativePhp = File(context.applicationInfo.nativeLibraryDir, "libphp.so")
-        if (nativePhp.exists()) {
-            AppLogger.d(TAG, "使用 nativeLibraryDir PHP: ${nativePhp.absolutePath}")
-            return nativePhp.absolutePath
+        resolvePhpExecutable(context)?.let { phpBinary ->
+            return phpBinary.absolutePath
         }
 
-        val downloaded = File(getPhpDir(context), "php")
-        AppLogger.d(TAG, "使用下载目录 PHP: ${downloaded.absolutePath}")
-        return downloaded.absolutePath
+        val fallback = File(getPhpDir(context), "php")
+        AppLogger.d(TAG, "PHP 二进制未就绪，返回默认路径: ${fallback.absolutePath}")
+        return fallback.absolutePath
     }
 
 
@@ -252,12 +245,12 @@ object WordPressDependencyManager {
                 if (!success) return@withContext false
             }
 
-            _downloadState.value = DownloadState.Complete
+            markComplete()
             AppLogger.i(TAG, "所有 WordPress 依赖下载完成")
             true
         } catch (e: Exception) {
             AppLogger.e(TAG, "下载依赖失败", e)
-            _downloadState.value = DownloadState.Error(e.message ?: "未知错误")
+            markError(e.message ?: "未知错误")
             false
         }
     }
@@ -269,7 +262,11 @@ object WordPressDependencyManager {
 
     suspend fun downloadPhpDependency(context: Context): Boolean = withContext(Dispatchers.IO) {
         try {
-            if (isPhpReady(context)) return@withContext true
+            if (isPhpReady(context)) {
+                DependencyDownloadNotification.getInstance(context)
+                markComplete()
+                return@withContext true
+            }
 
             _downloadState.value = DownloadState.Idle
             DependencyDownloadNotification.getInstance(context)
@@ -278,12 +275,12 @@ object WordPressDependencyManager {
 
             val success = downloadPhp(context, mirror)
             if (success) {
-                _downloadState.value = DownloadState.Complete
+                markComplete()
             }
             success
         } catch (e: Exception) {
             AppLogger.e(TAG, "下载 PHP 依赖失败", e)
-            _downloadState.value = DownloadState.Error(e.message ?: "未知错误")
+            markError(e.message ?: "未知错误")
             false
         }
     }
@@ -310,6 +307,60 @@ object WordPressDependencyManager {
 
     fun getDeviceAbi(): String {
         return Build.SUPPORTED_ABIS.firstOrNull() ?: "arm64-v8a"
+    }
+
+    private fun resolvePhpExecutable(context: Context): File? {
+        val nativePhp = File(context.applicationInfo.nativeLibraryDir, "libphp.so")
+        if (nativePhp.exists()) {
+            AppLogger.d(TAG, "使用 nativeLibraryDir PHP: ${nativePhp.absolutePath}")
+            return nativePhp
+        }
+
+        val phpDir = getPhpDir(context)
+        val targetBinary = File(phpDir, "php")
+        val candidate = when {
+            targetBinary.exists() -> targetBinary
+            File(phpDir, "bin/php").exists() -> File(phpDir, "bin/php")
+            else -> phpDir.walkTopDown().firstOrNull { it.isFile && it.name == "php" }
+        } ?: return null
+
+        val normalizedBinary = if (candidate.absolutePath == targetBinary.absolutePath) {
+            candidate
+        } else {
+            try {
+                targetBinary.parentFile?.mkdirs()
+                candidate.copyTo(targetBinary, overwrite = true)
+                AppLogger.i(TAG, "已归一化 PHP 二进制位置: ${candidate.absolutePath} -> ${targetBinary.absolutePath}")
+                targetBinary
+            } catch (e: Exception) {
+                AppLogger.w(TAG, "归一化 PHP 二进制失败，继续使用原路径: ${candidate.absolutePath}", e)
+                candidate
+            }
+        }
+
+        repairPhpExecutable(normalizedBinary)
+        AppLogger.d(TAG, "使用下载目录 PHP: ${normalizedBinary.absolutePath}")
+        return normalizedBinary
+    }
+
+    private fun repairPhpExecutable(file: File) {
+        if (!file.exists() || !file.isFile) return
+
+        val wasReadable = file.canRead()
+        val wasExecutable = file.canExecute()
+
+        if (!wasReadable) {
+            file.setReadable(true, false)
+        }
+        if (!wasExecutable) {
+            file.setExecutable(true, false)
+        }
+
+        if (!wasExecutable && file.canExecute()) {
+            AppLogger.i(TAG, "已修复 PHP 二进制执行权限: ${file.absolutePath}")
+        } else if (!file.canExecute()) {
+            AppLogger.w(TAG, "PHP 二进制仍不可执行: ${file.absolutePath}")
+        }
     }
 
 
@@ -372,7 +423,7 @@ object WordPressDependencyManager {
         val abi = getDeviceAbi()
         if (abi != "arm64-v8a") {
             AppLogger.e(TAG, "PHP 二进制仅支持 arm64-v8a, 当前设备: $abi")
-            _downloadState.value = DownloadState.Error("PHP 二进制仅支持 arm64 设备")
+            markError("PHP 二进制仅支持 arm64 设备")
             return false
         }
 
@@ -415,7 +466,7 @@ object WordPressDependencyManager {
                 AppLogger.i(TAG, "PHP 二进制已就绪: ${targetBinary.absolutePath}")
             } else {
                 AppLogger.e(TAG, "解压后未找到 PHP 二进制")
-                _downloadState.value = DownloadState.Error("解压后未找到 PHP 二进制")
+                markError("解压后未找到 PHP 二进制")
                 return false
             }
 
@@ -424,7 +475,7 @@ object WordPressDependencyManager {
             return true
         } catch (e: Exception) {
             AppLogger.e(TAG, "解压 PHP 失败", e)
-            _downloadState.value = DownloadState.Error("解压 PHP 失败: ${e.message}")
+            markError("解压 PHP 失败: ${e.message}")
             return false
         }
     }
@@ -453,7 +504,7 @@ object WordPressDependencyManager {
 
             val wpDir = File(destDir, "wordpress")
             if (!wpDir.exists() || !File(wpDir, "wp-includes/version.php").exists()) {
-                _downloadState.value = DownloadState.Error("WordPress 解压不完整")
+                markError("WordPress 解压不完整")
                 return false
             }
 
@@ -461,7 +512,7 @@ object WordPressDependencyManager {
             return true
         } catch (e: Exception) {
             AppLogger.e(TAG, "解压 WordPress 失败", e)
-            _downloadState.value = DownloadState.Error("解压 WordPress 失败: ${e.message}")
+            markError("解压 WordPress 失败: ${e.message}")
             return false
         }
     }
@@ -489,7 +540,7 @@ object WordPressDependencyManager {
 
             val pluginDir = File(destDir, "sqlite-database-integration")
             if (!pluginDir.exists()) {
-                _downloadState.value = DownloadState.Error("SQLite 插件解压不完整")
+                markError("SQLite 插件解压不完整")
                 return false
             }
 
@@ -497,7 +548,7 @@ object WordPressDependencyManager {
             return true
         } catch (e: Exception) {
             AppLogger.e(TAG, "解压 SQLite 插件失败", e)
-            _downloadState.value = DownloadState.Error("解压 SQLite 插件失败: ${e.message}")
+            markError("解压 SQLite 插件失败: ${e.message}")
             return false
         }
     }
@@ -528,6 +579,16 @@ object WordPressDependencyManager {
             }
             else -> {}
         }
+    }
+
+    private fun markComplete() {
+        _downloadState.value = DownloadState.Complete
+        DependencyDownloadEngine._state.value = DependencyDownloadEngine.State.Complete
+    }
+
+    private fun markError(message: String) {
+        _downloadState.value = DownloadState.Error(message)
+        DependencyDownloadEngine._state.value = DependencyDownloadEngine.State.Error(message)
     }
 
 

@@ -211,6 +211,36 @@ data class ShellConfig(
     @SerializedName("announcementAllowNeverShow")
     val announcementAllowNeverShow: Boolean = false,
 
+    @SerializedName("announcementTriggerOnLaunch")
+    val announcementTriggerOnLaunch: Boolean = true,
+
+    @SerializedName("announcementTriggerOnNoNetwork")
+    val announcementTriggerOnNoNetwork: Boolean = false,
+
+    @SerializedName("announcementTriggerIntervalMinutes")
+    val announcementTriggerIntervalMinutes: Int = 0,
+
+    @SerializedName("adsEnabled")
+    val adsEnabled: Boolean = false,
+
+    @SerializedName("adBannerEnabled")
+    val adBannerEnabled: Boolean = false,
+
+    @SerializedName("adBannerId")
+    val adBannerId: String = "",
+
+    @SerializedName("adInterstitialEnabled")
+    val adInterstitialEnabled: Boolean = false,
+
+    @SerializedName("adInterstitialId")
+    val adInterstitialId: String = "",
+
+    @SerializedName("adSplashEnabled")
+    val adSplashEnabled: Boolean = false,
+
+    @SerializedName("adSplashId")
+    val adSplashId: String = "",
+
 
     @SerializedName("webViewConfig")
     val webViewConfig: WebViewShellConfig = WebViewShellConfig(),
@@ -294,6 +324,9 @@ data class ShellConfig(
     @SerializedName("translateShowButton")
     val translateShowButton: Boolean = true,
 
+
+    @SerializedName("extensionEnabled")
+    val extensionEnabled: Boolean = false,
 
     @SerializedName("extensionFabIcon")
     val extensionFabIcon: String = "",
@@ -387,11 +420,7 @@ data class ShellConfig(
 
 
     @SerializedName("multiWebConfig")
-    val multiWebConfig: MultiWebShellConfig = MultiWebShellConfig(),
-
-
-    @SerializedName("cloudSdkConfig")
-    val cloudSdkConfig: CloudSdkConfig = CloudSdkConfig()
+    val multiWebConfig: MultiWebShellConfig = MultiWebShellConfig()
 )
 
 
@@ -411,6 +440,12 @@ data class EmbeddedShellModule(
     @SerializedName("category")
     val category: String = "OTHER",
 
+    @SerializedName("versionName")
+    val versionName: String = "1.0.0",
+
+    @SerializedName("authorName")
+    val authorName: String = "",
+
     @SerializedName("code")
     val code: String = "",
 
@@ -420,11 +455,38 @@ data class EmbeddedShellModule(
     @SerializedName("runAt")
     val runAt: String = "DOCUMENT_END",
 
+    @SerializedName("sourceType")
+    val sourceType: String = "CUSTOM",
+
+    @SerializedName("runMode")
+    val runMode: String = "INTERACTIVE",
+
+    @SerializedName("uiConfig")
+    val uiConfig: EmbeddedShellModuleUiConfig = EmbeddedShellModuleUiConfig(),
+
     @SerializedName("urlMatches")
     val urlMatches: List<EmbeddedUrlMatch> = emptyList(),
 
     @SerializedName("configValues")
     val configValues: Map<String, String> = emptyMap(),
+
+    @SerializedName("configItemCount")
+    val configItemCount: Int = 0,
+
+    @SerializedName("gmGrants")
+    val gmGrants: List<String> = emptyList(),
+
+    @SerializedName("requireUrls")
+    val requireUrls: List<String> = emptyList(),
+
+    @SerializedName("requireContents")
+    val requireContents: Map<String, String> = emptyMap(),
+
+    @SerializedName("resources")
+    val resources: Map<String, String> = emptyMap(),
+
+    @SerializedName("noframes")
+    val noframes: Boolean = false,
 
     @SerializedName("enabled")
     val enabled: Boolean = true
@@ -480,19 +542,38 @@ data class EmbeddedShellModule(
     @Volatile
     private var _cachedCode: String? = null
 
+    fun isUserscript(): Boolean = sourceType == "USERSCRIPT"
+
+    fun shouldRegisterInPanel(): Boolean {
+        return !(isUserscript() && configItemCount == 0)
+    }
 
     fun generateExecutableCode(): String {
         _cachedCode?.let { return it }
         val configJson = GSON.toJson(configValues)
+        val uiConfigJson = GSON.toJson(
+            mapOf(
+                "type" to uiConfig.type,
+                "autoHide" to uiConfig.autoHide,
+                "autoHideDelay" to uiConfig.autoHideDelay,
+                "initiallyHidden" to uiConfig.initiallyHidden,
+                "showOnlyOnMatch" to uiConfig.showOnlyOnMatch
+            )
+        )
         return """
             (function() {
                 'use strict';
                 // Module配置
                 const __MODULE_CONFIG__ = $configJson;
+                const __MODULE_UI_CONFIG__ = $uiConfigJson;
+                const __MODULE_RUN_MODE__ = '${runMode.escapeForJsSingleQuote()}';
                 const __MODULE_INFO__ = {
                     id: '${id.escapeForJsSingleQuote()}',
                     name: '${name.escapeForJsSingleQuote()}',
-                    version: '1.0.0'
+                    icon: '${icon.escapeForJsSingleQuote()}',
+                    version: '${versionName.escapeForJsSingleQuote()}',
+                    uiConfig: __MODULE_UI_CONFIG__,
+                    runMode: __MODULE_RUN_MODE__
                 };
 
                 // Configure访问函数
@@ -516,10 +597,54 @@ data class EmbeddedShellModule(
                 } catch(e) {
                     console.error('[ExtModule: ${name.escapeForJsSingleQuote()}] Error:', e);
                 }
+
+                ${if (shouldRegisterInPanel()) """
+                (function __autoRegister__() {
+                    if (typeof __WTA_MODULE_UI__ === 'undefined') {
+                        setTimeout(__autoRegister__, 100);
+                        return;
+                    }
+                    var panel = window.__WTA_PANEL__;
+                    if (!panel || !panel._initialized) {
+                        setTimeout(__autoRegister__, 100);
+                        return;
+                    }
+                    if (panel.modules) {
+                        var existing = panel.modules.find(function(m) { return m.id === __MODULE_INFO__.id; });
+                        if (existing && existing.uiConfig && existing.uiConfig.type) {
+                            return;
+                        }
+                    }
+                    __WTA_MODULE_UI__.register({
+                        id: __MODULE_INFO__.id,
+                        name: __MODULE_INFO__.name,
+                        icon: __MODULE_INFO__.icon,
+                        uiConfig: __MODULE_UI_CONFIG__,
+                        runMode: __MODULE_RUN_MODE__
+                    });
+                })();
+                """ else ""}
             })();
         """.trimIndent().also { _cachedCode = it }
     }
 }
+
+data class EmbeddedShellModuleUiConfig(
+    @SerializedName("type")
+    val type: String = "FLOATING_BUTTON",
+
+    @SerializedName("autoHide")
+    val autoHide: Boolean = false,
+
+    @SerializedName("autoHideDelay")
+    val autoHideDelay: Int = 3000,
+
+    @SerializedName("initiallyHidden")
+    val initiallyHidden: Boolean = false,
+
+    @SerializedName("showOnlyOnMatch")
+    val showOnlyOnMatch: Boolean = true
+)
 
 data class EmbeddedUrlMatch(
     @SerializedName("pattern")
@@ -564,7 +689,22 @@ data class GalleryShellConfig(
     val enableAudio: Boolean = true,
 
     @SerializedName("videoAutoNext")
-    val videoAutoNext: Boolean = true
+    val videoAutoNext: Boolean = true,
+
+    @SerializedName("shuffleOnLoop")
+    val shuffleOnLoop: Boolean = false,
+
+    @SerializedName("defaultView")
+    val defaultView: String = "GRID",
+
+    @SerializedName("gridColumns")
+    val gridColumns: Int = 3,
+
+    @SerializedName("sortOrder")
+    val sortOrder: String = "CUSTOM",
+
+    @SerializedName("rememberPosition")
+    val rememberPosition: Boolean = true
 )
 
 data class GalleryShellItem(
@@ -712,6 +852,9 @@ data class GoAppShellConfig(
     @SerializedName("binaryName")
     val binaryName: String = "",
 
+    @SerializedName("targetArch")
+    val targetArch: String = "arm64-v8a",
+
     @SerializedName("port")
     val port: Int = 0,
 
@@ -823,6 +966,14 @@ data class DnsShellConfig(
 
     @SerializedName("bypassSystemDns")
     val bypassSystemDns: Boolean = false
+)
+
+data class HostMappingShellEntry(
+    @SerializedName("host")
+    val host: String = "",
+
+    @SerializedName("ip")
+    val ip: String = ""
 )
 
 data class WebViewShellConfig(
@@ -970,6 +1121,81 @@ data class WebViewShellConfig(
     @SerializedName("disableShields")
     val disableShields: Boolean = true,
 
+    @SerializedName("decodeBase64DeepLinks")
+    val decodeBase64DeepLinks: Boolean = false,
+
+    @SerializedName("mediaAutoplayEnabled")
+    val mediaAutoplayEnabled: Boolean = true,
+
+    @SerializedName("acceptThirdPartyCookies")
+    val acceptThirdPartyCookies: Boolean = true,
+
+    @SerializedName("enableKernelDisguise")
+    val enableKernelDisguise: Boolean = true,
+
+    @SerializedName("enableImageRepair")
+    val enableImageRepair: Boolean = true,
+
+    @SerializedName("enableScrollMemory")
+    val enableScrollMemory: Boolean = true,
+
+    @SerializedName("enableHttpsUpgrade")
+    val enableHttpsUpgrade: Boolean = true,
+
+    @SerializedName("enableOAuthExternalRedirect")
+    val enableOAuthExternalRedirect: Boolean = true,
+
+    @SerializedName("enableClipboardPolyfill")
+    val enableClipboardPolyfill: Boolean = true,
+
+    @SerializedName("enableNotificationPolyfill")
+    val enableNotificationPolyfill: Boolean = true,
+
+    @SerializedName("safeBrowsingEnabled")
+    val safeBrowsingEnabled: Boolean = true,
+
+    @SerializedName("geolocationEnabled")
+    val geolocationEnabled: Boolean = true,
+
+    @SerializedName("enableOrientationPolyfill")
+    val enableOrientationPolyfill: Boolean = true,
+
+    @SerializedName("enableCompatPolyfills")
+    val enableCompatPolyfills: Boolean = true,
+
+    @SerializedName("enableNativeBridge")
+    val enableNativeBridge: Boolean = true,
+
+    @SerializedName("javaScriptCanOpenWindows")
+    val javaScriptCanOpenWindows: Boolean = true,
+
+    @SerializedName("databaseEnabled")
+    val databaseEnabled: Boolean = true,
+
+    @SerializedName("enableCookiePersistence")
+    val enableCookiePersistence: Boolean = true,
+
+    @SerializedName("enablePrivateNetworkBridge")
+    val enablePrivateNetworkBridge: Boolean = true,
+
+    @SerializedName("allowMixedContent")
+    val allowMixedContent: Boolean = true,
+
+    @SerializedName("enableGpc")
+    val enableGpc: Boolean = true,
+
+    @SerializedName("enableCookieConsentBlock")
+    val enableCookieConsentBlock: Boolean = true,
+
+    @SerializedName("enableReferrerPolicy")
+    val enableReferrerPolicy: Boolean = true,
+
+    @SerializedName("enableTrackerBlocking")
+    val enableTrackerBlocking: Boolean = true,
+
+    @SerializedName("enableBlobDownloadInterception")
+    val enableBlobDownloadInterception: Boolean = true,
+
     @SerializedName("keepScreenOn")
     val keepScreenOn: Boolean = false,
 
@@ -984,7 +1210,7 @@ data class WebViewShellConfig(
 
 
     @SerializedName("showFloatingBackButton")
-    val showFloatingBackButton: Boolean = true,
+    val showFloatingBackButton: Boolean = false,
 
 
     @SerializedName("keyboardAdjustMode")
@@ -1039,6 +1265,12 @@ data class WebViewShellConfig(
 
     @SerializedName("proxyPassword")
     val proxyPassword: String = "",
+
+    @SerializedName("hostsMappingEnabled")
+    val hostsMappingEnabled: Boolean = false,
+
+    @SerializedName("hostsMappings")
+    val hostsMappings: List<HostMappingShellEntry> = emptyList(),
 
 
     @SerializedName("dnsMode")
@@ -1393,4 +1625,3 @@ data class NotificationShellConfig(
     @SerializedName("clickUrl")
     val clickUrl: String = ""
 )
-

@@ -49,6 +49,11 @@ find_library(
     log
 )
 
+find_library(
+    dl-lib
+    dl
+)
+
 # 链接库
 target_link_libraries(
     crypto_engine
@@ -108,6 +113,50 @@ target_compile_options(node_bridge PRIVATE
 
 # node_bridge 只 gc-sections，不 strip（保留 JNI 导出符号）
 set_target_properties(node_bridge PROPERTIES
+    LINK_FLAGS "-Wl,--gc-sections -Wl,-z,max-page-size=16384"
+)
+
+# Standalone launcher used by the local build environment. It is packaged as an
+# extracted asset and executed as a real `node` binary inside the app sandbox.
+add_executable(
+    node_launcher
+    node_launcher.c
+)
+
+add_executable(
+    go_exec_loader
+    go_exec_loader.c
+)
+
+set_property(TARGET node_launcher PROPERTY C_STANDARD 11)
+
+target_compile_options(node_launcher PRIVATE
+    -ffunction-sections
+    -fdata-sections
+    -O2
+    -DNDEBUG
+)
+
+target_link_libraries(
+    node_launcher
+    ${log-lib}
+    ${dl-lib}
+)
+
+set_target_properties(node_launcher PROPERTIES
+    LINK_FLAGS "-Wl,--gc-sections -Wl,-z,max-page-size=16384"
+)
+
+set_property(TARGET go_exec_loader PROPERTY C_STANDARD 11)
+
+target_compile_options(go_exec_loader PRIVATE
+    -ffunction-sections
+    -fdata-sections
+    -O2
+    -DNDEBUG
+)
+
+set_target_properties(go_exec_loader PROPERTIES
     LINK_FLAGS "-Wl,--gc-sections -Wl,-z,max-page-size=16384"
 )
 

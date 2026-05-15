@@ -133,6 +133,13 @@ object RuntimeAssetEmbedder {
         runtimeType = "nodejs"
     )
 
+    fun multiWebConfig(): EmbedConfig = EmbedConfig(
+        runtimeName = "multiWeb",
+        assetPrefix = "assets/html_projects",
+        excludeDirs = setOf("node_modules", ".git", ".cache", "__pycache__", ".next", ".nuxt"),
+        runtimeType = "nodejs"
+    )
+
 
 
 

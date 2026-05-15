@@ -190,7 +190,7 @@ val LocalThemeRevealState = staticCompositionLocalOf<ThemeRevealState?> { null }
 @Composable
 fun CircularRevealOverlay(
     revealState: ThemeRevealState,
-    durationMs: Int = 600
+    durationMs: Int = 480
 ) {
     if (!revealState.isAnimating) return
 
@@ -203,11 +203,16 @@ fun CircularRevealOverlay(
 
 
         val job = coroutineScope.launch {
+            // Reveal easing matches the rest of the app: quick to kick off,
+            // slow to settle. The old FastOutSlowInEasing felt like the
+            // new theme was punching through the screen.
             revealState.animationProgress.animateTo(
                 targetValue = 1f,
                 animationSpec = tween(
                     durationMillis = durationMs,
-                    easing = FastOutSlowInEasing
+                    easing = androidx.compose.animation.core.CubicBezierEasing(
+                        0.22f, 1.0f, 0.36f, 1.0f
+                    )
                 )
             )
 
@@ -236,7 +241,11 @@ fun CircularRevealOverlay(
             )
         }
 
-
+        // During the reveal the old snapshot sits on top; the new theme is
+        // already painted beneath it. We clip OUT the growing circle so the
+        // new theme shows through where the circle expands. A soft
+        // feathered edge (via reduced alpha on the outer ring) prevents the
+        // hard-line artifact you otherwise get at the clip boundary.
         clipPath(circlePath, clipOp = ClipOp.Difference) {
             drawImage(snap)
         }

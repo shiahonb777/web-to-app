@@ -2,9 +2,17 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
-
-
 }
+
+import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskAction
 
 android {
     namespace = "com.webtoapp"
@@ -67,6 +75,9 @@ android {
     sourceSets {
         getByName("main") {
             manifest.srcFile("src/main/AndroidManifest.xml")
+            // shell 的 src/main/java 由 syncShellRuntimeSources 任务从 app 模块同步而来（见下方）。
+            // src/main/java-overrides 放置 shell 专用的覆盖文件（例如自定义 BootReceiver 等）。
+            // 同步任务通过 exclude(...) 跳过 java-overrides 中已有的同名文件，避免 conflicting declaration。
             java.srcDirs("src/main/java", "src/main/java-overrides")
             res.srcDirs("../app/src/main/res")
             assets.srcDirs("src/main/assets")
@@ -136,6 +147,7 @@ val syncShellRuntimeSources by tasks.registering(Sync::class) {
         "**/ui/shell/**",
         "**/ui/theme/**",
         "**/ui/shared/**",
+        "**/ui/design/**",
 
 
 
@@ -258,6 +270,105 @@ tasks.matching { it.name == "preBuild" }.configureEach {
     dependsOn(syncShellRuntimeAssets)
 }
 
+abstract class SyncNativeExecutableJniLibsTask : DefaultTask() {
+    @get:Input
+    abstract val variantName: org.gradle.api.provider.Property<String>
+
+    @get:Input
+    abstract val buildTypeName: org.gradle.api.provider.Property<String>
+
+    @get:Input
+    abstract val executableName: org.gradle.api.provider.Property<String>
+
+    @get:Input
+    abstract val packagedLibraryName: org.gradle.api.provider.Property<String>
+
+    @get:InputDirectory
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val cxxRoot: DirectoryProperty
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
+
+    @TaskAction
+    fun sync() {
+        val cxxRootDir = cxxRoot.asFile.get()
+        if (!cxxRootDir.exists()) {
+            throw GradleException("CXX output not found for ${variantName.get()}: ${cxxRootDir.absolutePath}")
+        }
+
+        val executableTargets = cxxRootDir.walkTopDown()
+            .filter { file ->
+                file.isFile &&
+                    file.name == executableName.get() &&
+                    file.parentFile?.parentFile?.name == "obj"
+            }
+            .toList()
+
+        if (executableTargets.isEmpty()) {
+            throw GradleException("${executableName.get()} artifacts not found for ${variantName.get()} under ${cxxRootDir.absolutePath}")
+        }
+
+        val outputRoot = outputDir.get().asFile
+        outputRoot.deleteRecursively()
+        outputRoot.mkdirs()
+
+        executableTargets.forEach { binary ->
+            val abi = binary.parentFile.name
+            val destFile = outputRoot.resolve("$abi/${packagedLibraryName.get()}")
+            destFile.parentFile.mkdirs()
+            binary.copyTo(destFile, overwrite = true)
+            destFile.setExecutable(true, false)
+        }
+    }
+}
+
+androidComponents {
+    onVariants { variant ->
+        val capName = variant.name.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+        val variantBuildTypeName = variant.buildType ?: "release"
+        val cxxBuildType = if (variantBuildTypeName.equals("debug", ignoreCase = true)) "Debug" else "RelWithDebInfo"
+        val nativeBuildTaskName = "buildCMake$cxxBuildType"
+        val syncNodeLauncherTask = tasks.register<SyncNativeExecutableJniLibsTask>("syncNodeLauncherJniLibs$capName") {
+            group = "build"
+            description = "Copies ABI-specific node launcher executables into generated jniLibs for ${variant.name}."
+            variantName.set(variant.name)
+            buildTypeName.set(variantBuildTypeName)
+            executableName.set("node_launcher")
+            packagedLibraryName.set("libnode_launcher.so")
+            cxxRoot.set(layout.buildDirectory.dir("intermediates/cxx/$cxxBuildType"))
+            outputDir.set(layout.buildDirectory.dir("generated/jniLibs/nodeLauncher/${variant.name}"))
+            dependsOn(nativeBuildTaskName)
+        }
+
+        val syncGoLoaderTask = tasks.register<SyncNativeExecutableJniLibsTask>("syncGoExecLoaderJniLibs$capName") {
+            group = "build"
+            description = "Copies ABI-specific Go exec loader executables into generated jniLibs for ${variant.name}."
+            variantName.set(variant.name)
+            buildTypeName.set(variantBuildTypeName)
+            executableName.set("go_exec_loader")
+            packagedLibraryName.set("libgo_exec_loader.so")
+            cxxRoot.set(layout.buildDirectory.dir("intermediates/cxx/$cxxBuildType"))
+            outputDir.set(layout.buildDirectory.dir("generated/jniLibs/goExecLoader/${variant.name}"))
+            dependsOn(nativeBuildTaskName)
+        }
+
+        tasks.matching { it.name == "merge${capName}NativeLibs" }.configureEach {
+            dependsOn(syncNodeLauncherTask)
+            dependsOn(syncGoLoaderTask)
+        }
+
+        variant.sources.jniLibs?.addGeneratedSourceDirectory(
+            syncNodeLauncherTask,
+            SyncNativeExecutableJniLibsTask::outputDir
+        )
+        variant.sources.jniLibs?.addGeneratedSourceDirectory(
+            syncGoLoaderTask,
+            SyncNativeExecutableJniLibsTask::outputDir
+        )
+    }
+}
+
 dependencies {
 
 
@@ -332,13 +443,7 @@ dependencies {
 
 
 
-
-    implementation("com.android.billingclient:billing-ktx:7.0.0")
-
-
     implementation("androidx.credentials:credentials:1.3.0")
-    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
-    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
     implementation("androidx.browser:browser:1.8.0")
 
 

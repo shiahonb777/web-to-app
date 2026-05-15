@@ -40,6 +40,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.webkit.WebViewAssetLoader
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.ui.theme.WebToAppTheme
 import java.io.File
@@ -210,12 +211,38 @@ private fun HtmlPreviewScreen(
                             setBackgroundColor(android.graphics.Color.WHITE)
 
 
+                            // Debug 包打开远程调试，方便用户在 PC Chrome chrome://inspect 抓真实 console。
+                            // Release 包通过 BuildConfig.DEBUG 自动关闭，不影响发布。
+                            try {
+                                if (com.webtoapp.BuildConfig.DEBUG) {
+                                    WebView.setWebContentsDebuggingEnabled(true)
+                                }
+                            } catch (_: Throwable) { /* 某些设备拒绝即跳过 */ }
+
                             lifecycleScope?.let { scope ->
                                 val downloadBridge = com.webtoapp.core.webview.DownloadBridge(ctx, scope)
                                 addJavascriptInterface(downloadBridge, com.webtoapp.core.webview.DownloadBridge.JS_INTERFACE_NAME)
                             }
 
+                            // 用 WebViewAssetLoader 在 https://appassets.androidplatform.net/local/...
+                            // 下代理本地 HTML 项目目录。这是真正合法的 https origin，
+                            // 外联 CDN（如 mdui、Vue、React 等带 integrity/crossorigin 或 ES Module 的脚本）
+                            // 在这个 origin 下 fetch、CORS、模块解析才会正常工作。
+                            val projectRoot: File? = filePath?.let { File(it).parentFile }
+                            val assetLoader = WebViewAssetLoader.Builder()
+                                .setDomain("appassets.androidplatform.net")
+                                .apply {
+                                    if (projectRoot != null && projectRoot.isDirectory) {
+                                        addPathHandler(
+                                            "/local/",
+                                            WebViewAssetLoader.InternalStoragePathHandler(ctx, projectRoot)
+                                        )
+                                    }
+                                }
+                                .build()
+
                             setupWebView(
+                                assetLoader = assetLoader,
                                 onProgressChanged = { progress ->
                                     loadProgress = progress
                                     isLoading = progress < 100
@@ -238,22 +265,15 @@ private fun HtmlPreviewScreen(
                             when {
                                 filePath != null -> {
                                     val file = File(filePath)
-                                    val htmlContent = file.readText()
-                                    val baseDir = file.parentFile?.absolutePath ?: ""
-
-
-
-                                    loadDataWithBaseURL(
-                                        "https://localhost/__local__/$baseDir/",
-                                        htmlContent,
-                                        "text/html",
-                                        "UTF-8",
-                                        null
-                                    )
+                                    // 走合法 https origin，外联 CDN 脚本能按正常路径解析。
+                                    val url = "https://appassets.androidplatform.net/local/${file.name}"
+                                    loadUrl(url)
                                 }
                                 htmlContent != null -> {
+                                    // 没有磁盘项目时退化为空 origin 加载内联 HTML。
+                                    // 此模式下页面里的相对链接无效，仅适合纯内联预览。
                                     loadDataWithBaseURL(
-                                        "https://localhost/__local__/",
+                                        "https://appassets.androidplatform.net/inline/",
                                         htmlContent,
                                         "text/html",
                                         "UTF-8",
@@ -308,6 +328,7 @@ private fun HtmlPreviewScreen(
 
 @SuppressLint("SetJavaScriptEnabled")
 private fun WebView.setupWebView(
+    assetLoader: WebViewAssetLoader,
     onProgressChanged: (Int) -> Unit,
     onPageStarted: (String) -> Unit,
     onPageFinished: () -> Unit,
@@ -323,8 +344,12 @@ private fun WebView.setupWebView(
         builtInZoomControls = true
         displayZoomControls = false
         setSupportZoom(true)
+        // 通过 WebViewAssetLoader 加载后已经是合法 https origin，
+        // 但保留 ALWAYS_ALLOW 是为了兼容用户引入 http 资源的极端场景。
         mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
 
+        // 走 https origin 之后，这两个 file:// 专用开关本可以收紧；
+        // 暂时保留，避免回归用户既有的本地 file:// 引用习惯。
         @Suppress("DEPRECATION")
         allowFileAccessFromFileURLs = true
         @Suppress("DEPRECATION")
@@ -345,89 +370,25 @@ private fun WebView.setupWebView(
             super.onPageFinished(view, url)
             onPageFinished()
 
-
+            // 仅注入下载桥；不再注入大段调试 script，避免污染用户 console
+            // 也避免在外链脚本（如 mdui）执行链路里多塞一段同步 IIFE。
             view?.evaluateJavascript(com.webtoapp.core.webview.DownloadBridge.getInjectionScript(), null)
-
-
-            view?.evaluateJavascript("""
-                (function() {
-                    console.log('[DEBUG] JavaScript is working!');
-                    console.log('[DEBUG] Document ready state: ' + document.readyState);
-                    console.log('[DEBUG] Script tags count: ' + document.getElementsByTagName('script').length);
-                    console.log('[DEBUG] Vue available: ' + (typeof Vue !== 'undefined'));
-                    console.log('[DEBUG] React available: ' + (typeof React !== 'undefined'));
-                    var scripts = document.getElementsByTagName('script');
-                    for (var i = 0; i < scripts.length; i++) {
-                        var script = scripts[i];
-                        var src = script.src || '(inline)';
-                        var contentLength = script.textContent ? script.textContent.length : 0;
-                        console.log('[DEBUG] Script ' + i + ': src=' + src + ', contentLength=' + contentLength);
-                    }
-                    return 'JS check complete';
-                })();
-            """.trimIndent()) { result ->
-                AppLogger.d("HtmlPreviewActivity", "JS check result: $result")
-            }
         }
 
         override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
             return false
         }
 
-
-
-
-
-
+        // 把本地资源解析完全交给 WebViewAssetLoader：
+        //   https://appassets.androidplatform.net/local/...  -> 项目目录磁盘文件
+        // 其它 https/http 请求 assetLoader 返回 null，由 WebView 走默认网络栈，
+        // 这样 mdui / Vue / React 等 CDN 资源走真实网络，integrity/CORS 才会正常。
         override fun shouldInterceptRequest(
             view: WebView?,
             request: WebResourceRequest?
         ): WebResourceResponse? {
-            val url = request?.url?.toString() ?: return null
-
-            AppLogger.d("HtmlPreviewActivity", "shouldInterceptRequest: $url")
-
-
-            if (url.startsWith("https://localhost/__local__/")) {
-                val localPath = url.removePrefix("https://localhost/__local__/")
-                AppLogger.d("HtmlPreviewActivity", "Loading local resource: $localPath")
-
-                return try {
-                    val file = java.io.File(localPath)
-                    if (file.exists() && file.isFile) {
-                        val mimeType = getMimeTypeForFile(localPath)
-                        val inputStream = java.io.FileInputStream(file)
-                        WebResourceResponse(mimeType, "UTF-8", inputStream)
-                    } else {
-                        AppLogger.w("HtmlPreviewActivity", "Local file not found: $localPath")
-                        null
-                    }
-                } catch (e: Exception) {
-                    AppLogger.e("HtmlPreviewActivity", "Error loading local resource: $localPath", e)
-                    null
-                }
-            }
-
-
-            return null
-        }
-
-        private fun getMimeTypeForFile(path: String): String {
-            val extension = path.substringAfterLast('.', "").lowercase()
-            return when (extension) {
-                "html", "htm" -> "text/html"
-                "css" -> "text/css"
-                "js" -> "application/javascript"
-                "json" -> "application/json"
-                "png" -> "image/png"
-                "jpg", "jpeg" -> "image/jpeg"
-                "gif" -> "image/gif"
-                "svg" -> "image/svg+xml"
-                "woff" -> "font/woff"
-                "woff2" -> "font/woff2"
-                "ttf" -> "font/ttf"
-                else -> "application/octet-stream"
-            }
+            val url = request?.url ?: return null
+            return assetLoader.shouldInterceptRequest(url)
         }
     }
 

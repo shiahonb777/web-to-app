@@ -42,9 +42,22 @@ object ChromeExtensionPolyfill {
     if (window[POLYFILL_KEY]) return;
     window[POLYFILL_KEY] = true;
     var IS_BACKGROUND = ${isBackground};
-    var STORAGE_PREFIX = '__wta_ext_' + EXT_ID + '_';
     var MANIFEST = {};
+    var _popupPathOverride = null;
     try { MANIFEST = JSON.parse('$safeManifest'); } catch(e) { MANIFEST = {}; }
+
+    function resolvePopupPath() {
+        if (_popupPathOverride !== null && _popupPathOverride !== undefined) {
+            return _popupPathOverride || '';
+        }
+        try {
+            return (MANIFEST.action && MANIFEST.action.default_popup) ||
+                (MANIFEST.browser_action && MANIFEST.browser_action.default_popup) ||
+                (MANIFEST.page_action && MANIFEST.page_action.default_popup) || '';
+        } catch (e) {
+            return '';
+        }
+    }
 
     // ===== Native Bridge Messaging =====
     var _msgCounter = 0;
@@ -80,36 +93,123 @@ object ChromeExtensionPolyfill {
     // ===== Storage Implementation =====
     function StorageArea(areaName) {
         this._area = areaName;
-        this._prefix = STORAGE_PREFIX + areaName + '_';
+    }
+
+    StorageArea.prototype._bridgeSupportsSharedArea = function() {
+        return typeof WtaExtBridge !== 'undefined' &&
+            typeof WtaExtBridge.storageGetForExt === 'function' &&
+            typeof WtaExtBridge.storageSetForExt === 'function' &&
+            typeof WtaExtBridge.storageRemoveForExt === 'function' &&
+            typeof WtaExtBridge.storageGetAllForExt === 'function' &&
+            typeof WtaExtBridge.storageClearForExt === 'function';
+    };
+
+    StorageArea.prototype._bridgeGet = function(key) {
+        if (typeof WtaExtBridge === 'undefined') return '';
+        if (this._bridgeSupportsSharedArea()) {
+            return WtaExtBridge.storageGetForExt(EXT_ID, this._area, key);
+        }
+        if (this._area === 'sync') {
+            return (typeof WtaExtBridge.syncStorageGetForExt === 'function')
+                ? WtaExtBridge.syncStorageGetForExt(EXT_ID, key)
+                : WtaExtBridge.syncStorageGet(key);
+        }
+        return '';
+    };
+
+    StorageArea.prototype._bridgeSet = function(key, value) {
+        if (typeof WtaExtBridge === 'undefined') return;
+        if (this._bridgeSupportsSharedArea()) {
+            WtaExtBridge.storageSetForExt(EXT_ID, this._area, key, value);
+            return;
+        }
+        if (this._area === 'sync') {
+            if (typeof WtaExtBridge.syncStorageSetForExt === 'function') {
+                WtaExtBridge.syncStorageSetForExt(EXT_ID, key, value);
+            } else {
+                WtaExtBridge.syncStorageSet(key, value);
+            }
+        }
+    };
+
+    StorageArea.prototype._bridgeRemove = function(key) {
+        if (typeof WtaExtBridge === 'undefined') return;
+        if (this._bridgeSupportsSharedArea()) {
+            WtaExtBridge.storageRemoveForExt(EXT_ID, this._area, key);
+            return;
+        }
+        if (this._area === 'sync') {
+            if (typeof WtaExtBridge.syncStorageRemoveForExt === 'function') {
+                WtaExtBridge.syncStorageRemoveForExt(EXT_ID, key);
+            } else {
+                WtaExtBridge.syncStorageRemove(key);
+            }
+        }
+    };
+
+    StorageArea.prototype._bridgeGetAll = function() {
+        if (typeof WtaExtBridge === 'undefined') return '{}';
+        if (this._bridgeSupportsSharedArea()) {
+            return WtaExtBridge.storageGetAllForExt(EXT_ID, this._area);
+        }
+        if (this._area === 'sync') {
+            return (typeof WtaExtBridge.syncStorageGetAllForExt === 'function')
+                ? WtaExtBridge.syncStorageGetAllForExt(EXT_ID)
+                : WtaExtBridge.syncStorageGetAll();
+        }
+        return '{}';
+    };
+
+    StorageArea.prototype._bridgeClear = function() {
+        if (typeof WtaExtBridge === 'undefined') return;
+        if (this._bridgeSupportsSharedArea()) {
+            WtaExtBridge.storageClearForExt(EXT_ID, this._area);
+            return;
+        }
+        if (this._area === 'sync') {
+            if (typeof WtaExtBridge.syncStorageClearForExt === 'function') {
+                WtaExtBridge.syncStorageClearForExt(EXT_ID);
+            } else {
+                WtaExtBridge.syncStorageClear();
+            }
+        }
     }
 
     StorageArea.prototype.get = function(keys, callback) {
         var self = this;
         var result = {};
         try {
-            if (keys === null || keys === undefined) {
-                // Get all
-                for (var i = 0; i < localStorage.length; i++) {
-                    var k = localStorage.key(i);
-                    if (k && k.indexOf(self._prefix) === 0) {
-                        var realKey = k.substring(self._prefix.length);
-                        try { result[realKey] = JSON.parse(localStorage.getItem(k)); } catch(e) { result[realKey] = localStorage.getItem(k); }
+            if (self._area === 'managed') {
+                result = {};
+            } else if (typeof WtaExtBridge !== 'undefined' && (self._bridgeSupportsSharedArea() || self._area === 'sync')) {
+                if (keys === null || keys === undefined) {
+                    var allJson = self._bridgeGetAll();
+                    var allValues = JSON.parse(allJson || '{}');
+                    Object.keys(allValues).forEach(function(key) {
+                        try { result[key] = JSON.parse(allValues[key]); } catch(e) { result[key] = allValues[key]; }
+                    });
+                } else if (typeof keys === 'string') {
+                    var val = self._bridgeGet(keys);
+                    if (val !== null && val !== undefined && val !== '') {
+                        try { result[keys] = JSON.parse(val); } catch(e) { result[keys] = val; }
                     }
+                } else if (Array.isArray(keys)) {
+                    keys.forEach(function(key) {
+                        var val = self._bridgeGet(key);
+                        if (val !== null && val !== undefined && val !== '') {
+                            try { result[key] = JSON.parse(val); } catch(e) { result[key] = val; }
+                        }
+                    });
+                } else if (typeof keys === 'object') {
+                    Object.keys(keys).forEach(function(key) {
+                        var val = self._bridgeGet(key);
+                        if (val !== null && val !== undefined && val !== '') {
+                            try { result[key] = JSON.parse(val); } catch(e) { result[key] = val; }
+                        } else {
+                            result[key] = keys[key];
+                        }
+                    });
                 }
-            } else if (typeof keys === 'string') {
-                var val = localStorage.getItem(self._prefix + keys);
-                if (val !== null) { try { result[keys] = JSON.parse(val); } catch(e) { result[keys] = val; } }
-            } else if (Array.isArray(keys)) {
-                keys.forEach(function(key) {
-                    var val = localStorage.getItem(self._prefix + key);
-                    if (val !== null) { try { result[key] = JSON.parse(val); } catch(e) { result[key] = val; } }
-                });
-            } else if (typeof keys === 'object') {
-                Object.keys(keys).forEach(function(key) {
-                    var val = localStorage.getItem(self._prefix + key);
-                    if (val !== null) { try { result[key] = JSON.parse(val); } catch(e) { result[key] = val; } }
-                    else { result[key] = keys[key]; } // default value
-                });
             }
         } catch(e) {
             console.error('[ChromePolyfill] storage.get error:', e);
@@ -124,12 +224,17 @@ object ChromeExtensionPolyfill {
         var self = this;
         var changes = {};
         try {
+            if (self._area === 'managed') {
+                if (typeof callback === 'function') { callback(); }
+                return Promise.resolve();
+            }
             Object.keys(items).forEach(function(key) {
-                var oldVal = localStorage.getItem(self._prefix + key);
+                var oldVal = self._bridgeGet(key);
                 var oldParsed = undefined;
                 if (oldVal !== null) { try { oldParsed = JSON.parse(oldVal); } catch(e) { oldParsed = oldVal; } }
 
-                localStorage.setItem(self._prefix + key, JSON.stringify(items[key]));
+                var storedVal = JSON.stringify(items[key]);
+                self._bridgeSet(key, storedVal);
                 changes[key] = { oldValue: oldParsed, newValue: items[key] };
             });
 
@@ -150,13 +255,17 @@ object ChromeExtensionPolyfill {
         var self = this;
         var changes = {};
         try {
+            if (self._area === 'managed') {
+                if (typeof callback === 'function') { callback(); }
+                return Promise.resolve();
+            }
             if (typeof keys === 'string') keys = [keys];
             keys.forEach(function(key) {
-                var oldVal = localStorage.getItem(self._prefix + key);
+                var oldVal = self._bridgeGet(key);
                 if (oldVal !== null) {
                     var oldParsed;
                     try { oldParsed = JSON.parse(oldVal); } catch(e) { oldParsed = oldVal; }
-                    localStorage.removeItem(self._prefix + key);
+                    self._bridgeRemove(key);
                     changes[key] = { oldValue: oldParsed };
                 }
             });
@@ -175,12 +284,9 @@ object ChromeExtensionPolyfill {
     StorageArea.prototype.clear = function(callback) {
         var self = this;
         try {
-            var keysToRemove = [];
-            for (var i = 0; i < localStorage.length; i++) {
-                var k = localStorage.key(i);
-                if (k && k.indexOf(self._prefix) === 0) keysToRemove.push(k);
+            if (self._area !== 'managed') {
+                self._bridgeClear();
             }
-            keysToRemove.forEach(function(k) { localStorage.removeItem(k); });
         } catch(e) {
             console.error('[ChromePolyfill] storage.clear error:', e);
         }
@@ -308,6 +414,16 @@ object ChromeExtensionPolyfill {
             },
 
             openOptionsPage: function(callback) {
+                try {
+                    var path = '';
+                    if (MANIFEST.options_ui && MANIFEST.options_ui.page) path = MANIFEST.options_ui.page;
+                    else if (MANIFEST.options_page) path = MANIFEST.options_page;
+                    if (path && typeof WtaExtBridge !== 'undefined' && typeof WtaExtBridge.openOptionsPage === 'function') {
+                        WtaExtBridge.openOptionsPage(EXT_ID, String(path));
+                    }
+                } catch (e) {
+                    console.warn('[ChromePolyfill] openOptionsPage error:', e);
+                }
                 if (typeof callback === 'function') callback();
                 return Promise.resolve();
             },
@@ -613,8 +729,37 @@ object ChromeExtensionPolyfill {
                 return Promise.resolve();
             },
             getSessionRules: function(callback) {
-                if (typeof callback === 'function') callback([]);
-                return Promise.resolve([]);
+                var rules = [];
+                try {
+                    if (typeof WtaExtBridge !== 'undefined' && typeof WtaExtBridge.getDnrSessionRules === 'function') {
+                        var json = WtaExtBridge.getDnrSessionRules(EXT_ID);
+                        rules = JSON.parse(json || '[]');
+                    }
+                } catch(e) { console.warn('[ChromePolyfill] getSessionRules error:', e); }
+                if (typeof callback === 'function') callback(rules);
+                return Promise.resolve(rules);
+            },
+            getEnabledRulesets: function(callback) {
+                var rulesetIds = [];
+                try {
+                    if (typeof WtaExtBridge !== 'undefined' && typeof WtaExtBridge.getEnabledDnrStaticRulesets === 'function') {
+                        var json = WtaExtBridge.getEnabledDnrStaticRulesets(EXT_ID);
+                        rulesetIds = JSON.parse(json || '[]');
+                    }
+                } catch(e) { console.warn('[ChromePolyfill] getEnabledRulesets error:', e); }
+                if (typeof callback === 'function') callback(rulesetIds);
+                return Promise.resolve(rulesetIds);
+            },
+            updateEnabledRulesets: function(options, callback) {
+                try {
+                    if (typeof WtaExtBridge !== 'undefined' && typeof WtaExtBridge.updateEnabledDnrStaticRulesets === 'function') {
+                        var enableIds = (options && options.enableRulesetIds) ? JSON.stringify(options.enableRulesetIds) : '[]';
+                        var disableIds = (options && options.disableRulesetIds) ? JSON.stringify(options.disableRulesetIds) : '[]';
+                        WtaExtBridge.updateEnabledDnrStaticRulesets(EXT_ID, enableIds, disableIds);
+                    }
+                } catch(e) { console.error('[ChromePolyfill] updateEnabledRulesets error:', e); }
+                if (typeof callback === 'function') callback();
+                return Promise.resolve();
             },
             getMatchedRules: function(filter, callback) {
                 if (typeof filter === 'function') { callback = filter; }
@@ -628,8 +773,14 @@ object ChromeExtensionPolyfill {
                 return Promise.resolve(result);
             },
             getAvailableStaticRuleCount: function(callback) {
-                if (typeof callback === 'function') callback(30000);
-                return Promise.resolve(30000);
+                var count = 0;
+                try {
+                    if (typeof WtaExtBridge !== 'undefined' && typeof WtaExtBridge.getAvailableDnrStaticRuleCount === 'function') {
+                        count = Number(WtaExtBridge.getAvailableDnrStaticRuleCount(EXT_ID)) || 0;
+                    }
+                } catch (e) { console.warn('[ChromePolyfill] getAvailableStaticRuleCount error:', e); }
+                if (typeof callback === 'function') callback(count);
+                return Promise.resolve(count);
             },
             onRuleMatchedDebug: new ChromeEvent()
         },
@@ -729,30 +880,98 @@ object ChromeExtensionPolyfill {
 
         scripting: {
             executeScript: function(injection, callback) {
-                // Stub: executeScript is handled natively by WebViewManager
                 var results = [{ result: undefined }];
+                try {
+                    if (typeof WtaExtBridge !== 'undefined' && typeof WtaExtBridge.executeScript === 'function') {
+                        var payload = {
+                            target: (injection && injection.target) || { tabId: 1 },
+                            args: (injection && injection.args) || [],
+                            files: (injection && Array.isArray(injection.files)) ? injection.files.slice() : []
+                        };
+                        if (injection && typeof injection.func === 'function') {
+                            payload.functionCode = injection.func.toString();
+                        } else if (injection && typeof injection.function === 'string') {
+                            payload.functionCode = injection.function;
+                        } else if (injection && typeof injection.code === 'string') {
+                            payload.code = injection.code;
+                        }
+                        var json = WtaExtBridge.executeScript(EXT_ID, JSON.stringify(payload));
+                        results = JSON.parse(json || '[{"result":null}]');
+                    }
+                } catch (e) {
+                    console.error('[ChromePolyfill] executeScript error:', e);
+                }
                 if (typeof callback === 'function') callback(results);
                 return Promise.resolve(results);
             },
             insertCSS: function(injection, callback) {
+                try {
+                    if (typeof WtaExtBridge !== 'undefined' && typeof WtaExtBridge.insertCss === 'function') {
+                        WtaExtBridge.insertCss(EXT_ID, JSON.stringify({
+                            target: (injection && injection.target) || { tabId: 1 },
+                            files: (injection && Array.isArray(injection.files)) ? injection.files.slice() : [],
+                            css: (injection && injection.css) || '',
+                            origin: (injection && injection.origin) || '',
+                            cssOrigin: (injection && injection.cssOrigin) || ''
+                        }));
+                    }
+                } catch (e) {
+                    console.error('[ChromePolyfill] insertCSS error:', e);
+                }
                 if (typeof callback === 'function') callback();
                 return Promise.resolve();
             },
             removeCSS: function(injection, callback) {
+                try {
+                    if (typeof WtaExtBridge !== 'undefined' && typeof WtaExtBridge.removeCss === 'function') {
+                        WtaExtBridge.removeCss(EXT_ID, JSON.stringify({
+                            target: (injection && injection.target) || { tabId: 1 },
+                            files: (injection && Array.isArray(injection.files)) ? injection.files.slice() : [],
+                            css: (injection && injection.css) || '',
+                            origin: (injection && injection.origin) || '',
+                            cssOrigin: (injection && injection.cssOrigin) || ''
+                        }));
+                    }
+                } catch (e) {
+                    console.error('[ChromePolyfill] removeCSS error:', e);
+                }
                 if (typeof callback === 'function') callback();
                 return Promise.resolve();
             },
             registerContentScripts: function(scripts, callback) {
+                try {
+                    if (typeof WtaExtBridge !== 'undefined' && typeof WtaExtBridge.registerContentScripts === 'function') {
+                        WtaExtBridge.registerContentScripts(EXT_ID, JSON.stringify(scripts || []));
+                    }
+                } catch (e) {
+                    console.error('[ChromePolyfill] registerContentScripts error:', e);
+                }
                 if (typeof callback === 'function') callback();
                 return Promise.resolve();
             },
             unregisterContentScripts: function(filter, callback) {
+                try {
+                    if (typeof WtaExtBridge !== 'undefined' && typeof WtaExtBridge.unregisterContentScripts === 'function') {
+                        WtaExtBridge.unregisterContentScripts(EXT_ID, JSON.stringify(filter || {}));
+                    }
+                } catch (e) {
+                    console.error('[ChromePolyfill] unregisterContentScripts error:', e);
+                }
                 if (typeof callback === 'function') callback();
                 return Promise.resolve();
             },
             getRegisteredContentScripts: function(filter, callback) {
-                if (typeof callback === 'function') callback([]);
-                return Promise.resolve([]);
+                var scripts = [];
+                try {
+                    if (typeof WtaExtBridge !== 'undefined' && typeof WtaExtBridge.getRegisteredContentScripts === 'function') {
+                        var json = WtaExtBridge.getRegisteredContentScripts(EXT_ID, JSON.stringify(filter || {}));
+                        scripts = JSON.parse(json || '[]');
+                    }
+                } catch (e) {
+                    console.warn('[ChromePolyfill] getRegisteredContentScripts error:', e);
+                }
+                if (typeof callback === 'function') callback(scripts);
+                return Promise.resolve(scripts);
             }
         },
 
@@ -774,8 +993,28 @@ object ChromeExtensionPolyfill {
                 return Promise.resolve();
             },
             setPopup: function(details, callback) {
+                try {
+                    var popup = details && typeof details.popup === 'string' ? details.popup : '';
+                    _popupPathOverride = popup;
+                    if (typeof WtaExtBridge !== 'undefined' && typeof WtaExtBridge.setPopupPath === 'function') {
+                        WtaExtBridge.setPopupPath(EXT_ID, popup);
+                    }
+                } catch (e) {
+                    console.warn('[ChromePolyfill] action.setPopup error:', e);
+                }
                 if (typeof callback === 'function') callback();
                 return Promise.resolve();
+            },
+            getPopup: function(details, callback) {
+                var popup = '';
+                try {
+                    if (typeof WtaExtBridge !== 'undefined' && typeof WtaExtBridge.getPopupPath === 'function') {
+                        popup = WtaExtBridge.getPopupPath(EXT_ID) || '';
+                    }
+                } catch (e) {}
+                if (!popup) popup = resolvePopupPath();
+                if (typeof callback === 'function') callback(popup);
+                return Promise.resolve(popup);
             },
             onClicked: new ChromeEvent()
         },
@@ -1219,8 +1458,17 @@ object ChromeExtensionPolyfill {
             setBadgeText: function(details, callback) { if (typeof callback === 'function') callback(); return Promise.resolve(); },
             setBadgeBackgroundColor: function(details, callback) { if (typeof callback === 'function') callback(); return Promise.resolve(); },
             setTitle: function(details, callback) { if (typeof callback === 'function') callback(); return Promise.resolve(); },
-            setPopup: function(details, callback) { if (typeof callback === 'function') callback(); return Promise.resolve(); },
-            getPopup: function(details, callback) { if (typeof callback === 'function') callback(''); return Promise.resolve(''); },
+            setPopup: function(details, callback) {
+                return _chrome.action.setPopup(details, callback);
+            },
+            getPopup: function(details, callback) {
+                var popup = '';
+                try {
+                    popup = resolvePopupPath();
+                } catch (e) {}
+                if (typeof callback === 'function') callback(popup);
+                return Promise.resolve(popup);
+            },
             getBadgeText: function(details, callback) { if (typeof callback === 'function') callback(''); return Promise.resolve(''); },
             onClicked: new ChromeEvent()
         },
@@ -1231,7 +1479,17 @@ object ChromeExtensionPolyfill {
             hide: function(tabId, callback) { if (typeof callback === 'function') callback(); return Promise.resolve(); },
             setIcon: function(details, callback) { if (typeof callback === 'function') callback(); return Promise.resolve(); },
             setTitle: function(details, callback) { if (typeof callback === 'function') callback(); return Promise.resolve(); },
-            setPopup: function(details, callback) { if (typeof callback === 'function') callback(); return Promise.resolve(); },
+            setPopup: function(details, callback) {
+                return _chrome.action.setPopup(details, callback);
+            },
+            getPopup: function(details, callback) {
+                var popup = '';
+                try {
+                    popup = resolvePopupPath();
+                } catch (e) {}
+                if (typeof callback === 'function') callback(popup);
+                return Promise.resolve(popup);
+            },
             onClicked: new ChromeEvent()
         }
     };

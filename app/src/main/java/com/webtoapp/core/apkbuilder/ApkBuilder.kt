@@ -25,6 +25,7 @@ import com.webtoapp.data.model.AnnouncementTemplateType
 import com.webtoapp.data.model.WebApp
 import com.webtoapp.data.model.getActivationCodeStrings
 import com.webtoapp.ui.components.announcement.toUiTemplate
+import com.webtoapp.ui.shell.buildPackagedHtmlShellEntryUrl
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -462,6 +463,9 @@ class ApkBuilder(private val context: Context) {
             val muslLinkerPath = if (config.appType == "PYTHON_APP") {
                 com.webtoapp.core.python.PythonDependencyManager.getMuslLinkerPath(context)
             } else null
+            val builderMuslLinkerPath = if (config.appType == "PYTHON_APP") {
+                com.webtoapp.core.python.PythonDependencyManager.getBuilderMuslLinkerPath(context)
+            } else null
 
             val preflight = BuildInputPreflight.check(
                 BuildInputPreflightRequest(
@@ -470,17 +474,21 @@ class ApkBuilder(private val context: Context) {
                     mediaContentPath = mediaContentPath,
                     htmlFiles = htmlFiles,
                     galleryItems = galleryItems,
+                    multiWebSites = webApp.multiWebConfig?.sites.orEmpty(),
                     wordPressProjectDir = wordPressProjectDir,
                     nodejsProjectDir = nodejsProjectDir,
                     phpAppProjectDir = phpAppProjectDir,
                     pythonAppProjectDir = pythonAppProjectDir,
                     goAppProjectDir = goAppProjectDir,
                     frontendProjectDir = frontendProjectDir,
+                    multiWebProjectDir = config.multiWebProjectId.takeIf { it.isNotBlank() }
+                        ?.let { File(context.filesDir, "html_projects/$it") },
                     networkTrustConfig = config.networkTrustConfig,
                     phpBinaryPath = phpBinaryPath,
                     nodeBinaryPath = nodeBinaryPath,
                     pythonBinaryPath = pythonBinaryPath,
-                    muslLinkerPath = muslLinkerPath
+                    muslLinkerPath = muslLinkerPath,
+                    builderMuslLinkerPath = builderMuslLinkerPath
                 )
             )
             logger.logKeyValue("preflightPassed", preflight.passed)
@@ -509,6 +517,10 @@ class ApkBuilder(private val context: Context) {
                 onProgress(30, "Encrypting resources...")
                 logger.log("Encryption mode enabled")
             }
+            val progressMessage = java.util.concurrent.atomic.AtomicReference(
+                if (encryptionConfig.enabled) "Encrypting and processing resources..." else "Processing resources..."
+            )
+
             modifyApk(
                 templateApk, unsignedApk, config, webApp.iconPath,
                 webApp.getSplashMediaPath(), mediaContentPath,
@@ -523,12 +535,15 @@ class ApkBuilder(private val context: Context) {
                 pythonAppProjectDir,
                 goAppProjectDir,
                 perfConfig
-            ) { progress ->
+            ) { progress, stageMessage ->
+                if (stageMessage.isNotBlank()) {
+                    progressMessage.set(stageMessage)
+                }
                 val msg = when {
+                    stageMessage.isNotBlank() -> stageMessage
                     perfOptEnabled && encryptionConfig.enabled -> "Optimizing & encrypting resources..."
                     perfOptEnabled -> "Optimizing resources..."
-                    encryptionConfig.enabled -> "Encrypting and processing resources..."
-                    else -> "Processing resources..."
+                    else -> progressMessage.get()
                 }
                 onProgress(30 + (progress * 0.4).toInt(), msg)
             }
@@ -568,12 +583,15 @@ class ApkBuilder(private val context: Context) {
                     encryptionEnabled = encryptionConfig.enabled,
                     htmlFiles = htmlFiles,
                     galleryItems = galleryItems,
+                    multiWebSites = webApp.multiWebConfig?.sites.orEmpty(),
                     wordPressProjectDir = wordPressProjectDir,
                     nodejsProjectDir = nodejsProjectDir,
                     phpAppProjectDir = phpAppProjectDir,
                     pythonAppProjectDir = pythonAppProjectDir,
                     goAppProjectDir = goAppProjectDir,
-                    frontendProjectDir = frontendProjectDir
+                    frontendProjectDir = frontendProjectDir,
+                    multiWebProjectDir = config.multiWebProjectId.takeIf { it.isNotBlank() }
+                        ?.let { File(context.filesDir, "html_projects/$it") }
                 )
             )
             logger.logKeyValue("artifactEntryCount", artifactVerification.entryCount)
@@ -795,7 +813,7 @@ class ApkBuilder(private val context: Context) {
         pythonAppProjectDir: File? = null,
         goAppProjectDir: File? = null,
         perfConfig: com.webtoapp.core.linux.PerformanceOptimizer.OptimizeConfig? = null,
-        onProgress: (Int) -> Unit
+        onProgress: (Int, String) -> Unit
     ) {
         logger.log("modifyApk started, encryption=${encryptionConfig.enabled}, abiFilter=${abiFilters.ifEmpty { "all" }}")
         val iconBitmap = iconPath?.let { template.loadBitmap(it) }
@@ -821,7 +839,7 @@ class ApkBuilder(private val context: Context) {
 
                 entries.forEach { entry ->
                     processedCount++
-                    onProgress((processedCount * 100) / entries.size)
+                    onProgress((processedCount * 100) / entries.size, "Repacking base template...")
 
                     when {
 
@@ -986,6 +1004,7 @@ class ApkBuilder(private val context: Context) {
 
 
                 if (hardeningConfig.enabled) {
+                    onProgress(78, "Applying hardening...")
                     logger.section("App Hardening")
                     logger.log("Hardening: maximum protection enabled")
                     val hardeningEngine = com.webtoapp.core.hardening.AppHardeningEngine(context)
@@ -1012,6 +1031,7 @@ class ApkBuilder(private val context: Context) {
 
 
                 if (perfConfig != null && perfConfig.injectPerformanceScript) {
+                    onProgress(82, "Injecting performance assets...")
                     logger.section("Performance Optimization")
                     val perfScript = com.webtoapp.core.linux.PerformanceOptimizer.generatePerformanceScript()
                     val scriptData = perfScript.toByteArray(Charsets.UTF_8)
@@ -1042,6 +1062,7 @@ class ApkBuilder(private val context: Context) {
 
 
                 AppLogger.d("ApkBuilder", "Splash config: splashEnabled=${config.splashEnabled}, splashMediaPath=$splashMediaPath, splashType=${config.splashType}")
+                onProgress(86, "Embedding app assets...")
                 if (config.splashEnabled && splashMediaPath != null) {
                     addSplashMediaToAssets(zipOut, splashMediaPath, config.splashType, assetEncryptor, encryptionConfig)
                 } else {
@@ -1070,9 +1091,19 @@ class ApkBuilder(private val context: Context) {
                     "FRONTEND" -> frontendProjectDir
                     else -> null
                 }
+                val secondaryProjectDir = when (config.appType) {
+                    "MULTI_WEB" -> config.multiWebProjectId.takeIf { it.isNotBlank() }
+                        ?.let { File(context.filesDir, "html_projects/$it") }
+                    else -> null
+                }
 
                 val embedder = AppContentEmbedderFactory.create(config.appType)
                 if (embedder != null) {
+                    if (config.appType == "GO_APP" && projectDir != null) {
+                        onProgress(90, "Verifying Go binary...")
+                        ensureGoProjectBinaryForExport(projectDir, config, onProgress)
+                    }
+                    onProgress(94, "Embedding project files...")
                     val embedCtx = EmbedContext(
                         config = config,
                         logger = logger,
@@ -1082,6 +1113,7 @@ class ApkBuilder(private val context: Context) {
                         htmlFiles = htmlFiles,
                         galleryItems = galleryItems,
                         projectDir = projectDir,
+                        secondaryProjectDir = secondaryProjectDir,
                         fnAddMediaContent = ::addMediaContentToAssets,
                         fnAddHtmlFiles = ::addHtmlFilesToAssets,
                         fnAddGalleryItems = ::addGalleryItemsToAssets,
@@ -1098,6 +1130,7 @@ class ApkBuilder(private val context: Context) {
 
 
                 if (config.engineType == "GECKOVIEW") {
+                    onProgress(98, "Injecting native runtime...")
                     logger.section("Inject GeckoView Native Libraries")
                     injectGeckoViewNativeLibs(zipOut, abiFilters)
                 }
@@ -1675,11 +1708,11 @@ class ApkBuilder(private val context: Context) {
 
         val reqFile = File(projectDir, "requirements.txt")
         val sitePackages = File(projectDir, ".pypackages")
-        if (reqFile.exists() && (!sitePackages.exists() || sitePackages.listFiles().isNullOrEmpty())) {
-
-
-            val nativeMuslLinker = File(context.applicationInfo.nativeLibraryDir, "libmusl-linker.so")
-            if (nativeMuslLinker.exists() && nativeMuslLinker.canExecute()) {
+        if (reqFile.exists() && !com.webtoapp.core.python.PythonDependencyManager.hasInstalledPackages(sitePackages)) {
+            val pythonBin = com.webtoapp.core.python.PythonDependencyManager.getPythonExecutablePath(context)
+            val muslLinker = com.webtoapp.core.python.PythonDependencyManager.getMuslLinkerPath(context)
+            val pythonBinaryReady = File(pythonBin).exists()
+            if (pythonBinaryReady && !muslLinker.isNullOrBlank()) {
                 logger.log("Pre-installing Python dependencies for APK bundling...")
                 try {
                     val installed = kotlinx.coroutines.runBlocking {
@@ -1687,22 +1720,25 @@ class ApkBuilder(private val context: Context) {
                             AppLogger.d("ApkBuilder", "[pip-preinstall] $line")
                         }
                     }
-                    if (installed) {
-                        val pkgCount = sitePackages.listFiles()?.size ?: 0
-                        logger.log("Python dependencies pre-installed: $pkgCount packages in .pypackages")
-                    } else {
-                        logger.warn("Python dependency pre-install failed - APK will attempt pip install at runtime")
+                    if (!installed || !com.webtoapp.core.python.PythonDependencyManager.hasInstalledPackages(sitePackages)) {
+                        throw IllegalStateException(
+                            "Python requirements could not be pre-bundled into .pypackages. " +
+                                "Exporting this APK would require runtime pip install on device."
+                        )
                     }
+                    val pkgCount = sitePackages.listFiles()?.size ?: 0
+                    logger.log("Python dependencies pre-installed: $pkgCount packages in .pypackages")
                 } catch (e: Exception) {
-                    logger.warn("Python dependency pre-install exception: ${e.message}")
+                    throw IllegalStateException("Python dependency pre-install failed: ${e.message}", e)
                 }
             } else {
-
-
-                logger.log("Skipping pre-install: musl linker not executable from current context (SELinux). Runtime will install deps.")
+                throw IllegalStateException(
+                    "Python dependency pre-install unavailable: runtime binary or musl linker is missing locally. " +
+                        "Download Python runtime first, then re-export."
+                )
             }
-        } else if (sitePackages.exists() && !sitePackages.listFiles().isNullOrEmpty()) {
-            logger.log("Python .pypackages already exists (${sitePackages.listFiles()?.size} packages), skipping pre-install")
+        } else if (com.webtoapp.core.python.PythonDependencyManager.hasInstalledPackages(sitePackages)) {
+            logger.log("Python .pypackages already exists (${sitePackages.listFiles()?.size ?: 0} packages), skipping pre-install")
         }
 
 
@@ -1725,8 +1761,9 @@ try:
         except importlib.metadata.PackageNotFoundError:
             try:
                 mod = __import__(name.replace('-', '_'))
-                if hasattr(mod, '__version__'):
-                    return mod.__version__
+                version_value = getattr(mod, '__dict__', {}).get('__version__')
+                if isinstance(version_value, str) and version_value:
+                    return version_value
             except (ImportError, Exception):
                 pass
             return "0.0.0"
@@ -1844,6 +1881,25 @@ builtins.__import__ = _w2a_import
         projectDir: File
     ) {
         RuntimeAssetEmbedder.embedProjectFiles(zipOut, projectDir, RuntimeAssetEmbedder.goConfig(), logger)
+    }
+
+    private fun ensureGoProjectBinaryForExport(
+        projectDir: File,
+        config: ApkConfig,
+        onProgress: ((Int, String) -> Unit)? = null
+    ) {
+        val desiredBinaryName = config.goAppBinaryName.ifBlank { projectDir.name }
+        val hasCompatibleBinary = com.webtoapp.core.golang.GoDependencyManager.findBinaryPath(projectDir, desiredBinaryName) != null ||
+            com.webtoapp.core.golang.GoDependencyManager.detectAnyCompatibleBinary(projectDir) != null
+
+        if (hasCompatibleBinary) {
+            logger.log("Go binary already exists for export")
+            return
+        }
+
+        throw IllegalStateException(
+            "Go project has no runnable binary for export. WebToApp no longer compiles Go source during APK build. Build the binary first and retry export."
+        )
     }
 
 
@@ -2848,6 +2904,7 @@ builtins.__import__ = _w2a_import
     }
 
     private fun buildRequiredPermissions(config: ApkConfig): List<String> {
+        // 基线：WebView 应用运行必需，用户看不到也不需要选择
         val permissions = linkedSetOf(
             "android.permission.INTERNET",
             "android.permission.ACCESS_NETWORK_STATE"
@@ -2979,6 +3036,112 @@ builtins.__import__ = _w2a_import
             permissions += "android.permission.SYSTEM_ALERT_WINDOW"
         }
 
+        // ============================================================
+        // 功能依赖权限 —— 根据用户启用的功能自动推导，无需在权限面板勾选
+        // 只有功能开启时才加对应权限，保证 APK 的 AndroidManifest 最小化
+        // ============================================================
+
+        val needsForegroundService = config.backgroundRunEnabled ||
+            config.notificationEnabled ||
+            config.floatingWindowEnabled ||
+            config.forcedRunConfig?.enabled == true ||
+            config.bgmEnabled
+        if (needsForegroundService || rp.foregroundService) {
+            permissions += "android.permission.FOREGROUND_SERVICE"
+            permissions += "android.permission.FOREGROUND_SERVICE_SPECIAL_USE"
+        }
+        if (rp.foregroundService) {
+            // 用户显式勾选时再加更细的 FGS 子类型
+            permissions += "android.permission.FOREGROUND_SERVICE_DATA_SYNC"
+        }
+        if (rp.location || rp.foregroundService) {
+            permissions += "android.permission.FOREGROUND_SERVICE_LOCATION"
+        }
+        if (rp.camera || rp.foregroundService) {
+            permissions += "android.permission.FOREGROUND_SERVICE_CAMERA"
+        }
+        if (rp.microphone || rp.foregroundService) {
+            permissions += "android.permission.FOREGROUND_SERVICE_MICROPHONE"
+        }
+        if (config.bgmEnabled) {
+            permissions += "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+        }
+
+        // 后台保活 / 屏幕常亮 / CPU 唤醒
+        if (config.backgroundRunEnabled ||
+            config.screenAwakeMode.uppercase() != "OFF" ||
+            config.keepScreenOn ||
+            config.forcedRunConfig?.enabled == true ||
+            rp.wakeLock) {
+            permissions += "android.permission.WAKE_LOCK"
+        }
+        if (config.backgroundRunEnabled || rp.requestIgnoreBatteryOptimizations) {
+            permissions += "android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"
+        }
+
+        // 自启动 / 定时启动 / 开机启动
+        if (config.bootStartEnabled || config.autoStartEnabled || rp.bootCompleted) {
+            permissions += "android.permission.RECEIVE_BOOT_COMPLETED"
+        }
+        if (config.scheduledStartEnabled) {
+            permissions += "android.permission.SCHEDULE_EXACT_ALARM"
+            permissions += "android.permission.USE_EXACT_ALARM"
+        }
+
+        // 下载（网页 download 下载）- shell 运行时默认总是启用下载
+        permissions += "android.permission.DOWNLOAD_WITHOUT_NOTIFICATION"
+
+        // 激活码（指纹/生物识别）
+        if (config.activationEnabled) {
+            permissions += "android.permission.USE_BIOMETRIC"
+            permissions += "android.permission.USE_FINGERPRINT"
+        }
+
+        // BlackTech：闪光灯 / 震动 / 改系统设置 / WiFi 控制
+        val bt = config.blackTechConfig
+        if (bt?.forceFlashlight == true) {
+            permissions += "android.permission.FLASHLIGHT"
+            // 需要相机权限才能开手电
+            permissions += "android.permission.CAMERA"
+        }
+        if (bt?.forceMaxVibration == true || rp.vibration) {
+            permissions += "android.permission.VIBRATE"
+        }
+        val forcedRun = config.forcedRunConfig
+        val needsWriteSettings = bt?.forceScreenAwake == true ||
+            bt?.forceMaxVolume == true ||
+            bt?.forceMuteMode == true ||
+            forcedRun?.enabled == true
+        if (needsWriteSettings) {
+            permissions += "android.permission.WRITE_SETTINGS"
+        }
+        if (bt?.forceWifiHotspot == true ||
+            bt?.forceDisableWifi == true ||
+            rp.wifiState) {
+            permissions += "android.permission.ACCESS_WIFI_STATE"
+            permissions += "android.permission.CHANGE_WIFI_STATE"
+            permissions += "android.permission.CHANGE_NETWORK_STATE"
+        }
+
+        // 悬浮窗隐含 SYSTEM_ALERT_WINDOW
+        if (config.floatingWindowEnabled) {
+            permissions += "android.permission.SYSTEM_ALERT_WINDOW"
+        }
+
+        // 强制运行需要无障碍服务权限（声明即可，用户运行时手动授权）
+        // BIND_ACCESSIBILITY_SERVICE 属于受保护权限，只在 service 标签上使用，
+        // 不以 uses-permission 形式出现，因此这里不加。
+
+        // 蓝牙相关的 NEARBY_WIFI_DEVICES（Android 13+ 用于蓝牙扫描）
+        if (rp.bluetooth) {
+            permissions += "android.permission.NEARBY_WIFI_DEVICES"
+        }
+
+        // 传感器：HIGH_SAMPLING_RATE_SENSORS 在 Android 12+ 对 >200Hz 的采样需要
+        if (rp.bodySensors) {
+            permissions += "android.permission.HIGH_SAMPLING_RATE_SENSORS"
+        }
+
         return permissions.toList()
     }
 
@@ -3056,7 +3219,7 @@ fun WebApp.toApkConfig(packageName: String, context: android.content.Context? = 
     val effectiveTargetUrl = when (appType) {
         com.webtoapp.data.model.AppType.HTML -> {
             val entryFile = htmlConfig?.getValidEntryFile() ?: "index.html"
-            "file:///android_asset/html/$entryFile"
+            buildPackagedHtmlShellEntryUrl(packageName, entryFile)
         }
         com.webtoapp.data.model.AppType.IMAGE, com.webtoapp.data.model.AppType.VIDEO -> "asset://media_content"
         com.webtoapp.data.model.AppType.GALLERY -> "gallery://content"
@@ -3079,12 +3242,7 @@ fun WebApp.toApkConfig(packageName: String, context: android.content.Context? = 
         com.webtoapp.data.model.AppType.FRONTEND -> {
 
             val entryFile = htmlConfig?.getValidEntryFile() ?: "index.html"
-            val hasSourceProjectDir = !htmlConfig?.projectDir.isNullOrBlank()
-            if (hasSourceProjectDir) {
-                "file:///android_asset/frontend_app/$entryFile"
-            } else {
-                "file:///android_asset/html/$entryFile"
-            }
+            buildPackagedHtmlShellEntryUrl(packageName, entryFile)
         }
         com.webtoapp.data.model.AppType.PHP_APP -> "phpapp://localhost"
         com.webtoapp.data.model.AppType.PYTHON_APP -> "pythonapp://localhost"
@@ -3162,6 +3320,17 @@ fun WebApp.toApkConfig(packageName: String, context: android.content.Context? = 
         announcementShowOnce = announcement?.showOnce ?: true,
         announcementRequireConfirmation = announcement?.requireConfirmation ?: false,
         announcementAllowNeverShow = announcement?.allowNeverShow ?: false,
+        announcementTriggerOnLaunch = announcement?.triggerOnLaunch ?: true,
+        announcementTriggerOnNoNetwork = announcement?.triggerOnNoNetwork ?: false,
+        announcementTriggerIntervalMinutes = announcement?.triggerIntervalMinutes ?: 0,
+
+        adsEnabled = adsEnabled,
+        adBannerEnabled = adConfig?.bannerEnabled ?: false,
+        adBannerId = adConfig?.bannerId ?: "",
+        adInterstitialEnabled = adConfig?.interstitialEnabled ?: false,
+        adInterstitialId = adConfig?.interstitialId ?: "",
+        adSplashEnabled = adConfig?.splashEnabled ?: false,
+        adSplashId = adConfig?.splashId ?: "",
         javaScriptEnabled = webViewConfig.javaScriptEnabled,
         domStorageEnabled = webViewConfig.domStorageEnabled,
         allowFileAccess = webViewConfig.allowFileAccess,
@@ -3247,6 +3416,31 @@ fun WebApp.toApkConfig(packageName: String, context: android.content.Context? = 
         enableZoomPolyfill = webViewConfig.enableZoomPolyfill,
         enableCrossOriginIsolation = webViewConfig.enableCrossOriginIsolation,
         disableShields = webViewConfig.disableShields,
+        decodeBase64DeepLinks = webViewConfig.decodeBase64DeepLinks,
+        mediaAutoplayEnabled = webViewConfig.mediaAutoplayEnabled,
+        acceptThirdPartyCookies = webViewConfig.acceptThirdPartyCookies,
+        enableKernelDisguise = webViewConfig.enableKernelDisguise,
+        enableImageRepair = webViewConfig.enableImageRepair,
+        enableScrollMemory = webViewConfig.enableScrollMemory,
+        enableHttpsUpgrade = webViewConfig.enableHttpsUpgrade,
+        enableOAuthExternalRedirect = webViewConfig.enableOAuthExternalRedirect,
+        enableClipboardPolyfill = webViewConfig.enableClipboardPolyfill,
+        enableNotificationPolyfill = webViewConfig.enableNotificationPolyfill,
+        safeBrowsingEnabled = webViewConfig.safeBrowsingEnabled,
+        geolocationEnabled = webViewConfig.geolocationEnabled,
+        enableOrientationPolyfill = webViewConfig.enableOrientationPolyfill,
+        enableCompatPolyfills = webViewConfig.enableCompatPolyfills,
+        enableNativeBridge = webViewConfig.enableNativeBridge,
+        javaScriptCanOpenWindows = webViewConfig.javaScriptCanOpenWindows,
+        databaseEnabled = webViewConfig.databaseEnabled,
+        enableCookiePersistence = webViewConfig.enableCookiePersistence,
+        enablePrivateNetworkBridge = webViewConfig.enablePrivateNetworkBridge,
+        allowMixedContent = webViewConfig.allowMixedContent,
+        enableGpc = webViewConfig.enableGpc,
+        enableCookieConsentBlock = webViewConfig.enableCookieConsentBlock,
+        enableReferrerPolicy = webViewConfig.enableReferrerPolicy,
+        enableTrackerBlocking = webViewConfig.enableTrackerBlocking,
+        enableBlobDownloadInterception = webViewConfig.enableBlobDownloadInterception,
         keepScreenOn = webViewConfig.keepScreenOn,
         screenAwakeMode = webViewConfig.screenAwakeMode.name,
         screenAwakeTimeoutMinutes = webViewConfig.screenAwakeTimeoutMinutes,
@@ -3267,6 +3461,8 @@ fun WebApp.toApkConfig(packageName: String, context: android.content.Context? = 
         proxyBypassRules = webViewConfig.proxyBypassRules,
         proxyUsername = webViewConfig.proxyUsername,
         proxyPassword = webViewConfig.proxyPassword,
+        hostsMappingEnabled = webViewConfig.hostsMappingEnabled,
+        hostsMappings = webViewConfig.hostsMappings,
 
         dnsMode = webViewConfig.dnsMode,
         dnsConfig = DnsApkConfig(
@@ -3346,6 +3542,11 @@ fun WebApp.toApkConfig(packageName: String, context: android.content.Context? = 
         galleryOrientation = galleryConfig?.orientation?.name ?: "PORTRAIT",
         galleryEnableAudio = galleryConfig?.enableAudio ?: true,
         galleryVideoAutoNext = galleryConfig?.videoAutoNext ?: true,
+        galleryShuffleOnLoop = galleryConfig?.shuffleOnLoop ?: false,
+        galleryDefaultView = galleryConfig?.defaultView?.name ?: "GRID",
+        galleryGridColumns = galleryConfig?.gridColumns ?: 3,
+        gallerySortOrder = galleryConfig?.sortOrder?.name ?: "CUSTOM",
+        galleryRememberPosition = galleryConfig?.rememberPosition ?: true,
 
 
         bgmEnabled = bgmEnabled,
@@ -3382,6 +3583,7 @@ fun WebApp.toApkConfig(packageName: String, context: android.content.Context? = 
         translateTargetLanguage = translateConfig?.targetLanguage?.code ?: "zh-CN",
         translateShowButton = translateConfig?.showFloatingButton ?: true,
 
+        extensionEnabled = extensionEnabled,
         extensionFabIcon = extensionFabIcon ?: "",
         extensionModuleIds = extensionModuleIds,
 
@@ -3476,6 +3678,7 @@ fun WebApp.toApkConfig(packageName: String, context: android.content.Context? = 
 
         goAppFramework = goAppConfig?.framework ?: "",
         goAppBinaryName = goAppConfig?.binaryName ?: "",
+        goAppTargetArch = goAppConfig?.targetArch ?: "arm64-v8a",
         goAppPort = goAppConfig?.serverPort ?: 0,
         goAppStaticDir = goAppConfig?.staticDir ?: "",
         goAppEnvVars = goAppConfig?.envVars ?: emptyMap(),
@@ -3500,10 +3703,7 @@ fun WebApp.toApkConfig(packageName: String, context: android.content.Context? = 
         multiWebRefreshInterval = multiWebConfig?.refreshInterval ?: 30,
         multiWebShowSiteIcons = multiWebConfig?.showSiteIcons ?: true,
         multiWebLandscapeMode = multiWebConfig?.landscapeMode ?: false,
-        multiWebProjectId = multiWebConfig?.projectId ?: "",
-
-
-        cloudSdkConfig = cloudConfig?.toCloudSdkConfig() ?: com.webtoapp.core.shell.CloudSdkConfig()
+        multiWebProjectId = multiWebConfig?.projectId ?: ""
     )
 }
 
@@ -3599,12 +3799,44 @@ private fun buildOAuthReturnHosts(
 
 fun WebApp.toApkConfigWithModules(packageName: String, context: android.content.Context): ApkConfig {
     val baseConfig = toApkConfig(packageName, context)
+    val extensionFileManager = com.webtoapp.core.extension.ExtensionFileManager(context)
 
 
     val embeddedModules = if (extensionModuleIds.isNotEmpty()) {
         try {
             val extensionManager = com.webtoapp.core.extension.ExtensionManager.getInstance(context)
-            extensionManager.getModulesByIds(extensionModuleIds).map { module ->
+
+            // Ensure async module loading has completed before resolving IDs.
+            // Without this, user-added modules (userscripts, Chrome extensions) may not
+            // yet be in the cache, causing them to be silently dropped from the APK.
+            kotlinx.coroutines.runBlocking {
+                kotlinx.coroutines.withTimeoutOrNull(5000L) {
+                    extensionManager.awaitLoaded()
+                }
+            }
+
+            val resolvedModules = extensionManager.getModulesByIds(extensionModuleIds)
+
+            if (resolvedModules.size < extensionModuleIds.size) {
+                val foundIds = resolvedModules.map { it.id }.toSet()
+                val missingIds = extensionModuleIds.filter { it !in foundIds }
+                AppLogger.w(
+                    "ApkBuilder",
+                    "Extension module resolution: requested ${extensionModuleIds.size}, found ${resolvedModules.size}. " +
+                        "Missing IDs (will NOT be embedded in APK): $missingIds"
+                )
+            }
+
+            resolvedModules.map { module ->
+                val resolvedRequireContents = linkedMapOf<String, String>()
+                module.requireUrls.forEach { url ->
+                    extensionFileManager.getCachedRequire(url)?.let { resolvedRequireContents[url] = it }
+                }
+
+                val resolvedResources = linkedMapOf<String, String>()
+                module.resources.forEach { (name, url) ->
+                    resolvedResources[name] = extensionFileManager.getCachedResource(name, url) ?: url
+                }
 
 
                 val resolvedCode: String
@@ -3641,9 +3873,20 @@ fun WebApp.toApkConfigWithModules(packageName: String, context: android.content.
                     description = module.description,
                     icon = module.icon,
                     category = module.category.name,
+                    versionName = module.version.name,
+                    authorName = module.author?.name.orEmpty(),
                     code = resolvedCode,
                     cssCode = resolvedCss,
                     runAt = module.runAt.name,
+                    sourceType = module.sourceType.name,
+                    runMode = module.runMode.name,
+                    uiConfig = EmbeddedExtensionModuleUiConfig(
+                        type = module.uiConfig.type.name,
+                        autoHide = module.uiConfig.autoHide,
+                        autoHideDelay = module.uiConfig.autoHideDelay,
+                        initiallyHidden = module.uiConfig.initiallyHidden,
+                        showOnlyOnMatch = module.uiConfig.showOnlyOnMatch
+                    ),
                     urlMatches = module.urlMatches.map { rule ->
                         EmbeddedUrlMatchRule(
                             pattern = rule.pattern,
@@ -3652,6 +3895,12 @@ fun WebApp.toApkConfigWithModules(packageName: String, context: android.content.
                         )
                     },
                     configValues = module.configValues,
+                    configItemCount = module.configItems.size,
+                    gmGrants = module.gmGrants,
+                    requireUrls = module.requireUrls,
+                    requireContents = resolvedRequireContents,
+                    resources = resolvedResources,
+                    noframes = module.noframes,
 
 
                     enabled = true

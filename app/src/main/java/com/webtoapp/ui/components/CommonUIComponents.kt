@@ -1,37 +1,44 @@
 package com.webtoapp.ui.components
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material.icons.rounded.WarningAmber
-import androidx.compose.material3.*
+import androidx.compose.material.icons.outlined.Warning
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.webtoapp.ui.design.WtaCard
+import com.webtoapp.ui.design.WtaCardTone
+import com.webtoapp.ui.design.WtaErrorState
+import com.webtoapp.ui.design.WtaFullEmptyState
+import com.webtoapp.ui.design.WtaIconTitle
+import com.webtoapp.ui.design.WtaInfoChip
+import com.webtoapp.ui.design.WtaLoadingState
+import com.webtoapp.ui.design.WtaSpacing
+import com.webtoapp.ui.design.WtaStatItem
+import com.webtoapp.ui.design.WtaStatusTone
+import com.webtoapp.ui.design.WtaStatusBanner
+import com.webtoapp.ui.design.WtaSwitch
 
-
-
-
-
-
-
-
-
-
-
-
-
+/**
+ * Legacy common UI helpers kept as thin forwarders over the Wta design system.
+ * Prefer the Wta components directly in new code. These exist to avoid a
+ * flag-day migration of every screen at once.
+ */
 
 @Composable
 fun SettingsSwitch(
@@ -48,12 +55,11 @@ fun SettingsSwitch(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(modifier = Modifier.weight(weight = 1f, fill = true).padding(end = 12.dp)) {
+        Column(modifier = Modifier.weight(1f).padding(end = WtaSpacing.Medium)) {
             Text(
                 title,
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = FontWeight.Medium
-                )
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
@@ -62,15 +68,9 @@ fun SettingsSwitch(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        PremiumSwitch(checked = checked, onCheckedChange = onCheckedChange)
+        WtaSwitch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }
-
-
-
-
-
-
 
 @Composable
 fun SettingsSection(
@@ -81,32 +81,22 @@ fun SettingsSection(
     Column(modifier = modifier) {
         Text(
             text = title,
-            style = MaterialTheme.typography.labelMedium,
+            style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(vertical = 8.dp)
+            modifier = Modifier.padding(vertical = WtaSpacing.Small)
         )
-        Surface(
+        WtaCard(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            color = if (com.webtoapp.ui.theme.LocalIsDarkTheme.current) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.72f)
+            tone = WtaCardTone.Surface,
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(WtaSpacing.Large)
         ) {
             Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(WtaSpacing.Small),
                 content = content
             )
         }
     }
 }
-
-
-
-
-
-
-
-
-
 
 @Composable
 fun IconSwitchCard(
@@ -117,62 +107,27 @@ fun IconSwitchCard(
     subtitle: String? = null,
     modifier: Modifier = Modifier
 ) {
-    val primary = MaterialTheme.colorScheme.primary
-
-    EnhancedElevatedCard(modifier = modifier.fillMaxWidth()) {
+    WtaCard(
+        modifier = modifier.fillMaxWidth(),
+        tone = WtaCardTone.Surface
+    ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(weight = 1f, fill = true)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(
-                            if (checked) primary.copy(alpha = 0.1f)
-                            else MaterialTheme.colorScheme.surfaceVariant
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = if (checked) primary
-                               else MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(14.dp))
-                Column {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    if (subtitle != null) {
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = subtitle,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            PremiumSwitch(checked = checked, onCheckedChange = onCheckedChange)
+            WtaIconTitle(
+                icon = icon,
+                title = title,
+                subtitle = subtitle,
+                enabled = checked,
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(modifier = Modifier.width(WtaSpacing.Small))
+            WtaSwitch(checked = checked, onCheckedChange = onCheckedChange)
         }
     }
 }
-
-
-
 
 @Composable
 fun IconSwitchCard(
@@ -183,65 +138,32 @@ fun IconSwitchCard(
     subtitle: String? = null,
     modifier: Modifier = Modifier
 ) {
-    val primary = MaterialTheme.colorScheme.primary
-
-    EnhancedElevatedCard(modifier = modifier.fillMaxWidth()) {
+    // Painter variant: fall back to a plain row without an icon plate so we don't
+    // have to duplicate the tinted plate rendering. Legacy callers keep working.
+    WtaCard(
+        modifier = modifier.fillMaxWidth(),
+        tone = WtaCardTone.Surface
+    ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(weight = 1f, fill = true)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(
-                            if (checked) primary.copy(alpha = 0.1f)
-                            else MaterialTheme.colorScheme.surfaceVariant
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        painter = iconPainter,
-                        contentDescription = null,
-                        tint = if (checked) primary
-                               else MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(14.dp))
-                Column {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.titleMedium)
+                if (subtitle != null) {
                     Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleMedium
+                        subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    if (subtitle != null) {
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = subtitle,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
                 }
             }
-            Spacer(modifier = Modifier.width(8.dp))
-            PremiumSwitch(checked = checked, onCheckedChange = onCheckedChange)
+            Spacer(modifier = Modifier.width(WtaSpacing.Small))
+            WtaSwitch(checked = checked, onCheckedChange = onCheckedChange)
         }
     }
 }
-
-
-
-
-
-
 
 @Composable
 fun InfoChip(
@@ -249,36 +171,8 @@ fun InfoChip(
     icon: ImageVector,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(8.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Icon(
-                icon,
-                contentDescription = null,
-                modifier = Modifier.size(14.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
+    WtaInfoChip(label = label, icon = icon, modifier = modifier)
 }
-
-
-
-
-
-
 
 @Composable
 fun StatItem(
@@ -286,38 +180,8 @@ fun StatItem(
     label: String,
     modifier: Modifier = Modifier
 ) {
-    val primary = MaterialTheme.colorScheme.primary
-
-    Column(
-        modifier = modifier
-            .clip(RoundedCornerShape(14.dp))
-            .background(primary.copy(alpha = 0.06f))
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = value,
-            style = MaterialTheme.typography.headlineMedium.copy(
-                fontWeight = FontWeight.Bold
-            ),
-            color = primary
-        )
-        Spacer(modifier = Modifier.height(2.dp))
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
+    WtaStatItem(value = value, label = label, modifier = modifier)
 }
-
-
-
-
-
-
-
-
 
 @Composable
 fun EmptyStatePlaceholder(
@@ -327,103 +191,22 @@ fun EmptyStatePlaceholder(
     modifier: Modifier = Modifier,
     action: (@Composable () -> Unit)? = null
 ) {
-    val primary = MaterialTheme.colorScheme.primary
-
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(horizontal = 32.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(88.dp)
-                    .clip(CircleShape)
-                    .background(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                primary.copy(alpha = 0.12f),
-                                primary.copy(alpha = 0.04f)
-                            )
-                        )
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(40.dp),
-                    tint = primary.copy(alpha = 0.7f)
-                )
-            }
-            Spacer(modifier = Modifier.height(20.dp))
-            Text(
-                title,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.SemiBold
-                )
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                subtitle,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            if (action != null) {
-                Spacer(modifier = Modifier.height(24.dp))
-                action()
-            }
-        }
-    }
+    WtaFullEmptyState(
+        title = title,
+        message = subtitle,
+        icon = icon,
+        modifier = modifier,
+        action = action
+    )
 }
-
-
-
-
-
 
 @Composable
 fun LoadingPlaceholder(
     message: String,
     modifier: Modifier = Modifier
 ) {
-    val primary = MaterialTheme.colorScheme.primary
-
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(
-                modifier = Modifier
-                    .size(72.dp)
-                    .clip(CircleShape)
-                    .background(primary.copy(alpha = 0.06f)),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(36.dp),
-                    strokeWidth = 3.dp
-                )
-            }
-            Spacer(modifier = Modifier.height(20.dp))
-            Text(
-                message,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
+    WtaLoadingState(modifier = modifier, message = message)
 }
-
-
-
-
-
-
-
 
 @Composable
 fun ErrorPlaceholder(
@@ -432,66 +215,13 @@ fun ErrorPlaceholder(
     retryText: String = "Retry",
     modifier: Modifier = Modifier
 ) {
-    val errorColor = MaterialTheme.colorScheme.error
-
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(horizontal = 32.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(CircleShape)
-                    .background(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                errorColor.copy(alpha = 0.12f),
-                                errorColor.copy(alpha = 0.04f)
-                            )
-                        )
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    Icons.Outlined.ErrorOutline,
-                    contentDescription = null,
-                    modifier = Modifier.size(36.dp),
-                    tint = errorColor.copy(alpha = 0.7f)
-                )
-            }
-            Spacer(modifier = Modifier.height(20.dp))
-            Text(
-                message,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(20.dp))
-            FilledTonalButton(
-                onClick = onRetry,
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Icon(
-                    Icons.Outlined.Refresh,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(retryText)
-            }
-        }
-    }
+    WtaErrorState(
+        message = message,
+        retryLabel = retryText,
+        onRetry = onRetry,
+        modifier = modifier
+    )
 }
-
-
-
-
-
-
-
 
 @Composable
 fun SettingsSwitchRow(
@@ -503,19 +233,14 @@ fun SettingsSwitchRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = WtaSpacing.Tiny),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(title, style = MaterialTheme.typography.bodyMedium)
-        PremiumSwitch(checked = checked, onCheckedChange = onCheckedChange)
+        WtaSwitch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }
-
-
-
-
-
 
 @Composable
 fun CardContent(
@@ -523,35 +248,23 @@ fun CardContent(
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(
-        modifier = modifier.padding(16.dp),
+        modifier = modifier.padding(WtaSpacing.Large),
         content = content
     )
 }
-
-
-
-
-
-
 
 @Composable
 fun CardContentWithSpacing(
     modifier: Modifier = Modifier,
-    spacing: androidx.compose.ui.unit.Dp = 16.dp,
+    spacing: Dp = WtaSpacing.Large,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(
-        modifier = modifier.padding(16.dp),
+        modifier = modifier.padding(WtaSpacing.Large),
         verticalArrangement = Arrangement.spacedBy(spacing),
         content = content
     )
 }
-
-
-
-
-
-
 
 @Composable
 fun IconTitleRow(
@@ -560,40 +273,13 @@ fun IconTitleRow(
     enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
-    val primary = MaterialTheme.colorScheme.primary
-
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(
-                    if (enabled) primary.copy(alpha = 0.1f)
-                    else MaterialTheme.colorScheme.surfaceVariant
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = if (enabled) primary
-                       else MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(20.dp)
-            )
-        }
-        Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium
-        )
-    }
+    WtaIconTitle(
+        icon = icon,
+        title = title,
+        enabled = enabled,
+        modifier = modifier
+    )
 }
-
-
-
 
 @Composable
 fun IconTitleRow(
@@ -602,45 +288,21 @@ fun IconTitleRow(
     enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
-    val primary = MaterialTheme.colorScheme.primary
-
+    // Painter variant retained for callers that use vector resource painters.
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(
-                    if (enabled) primary.copy(alpha = 0.1f)
-                    else MaterialTheme.colorScheme.surfaceVariant
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = iconPainter,
-                contentDescription = null,
-                tint = if (enabled) primary
-                       else MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(20.dp)
-            )
-        }
-        Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium
+        androidx.compose.material3.Icon(
+            painter = iconPainter,
+            contentDescription = null,
+            tint = if (enabled) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(end = WtaSpacing.Small)
         )
+        Text(title, style = MaterialTheme.typography.titleMedium)
     }
 }
-
-
-
-
-
-
-
-
 
 @Composable
 fun CollapsibleCardHeader(
@@ -655,13 +317,10 @@ fun CollapsibleCardHeader(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconTitleRow(icon = icon, title = title, enabled = checked)
-        PremiumSwitch(checked = checked, onCheckedChange = onCheckedChange)
+        WtaIconTitle(icon = icon, title = title, enabled = checked)
+        WtaSwitch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }
-
-
-
 
 @Composable
 fun CollapsibleCardHeader(
@@ -677,78 +336,18 @@ fun CollapsibleCardHeader(
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconTitleRow(iconPainter = iconPainter, title = title, enabled = checked)
-        PremiumSwitch(checked = checked, onCheckedChange = onCheckedChange)
+        WtaSwitch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }
-
-
-
-
-
 
 @Composable
 fun WarningCard(
     message: String,
     modifier: Modifier = Modifier
 ) {
-    val warningColor = Color(0xFFE65100)
-    val warningBg = Color(0xFFFFF3E0)
-    val warningAccent = Color(0xFFFF9800)
-
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = Color.Transparent,
-        tonalElevation = 0.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(
-                            warningBg,
-                            warningBg.copy(alpha = 0.6f)
-                        )
-                    ),
-                    shape = RoundedCornerShape(16.dp)
-                )
-                .padding(16.dp),
-            verticalAlignment = Alignment.Top
-        ) {
-
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                warningAccent.copy(alpha = 0.2f),
-                                warningColor.copy(alpha = 0.15f)
-                            )
-                        )
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    Icons.Rounded.WarningAmber,
-                    contentDescription = null,
-                    tint = warningColor,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(14.dp))
-            Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
-                Text(
-                    text = message,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.Medium,
-                        lineHeight = MaterialTheme.typography.bodyMedium.lineHeight * 1.15f
-                    ),
-                    color = warningColor
-                )
-            }
-        }
-    }
+    WtaStatusBanner(
+        message = message,
+        tone = WtaStatusTone.Warning,
+        modifier = modifier
+    )
 }

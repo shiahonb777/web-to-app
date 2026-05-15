@@ -1,6 +1,7 @@
 package com.webtoapp.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import com.webtoapp.ui.design.WtaSwitch
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.FlowRow
@@ -31,8 +32,15 @@ fun IsolationConfigCard(
     onConfigChange: (IsolationConfig) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var expanded by remember { mutableStateOf(false) }
-    var showAdvanced by remember { mutableStateOf(false) }
+    var showAdvanced by remember {
+        mutableStateOf(hasAdvancedIsolationOptionsEnabled(config))
+    }
+
+    LaunchedEffect(config) {
+        if (hasAdvancedIsolationOptionsEnabled(config)) {
+            showAdvanced = true
+        }
+    }
 
     EnhancedElevatedCard(
         modifier = modifier.fillMaxWidth()
@@ -84,10 +92,10 @@ fun IsolationConfigCard(
                     }
                 }
 
-                PremiumSwitch(
+                WtaSwitch(
                     checked = config.enabled,
                     onCheckedChange = { enabled ->
-                        onConfigChange(if (enabled) IsolationConfig.STANDARD else IsolationConfig.DISABLED)
+                        onConfigChange(if (enabled) IsolationConfig.MAXIMUM else IsolationConfig.DISABLED)
                     }
                 )
             }
@@ -136,258 +144,242 @@ fun IsolationConfigCard(
                                 { Icon(Icons.Default.Check, null, Modifier.size(18.dp)) }
                             } else null
                         )
-
-                        PremiumFilterChip(
-                            selected = expanded,
-                            onClick = { expanded = !expanded },
-                            label = { Text(Strings.custom) },
-                            leadingIcon = {
-                                Icon(
-                                    if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                                    null,
-                                    Modifier.size(18.dp)
-                                )
-                            }
-                        )
                     }
 
+                    Column(
+                        modifier = Modifier.padding(top = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
 
-                    AnimatedVisibility(visible = expanded) {
-                        Column(
-                            modifier = Modifier.padding(top = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
+                        Text(
+                            text = Strings.fingerprintProtection,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.tertiary,
+                            modifier = Modifier.padding(vertical = 4.dp)
+                        )
 
-                            Text(
-                                text = Strings.fingerprintProtection,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.tertiary,
-                                modifier = Modifier.padding(vertical = 4.dp)
-                            )
-
-                            IsolationOption(
-                                title = Strings.randomFingerprint,
-                                description = Strings.randomFingerprintHint,
-                                icon = Icons.Outlined.Fingerprint,
-                                checked = config.fingerprintConfig.randomize,
-                                onCheckedChange = {
-                                    onConfigChange(config.copy(
-                                        fingerprintConfig = config.fingerprintConfig.copy(randomize = it)
-                                    ))
-                                }
-                            )
-
-                            IsolationOption(
-                                title = Strings.canvasProtection,
-                                description = Strings.canvasProtectionHint,
-                                icon = Icons.Outlined.Palette,
-                                checked = config.protectCanvas,
-                                onCheckedChange = { onConfigChange(config.copy(protectCanvas = it)) }
-                            )
-
-                            IsolationOption(
-                                title = Strings.webglProtection,
-                                description = Strings.webglProtectionHint,
-                                icon = Icons.Outlined.Brush,
-                                checked = config.protectWebGL,
-                                onCheckedChange = { onConfigChange(config.copy(protectWebGL = it)) }
-                            )
-
-                            IsolationOption(
-                                title = Strings.audioProtection,
-                                description = Strings.audioProtectionHint,
-                                icon = Icons.Outlined.VolumeUp,
-                                checked = config.protectAudio,
-                                onCheckedChange = { onConfigChange(config.copy(protectAudio = it)) }
-                            )
-
-                            IsolationOption(
-                                title = Strings.fontProtection,
-                                description = Strings.fontProtectionHint,
-                                icon = Icons.Outlined.FontDownload,
-                                checked = config.protectFonts,
-                                onCheckedChange = { onConfigChange(config.copy(protectFonts = it)) }
-                            )
-
-                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-
-                            Text(
-                                text = Strings.networkProtection,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.tertiary,
-                                modifier = Modifier.padding(vertical = 4.dp)
-                            )
-
-                            IsolationOption(
-                                title = Strings.webrtcProtection,
-                                description = Strings.webrtcProtectionHint,
-                                icon = Icons.Outlined.Wifi,
-                                checked = config.blockWebRTC,
-                                onCheckedChange = { onConfigChange(config.copy(blockWebRTC = it)) }
-                            )
-
-                            IsolationOption(
-                                title = Strings.headerSpoofing,
-                                description = Strings.headerSpoofingHint,
-                                icon = Icons.Outlined.Http,
-                                checked = config.headerConfig.enabled,
-                                onCheckedChange = {
-                                    onConfigChange(config.copy(
-                                        headerConfig = config.headerConfig.copy(enabled = it)
-                                    ))
-                                }
-                            )
-
-                            IsolationOption(
-                                title = Strings.ipSpoofing,
-                                description = Strings.ipSpoofingHint,
-                                icon = Icons.Outlined.VpnKey,
-                                checked = config.ipSpoofConfig.enabled,
-                                onCheckedChange = {
-                                    onConfigChange(config.copy(
-                                        ipSpoofConfig = config.ipSpoofConfig.copy(enabled = it)
-                                    ))
-                                }
-                            )
-
-
-                            AnimatedVisibility(visible = config.ipSpoofConfig.enabled) {
-                                Column(
-                                    modifier = Modifier.padding(start = 16.dp, top = 8.dp)
-                                ) {
-                                    Text(
-                                        text = Strings.ipRegion,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    Row(
-                                        modifier = Modifier.padding(top = 4.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                    ) {
-                                        IpRange.entries.forEach { range ->
-                                            PremiumFilterChip(
-                                                selected = config.ipSpoofConfig.randomIpRange == range,
-                                                onClick = {
-                                                    onConfigChange(config.copy(
-                                                        ipSpoofConfig = config.ipSpoofConfig.copy(randomIpRange = range)
-                                                    ))
-                                                },
-                                                label = { Text(range.displayName, style = MaterialTheme.typography.labelSmall) },
-                                                modifier = Modifier.height(28.dp)
-                                            )
-                                        }
-                                    }
-
-
-                                    AnimatedVisibility(visible = config.ipSpoofConfig.randomIpRange == IpRange.SEARCH) {
-                                        Column(
-                                            modifier = Modifier.padding(top = 8.dp)
-                                        ) {
-                                            PremiumTextField(
-                                                value = config.ipSpoofConfig.searchKeyword ?: "",
-                                                onValueChange = { keyword ->
-                                                    onConfigChange(config.copy(
-                                                        ipSpoofConfig = config.ipSpoofConfig.copy(searchKeyword = keyword)
-                                                    ))
-                                                },
-                                                label = { Text(Strings.countryRegion) },
-                                                placeholder = { Text(Strings.countryRegionHint) },
-                                                singleLine = true,
-                                                modifier = Modifier.fillMaxWidth(),
-                                                textStyle = MaterialTheme.typography.bodySmall,
-                                                leadingIcon = {
-                                                    Icon(
-                                                        Icons.Outlined.Search,
-                                                        contentDescription = null,
-                                                        modifier = Modifier.size(18.dp)
-                                                    )
-                                                }
-                                            )
-                                            Text(
-                                                text = Strings.supportedCountriesHint,
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                                modifier = Modifier.padding(top = 4.dp)
-                                            )
-                                        }
-                                    }
-                                }
+                        IsolationOption(
+                            title = Strings.randomFingerprint,
+                            description = Strings.randomFingerprintHint,
+                            icon = Icons.Outlined.Fingerprint,
+                            checked = config.fingerprintConfig.randomize,
+                            onCheckedChange = {
+                                onConfigChange(config.copy(
+                                    fingerprintConfig = config.fingerprintConfig.copy(randomize = it)
+                                ))
                             }
+                        )
 
-                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                        IsolationOption(
+                            title = Strings.canvasProtection,
+                            description = Strings.canvasProtectionHint,
+                            icon = Icons.Outlined.Palette,
+                            checked = config.protectCanvas,
+                            onCheckedChange = { onConfigChange(config.copy(protectCanvas = it)) }
+                        )
+
+                        IsolationOption(
+                            title = Strings.webglProtection,
+                            description = Strings.webglProtectionHint,
+                            icon = Icons.Outlined.Brush,
+                            checked = config.protectWebGL,
+                            onCheckedChange = { onConfigChange(config.copy(protectWebGL = it)) }
+                        )
+
+                        IsolationOption(
+                            title = Strings.audioProtection,
+                            description = Strings.audioProtectionHint,
+                            icon = Icons.Outlined.VolumeUp,
+                            checked = config.protectAudio,
+                            onCheckedChange = { onConfigChange(config.copy(protectAudio = it)) }
+                        )
+
+                        IsolationOption(
+                            title = Strings.fontProtection,
+                            description = Strings.fontProtectionHint,
+                            icon = Icons.Outlined.FontDownload,
+                            checked = config.protectFonts,
+                            onCheckedChange = { onConfigChange(config.copy(protectFonts = it)) }
+                        )
+
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
 
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                        Text(
+                            text = Strings.networkProtection,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.tertiary,
+                            modifier = Modifier.padding(vertical = 4.dp)
+                        )
+
+                        IsolationOption(
+                            title = Strings.webrtcProtection,
+                            description = Strings.webrtcProtectionHint,
+                            icon = Icons.Outlined.Wifi,
+                            checked = config.blockWebRTC,
+                            onCheckedChange = { onConfigChange(config.copy(blockWebRTC = it)) }
+                        )
+
+                        IsolationOption(
+                            title = Strings.headerSpoofing,
+                            description = Strings.headerSpoofingHint,
+                            icon = Icons.Outlined.Http,
+                            checked = config.headerConfig.enabled,
+                            onCheckedChange = {
+                                onConfigChange(config.copy(
+                                    headerConfig = config.headerConfig.copy(enabled = it)
+                                ))
+                            }
+                        )
+
+                        IsolationOption(
+                            title = Strings.ipSpoofing,
+                            description = Strings.ipSpoofingHint,
+                            icon = Icons.Outlined.VpnKey,
+                            checked = config.ipSpoofConfig.enabled,
+                            onCheckedChange = {
+                                onConfigChange(config.copy(
+                                    ipSpoofConfig = config.ipSpoofConfig.copy(enabled = it)
+                                ))
+                            }
+                        )
+
+
+                        AnimatedVisibility(visible = config.ipSpoofConfig.enabled) {
+                            Column(
+                                modifier = Modifier.padding(start = 16.dp, top = 8.dp)
                             ) {
                                 Text(
-                                    text = Strings.advancedOptions,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.tertiary
+                                    text = Strings.ipRegion,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
-                                TextButton(
-                                    onClick = { showAdvanced = !showAdvanced }
+                                Row(
+                                    modifier = Modifier.padding(top = 4.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
-                                    Text(if (showAdvanced) Strings.collapse else Strings.expand)
-                                    Icon(
-                                        if (showAdvanced) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(18.dp)
-                                    )
+                                    IpRange.entries.forEach { range ->
+                                        PremiumFilterChip(
+                                            selected = config.ipSpoofConfig.randomIpRange == range,
+                                            onClick = {
+                                                onConfigChange(config.copy(
+                                                    ipSpoofConfig = config.ipSpoofConfig.copy(randomIpRange = range)
+                                                ))
+                                            },
+                                            label = { Text(range.displayName, style = MaterialTheme.typography.labelSmall) },
+                                            modifier = Modifier.height(28.dp)
+                                        )
+                                    }
+                                }
+
+
+                                AnimatedVisibility(visible = config.ipSpoofConfig.randomIpRange == IpRange.SEARCH) {
+                                    Column(
+                                        modifier = Modifier.padding(top = 8.dp)
+                                    ) {
+                                        PremiumTextField(
+                                            value = config.ipSpoofConfig.searchKeyword ?: "",
+                                            onValueChange = { keyword ->
+                                                onConfigChange(config.copy(
+                                                    ipSpoofConfig = config.ipSpoofConfig.copy(searchKeyword = keyword)
+                                                ))
+                                            },
+                                            label = { Text(Strings.countryRegion) },
+                                            placeholder = { Text(Strings.countryRegionHint) },
+                                            singleLine = true,
+                                            modifier = Modifier.fillMaxWidth(),
+                                            textStyle = MaterialTheme.typography.bodySmall,
+                                            leadingIcon = {
+                                                Icon(
+                                                    Icons.Outlined.Search,
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                            }
+                                        )
+                                        Text(
+                                            text = Strings.supportedCountriesHint,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                            modifier = Modifier.padding(top = 4.dp)
+                                        )
+                                    }
                                 }
                             }
+                        }
 
-                            AnimatedVisibility(visible = showAdvanced) {
-                                Column(
-                                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    IsolationOption(
-                                        title = Strings.storageIsolation,
-                                        description = Strings.storageIsolationHint,
-                                        icon = Icons.Outlined.Storage,
-                                        checked = config.storageIsolation,
-                                        onCheckedChange = { onConfigChange(config.copy(storageIsolation = it)) }
-                                    )
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-                                    IsolationOption(
-                                        title = Strings.timezoneSpoofing,
-                                        description = Strings.timezoneSpoofingHint,
-                                        icon = Icons.Outlined.Schedule,
-                                        checked = config.spoofTimezone,
-                                        onCheckedChange = { onConfigChange(config.copy(spoofTimezone = it)) }
-                                    )
 
-                                    IsolationOption(
-                                        title = Strings.languageSpoofing,
-                                        description = Strings.languageSpoofingHint,
-                                        icon = Icons.Outlined.Language,
-                                        checked = config.spoofLanguage,
-                                        onCheckedChange = { onConfigChange(config.copy(spoofLanguage = it)) }
-                                    )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = Strings.advancedOptions,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.tertiary
+                            )
+                            TextButton(
+                                onClick = { showAdvanced = !showAdvanced }
+                            ) {
+                                Text(if (showAdvanced) Strings.collapse else Strings.expand)
+                                Icon(
+                                    if (showAdvanced) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
 
-                                    IsolationOption(
-                                        title = Strings.resolutionSpoofing,
-                                        description = Strings.resolutionSpoofingHint,
-                                        icon = Icons.Outlined.AspectRatio,
-                                        checked = config.spoofScreen,
-                                        onCheckedChange = { onConfigChange(config.copy(spoofScreen = it)) }
-                                    )
+                        AnimatedVisibility(visible = showAdvanced) {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                IsolationOption(
+                                    title = Strings.storageIsolation,
+                                    description = Strings.storageIsolationHint,
+                                    icon = Icons.Outlined.Storage,
+                                    checked = config.storageIsolation,
+                                    onCheckedChange = { onConfigChange(config.copy(storageIsolation = it)) }
+                                )
 
-                                    IsolationOption(
-                                        title = Strings.regenerateOnLaunch,
-                                        description = Strings.regenerateOnLaunchHint,
-                                        icon = Icons.Outlined.Refresh,
-                                        checked = config.fingerprintConfig.regenerateOnLaunch,
-                                        onCheckedChange = {
-                                            onConfigChange(config.copy(
-                                                fingerprintConfig = config.fingerprintConfig.copy(regenerateOnLaunch = it)
-                                            ))
-                                        }
-                                    )
-                                }
+                                IsolationOption(
+                                    title = Strings.timezoneSpoofing,
+                                    description = Strings.timezoneSpoofingHint,
+                                    icon = Icons.Outlined.Schedule,
+                                    checked = config.spoofTimezone,
+                                    onCheckedChange = { onConfigChange(config.copy(spoofTimezone = it)) }
+                                )
+
+                                IsolationOption(
+                                    title = Strings.languageSpoofing,
+                                    description = Strings.languageSpoofingHint,
+                                    icon = Icons.Outlined.Language,
+                                    checked = config.spoofLanguage,
+                                    onCheckedChange = { onConfigChange(config.copy(spoofLanguage = it)) }
+                                )
+
+                                IsolationOption(
+                                    title = Strings.resolutionSpoofing,
+                                    description = Strings.resolutionSpoofingHint,
+                                    icon = Icons.Outlined.AspectRatio,
+                                    checked = config.spoofScreen,
+                                    onCheckedChange = { onConfigChange(config.copy(spoofScreen = it)) }
+                                )
+
+                                IsolationOption(
+                                    title = Strings.regenerateOnLaunch,
+                                    description = Strings.regenerateOnLaunchHint,
+                                    icon = Icons.Outlined.Refresh,
+                                    checked = config.fingerprintConfig.regenerateOnLaunch,
+                                    onCheckedChange = {
+                                        onConfigChange(config.copy(
+                                            fingerprintConfig = config.fingerprintConfig.copy(regenerateOnLaunch = it)
+                                        ))
+                                    }
+                                )
                             }
                         }
                     }
@@ -520,4 +512,12 @@ private fun isMaximumConfig(config: IsolationConfig): Boolean {
             config.protectAudio &&
             config.protectWebGL &&
             config.protectFonts
+}
+
+private fun hasAdvancedIsolationOptionsEnabled(config: IsolationConfig): Boolean {
+    return config.storageIsolation ||
+            config.spoofTimezone ||
+            config.spoofLanguage ||
+            config.spoofScreen ||
+            config.fingerprintConfig.regenerateOnLaunch
 }

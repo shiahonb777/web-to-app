@@ -5,6 +5,7 @@ import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.core.i18n.AppLanguage
 import com.webtoapp.core.i18n.Strings
 import java.io.File
+import java.util.zip.ZipFile
 
 
 
@@ -73,6 +74,7 @@ object SampleProjectExtractor {
 
             val assetPath = "$SAMPLES_DIR/$projectId"
             copyAssetFolder(context, assetPath, outputDir)
+            copySharedPythonSampleAssetsIfNeeded(context, projectId, outputDir)
 
             versionFile.writeText(currentVersion.toString())
 
@@ -130,6 +132,57 @@ object SampleProjectExtractor {
         } catch (e: Exception) {
             AppLogger.w(TAG, "复制文件失败: $assetPath", e)
         }
+    }
+
+    private fun copySharedPythonSampleAssetsIfNeeded(
+        context: Context,
+        projectId: String,
+        outputDir: File
+    ) {
+        val sharedAssetPath = when {
+            projectId.startsWith("python-fastapi") -> "$SAMPLES_DIR/python-fastapi-shared/.pypackages"
+            projectId.startsWith("python-django") -> "$SAMPLES_DIR/python-django-shared/.pypackages"
+            else -> null
+        } ?: return
+
+        val sharedTarget = File(outputDir, ".pypackages")
+        AppLogger.i(TAG, "复制共享 Python 示例依赖: $sharedAssetPath -> ${sharedTarget.absolutePath}")
+        copyAssetFolder(context, sharedAssetPath, sharedTarget)
+        if (!sharedTarget.walkTopDown().any { it.isFile }) {
+            val copied = copyAssetFolderFromApk(context, sharedAssetPath, sharedTarget)
+            if (!copied) {
+                AppLogger.w(TAG, "共享 Python 示例依赖为空: $sharedAssetPath")
+            }
+        }
+    }
+
+    private fun copyAssetFolderFromApk(
+        context: Context,
+        assetPath: String,
+        targetDir: File
+    ): Boolean {
+        val sourceApk = context.applicationInfo?.sourceDir?.takeIf { it.isNotBlank() } ?: return false
+        val apkFile = File(sourceApk)
+        if (!apkFile.exists() || !apkFile.isFile) return false
+
+        val prefix = "assets/${assetPath.trimStart('/')}/"
+        var copiedAny = false
+        ZipFile(apkFile).use { zip ->
+            val entries = zip.entries()
+            while (entries.hasMoreElements()) {
+                val entry = entries.nextElement()
+                if (entry.isDirectory || !entry.name.startsWith(prefix)) continue
+                val relativePath = entry.name.removePrefix(prefix)
+                if (relativePath.isBlank()) continue
+                val targetFile = File(targetDir, relativePath)
+                targetFile.parentFile?.mkdirs()
+                zip.getInputStream(entry).use { input ->
+                    targetFile.outputStream().use { output -> input.copyTo(output) }
+                }
+                copiedAny = true
+            }
+        }
+        return copiedAny
     }
 
 

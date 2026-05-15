@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "updatedAt": "2026-05-15T00:00:00Z",
+  "modules": [
+    {
+      "id": "wta-hello-world",
+      "path": "hello-world",
+      "name": "Hello World",
+      "description": "A minimal example module that prints a greeting and shows a floating banner. Use it as a template for your own modules.",
+      "icon": "auto_awesome",
+      "category": "OTHER",
+      "tags": ["demo", "example", "starter"],
+      "version": "1.0.0",
+      "minAppVersion": 33,
+      "author": {
+        "name": "shiaho",
+        "url": "https://github.com/shiahonb777"
+      },
+      "runAt": "DOCUMENT_END",
+      "permissions": ["DOM_ACCESS", "CSS_INJECT"],
+      "urlMatches": [
+        { "pattern": "*", "isRegex": false, "exclude": false }
+      ],
+      "hasCss": false
+    },
+    {
+      "id": "wta-night-shift",
+      "path": "night-shift",
+      "name": "Night Shift",
+      "description": "Applies a soft amber overlay to reduce blue light. Tweakable opacity via config.",
+      "icon": "dark_mode",
+      "category": "STYLE_MODIFIER",
+      "tags": ["theme", "dark", "eye-care"],
+      "version": "1.0.0",
+      "minAppVersion": 33,
+      "author": {
+        "name": "shiaho",
+        "url": "https://github.com/shiahonb777"
+      },
+      "runAt": "DOCUMENT_START",
+      "permissions": ["CSS_INJECT", "DOM_ACCESS"],
+      "urlMatches": [
+        { "pattern": "*", "isRegex": false, "exclude": false }
+      ],
+      "hasCss": true
+    }
+  ]
+}

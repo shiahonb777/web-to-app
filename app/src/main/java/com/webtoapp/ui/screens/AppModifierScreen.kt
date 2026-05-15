@@ -1,6 +1,7 @@
 package com.webtoapp.ui.screens
 
 import android.net.Uri
+import com.webtoapp.ui.design.WtaSwitch
 import com.webtoapp.ui.components.PremiumOutlinedButton
 import com.webtoapp.ui.components.PremiumFilterChip
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -35,7 +36,7 @@ import com.webtoapp.ui.components.*
 import com.webtoapp.util.SplashStorage
 import kotlinx.coroutines.launch
 import java.io.File
-import com.webtoapp.ui.components.ThemedBackgroundBox
+import com.webtoapp.ui.design.WtaBackground
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import com.webtoapp.R
@@ -110,7 +111,7 @@ fun AppModifierScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        ThemedBackgroundBox(
+        WtaBackground(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
@@ -698,7 +699,7 @@ private fun ActivationCard(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    PremiumSwitch(checked = requireEveryTime, onCheckedChange = onRequireEveryTimeChange)
+                    WtaSwitch(checked = requireEveryTime, onCheckedChange = onRequireEveryTimeChange)
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))

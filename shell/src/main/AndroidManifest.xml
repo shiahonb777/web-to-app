@@ -148,6 +148,13 @@
         <intent>
             <action android:name="android.media.action.VIDEO_CAPTURE" />
         </intent>
+        
+        <intent>
+            <action android:name="com.webtoapp.action.PORT_QUERY" />
+        </intent>
+        <intent>
+            <action android:name="com.webtoapp.action.PORT_RELEASE" />
+        </intent>
     </queries>
 
     <application
@@ -159,8 +166,13 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.WebToApp"
-        android:usesCleartextTraffic="false"
+        android:usesCleartextTraffic="true"
         tools:targetApi="31">
+
+        
+        <meta-data
+            android:name="com.webtoapp.WTA_APP_MARKER"
+            android:value="true" />
 
         
         <property
@@ -273,6 +285,25 @@
                 <action android:name="com.webtoapp.ACTION_FORCED_RUN_START" />
                 <action android:name="com.webtoapp.ACTION_FORCED_RUN_END" />
                 <action android:name="com.webtoapp.ACTION_FORCED_RUN_CHECK" />
+            </intent-filter>
+        </receiver>
+
+        
+        <receiver
+            android:name=".core.port.PortQueryReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.webtoapp.action.PORT_QUERY" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".core.port.PortReleaseReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.webtoapp.action.PORT_RELEASE" />
             </intent-filter>
         </receiver>
 

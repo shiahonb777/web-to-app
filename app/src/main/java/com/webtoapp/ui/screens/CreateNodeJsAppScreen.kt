@@ -1,5 +1,6 @@
 package com.webtoapp.ui.screens
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.webtoapp.ui.design.WtaSwitch
 import com.webtoapp.ui.components.PremiumButton
 
 import android.net.Uri
@@ -39,7 +40,6 @@ import com.webtoapp.ui.components.TypedSampleProjectsCard
 import com.webtoapp.ui.screens.create.WtaCreateFlowScaffold
 import com.webtoapp.ui.screens.create.WtaCreateFlowSection
 import com.webtoapp.ui.design.WtaRadius
-import com.webtoapp.ui.theme.AppColors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -69,7 +69,8 @@ fun CreateNodeJsAppScreen(
         nodejsConfig: NodeJsConfig,
         iconUri: Uri?,
         themeType: String
-    ) -> Unit
+    ) -> Unit,
+    onOpenLinuxEnv: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -161,18 +162,7 @@ fun CreateNodeJsAppScreen(
     var showDownloadDialog by remember { mutableStateOf(false) }
 
 
-    val frameworkColor = remember(detectedFramework) {
-        when (detectedFramework) {
-            "Express" -> AppColors.Success
-            "Fastify" -> AppColors.GitHubDark
-            "Koa" -> AppColors.Info
-            "NestJS" -> AppColors.Error
-            "Hapi" -> AppColors.BrandOrange
-            "Next.js" -> AppColors.GitHubDark
-            "Nuxt.js" -> AppColors.Success
-            else -> AppColors.NodeJs
-        }
-    }
+    val accentColor = MaterialTheme.colorScheme.onSurface
 
 
     val iconPickerLauncher = rememberLauncherForActivityResult(
@@ -463,7 +453,7 @@ fun CreateNodeJsAppScreen(
             WtaCreateFlowSection(title = Strings.importProject) {
                 NodeJsHeroSection(
                     detectedFramework = detectedFramework,
-                    frameworkColor = frameworkColor,
+                    accentColor = accentColor,
                     hasTypeScript = hasTypeScript,
                     packageManager = packageManager,
                     nodeEngineVersion = nodeEngineVersion
@@ -517,26 +507,26 @@ fun CreateNodeJsAppScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(WtaRadius.Button))
-                                    .background(frameworkColor.copy(alpha = 0.08f))
+                                    .background(accentColor.copy(alpha = 0.08f))
                             ) {
                                 Column(modifier = Modifier.padding(12.dp)) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(
                                             Icons.Default.CheckCircle, null,
-                                            tint = frameworkColor, modifier = Modifier.size(20.dp)
+                                            tint = accentColor, modifier = Modifier.size(20.dp)
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
                                             text = Strings.njsProjectDetected,
                                             style = MaterialTheme.typography.bodyMedium,
-                                            color = frameworkColor
+                                            color = accentColor
                                         )
                                     }
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
                                         text = selectedProjectDir!!.substringAfterLast("/"),
                                         style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.SemiBold
                                     )
                                     if (detectedFramework != null) {
                                         Text(
@@ -699,7 +689,7 @@ fun CreateNodeJsAppScreen(
                         hasTypeScript = hasTypeScript,
                         packageManager = packageManager,
                         detectedPort = detectedPort,
-                        frameworkColor = frameworkColor
+                        accentColor = accentColor
                     )
                 }
 
@@ -710,7 +700,7 @@ fun CreateNodeJsAppScreen(
                         selectedScript = selectedStartScript,
                         onSelectScript = { selectedStartScript = it },
                         packageManager = packageManager,
-                        frameworkColor = frameworkColor
+                        accentColor = accentColor
                     )
                 }
 
@@ -733,7 +723,7 @@ fun CreateNodeJsAppScreen(
                                     .fillMaxWidth()
                                     .padding(vertical = 2.dp)
                                     .clip(RoundedCornerShape(WtaRadius.Button))
-                                    .background(if (buildMode == mode) frameworkColor.copy(alpha = 0.08f) else Color.Transparent)
+                                    .background(if (buildMode == mode) accentColor.copy(alpha = 0.08f) else Color.Transparent)
                                     .clickable { buildMode = mode }
                             ) {
                                 Row(
@@ -743,14 +733,14 @@ fun CreateNodeJsAppScreen(
                                     RadioButton(
                                         selected = buildMode == mode,
                                         onClick = { buildMode = mode },
-                                        colors = RadioButtonDefaults.colors(selectedColor = frameworkColor)
+                                        colors = RadioButtonDefaults.colors(selectedColor = accentColor)
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Column {
                                         Text(
                                             text = label,
                                             style = MaterialTheme.typography.bodyMedium,
-                                            fontWeight = if (buildMode == mode) FontWeight.Bold else FontWeight.Normal
+                                            fontWeight = if (buildMode == mode) FontWeight.SemiBold else FontWeight.Normal
                                         )
                                         Text(
                                             text = desc,
@@ -777,14 +767,14 @@ fun CreateNodeJsAppScreen(
                                         Box(
                                             modifier = Modifier
                                                 .clip(RoundedCornerShape(WtaRadius.Button))
-                                                .background(AppColors.TypeScript.copy(alpha = 0.15f))
+                                                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f))
                                         ) {
                                             Text(
                                                 "TS",
                                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                                 style = MaterialTheme.typography.labelSmall,
-                                                color = AppColors.TypeScript,
-                                                fontWeight = FontWeight.Bold
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                fontWeight = FontWeight.SemiBold
                                             )
                                         }
                                     }
@@ -801,19 +791,19 @@ fun CreateNodeJsAppScreen(
                             RuntimeSectionHeader(
                                 icon = Icons.Outlined.Speed,
                                 title = Strings.tsPreCompile,
-                                brandColor = AppColors.TypeScript
+                                brandColor = MaterialTheme.colorScheme.onSurface
                             ) {
                                 Box(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(WtaRadius.Button))
-                                        .background(AppColors.TypeScript.copy(alpha = 0.15f))
+                                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f))
                                 ) {
                                     Text(
                                         "esbuild",
                                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = AppColors.TypeScript,
-                                        fontWeight = FontWeight.Bold
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        fontWeight = FontWeight.SemiBold
                                     )
                                 }
                             }
@@ -831,7 +821,7 @@ fun CreateNodeJsAppScreen(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
-                                PremiumSwitch(
+                                WtaSwitch(
                                     checked = enableTsPreCompile,
                                     onCheckedChange = { enableTsPreCompile = it }
                                 )
@@ -846,7 +836,7 @@ fun CreateNodeJsAppScreen(
                         detectedPort = detectedPort,
                         customPort = customPort,
                         onCustomPortChange = { customPort = it },
-                        frameworkColor = frameworkColor
+                        accentColor = accentColor
                     )
                 }
 
@@ -859,7 +849,19 @@ fun CreateNodeJsAppScreen(
                         onToggleDeps = { showAllDeps = !showAllDeps },
                         showAllDevDeps = showAllDevDeps,
                         onToggleDevDeps = { showAllDevDeps = !showAllDevDeps },
-                        frameworkColor = frameworkColor
+                        accentColor = accentColor
+                    )
+                }
+
+                // 在 App 内一键 npm/pnpm/yarn install——只在项目有 package.json 时显示
+                // 与前端项目类型不同，Node.js 应用走的是"libnode.so 现场跑源码"的路径，
+                // 没有自动构建步骤，所以需要给用户单独的"装依赖"入口
+                if (selectedProjectDir != null && File(selectedProjectDir!!, "package.json").exists()) {
+                    InstallProjectDepsCard(
+                        kind = DepsKind.NODE,
+                        projectDir = selectedProjectDir,
+                        accentColor = accentColor,
+                        onOpenBuildEnvScreen = onOpenLinuxEnv,
                     )
                 }
 
@@ -870,20 +872,20 @@ fun CreateNodeJsAppScreen(
                             RuntimeSectionHeader(
                                 icon = Icons.Outlined.Settings,
                                 title = Strings.njsEnvVars,
-                                brandColor = frameworkColor
+                                brandColor = accentColor
                             ) {
                                 if (envVars.isNotEmpty()) {
                                     Box(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(WtaRadius.Button))
-                                            .background(frameworkColor.copy(alpha = 0.12f))
+                                            .background(accentColor.copy(alpha = 0.12f))
                                     ) {
                                         Text(
                                             "${envVars.size}",
                                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                                             style = MaterialTheme.typography.labelSmall,
-                                            color = frameworkColor,
-                                            fontWeight = FontWeight.Bold
+                                            color = accentColor,
+                                            fontWeight = FontWeight.SemiBold
                                         )
                                     }
                                 }
@@ -910,8 +912,8 @@ fun CreateNodeJsAppScreen(
                                             text = key,
                                             style = MaterialTheme.typography.bodySmall,
                                             fontFamily = FontFamily.Monospace,
-                                            fontWeight = FontWeight.Bold,
-                                            color = frameworkColor
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = accentColor
                                         )
                                         Text(
                                             text = " = ",
@@ -981,7 +983,7 @@ fun CreateNodeJsAppScreen(
                 if (detectedFramework != null) {
                     NodeJsFrameworkTipsCard(
                         framework = detectedFramework!!,
-                        frameworkColor = frameworkColor
+                        accentColor = accentColor
                     )
                 }
             }
@@ -1062,7 +1064,7 @@ fun CreateNodeJsAppScreen(
 @Composable
 private fun NodeJsHeroSection(
     detectedFramework: String?,
-    frameworkColor: Color,
+    accentColor: Color,
     hasTypeScript: Boolean,
     packageManager: String,
     nodeEngineVersion: String?
@@ -1070,16 +1072,11 @@ private fun NodeJsHeroSection(
     val title = if (detectedFramework != null) "$detectedFramework ${Strings.njsHeroTitle}"
     else Strings.njsHeroTitle
 
-    val pmColor = when (packageManager) {
-        "yarn" -> AppColors.Info
-        "pnpm" -> AppColors.Warning
-        "bun" -> MaterialTheme.colorScheme.surfaceVariant
-        else -> AppColors.GmailRed
-    }
+    val pmColor = MaterialTheme.colorScheme.onSurface
 
     val tags = buildList {
-        nodeEngineVersion?.let { add("Node $it" to frameworkColor) }
-        if (hasTypeScript) add("TypeScript" to AppColors.TypeScript)
+        nodeEngineVersion?.let { add("Node $it" to accentColor) }
+        if (hasTypeScript) add("TypeScript" to MaterialTheme.colorScheme.onSurface)
         add(packageManager to pmColor)
     }
 
@@ -1087,7 +1084,7 @@ private fun NodeJsHeroSection(
         icon = Icons.Outlined.Code,
         title = title,
         subtitle = Strings.njsHeroDesc,
-        brandColor = frameworkColor,
+        brandColor = accentColor,
         tags = tags
     )
 }
@@ -1106,14 +1103,14 @@ private fun NodeJsProjectInfoCard(
     hasTypeScript: Boolean,
     packageManager: String,
     detectedPort: Int?,
-    frameworkColor: Color
+    accentColor: Color
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             RuntimeSectionHeader(
                 icon = Icons.Outlined.Info,
                 title = Strings.njsProjectInfo,
-                brandColor = frameworkColor
+                brandColor = accentColor
             )
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -1121,7 +1118,7 @@ private fun NodeJsProjectInfoCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(WtaRadius.Button))
-                    .background(frameworkColor.copy(alpha = 0.06f))
+                    .background(accentColor.copy(alpha = 0.06f))
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
 
@@ -1133,21 +1130,21 @@ private fun NodeJsProjectInfoCard(
                             text = packageName,
                             style = MaterialTheme.typography.bodyMedium,
                             fontFamily = FontFamily.Monospace,
-                            fontWeight = FontWeight.Bold,
-                            color = frameworkColor
+                            fontWeight = FontWeight.SemiBold,
+                            color = accentColor
                         )
                         packageVersion?.let {
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(WtaRadius.Button))
-                                    .background(frameworkColor.copy(alpha = 0.12f))
+                                    .background(accentColor.copy(alpha = 0.12f))
                             ) {
                                 Text(
                                     text = "v$it",
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                     style = MaterialTheme.typography.labelSmall,
                                     fontFamily = FontFamily.Monospace,
-                                    color = frameworkColor
+                                    color = accentColor
                                 )
                             }
                         }
@@ -1166,7 +1163,7 @@ private fun NodeJsProjectInfoCard(
                     }
 
                     Spacer(modifier = Modifier.height(10.dp))
-                    HorizontalDivider(color = frameworkColor.copy(alpha = 0.1f))
+                    HorizontalDivider(color = accentColor.copy(alpha = 0.1f))
                     Spacer(modifier = Modifier.height(10.dp))
 
 
@@ -1178,14 +1175,14 @@ private fun NodeJsProjectInfoCard(
                         NjsInfoChip(
                             icon = Icons.Outlined.Inventory2,
                             label = "${Strings.njsDependencies}: $depCount",
-                            color = frameworkColor
+                            color = accentColor
                         )
 
                         if (devDepCount > 0) {
                             NjsInfoChip(
                                 icon = Icons.Outlined.Build,
                                 label = "${Strings.njsDevDependencies}: $devDepCount",
-                                color = MaterialTheme.colorScheme.tertiary
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
 
@@ -1193,21 +1190,21 @@ private fun NodeJsProjectInfoCard(
                             NjsInfoChip(
                                 icon = Icons.Outlined.Code,
                                 label = "TypeScript",
-                                color = AppColors.TypeScript
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
 
                         NjsInfoChip(
                             icon = Icons.Outlined.Archive,
                             label = "${Strings.njsPackageManager}: $packageManager",
-                            color = MaterialTheme.colorScheme.secondary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
 
                         detectedPort?.let {
                         NjsInfoChip(
                             icon = Icons.Outlined.Lan,
                             label = "${Strings.njsDetectedPort}: $it",
-                            color = AppColors.BrandOrange
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -1256,26 +1253,26 @@ private fun NodeJsScriptsCard(
     selectedScript: String?,
     onSelectScript: (String) -> Unit,
     packageManager: String,
-    frameworkColor: Color
+    accentColor: Color
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             RuntimeSectionHeader(
                 icon = Icons.Outlined.Terminal,
                 title = Strings.njsScripts,
-                brandColor = frameworkColor
+                brandColor = accentColor
             ) {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(WtaRadius.Control))
-                        .background(frameworkColor.copy(alpha = 0.12f))
+                        .background(accentColor.copy(alpha = 0.12f))
                 ) {
                     Text(
                         "${scripts.size}",
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                         style = MaterialTheme.typography.labelSmall,
-                        color = frameworkColor,
-                        fontWeight = FontWeight.Bold
+                        color = accentColor,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
             }
@@ -1295,7 +1292,7 @@ private fun NodeJsScriptsCard(
                         .padding(vertical = 2.dp)
                         .clip(RoundedCornerShape(WtaRadius.Button))
                         .background(
-                            if (isSelected) frameworkColor.copy(alpha = 0.1f)
+                            if (isSelected) accentColor.copy(alpha = 0.1f)
                             else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                         )
                         .clickable { onSelectScript(name) }
@@ -1308,7 +1305,7 @@ private fun NodeJsScriptsCard(
                             selected = isSelected,
                             onClick = { onSelectScript(name) },
                             modifier = Modifier.size(20.dp),
-                            colors = RadioButtonDefaults.colors(selectedColor = frameworkColor)
+                            colors = RadioButtonDefaults.colors(selectedColor = accentColor)
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Column(modifier = Modifier.weight(weight = 1f, fill = true)) {
@@ -1316,8 +1313,8 @@ private fun NodeJsScriptsCard(
                                 Text(
                                     text = name,
                                     style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (isSelected) frameworkColor else MaterialTheme.colorScheme.onSurface
+                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                    color = if (isSelected) accentColor else MaterialTheme.colorScheme.onSurface
                                 )
 
                                 if (name == "start" || name == "dev") {
@@ -1325,13 +1322,13 @@ private fun NodeJsScriptsCard(
                                     Box(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(WtaRadius.Button))
-                                            .background(AppColors.Warning.copy(alpha = 0.2f))
+                                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f))
                                     ) {
                                         Icon(
                                             Icons.Default.Star,
                                             contentDescription = null,
                                             modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp).size(14.dp),
-                                            tint = AppColors.Warning
+                                            tint = MaterialTheme.colorScheme.onSurface
                                         )
                                     }
                                 }
@@ -1360,14 +1357,14 @@ private fun NodeJsPortCard(
     detectedPort: Int?,
     customPort: String,
     onCustomPortChange: (String) -> Unit,
-    frameworkColor: Color
+    accentColor: Color
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             RuntimeSectionHeader(
                 icon = Icons.Outlined.Lan,
                 title = Strings.njsDetectedPort,
-                brandColor = frameworkColor
+                brandColor = accentColor
             )
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -1377,7 +1374,7 @@ private fun NodeJsPortCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(WtaRadius.Button))
-                        .background(frameworkColor.copy(alpha = 0.06f))
+                        .background(accentColor.copy(alpha = 0.06f))
                 ) {
                     Row(
                         modifier = Modifier.padding(12.dp),
@@ -1385,7 +1382,7 @@ private fun NodeJsPortCard(
                     ) {
                         Icon(
                             Icons.Outlined.CheckCircle, null,
-                            tint = frameworkColor, modifier = Modifier.size(20.dp)
+                            tint = accentColor, modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
@@ -1397,8 +1394,8 @@ private fun NodeJsPortCard(
                             text = "$detectedPort",
                             style = MaterialTheme.typography.bodyMedium,
                             fontFamily = FontFamily.Monospace,
-                            fontWeight = FontWeight.Bold,
-                            color = frameworkColor
+                            fontWeight = FontWeight.SemiBold,
+                            color = accentColor
                         )
                     }
                 }
@@ -1441,14 +1438,14 @@ private fun NodeJsDependenciesCard(
     onToggleDeps: () -> Unit,
     showAllDevDeps: Boolean,
     onToggleDevDeps: () -> Unit,
-    frameworkColor: Color
+    accentColor: Color
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             RuntimeSectionHeader(
                 icon = Icons.Outlined.Inventory2,
                 title = Strings.njsDependencies,
-                brandColor = frameworkColor
+                brandColor = accentColor
             )
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -1459,21 +1456,21 @@ private fun NodeJsDependenciesCard(
                         "dependencies",
                         style = MaterialTheme.typography.labelMedium,
                         fontFamily = FontFamily.Monospace,
-                        color = frameworkColor,
-                        fontWeight = FontWeight.Bold
+                        color = accentColor,
+                        fontWeight = FontWeight.SemiBold
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(WtaRadius.Button))
-                            .background(frameworkColor.copy(alpha = 0.12f))
+                            .background(accentColor.copy(alpha = 0.12f))
                     ) {
                         Text(
                             "${dependencies.size}",
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                             style = MaterialTheme.typography.labelSmall,
-                            color = frameworkColor,
-                            fontWeight = FontWeight.Bold
+                            color = accentColor,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
@@ -1512,7 +1509,7 @@ private fun NodeJsDependenciesCard(
                         Text(
                             if (showAllDeps) Strings.collapse else "${Strings.expandAll} (${dependencies.size})",
                             style = MaterialTheme.typography.labelSmall,
-                            color = frameworkColor
+                            color = accentColor
                         )
                     }
                 }
@@ -1529,21 +1526,21 @@ private fun NodeJsDependenciesCard(
                         "devDependencies",
                         style = MaterialTheme.typography.labelMedium,
                         fontFamily = FontFamily.Monospace,
-                        color = MaterialTheme.colorScheme.tertiary,
-                        fontWeight = FontWeight.Bold
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.SemiBold
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(WtaRadius.Button))
-                            .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.12f))
+                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f))
                     ) {
                         Text(
                             "${devDependencies.size}",
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.tertiary,
-                            fontWeight = FontWeight.Bold
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
@@ -1583,7 +1580,7 @@ private fun NodeJsDependenciesCard(
                         Text(
                             if (showAllDevDeps) Strings.collapse else "${Strings.expandAll} (${devDependencies.size})",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.tertiary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -1617,7 +1614,7 @@ private fun getPathFromUri(uri: Uri): String? {
 @Composable
 private fun NodeJsFrameworkTipsCard(
     framework: String,
-    frameworkColor: Color
+    accentColor: Color
 ) {
     val tips = Strings.njsFrameworkTips(framework)
 
@@ -1626,7 +1623,7 @@ private fun NodeJsFrameworkTipsCard(
             RuntimeSectionHeader(
                 icon = Icons.Outlined.Lightbulb,
                 title = "$framework ${Strings.frameworkTips}",
-                brandColor = AppColors.Warning
+                brandColor = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -1636,7 +1633,7 @@ private fun NodeJsFrameworkTipsCard(
                         .fillMaxWidth()
                         .padding(vertical = 3.dp)
                         .clip(RoundedCornerShape(WtaRadius.Button))
-                        .background(frameworkColor.copy(alpha = 0.04f))
+                        .background(accentColor.copy(alpha = 0.04f))
                 ) {
                     Text(
                         text = tip,

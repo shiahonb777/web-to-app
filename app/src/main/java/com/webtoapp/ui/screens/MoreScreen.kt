@@ -156,15 +156,15 @@ private fun MoreMenuItem(
                 painter = icon,
                 contentDescription = null,
                 modifier = Modifier.size(20.dp),
-                tint = MaterialTheme.colorScheme.primary
+                tint = MaterialTheme.colorScheme.onSurface
             )
         }
     ) {
         Icon(
             imageVector = Icons.Outlined.ChevronRight,
             contentDescription = null,
-            modifier = Modifier.size(18.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+            modifier = Modifier.size(20.dp),
+            tint = MaterialTheme.colorScheme.outline
         )
     }
 }

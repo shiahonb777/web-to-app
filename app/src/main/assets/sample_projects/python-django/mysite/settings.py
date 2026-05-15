@@ -1,6 +1,9 @@
 SECRET_KEY = 'demo-secret-key'
 DEBUG = True
 ALLOWED_HOSTS = ['*']
-INSTALLED_APPS = ['django.contrib.admin', 'django.contrib.auth', 'django.contrib.contenttypes']
+INSTALLED_APPS = ['django.contrib.auth', 'django.contrib.contenttypes']
+MIDDLEWARE = []
+ROOT_URLCONF = 'mysite.urls'
+WSGI_APPLICATION = 'mysite.wsgi.application'
 DATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': 'db.sqlite3'}}
 STATIC_URL = 'static/'

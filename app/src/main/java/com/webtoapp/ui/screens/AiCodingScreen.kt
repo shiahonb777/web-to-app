@@ -1237,7 +1237,7 @@ private fun AiCodingWelcomeContent(
         Text(
             Strings.aiCodingAssistant,
             style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.SemiBold
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -1309,7 +1309,7 @@ private fun AiCodingWelcomeContent(
                                     Text(
                                         type.getDisplayName(),
                                         style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                                         color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
                                                 else MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -1641,7 +1641,7 @@ private fun AiCodingSessionListItem(
                 Text(
                     session.title.takeIf { it.isNotBlank() } ?: Strings.newConversation,
                     style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -1819,7 +1819,7 @@ private fun AiCodingDirectoryTreePanel(
                                 fileInfo.name,
                                 style = MaterialTheme.typography.bodySmall,
                                 fontFamily = FontFamily.Monospace,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                                 color = if (isSelected) MaterialTheme.colorScheme.primary
                                         else MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.weight(weight = 1f, fill = true),

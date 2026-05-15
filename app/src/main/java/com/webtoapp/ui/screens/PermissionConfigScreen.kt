@@ -1,33 +1,38 @@
 package com.webtoapp.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.DirectionsRun
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.data.model.ApkRuntimePermissions
 import com.webtoapp.ui.components.EnhancedElevatedCard
+import com.webtoapp.ui.components.IconSwitchCard
 import com.webtoapp.ui.components.PremiumButton
 import com.webtoapp.ui.components.PremiumTextField
-import com.webtoapp.ui.components.SettingsSwitch
-import com.webtoapp.ui.components.ThemedBackgroundBox
+import com.webtoapp.ui.design.WtaBackground
 import com.webtoapp.ui.design.WtaSettingCard
 import com.webtoapp.ui.design.WtaSettingRow
 import com.webtoapp.ui.design.WtaSectionDivider
@@ -54,21 +59,11 @@ private data class PermissionPreset(
 
 private data class PermissionItem(
     val key: String,
+    val icon: ImageVector,
     val title: () -> String,
     val subtitle: () -> String,
     val checked: (ApkRuntimePermissions) -> Boolean,
     val update: (ApkRuntimePermissions, Boolean) -> ApkRuntimePermissions
-)
-
-private data class PermissionCategorySpec(
-    val title: () -> String,
-    val icon: ImageVector,
-    val items: List<PermissionItem>
-)
-
-private fun defaultExpandedCategories(): Set<String> = setOf(
-    Strings.permissionCategoryBasic,
-    Strings.permissionCategoryStorage
 )
 
 private val PERMISSION_PRESETS = listOf(
@@ -112,78 +107,93 @@ private val PERMISSION_PRESETS = listOf(
     )
 )
 
-private val PERMISSION_CATEGORIES = listOf(
-    PermissionCategorySpec(
-        title = { Strings.permissionCategoryBasic },
-        icon = Icons.Outlined.Security,
+private data class PermissionGroup(
+    val title: () -> String,
+    val icon: ImageVector,
+    val items: List<PermissionItem>
+)
+
+private val PERMISSION_GROUPS = listOf(
+    PermissionGroup(
+        title = { "基础功能" },
+        icon = Icons.Outlined.Tune,
         items = listOf(
-            PermissionItem("camera", { Strings.permissionCamera }, { Strings.permissionCameraDesc }, { it.camera }) { p, v -> p.copy(camera = v) },
-            PermissionItem("microphone", { Strings.permissionMicrophone }, { Strings.permissionMicrophoneDesc }, { it.microphone }) { p, v -> p.copy(microphone = v) },
-            PermissionItem("location", { Strings.permissionLocation }, { Strings.permissionLocationDesc }, { it.location }) { p, v -> p.copy(location = v) },
-            PermissionItem("notifications", { Strings.permissionNotifications }, { Strings.permissionNotificationsDesc }, { it.notifications }) { p, v -> p.copy(notifications = v) }
+            PermissionItem("camera", Icons.Outlined.PhotoCamera, { Strings.permissionCamera }, { Strings.permissionCameraDesc }, { it.camera }) { p, v -> p.copy(camera = v) },
+            PermissionItem("microphone", Icons.Outlined.Mic, { Strings.permissionMicrophone }, { Strings.permissionMicrophoneDesc }, { it.microphone }) { p, v -> p.copy(microphone = v) },
+            PermissionItem("location", Icons.Outlined.LocationOn, { Strings.permissionLocation }, { Strings.permissionLocationDesc }, { it.location }) { p, v -> p.copy(location = v) },
+            PermissionItem("notifications", Icons.Outlined.Notifications, { Strings.permissionNotifications }, { Strings.permissionNotificationsDesc }, { it.notifications }) { p, v -> p.copy(notifications = v) },
         )
     ),
-    PermissionCategorySpec(
-        title = { Strings.permissionCategoryStorage },
+    PermissionGroup(
+        title = { "存储与媒体" },
         icon = Icons.Outlined.Folder,
         items = listOf(
-            PermissionItem("readExternalStorage", { Strings.permissionReadExternalStorage }, { Strings.permissionReadExternalStorageDesc }, { it.readExternalStorage }) { p, v -> p.copy(readExternalStorage = v) },
-            PermissionItem("writeExternalStorage", { Strings.permissionWriteExternalStorage }, { Strings.permissionWriteExternalStorageDesc }, { it.writeExternalStorage }) { p, v -> p.copy(writeExternalStorage = v) },
-            PermissionItem("readMediaImages", { Strings.permissionReadMediaImages }, { Strings.permissionReadMediaImagesDesc }, { it.readMediaImages }) { p, v -> p.copy(readMediaImages = v) },
-            PermissionItem("readMediaVideo", { Strings.permissionReadMediaVideo }, { Strings.permissionReadMediaVideoDesc }, { it.readMediaVideo }) { p, v -> p.copy(readMediaVideo = v) },
-            PermissionItem("readMediaAudio", { Strings.permissionReadMediaAudio }, { Strings.permissionReadMediaAudioDesc }, { it.readMediaAudio }) { p, v -> p.copy(readMediaAudio = v) }
+            PermissionItem("readExternalStorage", Icons.Outlined.FolderOpen, { Strings.permissionReadExternalStorage }, { Strings.permissionReadExternalStorageDesc }, { it.readExternalStorage }) { p, v -> p.copy(readExternalStorage = v) },
+            PermissionItem("writeExternalStorage", Icons.Outlined.SaveAlt, { Strings.permissionWriteExternalStorage }, { Strings.permissionWriteExternalStorageDesc }, { it.writeExternalStorage }) { p, v -> p.copy(writeExternalStorage = v) },
+            PermissionItem("readMediaImages", Icons.Outlined.Image, { Strings.permissionReadMediaImages }, { Strings.permissionReadMediaImagesDesc }, { it.readMediaImages }) { p, v -> p.copy(readMediaImages = v) },
+            PermissionItem("readMediaVideo", Icons.Outlined.Videocam, { Strings.permissionReadMediaVideo }, { Strings.permissionReadMediaVideoDesc }, { it.readMediaVideo }) { p, v -> p.copy(readMediaVideo = v) },
+            PermissionItem("readMediaAudio", Icons.Outlined.LibraryMusic, { Strings.permissionReadMediaAudio }, { Strings.permissionReadMediaAudioDesc }, { it.readMediaAudio }) { p, v -> p.copy(readMediaAudio = v) },
         )
     ),
-    PermissionCategorySpec(
-        title = { Strings.permissionCategoryConnectivity },
-        icon = Icons.Outlined.Bluetooth,
+    PermissionGroup(
+        title = { "网络与连接" },
+        icon = Icons.Outlined.Wifi,
         items = listOf(
-            PermissionItem("bluetooth", { Strings.permissionBluetooth }, { Strings.permissionBluetoothDesc }, { it.bluetooth }) { p, v -> p.copy(bluetooth = v) },
-            PermissionItem("nfc", { Strings.permissionNfc }, { Strings.permissionNfcDesc }, { it.nfc }) { p, v -> p.copy(nfc = v) },
-            PermissionItem("wifiState", { Strings.permissionWifiState }, { Strings.permissionWifiStateDesc }, { it.wifiState }) { p, v -> p.copy(wifiState = v) }
+            PermissionItem("bluetooth", Icons.Outlined.Bluetooth, { Strings.permissionBluetooth }, { Strings.permissionBluetoothDesc }, { it.bluetooth }) { p, v -> p.copy(bluetooth = v) },
+            PermissionItem("nfc", Icons.Outlined.Nfc, { Strings.permissionNfc }, { Strings.permissionNfcDesc }, { it.nfc }) { p, v -> p.copy(nfc = v) },
+            PermissionItem("wifiState", Icons.Outlined.Wifi, { Strings.permissionWifiState }, { Strings.permissionWifiStateDesc }, { it.wifiState }) { p, v -> p.copy(wifiState = v) },
         )
     ),
-    PermissionCategorySpec(
-        title = { Strings.permissionCategorySensors },
-        icon = Icons.AutoMirrored.Outlined.DirectionsRun,
+    PermissionGroup(
+        title = { "传感器" },
+        icon = Icons.Outlined.Sensors,
         items = listOf(
-            PermissionItem("bodySensors", { Strings.permissionBodySensors }, { Strings.permissionBodySensorsDesc }, { it.bodySensors }) { p, v -> p.copy(bodySensors = v) },
-            PermissionItem("activityRecognition", { Strings.permissionActivityRecognition }, { Strings.permissionActivityRecognitionDesc }, { it.activityRecognition }) { p, v -> p.copy(activityRecognition = v) }
+            PermissionItem("bodySensors", Icons.AutoMirrored.Outlined.DirectionsRun, { Strings.permissionBodySensors }, { Strings.permissionBodySensorsDesc }, { it.bodySensors }) { p, v -> p.copy(bodySensors = v) },
+            PermissionItem("activityRecognition", Icons.Outlined.DirectionsWalk, { Strings.permissionActivityRecognition }, { Strings.permissionActivityRecognitionDesc }, { it.activityRecognition }) { p, v -> p.copy(activityRecognition = v) },
         )
     ),
-    PermissionCategorySpec(
-        title = { Strings.permissionCategorySystem },
+    PermissionGroup(
+        title = { "通讯录与日历" },
+        icon = Icons.Outlined.Contacts,
+        items = listOf(
+            PermissionItem("readContacts", Icons.Outlined.Contacts, { Strings.permissionReadContacts }, { Strings.permissionReadContactsDesc }, { it.readContacts }) { p, v -> p.copy(readContacts = v) },
+            PermissionItem("writeContacts", Icons.Outlined.EditNote, { Strings.permissionWriteContacts }, { Strings.permissionWriteContactsDesc }, { it.writeContacts }) { p, v -> p.copy(writeContacts = v) },
+            PermissionItem("readCalendar", Icons.Outlined.CalendarMonth, { Strings.permissionReadCalendar }, { Strings.permissionReadCalendarDesc }, { it.readCalendar }) { p, v -> p.copy(readCalendar = v) },
+            PermissionItem("writeCalendar", Icons.Outlined.EventAvailable, { Strings.permissionWriteCalendar }, { Strings.permissionWriteCalendarDesc }, { it.writeCalendar }) { p, v -> p.copy(writeCalendar = v) },
+        )
+    ),
+    PermissionGroup(
+        title = { "电话与短信" },
         icon = Icons.Outlined.Phone,
         items = listOf(
-            PermissionItem("readPhoneState", { Strings.permissionReadPhoneState }, { Strings.permissionReadPhoneStateDesc }, { it.readPhoneState }) { p, v -> p.copy(readPhoneState = v) },
-            PermissionItem("callPhone", { Strings.permissionCallPhone }, { Strings.permissionCallPhoneDesc }, { it.callPhone }) { p, v -> p.copy(callPhone = v) },
-            PermissionItem("readContacts", { Strings.permissionReadContacts }, { Strings.permissionReadContactsDesc }, { it.readContacts }) { p, v -> p.copy(readContacts = v) },
-            PermissionItem("writeContacts", { Strings.permissionWriteContacts }, { Strings.permissionWriteContactsDesc }, { it.writeContacts }) { p, v -> p.copy(writeContacts = v) },
-            PermissionItem("readCalendar", { Strings.permissionReadCalendar }, { Strings.permissionReadCalendarDesc }, { it.readCalendar }) { p, v -> p.copy(readCalendar = v) },
-            PermissionItem("writeCalendar", { Strings.permissionWriteCalendar }, { Strings.permissionWriteCalendarDesc }, { it.writeCalendar }) { p, v -> p.copy(writeCalendar = v) },
-            PermissionItem("readSms", { Strings.permissionReadSms }, { Strings.permissionReadSmsDesc }, { it.readSms }) { p, v -> p.copy(readSms = v) },
-            PermissionItem("sendSms", { Strings.permissionSendSms }, { Strings.permissionSendSmsDesc }, { it.sendSms }) { p, v -> p.copy(sendSms = v) },
-            PermissionItem("receiveSms", { Strings.permissionReceiveSms }, { Strings.permissionReceiveSmsDesc }, { it.receiveSms }) { p, v -> p.copy(receiveSms = v) },
-            PermissionItem("readCallLog", { Strings.permissionReadCallLog }, { Strings.permissionReadCallLogDesc }, { it.readCallLog }) { p, v -> p.copy(readCallLog = v) },
-            PermissionItem("writeCallLog", { Strings.permissionWriteCallLog }, { Strings.permissionWriteCallLogDesc }, { it.writeCallLog }) { p, v -> p.copy(writeCallLog = v) },
-            PermissionItem("processOutgoingCalls", { Strings.permissionProcessOutgoingCalls }, { Strings.permissionProcessOutgoingCallsDesc }, { it.processOutgoingCalls }) { p, v -> p.copy(processOutgoingCalls = v) }
+            PermissionItem("readPhoneState", Icons.Outlined.Smartphone, { Strings.permissionReadPhoneState }, { Strings.permissionReadPhoneStateDesc }, { it.readPhoneState }) { p, v -> p.copy(readPhoneState = v) },
+            PermissionItem("callPhone", Icons.Outlined.Call, { Strings.permissionCallPhone }, { Strings.permissionCallPhoneDesc }, { it.callPhone }) { p, v -> p.copy(callPhone = v) },
+            PermissionItem("readSms", Icons.Outlined.Sms, { Strings.permissionReadSms }, { Strings.permissionReadSmsDesc }, { it.readSms }) { p, v -> p.copy(readSms = v) },
+            PermissionItem("sendSms", Icons.Outlined.Send, { Strings.permissionSendSms }, { Strings.permissionSendSmsDesc }, { it.sendSms }) { p, v -> p.copy(sendSms = v) },
+            PermissionItem("receiveSms", Icons.Outlined.Markunread, { Strings.permissionReceiveSms }, { Strings.permissionReceiveSmsDesc }, { it.receiveSms }) { p, v -> p.copy(receiveSms = v) },
+            PermissionItem("readCallLog", Icons.Outlined.History, { Strings.permissionReadCallLog }, { Strings.permissionReadCallLogDesc }, { it.readCallLog }) { p, v -> p.copy(readCallLog = v) },
+            PermissionItem("writeCallLog", Icons.Outlined.EditCalendar, { Strings.permissionWriteCallLog }, { Strings.permissionWriteCallLogDesc }, { it.writeCallLog }) { p, v -> p.copy(writeCallLog = v) },
+            PermissionItem("processOutgoingCalls", Icons.Outlined.PhoneForwarded, { Strings.permissionProcessOutgoingCalls }, { Strings.permissionProcessOutgoingCallsDesc }, { it.processOutgoingCalls }) { p, v -> p.copy(processOutgoingCalls = v) },
         )
     ),
-    PermissionCategorySpec(
-        title = { Strings.permissionCategoryBackground },
-        icon = Icons.Outlined.History,
+    PermissionGroup(
+        title = { "系统服务" },
+        icon = Icons.Outlined.Settings,
         items = listOf(
-            PermissionItem("foregroundService", { Strings.permissionForegroundService }, { Strings.permissionForegroundServiceDesc }, { it.foregroundService }) { p, v -> p.copy(foregroundService = v) },
-            PermissionItem("wakeLock", { Strings.permissionWakeLock }, { Strings.permissionWakeLockDesc }, { it.wakeLock }) { p, v -> p.copy(wakeLock = v) },
-            PermissionItem("requestIgnoreBatteryOptimizations", { Strings.permissionRequestIgnoreBatteryOptimizations }, { Strings.permissionRequestIgnoreBatteryOptimizationsDesc }, { it.requestIgnoreBatteryOptimizations }) { p, v -> p.copy(requestIgnoreBatteryOptimizations = v) },
-            PermissionItem("bootCompleted", { Strings.permissionBootCompleted }, { Strings.permissionBootCompletedDesc }, { it.bootCompleted }) { p, v -> p.copy(bootCompleted = v) },
-            PermissionItem("vibration", { Strings.permissionVibration }, { Strings.permissionVibrationDesc }, { it.vibration }) { p, v -> p.copy(vibration = v) },
-            PermissionItem("installPackages", { Strings.permissionInstallPackages }, { Strings.permissionInstallPackagesDesc }, { it.installPackages }) { p, v -> p.copy(installPackages = v) },
-            PermissionItem("requestDeletePackages", { Strings.permissionRequestDeletePackages }, { Strings.permissionRequestDeletePackagesDesc }, { it.requestDeletePackages }) { p, v -> p.copy(requestDeletePackages = v) },
-            PermissionItem("systemAlertWindow", { Strings.permissionSystemAlertWindow }, { Strings.permissionSystemAlertWindowDesc }, { it.systemAlertWindow }) { p, v -> p.copy(systemAlertWindow = v) }
+            PermissionItem("foregroundService", Icons.Outlined.PlayCircleOutline, { Strings.permissionForegroundService }, { Strings.permissionForegroundServiceDesc }, { it.foregroundService }) { p, v -> p.copy(foregroundService = v) },
+            PermissionItem("wakeLock", Icons.Outlined.LightMode, { Strings.permissionWakeLock }, { Strings.permissionWakeLockDesc }, { it.wakeLock }) { p, v -> p.copy(wakeLock = v) },
+            PermissionItem("requestIgnoreBatteryOptimizations", Icons.Outlined.BatteryChargingFull, { Strings.permissionRequestIgnoreBatteryOptimizations }, { Strings.permissionRequestIgnoreBatteryOptimizationsDesc }, { it.requestIgnoreBatteryOptimizations }) { p, v -> p.copy(requestIgnoreBatteryOptimizations = v) },
+            PermissionItem("bootCompleted", Icons.Outlined.PowerSettingsNew, { Strings.permissionBootCompleted }, { Strings.permissionBootCompletedDesc }, { it.bootCompleted }) { p, v -> p.copy(bootCompleted = v) },
+            PermissionItem("vibration", Icons.Outlined.Vibration, { Strings.permissionVibration }, { Strings.permissionVibrationDesc }, { it.vibration }) { p, v -> p.copy(vibration = v) },
+            PermissionItem("installPackages", Icons.Outlined.SystemUpdateAlt, { Strings.permissionInstallPackages }, { Strings.permissionInstallPackagesDesc }, { it.installPackages }) { p, v -> p.copy(installPackages = v) },
+            PermissionItem("requestDeletePackages", Icons.Outlined.DeleteOutline, { Strings.permissionRequestDeletePackages }, { Strings.permissionRequestDeletePackagesDesc }, { it.requestDeletePackages }) { p, v -> p.copy(requestDeletePackages = v) },
+            PermissionItem("systemAlertWindow", Icons.Outlined.PictureInPictureAlt, { Strings.permissionSystemAlertWindow }, { Strings.permissionSystemAlertWindowDesc }, { it.systemAlertWindow }) { p, v -> p.copy(systemAlertWindow = v) },
         )
     )
 )
+
+// Flat list for counting utilities
+private val PERMISSION_ITEMS = PERMISSION_GROUPS.flatMap { it.items }
 
 
 
@@ -206,7 +216,7 @@ fun PermissionConfigScreen(
                     Text(
                         Strings.permissionConfigTitle,
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.SemiBold
                     )
                 },
                 navigationIcon = {
@@ -221,7 +231,7 @@ fun PermissionConfigScreen(
             )
         }
     ) { padding ->
-        ThemedBackgroundBox {
+        WtaBackground {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -247,10 +257,8 @@ fun PermissionConfigPanel(
     showDescription: Boolean = true
 ) {
     val context = LocalContext.current
-    var searchQuery by remember { mutableStateOf("") }
     var schemeName by remember { mutableStateOf("") }
     var savedPresets by remember { mutableStateOf(PermissionPresetStorage.load(context)) }
-    var expandedCategories by remember { mutableStateOf(defaultExpandedCategories()) }
     val enabledCount = countEnabledPermissions(permissions)
     val conflicts = detectConflicts(permissions)
 
@@ -389,46 +397,13 @@ fun PermissionConfigPanel(
             }
         }
 
-        PremiumTextField(
-            value = searchQuery,
-            onValueChange = { searchQuery = it },
-            label = { Text(Strings.permissionSearchHint) },
-            leadingIcon = { Icon(Icons.Outlined.Search, null, modifier = Modifier.size(18.dp)) },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        PERMISSION_CATEGORIES.forEach { category ->
-            val visibleItems = category.items.filter { it.matches(searchQuery) }
-            if (visibleItems.isNotEmpty()) {
-                val title = category.title()
-                val isExpanded = searchQuery.isNotBlank() || title in expandedCategories
-                PermissionCategoryCard(
-                    title = title,
-                    icon = category.icon,
-                    enabledCount = visibleItems.count { it.checked(permissions) },
-                    totalCount = visibleItems.size,
-                    expanded = isExpanded,
-                    onExpandedChange = { expanded ->
-                        expandedCategories = if (expanded) {
-                            expandedCategories + title
-                        } else {
-                            expandedCategories - title
-                        }
-                    }
-                ) {
-                    visibleItems.forEach { item ->
-                        PermissionSwitch(
-                            key = item.key,
-                            title = item.title(),
-                            subtitle = item.subtitle(),
-                            checked = item.checked(permissions),
-                            onCheckedChange = { checked ->
-                                onPermissionsChange(item.update(permissions, checked))
-                            }
-                        )
-                    }
-                }
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            PERMISSION_GROUPS.forEach { group ->
+                PermissionGroupCard(
+                    group = group,
+                    permissions = permissions,
+                    onPermissionsChange = onPermissionsChange
+                )
             }
         }
     }
@@ -596,73 +571,103 @@ private fun PermissionSchemeCard(
     }
 }
 
-private fun PermissionItem.matches(searchQuery: String): Boolean {
-    return searchQuery.isBlank() ||
-        title().contains(searchQuery, ignoreCase = true) ||
-        subtitle().contains(searchQuery, ignoreCase = true) ||
-        key.contains(searchQuery, ignoreCase = true)
-}
-
 @Composable
-private fun PermissionCategoryCard(
-    title: String,
-    icon: ImageVector,
-    enabledCount: Int,
-    totalCount: Int,
-    expanded: Boolean,
-    onExpandedChange: (Boolean) -> Unit,
-    content: @Composable ColumnScope.() -> Unit
+private fun PermissionGroupCard(
+    group: PermissionGroup,
+    permissions: ApkRuntimePermissions,
+    onPermissionsChange: (ApkRuntimePermissions) -> Unit
 ) {
-    EnhancedElevatedCard {
-        Column(modifier = Modifier.padding(vertical = 8.dp)) {
+    val enabledInGroup = group.items.count { it.checked(permissions) }
+    var expanded by rememberSaveable { mutableStateOf(enabledInGroup > 0) }
+    val hasDangerous = group.items.any { it.key in DANGEROUS_PERMISSION_KEYS && it.checked(permissions) }
+
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        tonalElevation = 0.dp
+    ) {
+        Column {
+            // Group header — clickable to expand/collapse
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { onExpandedChange(!expanded) }
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .clip(RoundedCornerShape(16.dp))
+                    .clickable { expanded = !expanded }
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    icon,
+                    imageVector = group.icon,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(20.dp),
+                    tint = if (enabledInGroup > 0) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.weight(1f))
-                Text(
-                    text = "$enabledCount/$totalCount",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = if (enabledCount > 0) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = group.title(),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    if (enabledInGroup > 0) {
+                        Text(
+                            text = "${enabledInGroup}/${group.items.size} 已启用",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (hasDangerous) MaterialTheme.colorScheme.error
+                            else MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+                if (enabledInGroup > 0) {
+                    Surface(
+                        shape = RoundedCornerShape(999.dp),
+                        color = if (hasDangerous) MaterialTheme.colorScheme.errorContainer
+                        else MaterialTheme.colorScheme.primaryContainer
+                    ) {
+                        Text(
+                            text = enabledInGroup.toString(),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = if (hasDangerous) MaterialTheme.colorScheme.error
+                            else MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
                 Icon(
-                    if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                    imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
                     contentDescription = null,
+                    modifier = Modifier.size(20.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+
+            // Collapsible content
             AnimatedVisibility(
-                visible = expanded
+                visible = expanded,
+                enter = expandVertically(),
+                exit = shrinkVertically()
             ) {
-                Column {
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-                    Column(
-                        modifier = Modifier.padding(horizontal = 8.dp),
-                        content = content
-                    )
+                Column(
+                    modifier = Modifier.padding(
+                        start = 12.dp, end = 12.dp, bottom = 12.dp
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    group.items.forEach { item ->
+                        PermissionSwitch(
+                            key = item.key,
+                            icon = item.icon,
+                            title = item.title(),
+                            subtitle = item.subtitle(),
+                            checked = item.checked(permissions),
+                            onCheckedChange = { checked ->
+                                onPermissionsChange(item.update(permissions, checked))
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -672,26 +677,22 @@ private fun PermissionCategoryCard(
 @Composable
 private fun PermissionSwitch(
     key: String,
+    icon: ImageVector,
     title: String,
     subtitle: String,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    searchQuery: String = ""
+    onCheckedChange: (Boolean) -> Unit
 ) {
     val isDangerous = key in DANGEROUS_PERMISSION_KEYS
-    val matchesSearch = searchQuery.isBlank() ||
-        title.contains(searchQuery, ignoreCase = true) ||
-        subtitle.contains(searchQuery, ignoreCase = true)
 
-    if (!matchesSearch) return
-
-    Column {
-        SettingsSwitch(
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        IconSwitchCard(
             title = buildString {
                 append(title)
                 if (isDangerous) append(" ⚠")
             },
             subtitle = if (isDangerous) "$subtitle\n${Strings.permissionDangerTag}" else subtitle,
+            icon = icon,
             checked = checked,
             onCheckedChange = onCheckedChange
         )

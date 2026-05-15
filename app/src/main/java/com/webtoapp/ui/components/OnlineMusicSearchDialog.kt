@@ -1001,7 +1001,7 @@ private fun OnlineMusicTrackItem(
                             "${(downloadProgress * 100).toInt()}",
                             style = MaterialTheme.typography.labelSmall,
                             fontSize = 8.sp,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -1095,7 +1095,7 @@ private fun EnhancedMiniPlayer(
                     Text(
                         track.name,
                         style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -1213,7 +1213,7 @@ private fun DownloadLogPanel(
                 Text(
                     Strings.downloadLog,
                     style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.SemiBold
                 )
 
                 Spacer(modifier = Modifier.weight(weight = 1f, fill = true))
@@ -1222,7 +1222,7 @@ private fun DownloadLogPanel(
                     Text(
                         "${(progress * 100).toInt()}%",
                         style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.width(4.dp))

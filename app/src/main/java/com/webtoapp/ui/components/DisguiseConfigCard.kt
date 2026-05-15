@@ -1,6 +1,7 @@
 package com.webtoapp.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import com.webtoapp.ui.design.WtaSwitch
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -67,11 +68,16 @@ fun DisguiseConfigCard(
     val impactColor by animateColorAsState(
         targetValue = when (impactLevel) {
             0 -> MaterialTheme.colorScheme.primary
-            1 -> Color(0xFF4CAF50)
-            2 -> Color(0xFFFFA726)
-            3 -> Color(0xFFFF7043)
-            4 -> Color(0xFFE53935)
-            else -> Color(0xFFD500F9)
+
+            1 -> com.webtoapp.ui.design.WtaColors.semantic.success
+
+            2 -> com.webtoapp.ui.design.WtaColors.semantic.info
+
+            3 -> com.webtoapp.ui.design.WtaColors.semantic.warning
+
+            4 -> com.webtoapp.ui.design.WtaColors.semantic.error
+
+            else -> com.webtoapp.ui.design.WtaColors.semantic.error
         },
         label = "impactColor"
     )
@@ -114,28 +120,11 @@ fun DisguiseConfigCard(
                             Strings.disguiseMultiIconTitle,
                             style = MaterialTheme.typography.titleMedium
                         )
-                        if (enabled && multiLauncherIcons > 1) {
-                            Text(
-                                "${multiLauncherIcons} ${Strings.iconStormIcons} · ${Strings.iconStormImpactPrefix}${
-                                    when (impactLevel) {
-                                        0 -> Strings.iconStormImpactNone
-                                        1 -> Strings.iconStormImpactLight
-                                        2 -> Strings.iconStormImpactMedium
-                                        3 -> Strings.iconStormImpactHeavy
-                                        4 -> Strings.iconStormImpactExtreme
-                                        else -> Strings.iconStormImpactDangerous
-                                    }
-                                }",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = impactColor
-                            )
-                        } else if (!enabled) {
-                            Text(
-                                Strings.notEnabled,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                        Text(
+                            if (enabled) Strings.enabled else Strings.notEnabled,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (enabled) impactColor else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                     }
                 Icon(
@@ -163,7 +152,7 @@ fun DisguiseConfigCard(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        PremiumSwitch(
+                        WtaSwitch(
                             checked = enabled,
                             onCheckedChange = {
                                 enabled = it
@@ -202,11 +191,16 @@ fun DisguiseConfigCard(
                                             isSelected = iconStormMode == mode,
                                             impactColor = when (DisguiseConfig.assessImpactLevel(mode.suggestedCount.coerceAtLeast(2))) {
                                                 0 -> MaterialTheme.colorScheme.primary
-                                                1 -> Color(0xFF4CAF50)
-                                                2 -> Color(0xFFFFA726)
-                                                3 -> Color(0xFFFF7043)
-                                                4 -> Color(0xFFE53935)
-                                                else -> Color(0xFFD500F9)
+
+                                                1 -> com.webtoapp.ui.design.WtaColors.semantic.success
+
+                                                2 -> com.webtoapp.ui.design.WtaColors.semantic.info
+
+                                                3 -> com.webtoapp.ui.design.WtaColors.semantic.warning
+
+                                                4 -> com.webtoapp.ui.design.WtaColors.semantic.error
+
+                                                else -> com.webtoapp.ui.design.WtaColors.semantic.error
                                             },
                                             onClick = {
                                                 iconStormMode = mode
@@ -231,11 +225,16 @@ fun DisguiseConfigCard(
                                                 else mode.suggestedCount.coerceAtLeast(2)
                                             )) {
                                                 0 -> MaterialTheme.colorScheme.primary
-                                                1 -> Color(0xFF4CAF50)
-                                                2 -> Color(0xFFFFA726)
-                                                3 -> Color(0xFFFF7043)
-                                                4 -> Color(0xFFE53935)
-                                                else -> Color(0xFFD500F9)
+
+                                                1 -> com.webtoapp.ui.design.WtaColors.semantic.success
+
+                                                2 -> com.webtoapp.ui.design.WtaColors.semantic.info
+
+                                                3 -> com.webtoapp.ui.design.WtaColors.semantic.warning
+
+                                                4 -> com.webtoapp.ui.design.WtaColors.semantic.error
+
+                                                else -> com.webtoapp.ui.design.WtaColors.semantic.error
                                             },
                                             onClick = {
                                                 iconStormMode = mode
@@ -327,7 +326,7 @@ fun DisguiseConfigCard(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
-                                PremiumSwitch(
+                                WtaSwitch(
                                     checked = randomizeNames,
                                     onCheckedChange = {
                                         randomizeNames = it
@@ -383,7 +382,7 @@ fun DisguiseConfigCard(
                                 Column {
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Surface(
-                                        color = Color(0x33E53935),
+                                        color = com.webtoapp.ui.design.WtaColors.semantic.errorContainer,
                                         shape = RoundedCornerShape(8.dp)
                                     ) {
                                         Row(
@@ -394,13 +393,13 @@ fun DisguiseConfigCard(
                                                 Icons.Outlined.Warning,
                                                 contentDescription = null,
                                                 modifier = Modifier.size(16.dp),
-                                                tint = Color(0xFFE53935)
+                                                tint = com.webtoapp.ui.design.WtaColors.semantic.error
                                             )
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Text(
                                                 Strings.iconStormWarning,
                                                 style = MaterialTheme.typography.bodySmall,
-                                                color = Color(0xFFE53935)
+                                                color = com.webtoapp.ui.design.WtaColors.semantic.error
                                             )
                                         }
                                     }
@@ -512,7 +511,7 @@ private fun ImpactDashboard(
                         },
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                         style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = impactColor
                     )
                 }
@@ -534,7 +533,7 @@ private fun ImpactDashboard(
                     Text(
                         "${count - 1}",
                         style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = impactColor
                     )
                 }
@@ -547,7 +546,7 @@ private fun ImpactDashboard(
                     Text(
                         "+ $overheadStr",
                         style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = impactColor
                     )
                 }

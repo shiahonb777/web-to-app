@@ -1,6 +1,7 @@
 package com.webtoapp.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import com.webtoapp.ui.design.WtaSwitch
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -76,7 +77,7 @@ fun DnsConfigCard(
                         }
                     }
                 }
-                PremiumSwitch(
+                WtaSwitch(
                     checked = enabled,
                     onCheckedChange = { onDnsModeChange(if (it) "DOH" else "SYSTEM") }
                 )

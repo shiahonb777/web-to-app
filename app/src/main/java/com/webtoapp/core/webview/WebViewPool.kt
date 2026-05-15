@@ -186,13 +186,9 @@ object WebViewPool {
             mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
             @Suppress("DEPRECATION")
             setRenderPriority(android.webkit.WebSettings.RenderPriority.HIGH)
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                offscreenPreRaster = true
-            }
         }
 
 
-        webView.setLayerType(WebView.LAYER_TYPE_HARDWARE, null)
         webView.isScrollbarFadingEnabled = true
 
         return webView

@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 
 
 
@@ -33,56 +34,56 @@ val LocalAnimationSettings = staticCompositionLocalOf { AnimationSettings() }
 
 
 private val LightColorScheme = lightColorScheme(
-    primary = Color(0xFF1A1A1A),
+    primary = Color(0xFF111113),
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFF0F0F0),
-    onPrimaryContainer = Color(0xFF1A1A1A),
-    secondary = Color(0xFF505050),
+    primaryContainer = Color(0xFFEDEDEF),
+    onPrimaryContainer = Color(0xFF111113),
+    secondary = Color(0xFF474749),
     onSecondary = Color.White,
-    tertiary = Color(0xFF8A8A8A),
-    error = Color(0xFF2A2A2A),
+    tertiary = Color(0xFF7A7A7D),
+    error = Color(0xFF8A1D1D),
     onError = Color.White,
-    errorContainer = Color(0xFFEAEAEA),
-    onErrorContainer = Color(0xFF1A1A1A),
-    background = Color(0xFFFFFFFF),
-    onBackground = Color(0xFF1A1A1A),
+    errorContainer = Color(0xFFF9E4E4),
+    onErrorContainer = Color(0xFF3B0F0F),
+    background = Color(0xFFFBFBFC),
+    onBackground = Color(0xFF111113),
     surface = Color(0xFFFFFFFF),
-    onSurface = Color(0xFF1A1A1A),
-    surfaceVariant = Color(0xFFF5F5F5),
-    onSurfaceVariant = Color(0xFF5C5C5C),
-    surfaceContainer = Color(0xFFF7F7F7),
-    surfaceContainerLow = Color(0xFFFAFAFA),
-    surfaceContainerHigh = Color(0xFFF0F0F0),
-    surfaceContainerHighest = Color(0xFFEAEAEA),
+    onSurface = Color(0xFF111113),
+    surfaceVariant = Color(0xFFF1F1F3),
+    onSurfaceVariant = Color(0xFF55555A),
+    surfaceContainer = Color(0xFFF6F6F8),
+    surfaceContainerLow = Color(0xFFFAFAFB),
+    surfaceContainerHigh = Color(0xFFEFEFF1),
+    surfaceContainerHighest = Color(0xFFE8E8EB),
     surfaceContainerLowest = Color(0xFFFFFFFF),
-    outline = Color(0xFFD5D5D5),
-    outlineVariant = Color(0xFFE8E8E8)
+    outline = Color(0xFFCACACE),
+    outlineVariant = Color(0xFFE4E4E7)
 )
 
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Color(0xFFEEEEEE),
-    onPrimary = Color(0xFF1A1A1A),
-    primaryContainer = Color(0xFF303030),
-    onPrimaryContainer = Color(0xFFE0E0E0),
-    secondary = Color(0xFFB0B0B0),
-    error = Color(0xFFDADADA),
-    onError = Color(0xFF1A1A1A),
-    errorContainer = Color(0xFF303030),
-    onErrorContainer = Color(0xFFE0E0E0),
-    background = Color(0xFF000000),
-    onBackground = Color(0xFFE3E3E3),
-    surface = Color(0xFF0A0A0A),
-    onSurface = Color(0xFFE3E3E3),
-    surfaceVariant = Color(0xFF1E1E1E),
-    onSurfaceVariant = Color(0xFFA8A8A8),
-    surfaceContainer = Color(0xFF141414),
-    surfaceContainerLow = Color(0xFF0E0E0E),
-    surfaceContainerHigh = Color(0xFF1C1C1C),
-    surfaceContainerHighest = Color(0xFF262626),
-    surfaceContainerLowest = Color(0xFF050505),
-    outline = Color(0xFF3A3A3A),
-    outlineVariant = Color(0xFF2A2A2A)
+    primary = Color(0xFFF2F2F4),
+    onPrimary = Color(0xFF111113),
+    primaryContainer = Color(0xFF2A2A2E),
+    onPrimaryContainer = Color(0xFFE4E4E7),
+    secondary = Color(0xFFB8B8BC),
+    error = Color(0xFFE7A3A3),
+    onError = Color(0xFF1A0808),
+    errorContainer = Color(0xFF3B1515),
+    onErrorContainer = Color(0xFFF4D4D4),
+    background = Color(0xFF0B0B0E),
+    onBackground = Color(0xFFE6E6E9),
+    surface = Color(0xFF111114),
+    onSurface = Color(0xFFE6E6E9),
+    surfaceVariant = Color(0xFF1E1E22),
+    onSurfaceVariant = Color(0xFFB0B0B4),
+    surfaceContainer = Color(0xFF17171A),
+    surfaceContainerLow = Color(0xFF121215),
+    surfaceContainerHigh = Color(0xFF1C1C20),
+    surfaceContainerHighest = Color(0xFF242428),
+    surfaceContainerLowest = Color(0xFF08080A),
+    outline = Color(0xFF45454A),
+    outlineVariant = Color(0xFF2B2B2F)
 )
 
 
@@ -161,11 +162,16 @@ fun WebToAppTheme(
 
 
     val themeShapes = Shapes(
-        extraSmall = RoundedCornerShape(currentTheme.shapes.cornerRadius * 0.25f),
-        small = RoundedCornerShape(currentTheme.shapes.buttonRadius),
-        medium = RoundedCornerShape(currentTheme.shapes.cardRadius * 0.75f),
-        large = RoundedCornerShape(currentTheme.shapes.cardRadius),
-        extraLarge = RoundedCornerShape(currentTheme.shapes.dialogRadius)
+        // extraSmall: chips and small pills
+        extraSmall = RoundedCornerShape(6.dp),
+        // small: buttons and compact inputs
+        small = RoundedCornerShape(10.dp),
+        // medium: inner surfaces
+        medium = RoundedCornerShape(12.dp),
+        // large: cards and bottom sheets
+        large = RoundedCornerShape(14.dp),
+        // extraLarge: dialogs and modals
+        extraLarge = RoundedCornerShape(20.dp)
     )
 
     CompositionLocalProvider(
@@ -175,7 +181,7 @@ fun WebToAppTheme(
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
-            typography = Typography,
+            typography = WtaTypography,
             shapes = themeShapes,
             content = { content(useDarkTheme) }
         )
@@ -198,13 +204,11 @@ fun WebToAppThemeSimple(
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
-            typography = Typography,
+            typography = WtaTypography,
             content = content
         )
     }
 }
-
-val Typography = Typography()
 
 
 
@@ -247,11 +251,16 @@ fun ShellTheme(
     )
 
     val themeShapes = Shapes(
-        extraSmall = RoundedCornerShape(currentTheme.shapes.cornerRadius * 0.25f),
-        small = RoundedCornerShape(currentTheme.shapes.buttonRadius),
-        medium = RoundedCornerShape(currentTheme.shapes.cardRadius * 0.75f),
-        large = RoundedCornerShape(currentTheme.shapes.cardRadius),
-        extraLarge = RoundedCornerShape(currentTheme.shapes.dialogRadius)
+        // extraSmall: chips and small pills
+        extraSmall = RoundedCornerShape(6.dp),
+        // small: buttons and compact inputs
+        small = RoundedCornerShape(10.dp),
+        // medium: inner surfaces
+        medium = RoundedCornerShape(12.dp),
+        // large: cards and bottom sheets
+        large = RoundedCornerShape(14.dp),
+        // extraLarge: dialogs and modals
+        extraLarge = RoundedCornerShape(20.dp)
     )
 
     CompositionLocalProvider(
@@ -261,7 +270,7 @@ fun ShellTheme(
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
-            typography = Typography,
+            typography = WtaTypography,
             shapes = themeShapes,
             content = content
         )

@@ -38,6 +38,8 @@ import androidx.compose.ui.graphics.Color
 
 @Composable
 fun VueLogo(modifier: Modifier = Modifier) {
+    val accent = MaterialTheme.colorScheme.onSurface
+    val accentMuted = MaterialTheme.colorScheme.onSurfaceVariant
     val infiniteTransition = rememberInfiniteTransition(label = "vue")
     val glowAlpha by infiniteTransition.animateFloat(
         initialValue = 0.3f,
@@ -66,14 +68,14 @@ fun VueLogo(modifier: Modifier = Modifier) {
 
         drawPath(
             path = outerPath,
-            color = Color(0xFF42B883).copy(alpha = glowAlpha),
+            color = accent.copy(alpha = glowAlpha),
             style = Stroke(width = 8f, cap = StrokeCap.Round)
         )
 
         drawPath(
             path = outerPath,
             brush = Brush.verticalGradient(
-                colors = listOf(Color(0xFF42B883), Color(0xFF35495E))
+                colors = listOf(accent, accentMuted)
             )
         )
 
@@ -87,7 +89,7 @@ fun VueLogo(modifier: Modifier = Modifier) {
             close()
         }
 
-        drawPath(path = innerPath, color = Color(0xFF35495E))
+        drawPath(path = innerPath, color = accentMuted)
     }
 }
 
@@ -96,6 +98,7 @@ fun VueLogo(modifier: Modifier = Modifier) {
 
 @Composable
 fun ReactLogo(modifier: Modifier = Modifier) {
+    val accent = MaterialTheme.colorScheme.onSurface
     val infiniteTransition = rememberInfiniteTransition(label = "react")
     val rotation by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -112,9 +115,8 @@ fun ReactLogo(modifier: Modifier = Modifier) {
         val height = size.height
         val centerX = width / 2
         val centerY = height / 2
-        val reactBlue = Color(0xFF61DAFB)
 
-        drawCircle(color = reactBlue, radius = width * 0.1f, center = Offset(centerX, centerY))
+        drawCircle(color = accent, radius = width * 0.1f, center = Offset(centerX, centerY))
 
         val orbitRadiusX = width * 0.38f
         val orbitRadiusY = height * 0.15f
@@ -122,7 +124,7 @@ fun ReactLogo(modifier: Modifier = Modifier) {
         for (i in 0..2) {
             rotate(degrees = rotation + i * 60f, pivot = Offset(centerX, centerY)) {
                 drawOval(
-                    color = reactBlue,
+                    color = accent,
                     topLeft = Offset(centerX - orbitRadiusX, centerY - orbitRadiusY),
                     size = Size(orbitRadiusX * 2, orbitRadiusY * 2),
                     style = Stroke(width = 2.5f, cap = StrokeCap.Round)
@@ -136,7 +138,7 @@ fun ReactLogo(modifier: Modifier = Modifier) {
             val electronY = centerY + (orbitRadiusY * 0.9f * sin(angle)).toFloat()
 
             rotate(degrees = i * 60f, pivot = Offset(centerX, centerY)) {
-                drawCircle(color = reactBlue, radius = 4f, center = Offset(electronX, electronY))
+                drawCircle(color = accent, radius = 4f, center = Offset(electronX, electronY))
             }
         }
     }
@@ -147,6 +149,8 @@ fun ReactLogo(modifier: Modifier = Modifier) {
 
 @Composable
 fun ViteLogo(modifier: Modifier = Modifier) {
+    val accent = MaterialTheme.colorScheme.onSurface
+    val accentMuted = MaterialTheme.colorScheme.onSurfaceVariant
     val infiniteTransition = rememberInfiniteTransition(label = "vite")
     val shimmer by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -176,8 +180,8 @@ fun ViteLogo(modifier: Modifier = Modifier) {
             path = lightningPath,
             brush = Brush.linearGradient(
                 colors = listOf(
-                    Color(0xFFFFD62E).copy(alpha = 0.3f + shimmer * 0.3f),
-                    Color(0xFF646CFF).copy(alpha = 0.3f + shimmer * 0.3f)
+                    accent.copy(alpha = 0.3f + shimmer * 0.3f),
+                    accentMuted.copy(alpha = 0.3f + shimmer * 0.3f)
                 ),
                 start = Offset(0f, 0f),
                 end = Offset(width, height)
@@ -188,7 +192,7 @@ fun ViteLogo(modifier: Modifier = Modifier) {
         drawPath(
             path = lightningPath,
             brush = Brush.linearGradient(
-                colors = listOf(Color(0xFFFFD62E), Color(0xFF646CFF)),
+                colors = listOf(accent, accentMuted),
                 start = Offset(0f, 0f),
                 end = Offset(width, height)
             )
@@ -260,7 +264,7 @@ fun SampleProjectsCard(
                     Text(
                         Strings.sampleProjects,
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
@@ -311,7 +315,7 @@ private fun SampleProjectItem(
     onClick: () -> Unit
 ) {
     val theme = LocalAppTheme.current
-    val frameworkColor = getFrameworkColor(sample.framework)
+    val accentColor = MaterialTheme.colorScheme.onSurface
 
 
     var isPressed by remember { mutableStateOf(false) }
@@ -346,8 +350,8 @@ private fun SampleProjectItem(
                 .background(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            frameworkColor.copy(alpha = 0.15f),
-                            frameworkColor.copy(alpha = 0.05f)
+                            accentColor.copy(alpha = 0.15f),
+                            accentColor.copy(alpha = 0.05f)
                         )
                     )
                 ),
@@ -367,7 +371,7 @@ private fun SampleProjectItem(
             Text(
                 sample.name,
                 style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
             )
 
@@ -389,14 +393,14 @@ private fun SampleProjectItem(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(6.dp))
-                            .background(frameworkColor.copy(alpha = 0.1f))
+                            .background(accentColor.copy(alpha = 0.1f))
                             .padding(horizontal = 8.dp, vertical = 3.dp)
                     ) {
                         Text(
                             text = tag,
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Medium,
-                            color = frameworkColor
+                            color = accentColor
                         )
                     }
                 }
@@ -413,8 +417,8 @@ private fun SampleProjectItem(
                 .background(
                     brush = Brush.linearGradient(
                         colors = listOf(
-                            frameworkColor.copy(alpha = 0.2f),
-                            frameworkColor.copy(alpha = 0.1f)
+                            accentColor.copy(alpha = 0.2f),
+                            accentColor.copy(alpha = 0.1f)
                         )
                     )
                 ),
@@ -423,25 +427,9 @@ private fun SampleProjectItem(
             Icon(
                 Icons.Default.PlayArrow,
                 contentDescription = Strings.run,
-                tint = frameworkColor,
+                tint = accentColor,
                 modifier = Modifier.size(20.dp)
             )
         }
-    }
-}
-
-
-
-
-private fun getFrameworkColor(framework: FrontendFramework): Color {
-    return when (framework) {
-        FrontendFramework.VUE -> Color(0xFF42B883)
-        FrontendFramework.REACT -> Color(0xFF61DAFB)
-        FrontendFramework.NEXT -> Color(0xFF000000)
-        FrontendFramework.NUXT -> Color(0xFF00DC82)
-        FrontendFramework.ANGULAR -> Color(0xFFDD0031)
-        FrontendFramework.SVELTE -> Color(0xFFFF3E00)
-        FrontendFramework.VITE -> Color(0xFF646CFF)
-        FrontendFramework.UNKNOWN -> Color.Gray
     }
 }

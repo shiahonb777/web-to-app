@@ -63,6 +63,7 @@ object BuiltInChromeExtensions {
 
     private fun bewlyCat(context: Context): List<ExtensionModule> {
         val modules = mutableListOf<ExtensionModule>()
+        val manifestJson = loadAsset(context, "extensions/bewlycat/manifest.json").orEmpty()
 
 
         val contentJs = loadAsset(context, "extensions/bewlycat/content.js")
@@ -93,6 +94,7 @@ object BuiltInChromeExtensions {
                 chromeExtId = BEWLYCAT_EXT_ID,
                 world = "ISOLATED",
                 backgroundScript = "background/index.js",
+                manifestJson = manifestJson,
                 noframes = false
             ))
         } else {
@@ -120,6 +122,7 @@ object BuiltInChromeExtensions {
                 sourceType = ModuleSourceType.CHROME_EXTENSION,
                 chromeExtId = BEWLYCAT_EXT_ID,
                 world = "MAIN",
+                manifestJson = manifestJson,
                 noframes = false
             ))
         } else {

@@ -325,7 +325,7 @@ private fun CodeTabButton(
                     color = Color.White,
                     modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
                     fontSize = 9.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.SemiBold
                 )
             }
 
@@ -747,7 +747,7 @@ fun SimpleCodePreview(
                             style = MaterialTheme.typography.labelSmall,
                             color = Color.White,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
 

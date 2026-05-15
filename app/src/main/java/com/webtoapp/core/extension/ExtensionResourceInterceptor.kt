@@ -17,6 +17,7 @@ object ExtensionResourceInterceptor {
 
     private const val TAG = "ExtResInterceptor"
     private const val SCHEME = "chrome-extension"
+    private const val LOCALHOST_EXT_PREFIX = "https://localhost/__ext__/"
     private const val ASSETS_BASE = "extensions"
 
 
@@ -59,6 +60,24 @@ object ExtensionResourceInterceptor {
 
     fun isChromeExtensionUrl(url: String): Boolean {
         return url.startsWith("$SCHEME://")
+    }
+
+    fun isExtensionResourceUrl(url: String): Boolean {
+        return isChromeExtensionUrl(url) || url.startsWith(LOCALHOST_EXT_PREFIX)
+    }
+
+    fun normalizeExtensionResourceUrl(url: String): String? {
+        return when {
+            isChromeExtensionUrl(url) -> url
+            url.startsWith(LOCALHOST_EXT_PREFIX) ->
+                "$SCHEME://${url.removePrefix(LOCALHOST_EXT_PREFIX)}"
+            else -> null
+        }
+    }
+
+    fun interceptAny(context: Context, url: String): WebResourceResponse? {
+        val normalizedUrl = normalizeExtensionResourceUrl(url) ?: return null
+        return intercept(context, normalizedUrl)
     }
 
 

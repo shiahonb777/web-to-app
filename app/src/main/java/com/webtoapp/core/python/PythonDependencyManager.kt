@@ -29,6 +29,15 @@ import java.util.Locale
 object PythonDependencyManager {
 
     private const val TAG = "PythonDependencyManager"
+    private val ANDROID_UNSUPPORTED_REQUIREMENTS = setOf(
+        "uvloop",
+        "httptools",
+        "watchfiles"
+    )
+    private val UVICORN_EXTRAS_REGEX = Regex(
+        """^(\s*)uvicorn\s*\[[^]]+](\s*.*)$""",
+        RegexOption.IGNORE_CASE
+    )
 
 
 
@@ -216,6 +225,14 @@ object PythonDependencyManager {
         return null
     }
 
+    private fun resolveBuilderMuslLinker(context: Context): File? {
+        val nativeLinker = File(context.applicationInfo.nativeLibraryDir, "libmusl-linker.so")
+        if (nativeLinker.exists() && nativeLinker.length() > 1024 && nativeLinker.canExecute()) {
+            return nativeLinker
+        }
+        return null
+    }
+
 
 
 
@@ -257,11 +274,22 @@ object PythonDependencyManager {
         return resolveMuslLinker(context)?.absolutePath
     }
 
+    fun getBuilderMuslLinkerPath(context: Context): String? {
+        return resolveBuilderMuslLinker(context)?.absolutePath
+    }
+
 
 
 
     fun getPipPath(context: Context): String {
         return File(getPythonDir(context), "bin/pip3").absolutePath
+    }
+
+    fun hasInstalledPackages(sitePackagesDir: File): Boolean {
+        if (!sitePackagesDir.exists() || !sitePackagesDir.isDirectory) return false
+        return sitePackagesDir.walkTopDown()
+            .drop(1)
+            .any { it.isFile }
     }
 
 
@@ -276,7 +304,7 @@ object PythonDependencyManager {
             val pythonReady = resolvePythonBinary(context) != null
             val muslReady = resolveMuslLinker(context) != null
             if (pythonReady && muslReady) {
-                _downloadState.value = DownloadState.Complete
+                markComplete()
                 return@withContext true
             }
 
@@ -291,7 +319,7 @@ object PythonDependencyManager {
                 !muslReady -> {
                     val muslUrl = mirror.muslLinkerUrl
                     if (muslUrl == null) {
-                        _downloadState.value = DownloadState.Error("当前 ABI ($abi) 暂无可用的 musl linker")
+                        markError("当前 ABI ($abi) 暂无可用的 musl linker")
                         false
                     } else {
                         _downloadState.value = DownloadState.Extracting("musl linker")
@@ -303,16 +331,16 @@ object PythonDependencyManager {
             if (!success) return@withContext false
 
             if (!isPythonReady(context)) {
-                _downloadState.value = DownloadState.Error("Python 运行时下载不完整：缺少 Python 二进制或 musl linker")
+                markError("Python 运行时下载不完整：缺少 Python 二进制或 musl linker")
                 return@withContext false
             }
 
-            _downloadState.value = DownloadState.Complete
+            markComplete()
             AppLogger.i(TAG, "Python 运行时下载完成")
             true
         } catch (e: Exception) {
             AppLogger.e(TAG, "下载 Python 运行时失败", e)
-            _downloadState.value = DownloadState.Error(e.message ?: "未知错误")
+            markError(e.message ?: "未知错误")
             false
         }
     }
@@ -333,40 +361,44 @@ object PythonDependencyManager {
 
 
         val sitePackages = File(projectDir, ".pypackages")
-        val existingPackages = sitePackages.listFiles()
-        if (sitePackages.exists() && existingPackages != null && existingPackages.isNotEmpty()) {
-            AppLogger.i(TAG, ".pypackages 已存在 (${existingPackages.size} items)，跳过 pip install")
+        if (hasInstalledPackages(sitePackages)) {
+            val existingPackages = sitePackages.listFiles()?.size ?: 0
+            AppLogger.i(TAG, ".pypackages 已存在 (${existingPackages} items)，跳过 pip install")
             onOutput?.invoke("依赖已就绪，跳过安装")
             return@withContext true
         }
 
         val pythonBin = getPythonExecutablePath(context)
         val pythonHome = getPythonHome(context)
-        val muslLinker = getMuslLinkerPath(context)
+        val muslLinker = getBuilderMuslLinkerPath(context)
+        val installReqFile = prepareRequirementsFileForInstall(context, projectDir, reqFile, onOutput)
 
         try {
             sitePackages.mkdirs()
             onOutput?.invoke("正在安装 Python 依赖...")
 
-
-
-
-
-
-
-
-
-
-
-
-            val result = if (muslLinker != null) {
-                runPipWithWrapper(context, projectDir, pythonBin, pythonHome, muslLinker,
-                    sitePackages, reqFile, onOutput)
-            } else {
-
-                runPipDirect(context, projectDir, pythonBin, pythonHome,
-                    sitePackages, reqFile, onOutput)
+            if (muslLinker == null) {
+                AppLogger.w(
+                    TAG,
+                    "构建阶段缺少可执行 musl linker，无法预安装 Python 依赖: nativeLibraryDir=${context.applicationInfo.nativeLibraryDir}"
+                )
+                onOutput?.invoke("本机构建器缺少可执行 musl linker，无法预安装依赖")
+                return@withContext false
             }
+
+
+
+
+
+
+
+
+
+
+
+
+            val result = runPipWithWrapper(context, projectDir, pythonBin, pythonHome, muslLinker,
+                sitePackages, installReqFile, onOutput)
 
             if (result) {
                 AppLogger.i(TAG, "Python 依赖安装成功")
@@ -380,6 +412,61 @@ object PythonDependencyManager {
             AppLogger.e(TAG, "安装 Python 依赖异常", e)
             onOutput?.invoke("安装异常: ${e.message}")
             false
+        } finally {
+            if (installReqFile != reqFile) {
+                installReqFile.delete()
+            }
+        }
+    }
+
+    private fun prepareRequirementsFileForInstall(
+        context: Context,
+        projectDir: File,
+        reqFile: File,
+        onOutput: ((String) -> Unit)?
+    ): File {
+        val original = reqFile.readText()
+        val sanitized = sanitizeRequirementsForAndroid(original)
+        if (sanitized == original) {
+            return reqFile
+        }
+
+        val tempFile = File.createTempFile("w2a_requirements_android_", ".txt", context.cacheDir)
+        tempFile.writeText(sanitized)
+        AppLogger.w(
+            TAG,
+            "检测到 Android 不兼容的 Python 依赖，已改用清洗后的 requirements: ${tempFile.absolutePath} (project=${projectDir.absolutePath})"
+        )
+        onOutput?.invoke("已自动调整 Android 不兼容依赖")
+        return tempFile
+    }
+
+    internal fun sanitizeRequirementsForAndroid(requirementsText: String): String {
+        val sanitized = requirementsText
+            .lineSequence()
+            .mapNotNull { line ->
+                val trimmed = line.trim()
+                if (trimmed.isEmpty() || trimmed.startsWith("#") || trimmed.startsWith("-")) {
+                    return@mapNotNull line
+                }
+
+                val packageName = trimmed.takeWhile { char ->
+                    char.isLetterOrDigit() || char == '-' || char == '_' || char == '.'
+                }
+                if (packageName.lowercase(Locale.US) in ANDROID_UNSUPPORTED_REQUIREMENTS) {
+                    return@mapNotNull null
+                }
+                if (packageName.equals("uvicorn", ignoreCase = true) && trimmed.getOrNull(packageName.length) == '[') {
+                    return@mapNotNull line.replaceFirst(UVICORN_EXTRAS_REGEX, "$1uvicorn$2")
+                }
+                line
+            }
+            .joinToString("\n")
+
+        return if (requirementsText.endsWith("\n") && !sanitized.endsWith("\n")) {
+            "$sanitized\n"
+        } else {
+            sanitized
         }
     }
 
@@ -739,7 +826,7 @@ sys.exit(main())
                     AppLogger.i(TAG, "Python 二进制已移动到: ${target.absolutePath}")
                 } else {
                     AppLogger.e(TAG, "解压后未找到有效的 Python 二进制 (>1MB)")
-                    _downloadState.value = DownloadState.Error("解压后未找到 Python 二进制")
+                    markError("解压后未找到 Python 二进制")
                     return false
                 }
             }
@@ -756,7 +843,7 @@ sys.exit(main())
             archiveFile.delete()
         } catch (e: Exception) {
             AppLogger.e(TAG, "解压 Python 失败", e)
-            _downloadState.value = DownloadState.Error("解压 Python 失败: ${e.message}")
+            markError("解压 Python 失败: ${e.message}")
             return false
         }
 
@@ -817,10 +904,12 @@ sys.exit(main())
 
             if (!found) {
                 AppLogger.e(TAG, "Alpine APK 中未找到 $linkerName")
+                markError("Alpine APK 中未找到 $linkerName")
             }
             return found
         } catch (e: Exception) {
             AppLogger.e(TAG, "下载 musl linker 失败", e)
+            markError("下载 musl linker 失败: ${e.message}")
             return false
         }
     }
@@ -939,5 +1028,15 @@ sys.exit(main())
             }
             else -> {}
         }
+    }
+
+    private fun markComplete() {
+        _downloadState.value = DownloadState.Complete
+        DependencyDownloadEngine._state.value = DependencyDownloadEngine.State.Complete
+    }
+
+    private fun markError(message: String) {
+        _downloadState.value = DownloadState.Error(message)
+        DependencyDownloadEngine._state.value = DependencyDownloadEngine.State.Error(message)
     }
 }

@@ -64,6 +64,12 @@ object ChromeExtensionParser {
         val mappedPermissions: List<ModulePermission> = emptyList()
     )
 
+    data class StaticRuleResource(
+        val id: String,
+        val enabled: Boolean,
+        val path: String
+    )
+
 
 
 
@@ -97,16 +103,55 @@ object ChromeExtensionParser {
 
             AppLogger.d(TAG, "Parsing extension: $name v$version (manifest v$manifestVersion)")
 
+            val popupPath = extractPopupPath(manifest)
+            val optionsPagePath = extractOptionsPagePath(manifest)
+            val backgroundScript = extractBackgroundScript(manifest)
+            val staticRuleResources = extractStaticRuleResources(manifest)
+
 
             val contentScripts = manifest.optJSONArray("content_scripts")
             if (contentScripts == null || contentScripts.length() == 0) {
-                warnings.add("No content_scripts found in manifest.json")
-                return ParseResult(
+                val extensionId = overrideExtensionId?.takeIf { it.isNotBlank() }
+                    ?: extensionDir.name.takeIf { it.isNotBlank() && it != "." }
+                    ?: UUID.randomUUID().toString().take(8)
+                val syntheticModules = mutableListOf<ExtensionModule>()
+                val hasExtensionUi = popupPath.isNotBlank() || optionsPagePath.isNotBlank()
+                val hasBackgroundRuntime = backgroundScript.isNotBlank() || staticRuleResources.isNotEmpty()
+
+                if (hasExtensionUi || hasBackgroundRuntime) {
+                    syntheticModules += ExtensionModule(
+                        id = "${extensionId}_ui_0",
+                        name = name,
+                        description = description,
+                        icon = "extension",
+                        category = ModuleCategory.FUNCTION_ENHANCE,
+                        version = ModuleVersion(name = version),
+                        code = "",
+                        cssCode = "",
+                        runAt = ModuleRunTime.DOCUMENT_IDLE,
+                        urlMatches = listOf(UrlMatchRule(pattern = "*")),
+                        enabled = true,
+                        sourceType = ModuleSourceType.CHROME_EXTENSION,
+                        chromeExtId = extensionId,
+                        world = "ISOLATED",
+                        backgroundScript = backgroundScript,
+                        popupPath = popupPath,
+                        optionsPagePath = optionsPagePath,
+                        manifestJson = manifestJson,
+                        noframes = false
+                    )
+                    warnings.add(buildSyntheticImportWarning(hasExtensionUi, hasBackgroundRuntime))
+                } else {
+                    warnings.add(
+                        "This extension has no content_scripts, popup, options page, background runtime, or declarative net request rules. Only Chrome extensions with page scripts, extension UI, or runtime/background capabilities are currently supported."
+                    )
+                }
+                return buildParseResult(
                     extensionName = name,
                     extensionVersion = version,
                     extensionDescription = description,
-                    modules = emptyList(),
-                    isValid = true,
+                    manifest = manifest,
+                    modules = syntheticModules,
                     warnings = warnings
                 )
             }
@@ -119,15 +164,6 @@ object ChromeExtensionParser {
                 ?: extensionDir.name.takeIf { it.isNotBlank() && it != "." }
                 ?: UUID.randomUUID().toString().take(8)
 
-
-            val backgroundScript = try {
-                val bg = manifest.optJSONObject("background")
-                bg?.optString("service_worker", "")?.takeIf { it.isNotBlank() }
-                    ?: bg?.optJSONArray("scripts")?.let { arr ->
-                        if (arr.length() > 0) arr.getString(0) else null
-                    }
-                    ?: ""
-            } catch (_: Exception) { "" }
 
             for (i in 0 until contentScripts.length()) {
                 val cs = contentScripts.getJSONObject(i)
@@ -243,57 +279,27 @@ object ChromeExtensionParser {
                     chromeExtId = extensionId,
                     world = world,
                     backgroundScript = if (i == 0) backgroundScript else "",
+                    popupPath = if (i == 0) popupPath else "",
+                    optionsPagePath = if (i == 0) optionsPagePath else "",
+                    manifestJson = manifestJson,
                     noframes = !allFrames
                 ))
             }
 
 
-            val rawPermissions = mutableListOf<String>()
-            manifest.optJSONArray("permissions")?.let { arr ->
-                for (j in 0 until arr.length()) rawPermissions.add(arr.getString(j))
-            }
-
-            manifest.optJSONArray("host_permissions")?.let { arr ->
-                for (j in 0 until arr.length()) rawPermissions.add(arr.getString(j))
-            }
-
-            manifest.optJSONArray("optional_permissions")?.let { arr ->
-                for (j in 0 until arr.length()) rawPermissions.add(arr.getString(j))
-            }
-
-
-            val apiPermissions = rawPermissions.filter { !it.contains("://") && it != "<all_urls>" }
-
-
-            val mapped = apiPermissions.mapNotNull { PERMISSION_MAP[it] }.distinct()
-            val supported = apiPermissions.filter { it in PERMISSION_MAP }
-            val unsupported = apiPermissions.filter { it in UNSUPPORTED_PERMISSIONS }
-
-            if (unsupported.isNotEmpty()) {
-                warnings.add("Unsupported permissions: ${unsupported.joinToString()}")
-            }
-
-            AppLogger.d(TAG, "Extension permissions: raw=$rawPermissions, supported=$supported, unsupported=$unsupported")
-
-
-            val modulesWithPermissions = modules.map { module ->
-                module.copy(permissions = (module.permissions + mapped).distinct())
-            }
-
-            AppLogger.i(TAG, "Parsed Chrome extension: name='$name', " +
-                "content_scripts=${modulesWithPermissions.size}, warnings=${warnings.size}")
-
-            ParseResult(
+            buildParseResult(
                 extensionName = name,
                 extensionVersion = version,
                 extensionDescription = description,
-                modules = modulesWithPermissions,
-                isValid = true,
-                warnings = warnings,
-                supportedPermissions = supported,
-                unsupportedPermissions = unsupported,
-                mappedPermissions = mapped
-            )
+                manifest = manifest,
+                modules = modules,
+                warnings = warnings
+            ).also {
+                AppLogger.i(
+                    TAG,
+                    "Parsed Chrome extension: name='$name', content_scripts=${it.modules.size}, warnings=${warnings.size}"
+                )
+            }
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to parse Chrome extension", e)
             ParseResult(
@@ -305,6 +311,121 @@ object ChromeExtensionParser {
                 warnings = listOf("Parse error: ${e.message}")
             )
         }
+    }
+
+    private fun extractPopupPath(manifest: JSONObject): String {
+        return manifest.optJSONObject("action")?.optString("default_popup", "")?.takeIf { it.isNotBlank() }
+            ?: manifest.optJSONObject("browser_action")?.optString("default_popup", "")?.takeIf { it.isNotBlank() }
+            ?: manifest.optJSONObject("page_action")?.optString("default_popup", "")?.takeIf { it.isNotBlank() }
+            ?: ""
+    }
+
+    private fun extractOptionsPagePath(manifest: JSONObject): String {
+        return manifest.optString("options_page", "").takeIf { it.isNotBlank() }
+            ?: manifest.optJSONObject("options_ui")?.optString("page", "")?.takeIf { it.isNotBlank() }
+            ?: ""
+    }
+
+    private fun extractBackgroundScript(manifest: JSONObject): String {
+        return try {
+            val bg = manifest.optJSONObject("background")
+            bg?.optString("service_worker", "")?.takeIf { it.isNotBlank() }
+                ?: bg?.optJSONArray("scripts")?.let { arr ->
+                    if (arr.length() > 0) arr.getString(0) else null
+                }
+                ?: ""
+        } catch (_: Exception) {
+            ""
+        }
+    }
+
+    private fun extractStaticRuleResources(manifest: JSONObject): List<StaticRuleResource> {
+        val ruleResources = manifest.optJSONObject("declarative_net_request")
+            ?.optJSONArray("rule_resources")
+            ?: return emptyList()
+        val resources = mutableListOf<StaticRuleResource>()
+        for (i in 0 until ruleResources.length()) {
+            val resource = ruleResources.optJSONObject(i) ?: continue
+            val path = resource.optString("path", "").trim()
+            val id = resource.optString("id", "").trim()
+            if (path.isBlank()) continue
+            resources += StaticRuleResource(
+                id = id,
+                enabled = resource.optBoolean("enabled", true),
+                path = path
+            )
+        }
+        return resources
+    }
+
+    private fun buildSyntheticImportWarning(
+        hasExtensionUi: Boolean,
+        hasBackgroundRuntime: Boolean
+    ): String {
+        return when {
+            hasExtensionUi && hasBackgroundRuntime ->
+                "This extension has no content_scripts. Imported using extension UI and background/runtime capabilities."
+            hasExtensionUi ->
+                "This extension has no content_scripts. Imported as popup/options UI only."
+            hasBackgroundRuntime ->
+                "This extension has no content_scripts. Imported as background/declarativeNetRequest runtime only."
+            else ->
+                "This extension has no content_scripts."
+        }
+    }
+
+    private fun collectRawPermissions(manifest: JSONObject): List<String> {
+        val rawPermissions = mutableListOf<String>()
+        manifest.optJSONArray("permissions")?.let { arr ->
+            for (j in 0 until arr.length()) rawPermissions.add(arr.getString(j))
+        }
+        manifest.optJSONArray("host_permissions")?.let { arr ->
+            for (j in 0 until arr.length()) rawPermissions.add(arr.getString(j))
+        }
+        manifest.optJSONArray("optional_permissions")?.let { arr ->
+            for (j in 0 until arr.length()) rawPermissions.add(arr.getString(j))
+        }
+        return rawPermissions
+    }
+
+    private fun buildParseResult(
+        extensionName: String,
+        extensionVersion: String,
+        extensionDescription: String,
+        manifest: JSONObject,
+        modules: List<ExtensionModule>,
+        warnings: MutableList<String>
+    ): ParseResult {
+        val rawPermissions = collectRawPermissions(manifest)
+        val apiPermissions = rawPermissions.filter { !it.contains("://") && it != "<all_urls>" }
+        val mapped = apiPermissions.mapNotNull { PERMISSION_MAP[it] }.distinct()
+        val supported = apiPermissions.filter { it in PERMISSION_MAP }
+        val unsupported = apiPermissions.filter { it in UNSUPPORTED_PERMISSIONS }
+
+        if (unsupported.isNotEmpty()) {
+            warnings.add("Unsupported permissions: ${unsupported.joinToString()}")
+        }
+
+        AppLogger.d(
+            TAG,
+            "Extension permissions: raw=$rawPermissions, supported=$supported, unsupported=$unsupported"
+        )
+
+        val modulesWithPermissions = modules.map { module ->
+            module.copy(permissions = (module.permissions + mapped).distinct())
+        }
+
+        return ParseResult(
+            extensionName = extensionName,
+            extensionVersion = extensionVersion,
+            extensionDescription = extensionDescription,
+            modules = modulesWithPermissions,
+            isValid = true,
+            warnings = warnings,
+            supportedPermissions = supported,
+            unsupportedPermissions = unsupported,
+            mappedPermissions = mapped
+        )
     }
 
 

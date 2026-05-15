@@ -1,6 +1,5 @@
 package com.webtoapp.ui.theme
 
-import androidx.compose.animation.core.*
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
@@ -10,11 +9,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.webtoapp.core.i18n.Strings
-
-
-
-
-
 
 
 enum class AppThemeType(val icon: String) {
@@ -100,132 +94,120 @@ data class ThemeShapes(
 )
 
 
-
 object AppThemes {
 
-
+    /**
+     * Single monochrome theme. Calibrated for a refined editorial look:
+     *  - Near-black instead of pure black in dark mode for a softer OLED-friendly base
+     *  - Distinct surfaceContainer steps so stacked cards read as layers
+     *  - Generous corner radius and subtle ambient shadow for a modern, tactile feel
+     */
     val KimiNoNawa = AppTheme(
         type = AppThemeType.KIMI_NO_NAWA,
         lightColors = lightColorScheme(
-
-            primary = Color(0xFF1A1A1A),
+            primary = Color(0xFF111113),
             onPrimary = Color(0xFFFFFFFF),
-            primaryContainer = Color(0xFFF0F0F0),
-            onPrimaryContainer = Color(0xFF1A1A1A),
-            inversePrimary = Color(0xFFD0D0D0),
+            primaryContainer = Color(0xFFE8E8EB),
+            onPrimaryContainer = Color(0xFF111113),
+            inversePrimary = Color(0xFFD5D5D8),
 
-
-            secondary = Color(0xFF505050),
+            secondary = Color(0xFF3E3E40),
             onSecondary = Color(0xFFFFFFFF),
-            secondaryContainer = Color(0xFFF5F5F5),
-            onSecondaryContainer = Color(0xFF1A1A1A),
+            secondaryContainer = Color(0xFFEEEEF1),
+            onSecondaryContainer = Color(0xFF1A1A1D),
 
-
-            tertiary = Color(0xFF8A8A8A),
+            tertiary = Color(0xFF6E6E71),
             onTertiary = Color(0xFFFFFFFF),
-            tertiaryContainer = Color(0xFFF5F5F5),
-            onTertiaryContainer = Color(0xFF1A1A1A),
+            tertiaryContainer = Color(0xFFEFEFF2),
+            onTertiaryContainer = Color(0xFF1A1A1D),
 
-
-            error = Color(0xFF2A2A2A),
+            error = Color(0xFF8A1D1D),
             onError = Color(0xFFFFFFFF),
-            errorContainer = Color(0xFFEAEAEA),
-            onErrorContainer = Color(0xFF1A1A1A),
+            errorContainer = Color(0xFFF9E4E4),
+            onErrorContainer = Color(0xFF3B0F0F),
 
-
-            background = Color(0xFFFFFFFF),
-            onBackground = Color(0xFF1A1A1A),
+            background = Color(0xFFF7F7F9),
+            onBackground = Color(0xFF111113),
             surface = Color(0xFFFFFFFF),
-            onSurface = Color(0xFF1A1A1A),
-            surfaceVariant = Color(0xFFF5F5F5),
-            onSurfaceVariant = Color(0xFF5C5C5C),
+            onSurface = Color(0xFF111113),
+            surfaceVariant = Color(0xFFEEEEF1),
+            onSurfaceVariant = Color(0xFF5A5A5F),
 
-
-            surfaceTint = Color(0xFF1A1A1A),
+            surfaceTint = Color(0xFF111113),
             surfaceBright = Color(0xFFFFFFFF),
-            surfaceDim = Color(0xFFF0F0F0),
-            surfaceContainer = Color(0xFFF7F7F7),
-            surfaceContainerLow = Color(0xFFFAFAFA),
-            surfaceContainerHigh = Color(0xFFF0F0F0),
-            surfaceContainerHighest = Color(0xFFEAEAEA),
+            surfaceDim = Color(0xFFEAEAEE),
+            surfaceContainer = Color(0xFFF3F3F5),
+            surfaceContainerLow = Color(0xFFF7F7F9),
+            surfaceContainerHigh = Color(0xFFEDEDF0),
+            surfaceContainerHighest = Color(0xFFE5E5E9),
             surfaceContainerLowest = Color(0xFFFFFFFF),
 
+            outline = Color(0xFFBEBEC3),
+            outlineVariant = Color(0xFFDFDFE3),
 
-            outline = Color(0xFFD5D5D5),
-            outlineVariant = Color(0xFFE8E8E8),
-
-
-            inverseSurface = Color(0xFF2F2F2F),
-            inverseOnSurface = Color(0xFFF0F0F0),
+            inverseSurface = Color(0xFF29292C),
+            inverseOnSurface = Color(0xFFF2F2F4),
             scrim = Color(0xFF000000)
         ),
         darkColors = darkColorScheme(
+            primary = Color(0xFFF2F2F4),
+            onPrimary = Color(0xFF111113),
+            primaryContainer = Color(0xFF2A2A2E),
+            onPrimaryContainer = Color(0xFFE4E4E7),
+            inversePrimary = Color(0xFF5A5A5E),
 
-            primary = Color(0xFFEEEEEE),
-            onPrimary = Color(0xFF1A1A1A),
-            primaryContainer = Color(0xFF303030),
-            onPrimaryContainer = Color(0xFFE0E0E0),
-            inversePrimary = Color(0xFF505050),
+            secondary = Color(0xFFBDBDC1),
+            onSecondary = Color(0xFF111113),
+            secondaryContainer = Color(0xFF242428),
+            onSecondaryContainer = Color(0xFFDCDCE0),
 
+            tertiary = Color(0xFF8A8A8E),
+            onTertiary = Color(0xFF111113),
+            tertiaryContainer = Color(0xFF232327),
+            onTertiaryContainer = Color(0xFFD4D4D8),
 
-            secondary = Color(0xFFB0B0B0),
-            onSecondary = Color(0xFF1A1A1A),
-            secondaryContainer = Color(0xFF2A2A2A),
-            onSecondaryContainer = Color(0xFFD8D8D8),
+            error = Color(0xFFE7A3A3),
+            onError = Color(0xFF1A0808),
+            errorContainer = Color(0xFF3B1515),
+            onErrorContainer = Color(0xFFF4D4D4),
 
+            background = Color(0xFF0A0A0C),
+            onBackground = Color(0xFFEBEBEE),
+            surface = Color(0xFF121215),
+            onSurface = Color(0xFFEBEBEE),
+            surfaceVariant = Color(0xFF1E1E22),
+            onSurfaceVariant = Color(0xFFB2B2B7),
 
-            tertiary = Color(0xFF808080),
-            onTertiary = Color(0xFF1A1A1A),
-            tertiaryContainer = Color(0xFF2A2A2A),
-            onTertiaryContainer = Color(0xFFD0D0D0),
+            surfaceTint = Color(0xFFF2F2F4),
+            surfaceBright = Color(0xFF2F2F33),
+            surfaceDim = Color(0xFF0A0A0C),
+            surfaceContainer = Color(0xFF17171B),
+            surfaceContainerLow = Color(0xFF131317),
+            surfaceContainerHigh = Color(0xFF1D1D21),
+            surfaceContainerHighest = Color(0xFF25252A),
+            surfaceContainerLowest = Color(0xFF08080A),
 
+            outline = Color(0xFF4A4A4F),
+            outlineVariant = Color(0xFF2C2C30),
 
-            error = Color(0xFFDADADA),
-            onError = Color(0xFF1A1A1A),
-            errorContainer = Color(0xFF303030),
-            onErrorContainer = Color(0xFFE0E0E0),
-
-
-            background = Color(0xFF000000),
-            onBackground = Color(0xFFE3E3E3),
-            surface = Color(0xFF0A0A0A),
-            onSurface = Color(0xFFE3E3E3),
-            surfaceVariant = Color(0xFF1E1E1E),
-            onSurfaceVariant = Color(0xFFA8A8A8),
-
-
-            surfaceTint = Color(0xFFEEEEEE),
-            surfaceBright = Color(0xFF3A3A3A),
-            surfaceDim = Color(0xFF000000),
-            surfaceContainer = Color(0xFF141414),
-            surfaceContainerLow = Color(0xFF0E0E0E),
-            surfaceContainerHigh = Color(0xFF1C1C1C),
-            surfaceContainerHighest = Color(0xFF262626),
-            surfaceContainerLowest = Color(0xFF050505),
-
-
-            outline = Color(0xFF3A3A3A),
-            outlineVariant = Color(0xFF2A2A2A),
-
-
-            inverseSurface = Color(0xFFE3E3E3),
-            inverseOnSurface = Color(0xFF1A1A1A),
+            inverseSurface = Color(0xFFE6E6E9),
+            inverseOnSurface = Color(0xFF111113),
             scrim = Color(0xFF000000)
         ),
         animationStyle = AnimationStyle.SNAPPY,
         interactionStyle = InteractionStyle.SCALE,
         gradients = ThemeGradients(
-            primary = listOf(Color(0xFF1A1A1A), Color(0xFF3A3A3A)),
-            secondary = listOf(Color(0xFF505050), Color(0xFF8A8A8A)),
-            background = listOf(Color(0xFF000000), Color(0xFF0A0A0A)),
-            accent = listOf(Color(0xFFEEEEEE), Color(0xFFD0D0D0)),
-            shimmer = listOf(Color(0x10FFFFFF), Color(0x30FFFFFF), Color(0x10FFFFFF))
+            primary = listOf(Color(0xFF111113), Color(0xFF2A2A2E)),
+            secondary = listOf(Color(0xFF474749), Color(0xFF7A7A7D)),
+            background = listOf(Color(0xFF0B0B0E), Color(0xFF111114)),
+            accent = listOf(Color(0xFFF2F2F4), Color(0xFFD5D5D8)),
+            shimmer = listOf(Color(0x08FFFFFF), Color(0x22FFFFFF), Color(0x08FFFFFF))
         ),
         effects = ThemeEffects(
             glowColor = Color.Transparent,
             glowRadius = 0.dp,
-            shadowColor = Color(0x10000000),
-            shadowElevation = 4.dp,
+            shadowColor = Color(0x14000000),
+            shadowElevation = 2.dp,
             blurRadius = 0.dp,
             particleColor = Color.Transparent,
             enableParticles = false,
@@ -233,12 +215,12 @@ object AppThemes {
             enableGlassmorphism = false
         ),
         shapes = ThemeShapes(
-            cornerRadius = 8.dp,
-            buttonRadius = 4.dp,
-            cardRadius = 8.dp,
-            dialogRadius = 12.dp,
-            useRoundedButtons = false,
-            useSoftShadows = false
+            cornerRadius = 14.dp,
+            buttonRadius = 10.dp,
+            cardRadius = 14.dp,
+            dialogRadius = 20.dp,
+            useRoundedButtons = true,
+            useSoftShadows = true
         )
     )
 
@@ -248,31 +230,31 @@ object AppThemes {
 }
 
 fun AppThemeType.getLocalizedDisplayName(): String {
-    return com.webtoapp.core.i18n.Strings.themeKimiNoNawa
+    return Strings.themeKimiNoNawa
 }
 
 fun AppThemeType.getLocalizedDescription(): String {
-    return com.webtoapp.core.i18n.Strings.themeKimiNoNawaDesc
+    return Strings.themeKimiNoNawaDesc
 }
 
 fun AnimationStyle.getLocalizedDisplayName(): String {
     return when (this) {
-        AnimationStyle.SMOOTH -> com.webtoapp.core.i18n.Strings.animSmooth
-        AnimationStyle.BOUNCY -> com.webtoapp.core.i18n.Strings.animBouncy
-        AnimationStyle.SNAPPY -> com.webtoapp.core.i18n.Strings.animSnappy
-        AnimationStyle.ELEGANT -> com.webtoapp.core.i18n.Strings.animElegant
-        AnimationStyle.PLAYFUL -> com.webtoapp.core.i18n.Strings.animPlayful
-        AnimationStyle.DRAMATIC -> com.webtoapp.core.i18n.Strings.animDramatic
+        AnimationStyle.SMOOTH -> Strings.animSmooth
+        AnimationStyle.BOUNCY -> Strings.animBouncy
+        AnimationStyle.SNAPPY -> Strings.animSnappy
+        AnimationStyle.ELEGANT -> Strings.animElegant
+        AnimationStyle.PLAYFUL -> Strings.animPlayful
+        AnimationStyle.DRAMATIC -> Strings.animDramatic
     }
 }
 
 fun InteractionStyle.getLocalizedDisplayName(): String {
     return when (this) {
-        InteractionStyle.RIPPLE -> com.webtoapp.core.i18n.Strings.interRipple
-        InteractionStyle.GLOW -> com.webtoapp.core.i18n.Strings.interGlow
-        InteractionStyle.SCALE -> com.webtoapp.core.i18n.Strings.interScale
-        InteractionStyle.SHAKE -> com.webtoapp.core.i18n.Strings.interShake
-        InteractionStyle.MORPH -> com.webtoapp.core.i18n.Strings.interMorph
-        InteractionStyle.PARTICLE -> com.webtoapp.core.i18n.Strings.interParticle
+        InteractionStyle.RIPPLE -> Strings.interRipple
+        InteractionStyle.GLOW -> Strings.interGlow
+        InteractionStyle.SCALE -> Strings.interScale
+        InteractionStyle.SHAKE -> Strings.interShake
+        InteractionStyle.MORPH -> Strings.interMorph
+        InteractionStyle.PARTICLE -> Strings.interParticle
     }
 }

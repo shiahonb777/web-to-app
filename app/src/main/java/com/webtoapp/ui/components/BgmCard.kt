@@ -46,11 +46,7 @@ fun BgmCard(
         Column(verticalArrangement = Arrangement.spacedBy(WtaSpacing.ContentGap)) {
             WtaToggleRow(
                 title = Strings.bgmTitle,
-                subtitle = if (enabled && config.playlist.isNotEmpty()) {
-                    "${config.playlist.size} ${Strings.selectedMusic}"
-                } else {
-                    Strings.bgmDescription
-                },
+                subtitle = null,
                 icon = Icons.Outlined.MusicNote,
                 checked = enabled,
                 onCheckedChange = onEnabledChange
@@ -94,7 +90,7 @@ fun BgmCard(
                                         Text(
                                             "${index + 1}",
                                             fontSize = 10.sp,
-                                            fontWeight = FontWeight.Bold,
+                                            fontWeight = FontWeight.SemiBold,
                                             color = MaterialTheme.colorScheme.primary
                                         )
                                     }

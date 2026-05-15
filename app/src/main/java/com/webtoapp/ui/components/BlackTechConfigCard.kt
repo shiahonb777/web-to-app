@@ -1,6 +1,7 @@
 package com.webtoapp.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import com.webtoapp.ui.design.WtaSwitch
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -180,13 +181,11 @@ fun BlackTechConfigCard(
                             Strings.blackTechFeatures,
                             style = MaterialTheme.typography.titleMedium
                         )
-                        if (!enabled) {
-                            Text(
-                                Strings.notEnabled,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                        Text(
+                            if (enabled) Strings.enabled else Strings.notEnabled,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
                 Icon(
@@ -214,7 +213,7 @@ fun BlackTechConfigCard(
                                 color = MaterialTheme.colorScheme.error
                             )
                         }
-                        PremiumSwitch(
+                        WtaSwitch(
                             checked = enabled,
                             onCheckedChange = {
                                 enabled = it
@@ -752,7 +751,7 @@ private fun BlackTechSwitchRow(
                 color = if (isDangerous) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        PremiumSwitch(
+        WtaSwitch(
             checked = checked,
             onCheckedChange = onCheckedChange
         )

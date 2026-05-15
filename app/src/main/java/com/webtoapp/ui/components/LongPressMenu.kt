@@ -750,12 +750,12 @@ fun IosStyleLongPressMenu(
     var visible by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
         targetValue = if (visible) 1f else 0.8f,
-        animationSpec = spring(dampingRatio = 0.7f, stiffness = 400f),
+        animationSpec = com.webtoapp.ui.design.WtaMotion.bouncySpring(),
         label = "scale"
     )
     val alpha by animateFloatAsState(
         targetValue = if (visible) 1f else 0f,
-        animationSpec = tween(200),
+        animationSpec = com.webtoapp.ui.design.WtaMotion.settleSpring(),
         label = "alpha"
     )
 
@@ -1224,12 +1224,12 @@ fun ContextMenuLongPressMenu(
     var visible by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
         targetValue = if (visible) 1f else 0.9f,
-        animationSpec = tween(150),
+        animationSpec = com.webtoapp.ui.design.WtaMotion.bouncySpring(),
         label = "scale"
     )
     val alpha by animateFloatAsState(
         targetValue = if (visible) 1f else 0f,
-        animationSpec = tween(150),
+        animationSpec = com.webtoapp.ui.design.WtaMotion.settleSpring(),
         label = "alpha"
     )
 

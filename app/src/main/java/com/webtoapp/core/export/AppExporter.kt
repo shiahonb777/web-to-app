@@ -458,7 +458,7 @@ dependencies {
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:networkSecurityConfig="@xml/network_security_config"
-        android:usesCleartextTraffic="false"
+        android:usesCleartextTraffic="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
 
         <activity

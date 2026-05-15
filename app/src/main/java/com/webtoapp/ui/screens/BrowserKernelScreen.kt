@@ -1,6 +1,6 @@
 package com.webtoapp.ui.screens
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.webtoapp.ui.components.PremiumSwitch
+import com.webtoapp.ui.design.WtaSwitch
 import com.webtoapp.ui.components.PremiumOutlinedButton
 
 import android.content.Context
@@ -314,7 +314,7 @@ private fun CurrentWebViewCard(
                 Text(
                     Strings.currentWebViewInfo,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
@@ -396,7 +396,7 @@ private fun SectionHeader(
         Text(
             title,
             style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.SemiBold
         )
         if (subtitle != null) {
             Spacer(modifier = Modifier.height(4.dp))
@@ -435,16 +435,15 @@ private fun EngineCard(
                     modifier = Modifier
                         .size(44.dp)
                         .clip(RoundedCornerShape(WtaRadius.Card))
-                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            icon,
-                            contentDescription = null,
-                            modifier = Modifier.size(24.dp),
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
+                    Icon(
+                        icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
@@ -454,7 +453,7 @@ private fun EngineCard(
                         Text(
                             name,
                             style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.SemiBold
                         )
                         if (isDefault) {
                             Spacer(modifier = Modifier.width(8.dp))
@@ -766,9 +765,9 @@ private fun RecommendedBrowserCard(
                     modifier = Modifier
                         .size(48.dp)
                         .clip(RoundedCornerShape(WtaRadius.Card))
-                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center
                 ) {
-                Box(contentAlignment = Alignment.Center) {
                     Icon(
                         browser.icon,
                         contentDescription = null,
@@ -776,7 +775,6 @@ private fun RecommendedBrowserCard(
                         tint = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
-            }
 
             Spacer(modifier = Modifier.width(16.dp))
 
@@ -864,7 +862,7 @@ private fun HelpCard() {
                 Text(
                     Strings.howToEnableDeveloperOptions,
                     style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onTertiaryContainer
                 )
             }
@@ -948,7 +946,7 @@ private fun ShieldsSettingsCard(
                     Text(
                         Strings.shieldsMasterSwitch,
                         style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.SemiBold
                     )
                     Text(
                         if (config.enabled) Strings.shieldsEnabledWithRules.replace("%d", trackerRuleCount.toString()) else Strings.shieldsDisabled,
@@ -957,7 +955,7 @@ private fun ShieldsSettingsCard(
                     )
                 }
 
-                PremiumSwitch(
+                WtaSwitch(
                     checked = config.enabled,
                     onCheckedChange = onToggleEnabled
                 )
@@ -1106,7 +1104,7 @@ private fun ShieldToggleRow(
         icon = icon,
         onClick = { onCheckedChange(!checked) }
     ) {
-        PremiumSwitch(
+        WtaSwitch(
             checked = checked,
             onCheckedChange = onCheckedChange
         )
@@ -1142,7 +1140,7 @@ private fun ShieldPolicySelector(
                     text = {
                         Text(
                             option,
-                            fontWeight = if (option == currentValue) FontWeight.Bold else FontWeight.Normal
+                            fontWeight = if (option == currentValue) FontWeight.SemiBold else FontWeight.Normal
                         )
                     },
                     onClick = {
@@ -1169,7 +1167,7 @@ private fun ShieldStatItem(label: String, count: Int) {
         Text(
             count.toString(),
             style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.primary
         )
         Text(

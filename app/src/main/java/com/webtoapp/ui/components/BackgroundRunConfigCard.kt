@@ -1,6 +1,7 @@
 package com.webtoapp.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import com.webtoapp.ui.design.WtaSwitch
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -78,7 +79,7 @@ fun BackgroundRunConfigCard(
                         }
                     }
                 }
-                PremiumSwitch(
+                WtaSwitch(
                     checked = enabled,
                     onCheckedChange = onEnabledChange
                 )
@@ -100,7 +101,7 @@ fun BackgroundRunConfigCard(
                             Strings.backgroundRunShowNotification,
                             style = MaterialTheme.typography.bodyMedium
                         )
-                        PremiumSwitch(
+                        WtaSwitch(
                             checked = config.showNotification,
                             onCheckedChange = { onConfigChange(config.copy(showNotification = it)) }
                         )
@@ -116,7 +117,7 @@ fun BackgroundRunConfigCard(
                             Strings.backgroundRunKeepCpuAwake,
                             style = MaterialTheme.typography.bodyMedium
                         )
-                        PremiumSwitch(
+                        WtaSwitch(
                             checked = config.keepCpuAwake,
                             onCheckedChange = { onConfigChange(config.copy(keepCpuAwake = it)) }
                         )

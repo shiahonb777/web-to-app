@@ -1,7 +1,7 @@
 
 """
 FastAPI API Monitor — 精美的 API 监控仪表盘
-展示 FastAPI 的高性能异步能力，包含تفاعلي式 API 文档
+展示 FastAPI 的高性能异步能力，包含交互式 API 文档
 """
 import os
 import random
@@ -118,7 +118,7 @@ body::before{content:'';position:fixed;top:-40%;left:-40%;width:180%;height:180%
     <div class="bar-row"><span class="bar-label">الذاكرة</span><div class="bar-track"><div class="bar-fill" id="mem" style="width:0%;background:linear-gradient(90deg,var(--purple),#c084fc)"></div></div><span class="bar-val" id="memV">0%</span></div>
     <div class="bar-row"><span class="bar-label">القرص</span><div class="bar-track"><div class="bar-fill" id="disk" style="width:0%;background:linear-gradient(90deg,var(--amber),#fbbf24)"></div></div><span class="bar-val" id="diskV">0%</span></div>
 </div>
-<div class="footer"><div class="footer-badge"><span class="dot" style="width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)"></span>FastAPI 0.109 · Python · Uvicorn</div></div>
+<div class="footer"><div class="footer-badge"><span class="dot" style="width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)"></span>FastAPI 0.99 · Python · Uvicorn</div></div>
 </div>
 <script>
 let rc=0;

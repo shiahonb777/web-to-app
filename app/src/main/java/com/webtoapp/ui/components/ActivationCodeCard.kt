@@ -1,6 +1,7 @@
 package com.webtoapp.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import com.webtoapp.ui.design.WtaSwitch
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -53,32 +54,37 @@ private data class CodeTypeTheme(
 )
 
 @Composable
-private fun getCodeTypeTheme(type: ActivationCodeType): CodeTypeTheme = when (type) {
-    ActivationCodeType.PERMANENT -> CodeTypeTheme(
-        icon = Icons.Outlined.AllInclusive,
-        color = Color(0xFF2E7D32),
-        labelBg = Color(0xFF2E7D32).copy(alpha = 0.1f)
-    )
-    ActivationCodeType.TIME_LIMITED -> CodeTypeTheme(
-        icon = Icons.Outlined.Timer,
-        color = Color(0xFF1565C0),
-        labelBg = Color(0xFF1565C0).copy(alpha = 0.1f)
-    )
-    ActivationCodeType.USAGE_LIMITED -> CodeTypeTheme(
-        icon = Icons.Outlined.ConfirmationNumber,
-        color = Color(0xFF6A1B9A),
-        labelBg = Color(0xFF6A1B9A).copy(alpha = 0.1f)
-    )
-    ActivationCodeType.DEVICE_BOUND -> CodeTypeTheme(
-        icon = Icons.Outlined.PhonelinkLock,
-        color = Color(0xFFE65100),
-        labelBg = Color(0xFFE65100).copy(alpha = 0.1f)
-    )
-    ActivationCodeType.COMBINED -> CodeTypeTheme(
-        icon = Icons.Outlined.Layers,
-        color = Color(0xFF00838F),
-        labelBg = Color(0xFF00838F).copy(alpha = 0.1f)
-    )
+private fun getCodeTypeTheme(type: ActivationCodeType): CodeTypeTheme {
+    val scheme = androidx.compose.material3.MaterialTheme.colorScheme
+    // In the monochrome palette the activation types are distinguished by icon,
+    // not by hue. Tones stay within the neutral scheme with gentle variation.
+    return when (type) {
+        ActivationCodeType.PERMANENT -> CodeTypeTheme(
+            icon = Icons.Outlined.AllInclusive,
+            color = scheme.primary,
+            labelBg = scheme.primary.copy(alpha = 0.10f)
+        )
+        ActivationCodeType.TIME_LIMITED -> CodeTypeTheme(
+            icon = Icons.Outlined.Timer,
+            color = scheme.secondary,
+            labelBg = scheme.secondary.copy(alpha = 0.10f)
+        )
+        ActivationCodeType.USAGE_LIMITED -> CodeTypeTheme(
+            icon = Icons.Outlined.ConfirmationNumber,
+            color = scheme.tertiary,
+            labelBg = scheme.tertiary.copy(alpha = 0.10f)
+        )
+        ActivationCodeType.DEVICE_BOUND -> CodeTypeTheme(
+            icon = Icons.Outlined.PhonelinkLock,
+            color = com.webtoapp.ui.design.WtaColors.semantic.warning,
+            labelBg = com.webtoapp.ui.design.WtaColors.semantic.warningContainer
+        )
+        ActivationCodeType.COMBINED -> CodeTypeTheme(
+            icon = Icons.Outlined.Layers,
+            color = com.webtoapp.ui.design.WtaColors.semantic.info,
+            labelBg = com.webtoapp.ui.design.WtaColors.semantic.infoContainer
+        )
+    }
 }
 
 
@@ -140,21 +146,12 @@ fun ActivationCodeCard(
                         )
                     }
                     Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text(
-                            text = Strings.activationCodeVerify,
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        if (enabled && activationCodes.isNotEmpty()) {
-                            Text(
-                                text = Strings.totalCodes.replace("%d", activationCodes.size.toString()),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
+                    Text(
+                        text = Strings.activationCodeVerify,
+                        style = MaterialTheme.typography.titleMedium
+                    )
                 }
-                PremiumSwitch(
+                WtaSwitch(
                     checked = enabled,
                     onCheckedChange = onEnabledChange
                 )
@@ -190,7 +187,7 @@ fun ActivationCodeCard(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    PremiumSwitch(
+                    WtaSwitch(
                         checked = requireEveryTime,
                         onCheckedChange = onRequireEveryTimeChange
                     )
@@ -389,7 +386,7 @@ fun ActivationCodeCard(
                     modifier = Modifier.size(32.dp)
                 )
             },
-            title = { Text(Strings.deleteAllCodes, fontWeight = FontWeight.Bold) },
+            title = { Text(Strings.deleteAllCodes, fontWeight = FontWeight.SemiBold) },
             text = { Text(Strings.deleteAllCodesConfirm) },
             confirmButton = {
                 Button(
@@ -533,7 +530,7 @@ private fun EnhancedActivationCodeItem(
                                 fontFamily = FontFamily.Monospace,
                                 letterSpacing = 1.sp
                             ),
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.weight(weight = 1f, fill = false)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
@@ -646,7 +643,7 @@ private fun AddActivationCodeDialog(
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(10.dp))
-                Text(Strings.addActivationCode, fontWeight = FontWeight.Bold)
+                Text(Strings.addActivationCode, fontWeight = FontWeight.SemiBold)
             }
         },
         text = {
@@ -937,7 +934,7 @@ private fun BatchGenerateDialog(
                 modifier = Modifier.size(32.dp)
             )
         },
-        title = { Text(Strings.batchGenerate, fontWeight = FontWeight.Bold) },
+        title = { Text(Strings.batchGenerate, fontWeight = FontWeight.SemiBold) },
         text = {
             Column(
                 modifier = Modifier

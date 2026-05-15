@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.first
+import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -1240,18 +1241,26 @@ class MainViewModel(
         } else multiWebConfig.projectId.ifBlank { if (localSites.isNotEmpty()) HtmlStorage.generateProjectId() else "" }
 
 
-        val updatedSites = if (localSites.isNotEmpty() && projectId.isNotBlank()) {
-            multiWebConfig.sites.map { site ->
-                if (site.type == "LOCAL" && site.localFileUri.isNotBlank()) {
+        val updatedSites = multiWebConfig.sites.map { site ->
+            when {
+                site.type == "LOCAL" && site.localFileUri.isNotBlank() && projectId.isNotBlank() -> {
                     val uri = Uri.parse(site.localFileUri)
-                    val fileName = site.localFilePath.ifBlank { "page.html" }
+                    val fileName = buildMultiWebSiteRelativePath(site)
                     val savedPath = HtmlStorage.saveHtmlFile(context, uri, fileName, projectId)
                     if (savedPath != null) {
                         site.copy(localFilePath = fileName.trimStart('/'), localFileUri = "")
                     } else site
-                } else site
+                }
+                site.type == "EXISTING" && site.localFilePath.isNotBlank() && projectId.isNotBlank() -> {
+                    site.copy(localFilePath = buildMultiWebSiteRelativePath(site).trimStart('/'))
+                }
+                else -> site
             }
-        } else multiWebConfig.sites
+        }
+
+        if (projectId.isNotBlank()) {
+            copyExistingMultiWebSiteFiles(context, updatedSites, projectId)
+        }
 
         WebApp(
             name = name.ifBlank { "Multi-Site App" },
@@ -1283,14 +1292,24 @@ class MainViewModel(
 
 
         val updatedSites = multiWebConfig.sites.map { site ->
-            if (site.type == "LOCAL" && site.localFileUri.isNotBlank() && projectId.isNotBlank()) {
-                val uri = Uri.parse(site.localFileUri)
-                val fileName = site.localFilePath.ifBlank { "page.html" }
-                val savedPath = HtmlStorage.saveHtmlFile(context, uri, fileName, projectId)
-                if (savedPath != null) {
-                    site.copy(localFilePath = fileName.trimStart('/'), localFileUri = "")
-                } else site
-            } else site
+            when {
+                site.type == "LOCAL" && site.localFileUri.isNotBlank() && projectId.isNotBlank() -> {
+                    val uri = Uri.parse(site.localFileUri)
+                    val fileName = buildMultiWebSiteRelativePath(site)
+                    val savedPath = HtmlStorage.saveHtmlFile(context, uri, fileName, projectId)
+                    if (savedPath != null) {
+                        site.copy(localFilePath = fileName.trimStart('/'), localFileUri = "")
+                    } else site
+                }
+                site.type == "EXISTING" && site.localFilePath.isNotBlank() && projectId.isNotBlank() -> {
+                    site.copy(localFilePath = buildMultiWebSiteRelativePath(site).trimStart('/'))
+                }
+                else -> site
+            }
+        }
+
+        if (projectId.isNotBlank()) {
+            copyExistingMultiWebSiteFiles(context, updatedSites, projectId)
         }
 
         existingApp.copy(
@@ -1300,6 +1319,38 @@ class MainViewModel(
             multiWebConfig = multiWebConfig.copy(sites = updatedSites, projectId = projectId),
             updatedAt = System.currentTimeMillis()
         )
+    }
+
+    private fun buildMultiWebSiteRelativePath(site: MultiWebSite): String {
+        val original = site.localFilePath.trim().trimStart('/').ifBlank { "index.html" }
+        val sitePrefix = "${site.id.ifBlank { "site" }}/"
+        return if (original.startsWith(sitePrefix)) original else "$sitePrefix$original"
+    }
+
+    private fun copyExistingMultiWebSiteFiles(
+        context: Application,
+        sites: List<MultiWebSite>,
+        projectId: String
+    ) {
+        val targetRoot = File(context.filesDir, "html_projects/$projectId").also { it.mkdirs() }
+        sites.filter { it.type == "EXISTING" && it.sourceProjectId.isNotBlank() && it.localFilePath.isNotBlank() }
+            .forEach { site ->
+                val sourceRoot = File(context.filesDir, "html_projects/${site.sourceProjectId}")
+                if (!sourceRoot.exists() || !sourceRoot.isDirectory) return@forEach
+
+                val desiredRelative = site.localFilePath.trim().trimStart('/')
+                val sourceRelative = site.localFilePath.substringAfter('/', site.localFilePath).trimStart('/')
+                if (sourceRelative == desiredRelative && sourceRoot.absolutePath == targetRoot.absolutePath) {
+                    return@forEach
+                }
+
+                val sourceFile = File(sourceRoot, sourceRelative)
+                if (!sourceFile.exists() || !sourceFile.isFile) return@forEach
+
+                val targetFile = File(targetRoot, desiredRelative)
+                targetFile.parentFile?.mkdirs()
+                sourceFile.copyTo(targetFile, overwrite = true)
+            }
     }
 
 

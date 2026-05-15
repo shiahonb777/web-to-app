@@ -591,6 +591,12 @@ data class ExtensionModule(
     val world: String = "ISOLATED",
     @SerializedName("backgroundScript")
     val backgroundScript: String = "",
+    @SerializedName("popupPath")
+    val popupPath: String = "",
+    @SerializedName("optionsPagePath")
+    val optionsPagePath: String = "",
+    @SerializedName("manifestJson")
+    val manifestJson: String = "",
 
 
     @SerializedName("gmGrants")
@@ -773,6 +779,14 @@ data class ExtensionModule(
     @Volatile
     private var _cachedExecutableCode: String? = null
 
+    fun shouldRegisterInPanel(): Boolean {
+        return !(
+            sourceType == ModuleSourceType.USERSCRIPT &&
+                runMode == ModuleRunMode.AUTO &&
+                configItems.isEmpty()
+        )
+    }
+
 
 
 
@@ -844,6 +858,7 @@ data class ExtensionModule(
                 // 自动注册模块到面板系统（使用配置的 uiConfig）
                 // 如果用户代码已经调用了 register，面板系统会更新已有注册
                 // 注意：只在用户代码未传递 uiConfig 时才补充注册
+                ${if (shouldRegisterInPanel()) """
                 (function __autoRegister__() {
                     if (typeof __WTA_MODULE_UI__ === 'undefined') {
                         setTimeout(__autoRegister__, 100);
@@ -872,6 +887,7 @@ data class ExtensionModule(
                         runMode: __MODULE_RUN_MODE__
                     });
                 })();
+                """ else ""}
             })();
         """.trimIndent().also { _cachedExecutableCode = it }
     }

@@ -3,6 +3,7 @@
 Flask Analytics Dashboard — 精美的 Python Web 应用示例
 一个现代化的数据分析仪表盘，展示 Flask 的强大功能
 """
+import importlib.metadata
 import os
 import json
 import random
@@ -98,19 +99,6 @@ body {
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
 }
-/* 顶部背景光效 */
-body::before {
-    content: '';
-    position: fixed;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(ellipse at 30% 20%, rgba(124,58,237,0.08) 0%, transparent 50%),
-                radial-gradient(ellipse at 70% 60%, rgba(59,130,246,0.06) 0%, transparent 50%);
-    pointer-events: none;
-    z-index: 0;
-}
 .container {
     max-width: 480px;
     margin: 0 auto;
@@ -149,12 +137,7 @@ body::before {
     height: 10px;
     border-radius: 50%;
     background: var(--accent-green);
-    box-shadow: 0 0 12px var(--accent-green);
-    animation: pulse-dot 2s infinite;
-}
-@keyframes pulse-dot {
-    0%, 100% { opacity: 1; box-shadow: 0 0 12px var(--accent-green); }
-    50% { opacity: 0.6; box-shadow: 0 0 20px var(--accent-green); }
+    opacity: 0.9;
 }
 .avatar {
     width: 38px;
@@ -182,13 +165,10 @@ body::before {
     padding: 18px 16px;
     position: relative;
     overflow: hidden;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
     transition: all 0.3s ease;
     cursor: pointer;
 }
 .stat-card:active {
-    transform: scale(0.97);
     background: var(--bg-card-hover);
 }
 .stat-card::before {
@@ -264,8 +244,6 @@ body::before {
     border-radius: var(--radius);
     padding: 20px;
     margin-bottom: 20px;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
 }
 .section-header {
     display: flex;
@@ -315,11 +293,9 @@ body::before {
 }
 .chart-bar.purple {
     background: linear-gradient(180deg, #a855f7, #7c3aed);
-    box-shadow: 0 0 12px rgba(124,58,237,0.3);
 }
 .chart-bar.blue {
     background: linear-gradient(180deg, #60a5fa, #3b82f6);
-    box-shadow: 0 0 12px rgba(59,130,246,0.3);
 }
 .chart-bar-label {
     font-size: 10px;
@@ -397,41 +373,6 @@ body::before {
     height: 6px;
     border-radius: 50%;
     background: var(--accent-green);
-    box-shadow: 0 0 8px var(--accent-green);
-}
-
-/* ===== Animations ===== */
-@keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-.stat-card { animation: fadeInUp 0.5s ease backwards; }
-.stat-card:nth-child(1) { animation-delay: 0.05s; }
-.stat-card:nth-child(2) { animation-delay: 0.1s; }
-.stat-card:nth-child(3) { animation-delay: 0.15s; }
-.stat-card:nth-child(4) { animation-delay: 0.2s; }
-.section-card { animation: fadeInUp 0.5s ease 0.25s backwards; }
-.activity-item { animation: fadeInUp 0.4s ease backwards; }
-.activity-item:nth-child(1) { animation-delay: 0.3s; }
-.activity-item:nth-child(2) { animation-delay: 0.35s; }
-.activity-item:nth-child(3) { animation-delay: 0.4s; }
-.activity-item:nth-child(4) { animation-delay: 0.45s; }
-.activity-item:nth-child(5) { animation-delay: 0.5s; }
-
-/* Number count-up */
-@keyframes countUp {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-.stat-value { animation: countUp 0.6s ease 0.3s backwards; }
-
-/* Bar grow */
-@keyframes growUp {
-    from { transform: scaleY(0); }
-    to { transform: scaleY(1); }
-}
-.chart-bar {
-    animation: growUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
 }
 </style>
 </head>
@@ -494,7 +435,7 @@ body::before {
         <div class="chart-container">
             {% for day in weekly_data %}
             <div class="chart-bar-group">
-                <div class="chart-bar purple" style="height: {{ day.users_pct }}%; animation-delay: {{ 0.3 + loop.index0 * 0.08 }}s;"></div>
+                <div class="chart-bar purple" style="height: {{ day.users_pct }}%;"></div>
                 <div class="chart-bar-label">{{ day.day }}</div>
             </div>
             {% endfor %}
@@ -502,7 +443,7 @@ body::before {
     </div>
 
     <!-- Activity Feed -->
-    <div class="section-card" style="animation-delay: 0.35s;">
+    <div class="section-card">
         <div class="section-header">
             <span class="section-title">最近动态</span>
             <span class="section-badge">🔔 今日</span>
@@ -561,8 +502,7 @@ def index():
         d['users_pct'] = int(d['users'] / max_users * 85) + 15
     flask_ver = '3.0'
     try:
-        import flask as _f
-        flask_ver = getattr(_f, '__version__', '3.0')
+        flask_ver = importlib.metadata.version('flask')
     except Exception:
         pass
     return render_template_string(

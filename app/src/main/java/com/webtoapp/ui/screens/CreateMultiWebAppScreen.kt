@@ -117,7 +117,7 @@ fun CreateMultiWebAppScreen(
     ) { uri -> pendingLocalSiteUri = uri }
 
     val canCreate = sites.isNotEmpty()
-    val brandIndigo = Color(0xFF6366F1)
+    val accentColor = MaterialTheme.colorScheme.onSurface
 
     WtaCreateFlowScaffold(
         title = if (isEdit) Strings.editApp else Strings.createMultiWebApp,
@@ -143,8 +143,8 @@ fun CreateMultiWebAppScreen(
             ) {
                 Text(
                     if (isEdit) Strings.btnSave else Strings.btnCreate,
-                    fontWeight = FontWeight.Bold,
-                    color = if (canCreate) brandIndigo else MaterialTheme.colorScheme.onSurfaceVariant
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (canCreate) accentColor else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -223,13 +223,13 @@ fun CreateMultiWebAppScreen(
                                     .fillMaxWidth()
                                     .padding(top = 8.dp),
                                 shape = RoundedCornerShape(10.dp),
-                                color = brandIndigo.copy(alpha = 0.08f)
+                                color = accentColor.copy(alpha = 0.08f)
                             ) {
                                 Text(
                                     Strings.multiWebFeedTip,
                                     modifier = Modifier.padding(12.dp),
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = brandIndigo,
+                                    color = accentColor,
                                     lineHeight = 18.sp
                                 )
                             }
@@ -534,7 +534,7 @@ private fun AddSiteDialog(
     onSave: (MultiWebSite) -> Unit,
     onBatchSave: (List<MultiWebSite>) -> Unit = {}
 ) {
-    val brandColor = Color(0xFF6366F1)
+    val accentColor = MaterialTheme.colorScheme.onSurface
 
 
     if (editingSite != null) {
@@ -604,7 +604,7 @@ private fun AddSiteDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = {
-            Icon(Icons.Outlined.AddCircleOutline, null, tint = brandColor, modifier = Modifier.size(32.dp))
+            Icon(Icons.Outlined.AddCircleOutline, null, tint = accentColor, modifier = Modifier.size(32.dp))
         },
         title = {
             Row(
@@ -612,18 +612,18 @@ private fun AddSiteDialog(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(Strings.multiWebAddSite, fontWeight = FontWeight.Bold)
+                Text(Strings.multiWebAddSite, fontWeight = FontWeight.SemiBold)
                 if (sourceType == "EXISTING" && selectedAppIds.isNotEmpty()) {
                     Surface(
                         shape = RoundedCornerShape(12.dp),
-                        color = brandColor.copy(alpha = 0.12f)
+                        color = accentColor.copy(alpha = 0.12f)
                     ) {
                         Text(
                             "${selectedAppIds.size}",
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                             style = MaterialTheme.typography.labelMedium,
-                            color = brandColor,
-                            fontWeight = FontWeight.Bold
+                            color = accentColor,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
@@ -835,7 +835,7 @@ private fun AddSiteDialog(
                             Text(
                                 if (selectedAppIds.size == filteredApps.size) Strings.deselectAll else Strings.selectAll,
                                 fontSize = 12.sp,
-                                color = brandColor
+                                color = accentColor
                             )
                         }
                     }
@@ -900,7 +900,7 @@ private fun AddSiteDialog(
                                         selectedAppIds = if (isSelected) selectedAppIds - app.id else selectedAppIds + app.id
                                     },
                                     modifier = Modifier.size(24.dp),
-                                    colors = CheckboxDefaults.colors(checkedColor = brandColor)
+                                    colors = CheckboxDefaults.colors(checkedColor = accentColor)
                                 )
                             }
                         }
@@ -968,7 +968,7 @@ private fun AddSiteDialog(
                     "LOCAL" -> localFileName.isNotBlank()
                     else -> selectedAppIds.isNotEmpty()
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = brandColor)
+                colors = ButtonDefaults.buttonColors(containerColor = accentColor)
             ) {
                 Text(if (sourceType == "EXISTING" && selectedAppIds.size > 1) "${Strings.btnSave} (${selectedAppIds.size})" else Strings.btnSave)
             }
@@ -1014,7 +1014,7 @@ private fun EditSiteDialog(
         }
     }
 
-    val brandColor = Color(0xFF6366F1)
+    val accentColor = MaterialTheme.colorScheme.onSurface
     val eligibleApps = existingApps.filter { it.appType != com.webtoapp.data.model.AppType.MULTI_WEB }
     val isValid = when (sourceType) {
         "URL" -> url.isNotBlank()
@@ -1025,10 +1025,10 @@ private fun EditSiteDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = {
-            Icon(Icons.Outlined.Edit, null, tint = brandColor, modifier = Modifier.size(32.dp))
+            Icon(Icons.Outlined.Edit, null, tint = accentColor, modifier = Modifier.size(32.dp))
         },
         title = {
-            Text(Strings.multiWebEditSite, fontWeight = FontWeight.Bold)
+            Text(Strings.multiWebEditSite, fontWeight = FontWeight.SemiBold)
         },
         text = {
             Column(
@@ -1179,7 +1179,7 @@ private fun EditSiteDialog(
                                 if (isSelected) {
                                     Icon(
                                         Icons.Outlined.CheckCircle, null,
-                                        tint = brandColor,
+                                        tint = accentColor,
                                         modifier = Modifier.size(24.dp)
                                     )
                                 }
@@ -1195,9 +1195,9 @@ private fun EditSiteDialog(
                         "Feed Extraction",
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = brandColor
+                        color = accentColor
                     )
-                    OutlinedTextField(
+                    PremiumTextField(
                         value = cssSelector,
                         onValueChange = { cssSelector = it },
                         label = { Text(Strings.multiWebCssSelector) },
@@ -1231,7 +1231,7 @@ private fun EditSiteDialog(
                     )
                 },
                 enabled = isValid,
-                colors = ButtonDefaults.buttonColors(containerColor = brandColor)
+                colors = ButtonDefaults.buttonColors(containerColor = accentColor)
             ) { Text(Strings.btnSave) }
         },
         dismissButton = {

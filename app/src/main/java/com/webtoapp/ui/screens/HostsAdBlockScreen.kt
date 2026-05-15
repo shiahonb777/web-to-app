@@ -25,7 +25,7 @@ import com.webtoapp.core.adblock.AdBlocker
 import com.webtoapp.core.adblock.HostsSource
 import com.webtoapp.core.i18n.Strings
 import kotlinx.coroutines.launch
-import com.webtoapp.ui.components.ThemedBackgroundBox
+import com.webtoapp.ui.design.WtaBackground
 import androidx.compose.ui.graphics.Color
 
 
@@ -94,7 +94,7 @@ fun HostsAdBlockScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text(Strings.hostsAdBlock, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                        Text(Strings.hostsAdBlock, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
                         Text(
                             Strings.hostsAdBlockSubtitle,
                             style = MaterialTheme.typography.bodySmall,
@@ -115,7 +115,7 @@ fun HostsAdBlockScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        ThemedBackgroundBox(
+        WtaBackground(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
@@ -144,7 +144,7 @@ fun HostsAdBlockScreen(
                             Text(
                                 String.format(java.util.Locale.getDefault(), Strings.hostsRulesCount, hostsRulesCount),
                                 style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.SemiBold
                             )
                             if (enabledSources.isNotEmpty()) {
                                 Text(

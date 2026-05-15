@@ -6,14 +6,72 @@ import org.junit.Test
 class ErrorPageManagerTest {
 
     @Test
-    fun `default mode does not intercept system error page`() {
+    fun `default mode does not intercept unrecognized errors`() {
         val manager = ErrorPageManager(
             ErrorPageConfig(mode = ErrorPageMode.DEFAULT)
         )
 
-        val html = manager.generateErrorPage(-2, "dns failed", "https://example.com")
+        // errorCode 0 + description with no errno marker → no diagnostic → system page preserved
+        val html = manager.generateErrorPage(0, "generic failure", "https://example.com")
 
         assertThat(html).isNull()
+    }
+
+    @Test
+    fun `default mode renders diagnostic fallback for EADDRNOTAVAIL`() {
+        val manager = ErrorPageManager(
+            ErrorPageConfig(mode = ErrorPageMode.DEFAULT, language = "CHINESE")
+        )
+
+        val html = manager.generateErrorPage(
+            -1,
+            "bind failed: EADDRNOTAVAIL (Cannot assign requested address)",
+            "https://example.com"
+        )
+
+        assertThat(html).isNotNull()
+        assertThat(html).contains("无法绑定本机网络地址")
+        assertThat(html).contains("EADDRNOTAVAIL")
+        // No mini-game or auto retry countdown in the minimal fallback
+        assertThat(html).doesNotContain("gameCanvas")
+        assertThat(html).doesNotContain("秒后重试")
+    }
+
+    @Test
+    fun `default mode localizes fallback to english`() {
+        val manager = ErrorPageManager(
+            ErrorPageConfig(mode = ErrorPageMode.DEFAULT, language = "ENGLISH")
+        )
+
+        val html = manager.generateErrorPage(
+            -1,
+            "bind failed: EADDRNOTAVAIL",
+            "https://example.com"
+        )
+
+        assertThat(html).isNotNull()
+        assertThat(html).contains("Can&#39;t bind a local network address")
+    }
+
+    @Test
+    fun `builtin mode includes diagnostic card for ECONNREFUSED to loopback`() {
+        val manager = ErrorPageManager(
+            ErrorPageConfig(
+                mode = ErrorPageMode.BUILTIN_STYLE,
+                showMiniGame = false,
+                autoRetrySeconds = 0
+            )
+        )
+
+        val html = manager.generateErrorPage(
+            -6,
+            "ECONNREFUSED",
+            "http://127.0.0.1:3000"
+        )
+
+        assertThat(html).contains("本地服务未启动")
+        assertThat(html).contains("diag-card")
+        assertThat(html).contains("LOCAL_CONN_REFUSED")
     }
 
     @Test

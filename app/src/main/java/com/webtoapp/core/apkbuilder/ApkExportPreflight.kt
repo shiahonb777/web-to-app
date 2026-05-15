@@ -69,6 +69,7 @@ object ApkExportPreflight {
                 else -> emptyList()
             },
             galleryItems = if (appType == AppType.GALLERY) galleryConfig?.items.orEmpty() else emptyList(),
+            multiWebSites = if (appType == AppType.MULTI_WEB) multiWebConfig?.sites.orEmpty() else emptyList(),
             wordPressProjectDir = if (appType == AppType.WORDPRESS) {
                 wordpressConfig?.projectId?.takeIf { it.isNotBlank() }
                     ?.let { com.webtoapp.core.wordpress.WordPressManager.getProjectDir(context, it) }
@@ -92,6 +93,10 @@ object ApkExportPreflight {
             frontendProjectDir = if (appType == AppType.FRONTEND) {
                 htmlConfig?.projectDir?.takeIf { it.isNotBlank() }?.let(::File)
             } else null,
+            multiWebProjectDir = if (appType == AppType.MULTI_WEB) {
+                multiWebConfig?.projectId?.takeIf { it.isNotBlank() }
+                    ?.let { File(context.filesDir, "html_projects/$it") }
+            } else null,
             networkTrustConfig = apkExportConfig?.networkTrustConfig ?: com.webtoapp.data.model.NetworkTrustConfig(),
             phpBinaryPath = if (appType == AppType.PHP_APP || appType == AppType.WORDPRESS) {
                 com.webtoapp.core.wordpress.WordPressDependencyManager.getPhpExecutablePath(context)
@@ -104,6 +109,9 @@ object ApkExportPreflight {
             } else null,
             muslLinkerPath = if (appType == AppType.PYTHON_APP) {
                 com.webtoapp.core.python.PythonDependencyManager.getMuslLinkerPath(context)
+            } else null,
+            builderMuslLinkerPath = if (appType == AppType.PYTHON_APP) {
+                com.webtoapp.core.python.PythonDependencyManager.getBuilderMuslLinkerPath(context)
             } else null
         )
     }
@@ -187,6 +195,7 @@ object ApkExportPreflight {
             key.startsWith("htmlEntryFile") -> Strings.preflightEntryFileIssue
             key.startsWith("htmlFiles") -> Strings.preflightHtmlFileIssue
             key.startsWith("galleryItems") -> Strings.preflightGalleryIssue
+            key.startsWith("multiWebSites") || key == "multiWebProjectDir" -> Strings.preflightRuntimeProjectIssue
             key.endsWith("ProjectDir") -> Strings.preflightRuntimeProjectIssue
             key == "mediaContentPath" -> Strings.preflightMediaFileIssue
             else -> Strings.preflightInputIssue

@@ -1,6 +1,7 @@
 package com.webtoapp.ui.screens
 
 import android.net.Uri
+import com.webtoapp.ui.design.WtaSwitch
 import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -119,15 +120,11 @@ fun CreateMediaAppScreen(
     var themeType by remember { mutableStateOf("AURORA") }
 
 
-    val brandColor = remember(mediaType) {
-        if (mediaType == AppType.IMAGE) Color(0xFF7C4DFF) else Color(0xFFFF5252)
-    }
-    val brandGradient = remember(mediaType) {
-        if (mediaType == AppType.IMAGE)
-            listOf(Color(0xFF7C4DFF).copy(alpha = 0.15f), Color(0xFF448AFF).copy(alpha = 0.05f))
-        else
-            listOf(Color(0xFFFF5252).copy(alpha = 0.15f), Color(0xFFFF6E40).copy(alpha = 0.05f))
-    }
+    val accentColor = MaterialTheme.colorScheme.onSurface
+    val accentGradient = listOf(
+        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f),
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+    )
 
 
     LaunchedEffect(existingApp) {
@@ -229,8 +226,8 @@ fun CreateMediaAppScreen(
 
             MediaHeroSection(
                 mediaType = mediaType,
-                brandColor = brandColor,
-                brandGradient = brandGradient,
+                accentColor = accentColor,
+                accentGradient = accentGradient,
                 fileName = fileName,
                 fileSize = fileSize,
                 fileMimeType = fileMimeType
@@ -285,11 +282,11 @@ fun CreateMediaAppScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                                .background(brandColor.copy(alpha = 0.1f)),
+                                .background(accentColor.copy(alpha = 0.1f)),
                             contentAlignment = Alignment.Center
                         ) { Icon(
                             if (mediaType == AppType.IMAGE) Icons.Outlined.Image else Icons.Outlined.Videocam,
-                            null, tint = brandColor, modifier = Modifier.size(22.dp)
+                            null, tint = accentColor, modifier = Modifier.size(22.dp)
                         ) }
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
@@ -310,7 +307,7 @@ fun CreateMediaAppScreen(
                             )
                             .border(
                                 width = 2.dp,
-                                color = if (mediaUri != null) brandColor
+                                color = if (mediaUri != null) accentColor
                                 else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
                                 shape = RoundedCornerShape(12.dp)
                             )
@@ -342,13 +339,13 @@ fun CreateMediaAppScreen(
                                     Icon(
                                         Icons.Filled.PlayCircle, null,
                                         modifier = Modifier.size(64.dp),
-                                        tint = brandColor
+                                        tint = accentColor
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(
                                         text = Strings.videoSelected,
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = brandColor
+                                        color = accentColor
                                     )
                                 }
                             }
@@ -394,7 +391,7 @@ fun CreateMediaAppScreen(
                         MediaFileInfoRow(
                             fileSize = fileSize,
                             mimeType = fileMimeType,
-                            brandColor = brandColor
+                            accentColor = accentColor
                         )
                     }
                 }
@@ -438,16 +435,16 @@ fun CreateMediaAppScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                                .background(brandColor.copy(alpha = 0.1f)),
+                                .background(accentColor.copy(alpha = 0.1f)),
                             contentAlignment = Alignment.Center
-                        ) { Icon(Icons.Outlined.Tune, null, tint = brandColor, modifier = Modifier.size(22.dp)) }
+                        ) { Icon(Icons.Outlined.Tune, null, tint = accentColor, modifier = Modifier.size(22.dp)) }
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(Strings.labelDisplaySettings, style = MaterialTheme.typography.titleMedium)
                     }
                     Spacer(modifier = Modifier.height(12.dp))
 
                     SettingsRow(title = Strings.fillScreen, subtitle = Strings.fillScreenHint) {
-                        PremiumSwitch(
+                        WtaSwitch(
                             checked = fillScreen,
                             onCheckedChange = { fillScreen = it },
                         )
@@ -456,7 +453,7 @@ fun CreateMediaAppScreen(
 
                     if (!isEditMode) {
                     SettingsRow(title = Strings.landscapeMode, subtitle = Strings.landscapeModeHint) {
-                        PremiumSwitch(
+                        WtaSwitch(
                             checked = orientation == SplashOrientation.LANDSCAPE,
                             onCheckedChange = {
                                 orientation = if (it) SplashOrientation.LANDSCAPE else SplashOrientation.PORTRAIT
@@ -468,7 +465,7 @@ fun CreateMediaAppScreen(
 
                     HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                     SettingsRow(title = Strings.mediaScreenLock, subtitle = Strings.mediaScreenLockHint) {
-                        PremiumSwitch(
+                        WtaSwitch(
                             checked = keepScreenOn,
                             onCheckedChange = { keepScreenOn = it },
                         )
@@ -478,19 +475,19 @@ fun CreateMediaAppScreen(
                         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
 
                         SettingsRow(title = Strings.enableAudio, subtitle = Strings.enableAudioHint) {
-                            PremiumSwitch(
+                            WtaSwitch(
                                 checked = enableAudio,
                                 onCheckedChange = { enableAudio = it },
                             )
                         }
                         SettingsRow(title = Strings.loopPlay, subtitle = Strings.loopPlayHint) {
-                            PremiumSwitch(
+                            WtaSwitch(
                                 checked = loop,
                                 onCheckedChange = { loop = it },
                             )
                         }
                         SettingsRow(title = Strings.autoPlay, subtitle = Strings.autoPlayHint) {
-                            PremiumSwitch(
+                            WtaSwitch(
                                 checked = autoPlay,
                                 onCheckedChange = { autoPlay = it },
                             )
@@ -504,7 +501,7 @@ fun CreateMediaAppScreen(
                 MediaPlaybackSpeedCard(
                     speed = playbackSpeed,
                     onSpeedChange = { playbackSpeed = it },
-                    brandColor = brandColor
+                    accentColor = accentColor
                 )
             }
 
@@ -518,7 +515,7 @@ fun CreateMediaAppScreen(
                     saturation = saturation,
                     onSaturationChange = { saturation = it },
                     onReset = { brightness = 1.0f; contrast = 1.0f; saturation = 1.0f },
-                    brandColor = brandColor
+                    accentColor = accentColor
                 )
             }
 
@@ -527,7 +524,7 @@ fun CreateMediaAppScreen(
                 MediaBackgroundColorCard(
                     selected = backgroundColor,
                     onSelect = { backgroundColor = it },
-                    brandColor = brandColor
+                    accentColor = accentColor
                 )
             }
 
@@ -539,7 +536,7 @@ fun CreateMediaAppScreen(
                     doubleTapZoom = doubleTapZoom,
                     onDoubleTapZoomChange = { doubleTapZoom = it },
                     isImage = mediaType == AppType.IMAGE,
-                    brandColor = brandColor
+                    accentColor = accentColor
                 )
             }
             }
@@ -548,13 +545,13 @@ fun CreateMediaAppScreen(
             WtaCreateFlowSection(title = Strings.preview) {
             EnhancedElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = brandColor.copy(alpha = 0.08f))
+                colors = CardDefaults.cardColors(containerColor = accentColor.copy(alpha = 0.08f))
             ) {
                 Row(
                     modifier = Modifier.padding(16.dp),
                     verticalAlignment = Alignment.Top
                 ) {
-                    Icon(Icons.Outlined.Info, null, modifier = Modifier.size(20.dp), tint = brandColor)
+                    Icon(Icons.Outlined.Info, null, modifier = Modifier.size(20.dp), tint = accentColor)
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
                         text = Strings.mediaAppHint.replace(
@@ -582,8 +579,8 @@ fun CreateMediaAppScreen(
 @Composable
 private fun MediaHeroSection(
     mediaType: AppType,
-    brandColor: Color,
-    brandGradient: List<Color>,
+    accentColor: Color,
+    accentGradient: List<Color>,
     fileName: String?,
     fileSize: Long?,
     fileMimeType: String?
@@ -597,7 +594,7 @@ private fun MediaHeroSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    brush = Brush.horizontalGradient(colors = brandGradient),
+                    brush = Brush.horizontalGradient(colors = accentGradient),
                     shape = RoundedCornerShape(16.dp)
                 )
                 .padding(20.dp)
@@ -606,12 +603,12 @@ private fun MediaHeroSection(
                 Surface(
                     modifier = Modifier.size(56.dp),
                     shape = RoundedCornerShape(14.dp),
-                    color = brandColor.copy(alpha = 0.15f)
+                    color = accentColor.copy(alpha = 0.15f)
                 ) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Icon(
                             if (mediaType == AppType.IMAGE) Icons.Outlined.Image else Icons.Outlined.Videocam,
-                            null, modifier = Modifier.size(32.dp), tint = brandColor
+                            null, modifier = Modifier.size(32.dp), tint = accentColor
                         )
                     }
                 }
@@ -620,8 +617,8 @@ private fun MediaHeroSection(
                     Text(
                         text = if (mediaType == AppType.IMAGE) Strings.mediaImageInfo else Strings.mediaVideoInfo,
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = brandColor
+                        fontWeight = FontWeight.SemiBold,
+                        color = accentColor
                     )
                     Text(
                         text = if (mediaType == AppType.IMAGE)
@@ -638,14 +635,14 @@ private fun MediaHeroSection(
                                 val ext = mime.substringAfter("/").uppercase()
                                 Surface(
                                     shape = RoundedCornerShape(4.dp),
-                                    color = brandColor.copy(alpha = 0.12f)
+                                    color = accentColor.copy(alpha = 0.12f)
                                 ) {
                                     Text(
                                         text = ext,
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = brandColor,
-                                        fontWeight = FontWeight.Bold
+                                        color = accentColor,
+                                        fontWeight = FontWeight.SemiBold
                                     )
                                 }
                             }
@@ -653,13 +650,13 @@ private fun MediaHeroSection(
                             fileSize?.let { size ->
                                 Surface(
                                     shape = RoundedCornerShape(4.dp),
-                                    color = brandColor.copy(alpha = 0.12f)
+                                    color = accentColor.copy(alpha = 0.12f)
                                 ) {
                                     Text(
                                         text = formatFileSize(size),
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = brandColor,
+                                        color = accentColor,
                                         fontFamily = FontFamily.Monospace
                                     )
                                 }
@@ -680,12 +677,12 @@ private fun MediaHeroSection(
 private fun MediaFileInfoRow(
     fileSize: Long?,
     mimeType: String?,
-    brandColor: Color
+    accentColor: Color
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        color = brandColor.copy(alpha = 0.06f)
+        color = accentColor.copy(alpha = 0.06f)
     ) {
         FlowRow(
             modifier = Modifier.padding(10.dp),
@@ -694,7 +691,7 @@ private fun MediaFileInfoRow(
         ) {
             fileSize?.let { size ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Outlined.Storage, null, modifier = Modifier.size(14.dp), tint = brandColor)
+                    Icon(Icons.Outlined.Storage, null, modifier = Modifier.size(14.dp), tint = accentColor)
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         "${Strings.mediaFileSize}: ${formatFileSize(size)}",
@@ -705,7 +702,7 @@ private fun MediaFileInfoRow(
             }
             mimeType?.let { mime ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Outlined.Description, null, modifier = Modifier.size(14.dp), tint = brandColor)
+                    Icon(Icons.Outlined.Description, null, modifier = Modifier.size(14.dp), tint = accentColor)
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         "${Strings.mediaFormat}: ${mime.substringAfter("/")}",
@@ -726,7 +723,7 @@ private fun MediaFileInfoRow(
 private fun MediaPlaybackSpeedCard(
     speed: Float,
     onSpeedChange: (Float) -> Unit,
-    brandColor: Color
+    accentColor: Color
 ) {
     val speeds = listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f)
 
@@ -735,9 +732,9 @@ private fun MediaPlaybackSpeedCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                        .background(brandColor.copy(alpha = 0.1f)),
+                        .background(accentColor.copy(alpha = 0.1f)),
                     contentAlignment = Alignment.Center
-                ) { Icon(Icons.Outlined.Speed, null, tint = brandColor, modifier = Modifier.size(22.dp)) }
+                ) { Icon(Icons.Outlined.Speed, null, tint = accentColor, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(Strings.mediaPlaybackSpeed, style = MaterialTheme.typography.titleMedium)
             }
@@ -755,7 +752,7 @@ private fun MediaPlaybackSpeedCard(
                         label = {
                             Text(
                                 "${s}x",
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                                 fontFamily = FontFamily.Monospace
                             )
                         },
@@ -779,21 +776,21 @@ private fun MediaImageAdjustCard(
     saturation: Float,
     onSaturationChange: (Float) -> Unit,
     onReset: () -> Unit,
-    brandColor: Color
+    accentColor: Color
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                        .background(brandColor.copy(alpha = 0.1f)),
+                        .background(accentColor.copy(alpha = 0.1f)),
                     contentAlignment = Alignment.Center
-                ) { Icon(Icons.Outlined.Tune, null, tint = brandColor, modifier = Modifier.size(22.dp)) }
+                ) { Icon(Icons.Outlined.Tune, null, tint = accentColor, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(Strings.mediaImageAdjust, style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.weight(weight = 1f, fill = true))
                 TextButton(onClick = onReset) {
-                    Text(Strings.mediaReset, style = MaterialTheme.typography.labelSmall, color = brandColor)
+                    Text(Strings.mediaReset, style = MaterialTheme.typography.labelSmall, color = accentColor)
                 }
             }
             Spacer(modifier = Modifier.height(4.dp))
@@ -810,7 +807,7 @@ private fun MediaImageAdjustCard(
                 value = brightness,
                 onValueChange = onBrightnessChange,
                 valueRange = 0.5f..2.0f,
-                brandColor = brandColor
+                accentColor = accentColor
             )
 
             MediaSliderRow(
@@ -818,7 +815,7 @@ private fun MediaImageAdjustCard(
                 value = contrast,
                 onValueChange = onContrastChange,
                 valueRange = 0.5f..2.0f,
-                brandColor = brandColor
+                accentColor = accentColor
             )
 
             MediaSliderRow(
@@ -826,7 +823,7 @@ private fun MediaImageAdjustCard(
                 value = saturation,
                 onValueChange = onSaturationChange,
                 valueRange = 0.0f..2.0f,
-                brandColor = brandColor
+                accentColor = accentColor
             )
         }
     }
@@ -841,7 +838,7 @@ private fun MediaSliderRow(
     value: Float,
     onValueChange: (Float) -> Unit,
     valueRange: ClosedFloatingPointRange<Float>,
-    brandColor: Color
+    accentColor: Color
 ) {
     Column(modifier = Modifier.padding(vertical = 2.dp)) {
         Row(
@@ -854,8 +851,8 @@ private fun MediaSliderRow(
                 String.format(java.util.Locale.getDefault(), "%.1f", value),
                 style = MaterialTheme.typography.labelSmall,
                 fontFamily = FontFamily.Monospace,
-                color = brandColor,
-                fontWeight = FontWeight.Bold
+                color = accentColor,
+                fontWeight = FontWeight.SemiBold
             )
         }
         Slider(
@@ -863,8 +860,8 @@ private fun MediaSliderRow(
             onValueChange = onValueChange,
             valueRange = valueRange,
             colors = SliderDefaults.colors(
-                thumbColor = brandColor,
-                activeTrackColor = brandColor
+                thumbColor = accentColor,
+                activeTrackColor = accentColor
             )
         )
     }
@@ -878,17 +875,17 @@ private fun MediaSliderRow(
 private fun MediaBackgroundColorCard(
     selected: String,
     onSelect: (String) -> Unit,
-    brandColor: Color
+    accentColor: Color
 ) {
     val colors = listOf(
         "#000000" to "Black",
         "#FFFFFF" to "White",
-        "#1A1A2E" to "Dark Blue",
-        "#16213E" to "Navy",
+        "#121212" to "Ink",
         "#1B1B1B" to "Charcoal",
         "#2D2D2D" to "Dark Gray",
-        "#0D1117" to "GitHub Dark",
-        "#282C34" to "VS Code"
+        "#444444" to "Mid Gray",
+        "#707070" to "Slate Gray",
+        "#BDBDBD" to "Light Gray"
     )
 
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
@@ -896,9 +893,9 @@ private fun MediaBackgroundColorCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                        .background(brandColor.copy(alpha = 0.1f)),
+                        .background(accentColor.copy(alpha = 0.1f)),
                     contentAlignment = Alignment.Center
-                ) { Icon(Icons.Outlined.Palette, null, tint = brandColor, modifier = Modifier.size(22.dp)) }
+                ) { Icon(Icons.Outlined.Palette, null, tint = accentColor, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(Strings.mediaBackgroundColor, style = MaterialTheme.typography.titleMedium)
             }
@@ -916,7 +913,7 @@ private fun MediaBackgroundColorCard(
                         shape = RoundedCornerShape(10.dp),
                         color = color,
                         border = if (isSelected)
-                            androidx.compose.foundation.BorderStroke(3.dp, brandColor)
+                            androidx.compose.foundation.BorderStroke(3.dp, accentColor)
                         else
                             androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                         onClick = { onSelect(hex) }
@@ -947,23 +944,23 @@ private fun MediaGestureCard(
     doubleTapZoom: Boolean,
     onDoubleTapZoomChange: (Boolean) -> Unit,
     isImage: Boolean,
-    brandColor: Color
+    accentColor: Color
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                        .background(brandColor.copy(alpha = 0.1f)),
+                        .background(accentColor.copy(alpha = 0.1f)),
                     contentAlignment = Alignment.Center
-                ) { Icon(Icons.Outlined.TouchApp, null, tint = brandColor, modifier = Modifier.size(22.dp)) }
+                ) { Icon(Icons.Outlined.TouchApp, null, tint = accentColor, modifier = Modifier.size(22.dp)) }
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(Strings.mediaGestureConfig, style = MaterialTheme.typography.titleMedium)
             }
             Spacer(modifier = Modifier.height(12.dp))
 
             SettingsRow(title = Strings.mediaSwipeDismiss, subtitle = Strings.mediaSwipeDismissHint) {
-                PremiumSwitch(
+                WtaSwitch(
                     checked = swipeDismiss,
                     onCheckedChange = onSwipeDismissChange,
                 )
@@ -971,7 +968,7 @@ private fun MediaGestureCard(
 
             if (isImage) {
                 SettingsRow(title = Strings.mediaDoubleTapZoom, subtitle = Strings.mediaDoubleTapZoomHint) {
-                    PremiumSwitch(
+                    WtaSwitch(
                         checked = doubleTapZoom,
                         onCheckedChange = onDoubleTapZoomChange,
                     )

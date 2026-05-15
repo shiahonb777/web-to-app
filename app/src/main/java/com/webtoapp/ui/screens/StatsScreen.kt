@@ -31,7 +31,7 @@ import com.webtoapp.ui.theme.AppColors
 import com.webtoapp.core.stats.*
 import com.webtoapp.data.model.AppType
 import com.webtoapp.data.model.WebApp
-import com.webtoapp.ui.components.ThemedBackgroundBox
+import com.webtoapp.ui.design.WtaBackground
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
 
@@ -71,7 +71,7 @@ fun StatsScreen(
             )
         }
     ) { padding ->
-        ThemedBackgroundBox(
+        WtaBackground(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
@@ -246,7 +246,7 @@ private fun StatItem(
         Text(
             value,
             style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.SemiBold,
             color = color
         )
         Text(
@@ -277,9 +277,9 @@ private fun UsageStatsCard(
             Surface(
                 shape = CircleShape,
                 color = when (rank) {
-                    1 -> Color(0xFFFFD700)
-                    2 -> Color(0xFFC0C0C0)
-                    3 -> Color(0xFFCD7F32)
+                    1 -> MaterialTheme.colorScheme.primary
+                    2 -> MaterialTheme.colorScheme.primaryContainer
+                    3 -> MaterialTheme.colorScheme.surfaceContainerHighest
                     else -> MaterialTheme.colorScheme.surfaceVariant
                 },
                 modifier = Modifier.size(32.dp)
@@ -288,8 +288,12 @@ private fun UsageStatsCard(
                     Text(
                         "#$rank",
                         style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = if (rank <= 3) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                        fontWeight = FontWeight.SemiBold,
+                        color = when (rank) {
+                            1 -> MaterialTheme.colorScheme.onPrimary
+                            2 -> MaterialTheme.colorScheme.onPrimaryContainer
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                        }
                     )
                 }
             }
@@ -322,7 +326,7 @@ private fun UsageStatsCard(
                 Text(
                     "${stats.launchCount}",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
@@ -366,7 +370,7 @@ private fun UsageTimeCard(
                 Text(
                     stats.formattedTotalUsage,
                     style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.tertiary
                 )
             }
@@ -446,6 +450,7 @@ private fun HealthOverviewCard(
     val slow = apps.count { recordMap[it.id]?.status == HealthStatus.SLOW }
     val offline = apps.count { recordMap[it.id]?.status == HealthStatus.OFFLINE }
     val unknown = apps.size - online - slow - offline
+    val semantic = com.webtoapp.ui.design.WtaColors.semantic
 
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -454,10 +459,10 @@ private fun HealthOverviewCard(
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            HealthStatItem(online, Strings.healthOnline, AppColors.Success)
-            HealthStatItem(slow, Strings.healthSlow, Color(0xFFFFC107))
-            HealthStatItem(offline, Strings.healthOffline, Color(0xFFF44336))
-            HealthStatItem(unknown, Strings.healthUnknown, Color(0xFF9E9E9E))
+            HealthStatItem(online, Strings.healthOnline, semantic.success)
+            HealthStatItem(slow, Strings.healthSlow, semantic.warning)
+            HealthStatItem(offline, Strings.healthOffline, semantic.error)
+            HealthStatItem(unknown, Strings.healthUnknown, semantic.neutral)
         }
     }
 }
@@ -475,7 +480,7 @@ private fun HealthStatItem(count: Int, label: String, color: Color) {
         Text(
             "$count",
             style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.SemiBold,
             color = color
         )
         Text(
@@ -495,11 +500,12 @@ private fun HealthStatusCard(
     record: AppHealthRecord?,
     onCheckHealth: (WebApp) -> Unit
 ) {
+    val semantic = com.webtoapp.ui.design.WtaColors.semantic
     val statusColor = when (record?.status) {
-        HealthStatus.ONLINE -> AppColors.Success
-        HealthStatus.SLOW -> Color(0xFFFFC107)
-        HealthStatus.OFFLINE -> Color(0xFFF44336)
-        else -> Color(0xFF9E9E9E)
+        HealthStatus.ONLINE -> semantic.success
+        HealthStatus.SLOW -> semantic.warning
+        HealthStatus.OFFLINE -> semantic.error
+        else -> semantic.neutral
     }
     val statusText = when (record?.status) {
         HealthStatus.ONLINE -> Strings.healthOnline

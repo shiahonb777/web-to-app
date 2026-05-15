@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_description">Website to app</string>
 
@@ -111,48 +111,12 @@
     <string name="module_disabled">Disabled</string>
     <string name="ai_module_developer">AI Module Developer</string>
 
-    <string name="store_get_download_link_failed">Failed to get download link: %1$s</string>
-    <string name="store_network_error">Network error: %1$s</string>
-    <string name="store_report_failed">Report failed: %1$s</string>
-
     <string name="njs_package_json_not_found">package.json not found. Select a valid project folder.</string>
 
-
-    <string name="community_recipe_json_supporting">Paste config JSON for import.</string>
-    <string name="community_tutorial_title_placeholder">Tutorial title *</string>
-    <string name="community_difficulty_label">Difficulty</string>
-    <string name="community_question_title_placeholder">Question title *</string>
-    <string name="community_showcase_content_placeholder">Introduce your work...</string>
-    <string name="community_tutorial_content_placeholder">Write your tutorial content...</string>
-    <string name="community_question_content_placeholder">Describe your question in detail...</string>
-
-    <string name="community_post_type_showcase">Showcase</string>
-    <string name="community_post_type_tutorial">Tutorial</string>
-    <string name="community_post_type_question">Question</string>
-    <string name="community_post_type_update">Update</string>
-    <string name="community_difficulty_beginner">Beginner</string>
-    <string name="community_difficulty_intermediate">Intermediate</string>
-    <string name="community_difficulty_advanced">Advanced</string>
-    <string name="community_resolved">Resolved</string>
-    <string name="community_work_default">Work</string>
-    <string name="community_source_website">Website</string>
-    <string name="community_source_html">HTML</string>
-    <string name="community_source_media">Media</string>
-    <string name="community_source_frontend">Frontend Framework</string>
-    <string name="community_source_server">Backend</string>
-    <string name="community_source_format">Source: %1$s</string>
-    <string name="community_recipe_imported">Recipe imported</string>
-    <string name="community_import_recipe_one_tap">Import recipe</string>
-    <string name="community_import_count">%1$d imports</string>
-    <string name="community_import">Imports</string>
 
     <string name="theme_dark">Dark mode</string>
     <string name="theme_light">Light mode</string>
 
-    <string name="community_developer_role">Developer</string>
-
-
-    
     <string name="ai_generating">AI Generating…</string>
     <string name="ai_analyzing">Analyzing requirements…</string>
     <string name="ai_planning">Planning development steps…</string>
@@ -519,30 +483,13 @@
     
     <string name="about">About</string>
     <string name="independent_developer">Independent Developer · AI Enthusiast</string>
-    <string name="check_update">Check Update</string>
     <string name="checking">Checking…</string>
     <string name="downloading">Downloading…</string>
     <string name="current_version">Current Version</string>
     <string name="about_this_app">About This App</string>
     <string name="about_app_description">WebToApp is a tool I independently developed that can quickly convert websites, images, and videos into standalone Android apps.\n\nIf you have any questions, suggestions, or ideas, feel free to contact me!</string>
-    <string name="social_media">Social Media</string>
-    <string name="exchange_group">Community Group</string>
-    <string name="video_tutorial">Video Tutorial</string>
-    <string name="open_source_repo">Open Source Repo</string>
-    <string name="join_exchange_group">Join Community</string>
-    <string name="learn_progress_together">Learn together, get latest news 🚀</string>
-    <string name="exchange_learning">Exchange learning, update news</string>
-    <string name="international_group">International user group</string>
-    <string name="contact_author">Contact Author</string>
-    <string name="feedback_cooperation">Feedback, cooperation, feature suggestions 💬</string>
-    <string name="feedback_cooperation_short">Feedback, cooperation</string>
-    <string name="email_contact">Email Contact</string>
-    <string name="international_email">International Email</string>
     <string name="update_later">Update Later</string>
     <string name="download_complete">Download complete, installing…</string>
-    <string name="check_update_failed">Check update failed</string>
-
-    
     <string name="ai_generating_status">AI Generating…</string>
     <string name="ai_analyzing_status">Analyzing requirements…</string>
     <string name="ai_completed_status">Generation completed</string>

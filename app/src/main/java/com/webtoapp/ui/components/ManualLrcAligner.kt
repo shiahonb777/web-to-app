@@ -724,7 +724,7 @@ private fun AlignmentStep(
                     ) {
                         Icon(Icons.Default.TouchApp, null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(com.webtoapp.core.i18n.Strings.tap, fontWeight = FontWeight.Bold)
+                        Text(com.webtoapp.core.i18n.Strings.tap, fontWeight = FontWeight.SemiBold)
                     }
 
 

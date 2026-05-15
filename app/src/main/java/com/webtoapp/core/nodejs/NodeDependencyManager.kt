@@ -9,6 +9,8 @@ import com.webtoapp.core.logging.AppLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
@@ -100,6 +102,7 @@ object NodeDependencyManager {
 
     private val _downloadState = MutableStateFlow<DownloadState>(DownloadState.Idle)
     val downloadState: StateFlow<DownloadState> = _downloadState
+    private val runtimeDownloadMutex = Mutex()
 
 
     private var _userMirrorRegion: MirrorRegion? = null
@@ -215,24 +218,30 @@ object NodeDependencyManager {
 
 
     suspend fun downloadNodeRuntime(context: Context): Boolean = withContext(Dispatchers.IO) {
-        try {
-            _downloadState.value = DownloadState.Idle
+        runtimeDownloadMutex.withLock {
             DependencyDownloadNotification.getInstance(context)
-            DependencyDownloadEngine.reset()
-            val mirror = getMirrorConfig()
-
-            if (!isNodeReady(context)) {
-                val success = downloadNode(context, mirror)
-                if (!success) return@withContext false
+            if (isNodeReady(context)) {
+                markComplete()
+                return@withLock true
             }
+            try {
+                _downloadState.value = DownloadState.Idle
+                DependencyDownloadEngine.reset()
+                val mirror = getMirrorConfig()
 
-            _downloadState.value = DownloadState.Complete
-            AppLogger.i(TAG, "Node.js 运行时下载完成")
-            true
-        } catch (e: Exception) {
-            AppLogger.e(TAG, "下载 Node.js 运行时失败", e)
-            _downloadState.value = DownloadState.Error(e.message ?: "未知错误")
-            false
+                if (!isNodeReady(context)) {
+                    val success = downloadNode(context, mirror)
+                    if (!success) return@withLock false
+                }
+
+                markComplete()
+                AppLogger.i(TAG, "Node.js 运行时下载完成")
+                true
+            } catch (e: Exception) {
+                AppLogger.e(TAG, "下载 Node.js 运行时失败", e)
+                markError(e.message ?: "未知错误")
+                false
+            }
         }
     }
 
@@ -326,7 +335,7 @@ object NodeDependencyManager {
                 AppLogger.i(TAG, "Node.js 运行时已就绪: ${nodeLib.absolutePath} (${nodeLib.length()} bytes)")
             } else {
                 AppLogger.e(TAG, "解压后未找到 $NODE_BINARY_NAME (ABI: $abi)")
-                _downloadState.value = DownloadState.Error("解压后未找到 Node.js 运行时 (ABI: $abi)")
+                markError("解压后未找到 Node.js 运行时 (ABI: $abi)")
                 return false
             }
 
@@ -335,7 +344,7 @@ object NodeDependencyManager {
             return true
         } catch (e: Exception) {
             AppLogger.e(TAG, "解压 Node.js 失败", e)
-            _downloadState.value = DownloadState.Error("解压 Node.js 失败: ${e.message}")
+            markError("解压 Node.js 失败: ${e.message}")
             return false
         }
     }
@@ -406,6 +415,16 @@ object NodeDependencyManager {
             }
             else -> {}
         }
+    }
+
+    private fun markComplete() {
+        _downloadState.value = DownloadState.Complete
+        DependencyDownloadEngine._state.value = DependencyDownloadEngine.State.Complete
+    }
+
+    private fun markError(message: String) {
+        _downloadState.value = DownloadState.Error(message)
+        DependencyDownloadEngine._state.value = DependencyDownloadEngine.State.Error(message)
     }
 
 

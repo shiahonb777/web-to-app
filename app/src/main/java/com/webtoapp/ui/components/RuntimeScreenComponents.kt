@@ -140,7 +140,7 @@ fun RuntimeHeroSection(
                     Text(
                         text = title,
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
@@ -162,7 +162,7 @@ fun RuntimeHeroSection(
                                         style = MaterialTheme.typography.labelSmall,
                                         color = accent,
                                         fontFamily = FontFamily.Monospace,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.SemiBold
                                     )
                                 }
                             }
@@ -204,7 +204,7 @@ fun RuntimeSuccessCard(
                     text = title,
                     style = MaterialTheme.typography.bodyMedium,
                     color = accent,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.SemiBold
                 )
                 subtitle?.let {
                     Text(

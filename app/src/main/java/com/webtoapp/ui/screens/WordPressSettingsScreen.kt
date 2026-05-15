@@ -24,7 +24,7 @@ import com.webtoapp.ui.components.EnhancedElevatedCard
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.webtoapp.ui.components.ThemedBackgroundBox
+import com.webtoapp.ui.design.WtaBackground
 import androidx.compose.ui.graphics.Color
 
 
@@ -72,7 +72,7 @@ fun WordPressSettingsScreen(
             )
         }
     ) { padding ->
-        ThemedBackgroundBox(
+        WtaBackground(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)

@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -75,10 +76,11 @@ fun QrCodeShareDialog(
             usePlatformDefaultWidth = false
         )
     ) {
+        val maxDialogHeight = (LocalConfiguration.current.screenHeightDp * 0.9f).dp
         Card(
             modifier = Modifier
                 .fillMaxWidth(0.92f)
-                .wrapContentHeight(),
+                .heightIn(max = maxDialogHeight),
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
@@ -100,7 +102,7 @@ fun QrCodeShareDialog(
                     Text(
                         text = Strings.shareModule,
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.SemiBold
                     )
                     IconButton(onClick = onDismiss) {
                         Icon(
@@ -205,7 +207,7 @@ fun QrCodeShareDialog(
                         Text(
                             text = Strings.moduleTooLargeTitle,
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.SemiBold
                         )
 
                         Spacer(modifier = Modifier.height(8.dp))

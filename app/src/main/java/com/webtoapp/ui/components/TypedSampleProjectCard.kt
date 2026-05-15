@@ -82,7 +82,7 @@ fun TypedSampleProjectsCard(
                     Text(
                         title,
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
@@ -179,7 +179,7 @@ private fun TypedSampleProjectItem(
             Text(
                 sample.name,
                 style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
             )
 

@@ -231,9 +231,9 @@ class DownloadNotificationManager(private val context: Context) {
 
         val downloadingCount = activeDownloads.size
         val title = if (downloadingCount == 1) {
-            "Downloading: ${activeDownloads.values.first().fileName}"
+            Strings.notifDownloadingFile.format(activeDownloads.values.first().fileName)
         } else {
-            "Downloading $downloadingCount files"
+            Strings.notifDownloadingMultipleFiles.format(downloadingCount)
         }
 
 
@@ -546,7 +546,7 @@ class DownloadNotificationManager(private val context: Context) {
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_notify_error)
             .setContentTitle(Strings.notifDownloadFailed)
-            .setContentText("$fileName: $reason")
+            .setContentText(Strings.notifSaveFailedWithReason.format(fileName, reason))
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .build()

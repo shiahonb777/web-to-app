@@ -1,6 +1,7 @@
 package com.webtoapp.ui.screens
 
 import android.net.Uri
+import com.webtoapp.ui.design.WtaSwitch
 import com.webtoapp.ui.components.PremiumButton
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -44,7 +45,7 @@ import com.webtoapp.util.MediaStorage
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.File
-import com.webtoapp.ui.components.ThemedBackgroundBox
+import com.webtoapp.ui.design.WtaBackground
 import com.webtoapp.ui.components.EnhancedElevatedCard
 
 
@@ -241,7 +242,7 @@ fun CreateGalleryAppScreen(
             )
         }
     ) { padding ->
-        ThemedBackgroundBox(
+        WtaBackground(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
@@ -605,7 +606,7 @@ private fun MediaManagementTab(
             EnhancedElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
                 )
             ) {
                 Row(
@@ -854,7 +855,7 @@ private fun PlaybackSettingsTab(
                     title = Strings.enableAudio,
                     subtitle = Strings.galleryEnableAudioHint
                 ) {
-                    PremiumSwitch(
+                    WtaSwitch(
                         checked = enableAudio,
                         onCheckedChange = onEnableAudioChange
                     )
@@ -864,7 +865,7 @@ private fun PlaybackSettingsTab(
                     title = Strings.galleryVideoAutoNext,
                     subtitle = Strings.galleryVideoAutoNextHint
                 ) {
-                    PremiumSwitch(
+                    WtaSwitch(
                         checked = videoAutoNext,
                         onCheckedChange = onVideoAutoNextChange
                     )
@@ -885,7 +886,7 @@ private fun PlaybackSettingsTab(
                     title = Strings.galleryAutoPlay,
                     subtitle = Strings.galleryAutoPlayHint
                 ) {
-                    PremiumSwitch(
+                    WtaSwitch(
                         checked = autoPlay,
                         onCheckedChange = onAutoPlayChange
                     )
@@ -895,7 +896,7 @@ private fun PlaybackSettingsTab(
                     title = Strings.loopPlay,
                     subtitle = Strings.galleryLoopHint
                 ) {
-                    PremiumSwitch(
+                    WtaSwitch(
                         checked = loop,
                         onCheckedChange = onLoopChange
                     )
@@ -906,7 +907,7 @@ private fun PlaybackSettingsTab(
                         title = Strings.galleryShuffleOnLoop,
                         subtitle = Strings.galleryShuffleOnLoopHint
                     ) {
-                        PremiumSwitch(
+                        WtaSwitch(
                             checked = shuffleOnLoop,
                             onCheckedChange = onShuffleOnLoopChange
                         )
@@ -917,7 +918,7 @@ private fun PlaybackSettingsTab(
                     title = Strings.galleryRememberPosition,
                     subtitle = Strings.galleryRememberPositionHint
                 ) {
-                    PremiumSwitch(
+                    WtaSwitch(
                         checked = rememberPosition,
                         onCheckedChange = onRememberPositionChange
                     )
@@ -1066,7 +1067,7 @@ private fun DisplaySettingsTab(
                     title = Strings.galleryShowThumbnailBar,
                     subtitle = Strings.galleryShowThumbnailBarHint
                 ) {
-                    PremiumSwitch(
+                    WtaSwitch(
                         checked = showThumbnailBar,
                         onCheckedChange = onShowThumbnailBarChange
                     )
@@ -1076,7 +1077,7 @@ private fun DisplaySettingsTab(
                     title = Strings.galleryShowMediaInfo,
                     subtitle = Strings.galleryShowMediaInfoHint
                 ) {
-                    PremiumSwitch(
+                    WtaSwitch(
                         checked = showMediaInfo,
                         onCheckedChange = onShowMediaInfoChange
                     )
@@ -1086,7 +1087,7 @@ private fun DisplaySettingsTab(
                     title = Strings.landscapeMode,
                     subtitle = Strings.landscapeModeHint
                 ) {
-                    PremiumSwitch(
+                    WtaSwitch(
                         checked = orientation == SplashOrientation.LANDSCAPE,
                         onCheckedChange = {
                             onOrientationChange(
@@ -1247,19 +1248,19 @@ private fun StatItem(
             icon,
             contentDescription = null,
             modifier = Modifier.size(24.dp),
-            tint = MaterialTheme.colorScheme.onSecondaryContainer
+            tint = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = value,
             style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSecondaryContainer
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface
         )
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
@@ -1836,7 +1837,7 @@ fun CreateGalleryAppScreenV2(
 private fun StatChip(icon: ImageVector, value: Int) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         Icon(icon, null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
-        Text(text = value.toString(), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Text(text = value.toString(), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
     }
 }
 
@@ -1924,7 +1925,7 @@ private fun GallerySettingsSheet(
             Column {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text(Strings.galleryImageInterval, style = MaterialTheme.typography.bodyMedium)
-                    Text("${imageInterval}s", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                    Text("${imageInterval}s", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
                 }
                 Slider(value = imageInterval.toFloat(), onValueChange = { onImageIntervalChange(it.toInt()) }, valueRange = 1f..15f, steps = 13, modifier = Modifier.fillMaxWidth())
             }

@@ -28,12 +28,6 @@ class WebToAppApplication : Application() {
         super.onCreate()
         instance = this
 
-        runCatching {
-            WebView.enableSlowWholeDocumentDraw()
-        }.onFailure {
-            android.util.Log.w("WebToAppApplication", "enableSlowWholeDocumentDraw failed", it)
-        }
-
         try {
             AppLogger.init(this)
             AppLogger.system("Application", "onCreate started (shell)")
@@ -47,9 +41,6 @@ class WebToAppApplication : Application() {
 
         com.webtoapp.core.perf.SystemPerfOptimizer.initSystem(this)
         com.webtoapp.core.perf.SystemPerfOptimizer.readaheadCriticalFiles(this)
-
-
-        com.webtoapp.core.webview.WebViewPool.prewarm(this)
 
         AppLogger.system("Application", "onCreate completed (shell)")
     }

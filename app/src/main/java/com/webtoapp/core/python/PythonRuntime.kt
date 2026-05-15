@@ -37,6 +37,8 @@ class PythonRuntime(private val context: Context) {
         private const val TAG = "PythonRuntime"
         private const val MAX_HEALTH_CHECK_RETRIES = 60
         private const val HEALTH_CHECK_INTERVAL_MS = 500L
+        private const val HEALTH_CHECK_STABILITY_DELAY_MS = 150L
+        private const val REQUIRED_HEALTHY_RESPONSES = 2
     }
 
 
@@ -159,9 +161,9 @@ class PythonRuntime(private val context: Context) {
                 if (!depsInstalled) {
 
                     val sitePackages = File(projDir, ".pypackages")
-                    val existingPackages = sitePackages.listFiles()
-                    if (sitePackages.exists() && existingPackages != null && existingPackages.isNotEmpty()) {
-                        AppLogger.w(TAG, "pip install 失败，但 .pypackages 已携带 ${existingPackages.size} 个包，继续启动")
+                    if (PythonDependencyManager.hasInstalledPackages(sitePackages)) {
+                        val existingPackages = sitePackages.listFiles()?.size ?: 0
+                        AppLogger.w(TAG, "pip install 失败，但 .pypackages 已携带 ${existingPackages} 个包，继续启动")
                         ShellLogger.w(TAG, "依赖安装失败，使用预打包依赖继续")
                     } else {
                         val errMsg = "Python 依赖安装失败。可能原因：1) 无网络连接 2) requirements.txt 中包含不兼容的包 3) Android 环境不支持该包的安装方式"
@@ -230,7 +232,7 @@ class PythonRuntime(private val context: Context) {
             AppLogger.i(TAG, "PYTHONPATH=$pythonPath")
             AppLogger.i(TAG, "LD_LIBRARY_PATH=${pythonHome}/lib")
             AppLogger.i(TAG, "musl linker=$muslLinker")
-            AppLogger.i(TAG, ".pypackages 存在=${sitePackages.exists()}, 数量=${sitePackages.listFiles()?.size ?: 0}")
+            AppLogger.i(TAG, ".pypackages 存在=${sitePackages.exists()}, 顶层数量=${sitePackages.listFiles()?.size ?: 0}, 含文件=${PythonDependencyManager.hasInstalledPackages(sitePackages)}")
             AppLogger.i(TAG, "stdlib 存在=${File(pythonHome, "lib/python${PythonDependencyManager.PYTHON_VERSION}").exists()}, 文件数=${File(pythonHome, "lib/python${PythonDependencyManager.PYTHON_VERSION}").walkTopDown().filter { it.isFile }.count()}")
             AppLogger.i(TAG, "libpython so 存在=${File(pythonHome, "lib/libpython3.12.so.1.0").exists()}, 大小=${File(pythonHome, "lib/libpython3.12.so.1.0").let { if (it.exists()) "${it.length()/1024}KB" else "N/A" }}")
             AppLogger.i(TAG, "=========================")
@@ -243,6 +245,7 @@ class PythonRuntime(private val context: Context) {
             pythonOutputBuffer.setLength(0)
             pythonStderrBuffer.setLength(0)
             pythonProcess = processBuilder.start()
+            attachProcessExitWatcher(pythonProcess!!, framework, serverPort)
 
 
             pythonProcess?.inputStream?.let { stream ->
@@ -271,7 +274,7 @@ class PythonRuntime(private val context: Context) {
             }
 
 
-            val ready = waitForServerReady(serverPort)
+            val ready = waitForServerReady(serverPort, framework)
             if (ready) {
                 val pid = getProcessPid(pythonProcess)
                 pythonProcess?.let { PortManager.registerProcess(serverPort, it, pid) }
@@ -602,8 +605,9 @@ try:
             # Try to find __version__ from the package module directly
             try:
                 mod = __import__(name.replace('-', '_'))
-                if hasattr(mod, '__version__'):
-                    return mod.__version__
+                version_value = getattr(mod, '__dict__', {}).get('__version__')
+                if isinstance(version_value, str) and version_value:
+                    return version_value
             except (ImportError, Exception):
                 pass
             return "0.0.0"
@@ -616,11 +620,23 @@ except Exception:
 # WebToApp allocates a dynamic port, but app.py may hardcode a different one.
 _w2a_port = int(sys.argv[2]) if len(sys.argv) > 2 else int(os.environ.get('PORT', '5000'))
 os.environ['PORT'] = str(_w2a_port)
+os.environ['FLASK_ENV'] = 'production'
+os.environ['FLASK_DEBUG'] = '0'
 
 try:
     import flask
     _orig_run = flask.Flask.run
     def _patched_run(self, host=None, port=None, **kwargs):
+        try:
+            if '__w2a_health' not in self.view_functions:
+                def _w2a_health():
+                    return ('ok', 200, {'Content-Type': 'text/plain; charset=utf-8'})
+                self.add_url_rule('/__w2a_health', '__w2a_health', _w2a_health)
+        except Exception:
+            pass
+        kwargs.pop('debug', None)
+        kwargs['use_reloader'] = False
+        kwargs['use_debugger'] = False
         _orig_run(self, host='127.0.0.1', port=_w2a_port, **kwargs)
     flask.Flask.run = _patched_run
 except ImportError:
@@ -654,24 +670,68 @@ else:
         return "config.settings"
     }
 
-    private suspend fun waitForServerReady(port: Int): Boolean {
+    private suspend fun waitForServerReady(port: Int, framework: String): Boolean {
+        val probePaths = when (framework.lowercase()) {
+            "flask" -> listOf("/__w2a_health", "/")
+            else -> listOf("/__w2a_health", "/__health", "/")
+        }
+        var consecutiveSuccesses = 0
+
         repeat(MAX_HEALTH_CHECK_RETRIES) { attempt ->
-            var conn: HttpURLConnection? = null
-            try {
-                val url = URL("http://127.0.0.1:$port/")
-                conn = url.openConnection() as HttpURLConnection
-                conn.connectTimeout = 500
-                conn.readTimeout = 500
-                conn.requestMethod = "GET"
-                val code = conn.responseCode
-                if (code in 200..499) {
-                    AppLogger.i(TAG, "Python 服务器就绪 (尝试 ${attempt + 1})")
+            var successfulPath: String? = null
+            var successfulCode = -1
+            for (path in probePaths) {
+                var conn: HttpURLConnection? = null
+                try {
+                    val url = URL("http://127.0.0.1:$port$path")
+                    conn = url.openConnection() as HttpURLConnection
+                    conn.connectTimeout = 1000
+                    conn.readTimeout = 2000
+                    conn.requestMethod = "GET"
+                    val code = conn.responseCode
+                    if (code in 200..499) {
+                        successfulPath = path
+                        successfulCode = code
+                        break
+                    }
+                } catch (e: Exception) {
+                    if (attempt % 5 == 0 && path == probePaths.last()) {
+                        AppLogger.d(TAG, "Health check attempt failed #${attempt + 1}: ${e.message}")
+                    }
+                } finally {
+                    try { conn?.disconnect() } catch (_: Exception) {}
+                }
+            }
+
+            if (successfulPath != null) {
+                consecutiveSuccesses++
+                AppLogger.i(
+                    TAG,
+                    "Python 健康检查成功 (尝试 ${attempt + 1}, path=$successfulPath, code=$successfulCode, consecutive=$consecutiveSuccesses/$REQUIRED_HEALTHY_RESPONSES)"
+                )
+                if (consecutiveSuccesses >= REQUIRED_HEALTHY_RESPONSES) {
+                    AppLogger.i(
+                        TAG,
+                        "Python 服务器就绪 (尝试 ${attempt + 1}, path=$successfulPath, code=$successfulCode, consecutive=$consecutiveSuccesses)"
+                    )
                     return true
                 }
-            } catch (e: Exception) {
-                AppLogger.d(TAG, "Health check attempt failed: ${e.message}")
-            } finally {
-                try { conn?.disconnect() } catch (_: Exception) {}
+                delay(HEALTH_CHECK_STABILITY_DELAY_MS)
+                pythonProcess?.let { process ->
+                    if (!process.isAliveCompat()) {
+                        val exitCode = try { process.exitValue() } catch (_: Exception) { -1 }
+                        val stdout = pythonOutputBuffer.toString().trim().ifEmpty { "(no stdout)" }
+                        val stderr = pythonStderrBuffer.toString().trim().ifEmpty { "(no stderr)" }
+                        AppLogger.e(TAG, "Python 进程意外退出, exitCode=$exitCode\nstdout: $stdout\nstderr: $stderr")
+                        return false
+                    }
+                }
+                return@repeat
+            }
+
+            if (consecutiveSuccesses > 0) {
+                AppLogger.d(TAG, "Python 健康检查稳定性重置: attempt=${attempt + 1}, previousConsecutive=$consecutiveSuccesses")
+                consecutiveSuccesses = 0
             }
 
             pythonProcess?.let { process ->
@@ -687,6 +747,31 @@ else:
         }
         AppLogger.e(TAG, "Python 服务器启动超时 (${MAX_HEALTH_CHECK_RETRIES * HEALTH_CHECK_INTERVAL_MS}ms)")
         return false
+    }
+
+    private fun attachProcessExitWatcher(process: Process, framework: String, port: Int) {
+        Thread {
+            val exitCode = try {
+                process.waitFor()
+            } catch (_: InterruptedException) {
+                return@Thread
+            }
+
+            if (pythonProcess !== process || currentPort != port) {
+                return@Thread
+            }
+
+            val stdout = pythonOutputBuffer.toString().trim().ifEmpty { "(no stdout)" }
+            val stderr = pythonStderrBuffer.toString().trim().ifEmpty { "(no stderr)" }
+            val message =
+                "Python 进程在服务启动后退出: framework=$framework, port=$port, exitCode=$exitCode\nstdout: $stdout\nstderr: $stderr"
+            AppLogger.e(TAG, message)
+            ShellLogger.e(TAG, message)
+        }.apply {
+            name = "PythonRuntime-ExitWatcher-$port"
+            isDaemon = true
+            start()
+        }
     }
 
     private fun getProcessPid(process: Process?): Long {

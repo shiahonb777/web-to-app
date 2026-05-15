@@ -1,0 +1,573 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 36,
+    "identityHash": "edf2cccde4bb442d6b044c0811e03272",
+    "entities": [
+      {
+        "tableName": "web_apps",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `url` TEXT NOT NULL, `iconPath` TEXT, `packageName` TEXT, `appType` TEXT NOT NULL, `mediaConfig` TEXT, `galleryConfig` TEXT, `htmlConfig` TEXT, `wordpressConfig` TEXT, `nodejsConfig` TEXT, `phpAppConfig` TEXT, `pythonAppConfig` TEXT, `goAppConfig` TEXT, `multiWebConfig` TEXT, `activationEnabled` INTEGER NOT NULL, `activationCodes` TEXT NOT NULL, `activationCodeList` TEXT NOT NULL, `activationRequireEveryTime` INTEGER NOT NULL, `isActivated` INTEGER NOT NULL, `adsEnabled` INTEGER NOT NULL, `adConfig` TEXT, `announcementEnabled` INTEGER NOT NULL, `announcement` TEXT, `adBlockEnabled` INTEGER NOT NULL, `adBlockRules` TEXT NOT NULL, `webViewConfig` TEXT NOT NULL, `splashEnabled` INTEGER NOT NULL, `splashConfig` TEXT, `bgmEnabled` INTEGER NOT NULL, `bgmConfig` TEXT, `apkExportConfig` TEXT, `themeType` TEXT NOT NULL, `translateEnabled` INTEGER NOT NULL, `translateConfig` TEXT, `extensionEnabled` INTEGER NOT NULL, `extensionModuleIds` TEXT NOT NULL, `extensionFabIcon` TEXT, `autoStartConfig` TEXT, `forcedRunConfig` TEXT, `blackTechConfig` TEXT, `disguiseConfig` TEXT, `browserDisguiseConfig` TEXT, `deviceDisguiseConfig` TEXT, `activationDialogConfig` TEXT, `categoryId` INTEGER, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "url",
+            "columnName": "url",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "iconPath",
+            "columnName": "iconPath",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "packageName",
+            "columnName": "packageName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "appType",
+            "columnName": "appType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mediaConfig",
+            "columnName": "mediaConfig",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "galleryConfig",
+            "columnName": "galleryConfig",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "htmlConfig",
+            "columnName": "htmlConfig",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "wordpressConfig",
+            "columnName": "wordpressConfig",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "nodejsConfig",
+            "columnName": "nodejsConfig",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "phpAppConfig",
+            "columnName": "phpAppConfig",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "pythonAppConfig",
+            "columnName": "pythonAppConfig",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "goAppConfig",
+            "columnName": "goAppConfig",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "multiWebConfig",
+            "columnName": "multiWebConfig",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "activationEnabled",
+            "columnName": "activationEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "activationCodes",
+            "columnName": "activationCodes",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "activationCodeList",
+            "columnName": "activationCodeList",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "activationRequireEveryTime",
+            "columnName": "activationRequireEveryTime",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isActivated",
+            "columnName": "isActivated",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "adsEnabled",
+            "columnName": "adsEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "adConfig",
+            "columnName": "adConfig",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "announcementEnabled",
+            "columnName": "announcementEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "announcement",
+            "columnName": "announcement",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "adBlockEnabled",
+            "columnName": "adBlockEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "adBlockRules",
+            "columnName": "adBlockRules",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "webViewConfig",
+            "columnName": "webViewConfig",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "splashEnabled",
+            "columnName": "splashEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "splashConfig",
+            "columnName": "splashConfig",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "bgmEnabled",
+            "columnName": "bgmEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "bgmConfig",
+            "columnName": "bgmConfig",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "apkExportConfig",
+            "columnName": "apkExportConfig",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "themeType",
+            "columnName": "themeType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "translateEnabled",
+            "columnName": "translateEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "translateConfig",
+            "columnName": "translateConfig",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "extensionEnabled",
+            "columnName": "extensionEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "extensionModuleIds",
+            "columnName": "extensionModuleIds",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "extensionFabIcon",
+            "columnName": "extensionFabIcon",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "autoStartConfig",
+            "columnName": "autoStartConfig",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "forcedRunConfig",
+            "columnName": "forcedRunConfig",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "blackTechConfig",
+            "columnName": "blackTechConfig",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "disguiseConfig",
+            "columnName": "disguiseConfig",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "browserDisguiseConfig",
+            "columnName": "browserDisguiseConfig",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "deviceDisguiseConfig",
+            "columnName": "deviceDisguiseConfig",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "activationDialogConfig",
+            "columnName": "activationDialogConfig",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "categoryId",
+            "columnName": "categoryId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_web_apps_updatedAt",
+            "unique": false,
+            "columnNames": [
+              "updatedAt"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_web_apps_updatedAt` ON `${TABLE_NAME}` (`updatedAt`)"
+          },
+          {
+            "name": "index_web_apps_categoryId",
+            "unique": false,
+            "columnNames": [
+              "categoryId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_web_apps_categoryId` ON `${TABLE_NAME}` (`categoryId`)"
+          },
+          {
+            "name": "index_web_apps_isActivated",
+            "unique": false,
+            "columnNames": [
+              "isActivated"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_web_apps_isActivated` ON `${TABLE_NAME}` (`isActivated`)"
+          },
+          {
+            "name": "index_web_apps_appType_url",
+            "unique": false,
+            "columnNames": [
+              "appType",
+              "url"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_web_apps_appType_url` ON `${TABLE_NAME}` (`appType`, `url`)"
+          },
+          {
+            "name": "index_web_apps_appType_iconPath_url",
+            "unique": false,
+            "columnNames": [
+              "appType",
+              "iconPath",
+              "url"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_web_apps_appType_iconPath_url` ON `${TABLE_NAME}` (`appType`, `iconPath`, `url`)"
+          }
+        ]
+      },
+      {
+        "tableName": "app_categories",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `icon` TEXT NOT NULL, `color` TEXT NOT NULL, `sortOrder` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "icon",
+            "columnName": "icon",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "color",
+            "columnName": "color",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sortOrder",
+            "columnName": "sortOrder",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "app_usage_stats",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `appId` INTEGER NOT NULL, `launchCount` INTEGER NOT NULL, `totalUsageMs` INTEGER NOT NULL, `lastUsedAt` INTEGER NOT NULL, `lastSessionDurationMs` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, FOREIGN KEY(`appId`) REFERENCES `web_apps`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "appId",
+            "columnName": "appId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "launchCount",
+            "columnName": "launchCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "totalUsageMs",
+            "columnName": "totalUsageMs",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastUsedAt",
+            "columnName": "lastUsedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastSessionDurationMs",
+            "columnName": "lastSessionDurationMs",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_app_usage_stats_appId",
+            "unique": true,
+            "columnNames": [
+              "appId"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_app_usage_stats_appId` ON `${TABLE_NAME}` (`appId`)"
+          },
+          {
+            "name": "index_app_usage_stats_lastUsedAt",
+            "unique": false,
+            "columnNames": [
+              "lastUsedAt"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_app_usage_stats_lastUsedAt` ON `${TABLE_NAME}` (`lastUsedAt`)"
+          },
+          {
+            "name": "index_app_usage_stats_launchCount",
+            "unique": false,
+            "columnNames": [
+              "launchCount"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_app_usage_stats_launchCount` ON `${TABLE_NAME}` (`launchCount`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "web_apps",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "appId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "app_health_records",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `appId` INTEGER NOT NULL, `url` TEXT NOT NULL, `status` TEXT NOT NULL, `responseTimeMs` INTEGER NOT NULL, `httpStatusCode` INTEGER NOT NULL, `errorMessage` TEXT, `checkedAt` INTEGER NOT NULL, FOREIGN KEY(`appId`) REFERENCES `web_apps`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "appId",
+            "columnName": "appId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "url",
+            "columnName": "url",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "responseTimeMs",
+            "columnName": "responseTimeMs",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "httpStatusCode",
+            "columnName": "httpStatusCode",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "errorMessage",
+            "columnName": "errorMessage",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "checkedAt",
+            "columnName": "checkedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_app_health_records_appId",
+            "unique": false,
+            "columnNames": [
+              "appId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_app_health_records_appId` ON `${TABLE_NAME}` (`appId`)"
+          },
+          {
+            "name": "index_app_health_records_checkedAt",
+            "unique": false,
+            "columnNames": [
+              "checkedAt"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_app_health_records_checkedAt` ON `${TABLE_NAME}` (`checkedAt`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "web_apps",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "appId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'edf2cccde4bb442d6b044c0811e03272')"
+    ]
+  }
+}

@@ -1,4 +1,13 @@
 import java.util.Properties
+import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskAction
 
 plugins {
     id("com.android.application")
@@ -155,6 +164,10 @@ tasks.register<Copy>("syncShellTemplateApk") {
 
 tasks.matching { it.name == "preBuild" }.configureEach {
     dependsOn("syncShellTemplateApk")
+    // PHP 二进制不能 dependsOn，因为它走外网（github releases）下载。
+    // 网络抽风时不应阻断整个 debug 构建。开发者要发 release 版前请手动跑：
+    //   ./gradlew :app:downloadPhpBinary
+    // 该 task 的 onlyIf 会缓存结果，已下载的话只是 NO-SOURCE，不会重复下。
 }
 
 tasks.register("testClasses") {
@@ -167,6 +180,105 @@ tasks.register("unitTestClasses") {
     group = "verification"
     description = "Compatibility alias for Android unit test class compilation in the Android app module."
     dependsOn("compileDebugUnitTestSources")
+}
+
+abstract class SyncNativeExecutableJniLibsTask : DefaultTask() {
+    @get:Input
+    abstract val variantName: org.gradle.api.provider.Property<String>
+
+    @get:Input
+    abstract val buildTypeName: org.gradle.api.provider.Property<String>
+
+    @get:Input
+    abstract val executableName: org.gradle.api.provider.Property<String>
+
+    @get:Input
+    abstract val packagedLibraryName: org.gradle.api.provider.Property<String>
+
+    @get:InputDirectory
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val cxxRoot: DirectoryProperty
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
+
+    @TaskAction
+    fun sync() {
+        val cxxRootDir = cxxRoot.asFile.get()
+        if (!cxxRootDir.exists()) {
+            throw GradleException("CXX output not found for ${variantName.get()}: ${cxxRootDir.absolutePath}")
+        }
+
+        val executableTargets = cxxRootDir.walkTopDown()
+            .filter { file ->
+                file.isFile &&
+                    file.name == executableName.get() &&
+                    file.parentFile?.parentFile?.name == "obj"
+            }
+            .toList()
+
+        if (executableTargets.isEmpty()) {
+            throw GradleException("${executableName.get()} artifacts not found for ${variantName.get()} under ${cxxRootDir.absolutePath}")
+        }
+
+        val outputRoot = outputDir.get().asFile
+        outputRoot.deleteRecursively()
+        outputRoot.mkdirs()
+
+        executableTargets.forEach { binary ->
+            val abi = binary.parentFile.name
+            val destFile = outputRoot.resolve("$abi/${packagedLibraryName.get()}")
+            destFile.parentFile.mkdirs()
+            binary.copyTo(destFile, overwrite = true)
+            destFile.setExecutable(true, false)
+        }
+    }
+}
+
+androidComponents {
+    onVariants { variant ->
+        val capName = variant.name.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+        val variantBuildTypeName = variant.buildType ?: "release"
+        val cxxBuildType = if (variantBuildTypeName.equals("debug", ignoreCase = true)) "Debug" else "RelWithDebInfo"
+        val nativeBuildTaskName = "buildCMake$cxxBuildType"
+        val syncNodeLauncherTask = tasks.register<SyncNativeExecutableJniLibsTask>("syncNodeLauncherJniLibs$capName") {
+            group = "build"
+            description = "Copies ABI-specific node launcher executables into generated jniLibs for ${variant.name}."
+            variantName.set(variant.name)
+            buildTypeName.set(variantBuildTypeName)
+            executableName.set("node_launcher")
+            packagedLibraryName.set("libnode_launcher.so")
+            cxxRoot.set(layout.buildDirectory.dir("intermediates/cxx/$cxxBuildType"))
+            outputDir.set(layout.buildDirectory.dir("generated/jniLibs/nodeLauncher/${variant.name}"))
+            dependsOn(nativeBuildTaskName)
+        }
+
+        val syncGoLoaderTask = tasks.register<SyncNativeExecutableJniLibsTask>("syncGoExecLoaderJniLibs$capName") {
+            group = "build"
+            description = "Copies ABI-specific Go exec loader executables into generated jniLibs for ${variant.name}."
+            variantName.set(variant.name)
+            buildTypeName.set(variantBuildTypeName)
+            executableName.set("go_exec_loader")
+            packagedLibraryName.set("libgo_exec_loader.so")
+            cxxRoot.set(layout.buildDirectory.dir("intermediates/cxx/$cxxBuildType"))
+            outputDir.set(layout.buildDirectory.dir("generated/jniLibs/goExecLoader/${variant.name}"))
+            dependsOn(nativeBuildTaskName)
+        }
+
+        tasks.matching { it.name == "merge${capName}NativeLibs" }.configureEach {
+            dependsOn(syncNodeLauncherTask)
+            dependsOn(syncGoLoaderTask)
+        }
+
+        variant.sources.jniLibs?.addGeneratedSourceDirectory(
+            syncNodeLauncherTask,
+            SyncNativeExecutableJniLibsTask::outputDir
+        )
+        variant.sources.jniLibs?.addGeneratedSourceDirectory(
+            syncGoLoaderTask,
+            SyncNativeExecutableJniLibsTask::outputDir
+        )
+    }
 }
 
 dependencies {
@@ -246,13 +358,7 @@ dependencies {
 
     implementation("com.patrykandpatrick.vico:compose-m3:2.0.0-beta.3")
 
-
-    implementation("com.android.billingclient:billing-ktx:7.0.0")
-
-
     implementation("androidx.credentials:credentials:1.3.0")
-    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
-    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
     implementation("androidx.browser:browser:1.8.0")
 
 
@@ -281,15 +387,18 @@ tasks.register("downloadPhpBinary") {
     val phpVersion = "8.4"
     val jniLibsDir = file("src/main/jniLibs/arm64-v8a")
     val outputFile = File(jniLibsDir, "libphp.so")
+    // 在配置阶段就解析路径，避免 doLast 闭包里访问 project.layout / Task.project
+    // （Gradle configuration cache 9.x 禁止执行期访问这些）
+    val tempDirRoot = layout.buildDirectory.dir("tmp/php-download").get().asFile
+    val rootProjectDirCapture = rootDir
 
     onlyIf { !outputFile.exists() }
 
     doLast {
         jniLibsDir.mkdirs()
         val url = "https://github.com/pmmp/PHP-Binaries/releases/download/pm5-php-${phpVersion}-latest/PHP-${phpVersion}-Android-arm64-PM5.tar.gz"
-        val tempDir = File(project.layout.buildDirectory.asFile.get(), "tmp/php-download")
-        tempDir.mkdirs()
-        val tarFile = File(tempDir, "php.tar.gz")
+        tempDirRoot.mkdirs()
+        val tarFile = File(tempDirRoot, "php.tar.gz")
         fun runCommand(vararg args: String) {
             val exitCode = ProcessBuilder(*args).inheritIO().start().waitFor()
             if (exitCode != 0) {
@@ -301,17 +410,17 @@ tasks.register("downloadPhpBinary") {
         runCommand("curl", "-L", "-f", "-o", tarFile.absolutePath, url)
 
         println("Extracting PHP binary...")
-        runCommand("tar", "-xzf", tarFile.absolutePath, "-C", tempDir.absolutePath)
+        runCommand("tar", "-xzf", tarFile.absolutePath, "-C", tempDirRoot.absolutePath)
 
 
-        val extracted = File(tempDir, "bin/php").takeIf { it.exists() }
-            ?: tempDir.walkTopDown().firstOrNull { it.name == "php" && it.isFile }
+        val extracted = File(tempDirRoot, "bin/php").takeIf { it.exists() }
+            ?: tempDirRoot.walkTopDown().firstOrNull { it.name == "php" && it.isFile }
             ?: throw GradleException("PHP binary not found in archive")
 
         extracted.copyTo(outputFile, overwrite = true)
         outputFile.setExecutable(true)
-        tempDir.deleteRecursively()
+        tempDirRoot.deleteRecursively()
 
-        println("PHP binary installed: ${outputFile.relativeTo(rootDir)}")
+        println("PHP binary installed: ${outputFile.relativeTo(rootProjectDirCapture)}")
     }
 }

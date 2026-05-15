@@ -3,6 +3,7 @@
 Flask Analytics Dashboard — Beautiful Python Web App Demo
 A modern analytics dashboard showcasing Flask's capabilities
 """
+import importlib.metadata
 import os
 import json
 import random
@@ -84,24 +85,16 @@ body {
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
 }
-body::before {
-    content: '';
-    position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
-    background: radial-gradient(ellipse at 30% 20%, rgba(124,58,237,0.08) 0%, transparent 50%),
-                radial-gradient(ellipse at 70% 60%, rgba(59,130,246,0.06) 0%, transparent 50%);
-    pointer-events: none; z-index: 0;
-}
 .container { max-width: 480px; margin: 0 auto; padding: 0 16px 32px; position: relative; z-index: 1; }
 .header { display: flex; justify-content: space-between; align-items: center; padding: 20px 4px 24px; }
 .header-left h1 { font-size: 24px; font-weight: 800; background: linear-gradient(135deg, #f0f0ff, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 .header-left p { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
 .header-right { display: flex; align-items: center; gap: 12px; }
-.status-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent-green); box-shadow: 0 0 12px var(--accent-green); animation: pulse-dot 2s infinite; }
-@keyframes pulse-dot { 0%,100%{opacity:1;box-shadow:0 0 12px var(--accent-green)} 50%{opacity:.6;box-shadow:0 0 20px var(--accent-green)} }
+.status-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent-green); opacity: 0.9; }
 .avatar { width: 38px; height: 38px; border-radius: 12px; background: var(--gradient-purple); display: flex; align-items: center; justify-content: center; font-size: 16px; }
 .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-.stat-card { background: var(--bg-card); border: 1px solid var(--border-card); border-radius: var(--radius); padding: 18px 16px; position: relative; overflow: hidden; backdrop-filter: blur(20px); transition: all 0.3s; cursor: pointer; }
-.stat-card:active { transform: scale(0.97); background: var(--bg-card-hover); }
+.stat-card { background: var(--bg-card); border: 1px solid var(--border-card); border-radius: var(--radius); padding: 18px 16px; position: relative; overflow: hidden; transition: all 0.3s; cursor: pointer; }
+.stat-card:active { background: var(--bg-card-hover); }
 .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
 .stat-card:nth-child(1)::before { background: var(--gradient-purple); }
 .stat-card:nth-child(2)::before { background: var(--gradient-green); }
@@ -116,13 +109,13 @@ body::before {
 .stat-card:nth-child(4) .stat-icon { background: rgba(245,158,11,0.15); }
 .stat-value { font-size: 26px; font-weight: 800; letter-spacing: -1px; line-height: 1; margin-bottom: 6px; }
 .stat-change { font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 20px; color: var(--accent-green); background: rgba(16,185,129,0.1); }
-.section-card { background: var(--bg-card); border: 1px solid var(--border-card); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; backdrop-filter: blur(20px); }
+.section-card { background: var(--bg-card); border: 1px solid var(--border-card); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; }
 .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .section-title { font-size: 16px; font-weight: 700; }
 .section-badge { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: rgba(124,58,237,0.12); color: var(--accent-purple); }
 .chart-container { display: flex; align-items: flex-end; justify-content: space-between; height: 160px; padding-top: 10px; gap: 6px; }
 .chart-bar-group { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
-.chart-bar { width: 100%; max-width: 32px; border-radius: 6px 6px 4px 4px; background: linear-gradient(180deg, #a855f7, #7c3aed); box-shadow: 0 0 12px rgba(124,58,237,0.3); }
+.chart-bar { width: 100%; max-width: 32px; border-radius: 6px 6px 4px 4px; background: linear-gradient(180deg, #a855f7, #7c3aed); }
 .chart-bar-label { font-size: 10px; color: var(--text-tertiary); font-weight: 500; }
 .activity-item { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
 .activity-item:last-child { border-bottom: none; }
@@ -133,15 +126,7 @@ body::before {
 .activity-time { font-size: 11px; color: var(--text-tertiary); white-space: nowrap; font-weight: 500; }
 .server-info { margin-top: 8px; padding: 16px; background: var(--bg-card); border: 1px solid var(--border-card); border-radius: var(--radius); text-align: center; }
 .server-info-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--text-tertiary); padding: 6px 14px; border-radius: 20px; background: rgba(124,58,237,0.06); border: 1px solid rgba(124,58,237,0.1); }
-.server-info-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
-@keyframes fadeInUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-.stat-card { animation: fadeInUp 0.5s ease backwards; }
-.stat-card:nth-child(1){animation-delay:.05s} .stat-card:nth-child(2){animation-delay:.1s} .stat-card:nth-child(3){animation-delay:.15s} .stat-card:nth-child(4){animation-delay:.2s}
-.section-card { animation: fadeInUp 0.5s ease 0.25s backwards; }
-.activity-item { animation: fadeInUp 0.4s ease backwards; }
-.activity-item:nth-child(1){animation-delay:.3s} .activity-item:nth-child(2){animation-delay:.35s} .activity-item:nth-child(3){animation-delay:.4s} .activity-item:nth-child(4){animation-delay:.45s}
-@keyframes growUp { from{transform:scaleY(0)} to{transform:scaleY(1)} }
-.chart-bar { animation: growUp 0.8s cubic-bezier(0.34,1.56,0.64,1) backwards; transform-origin: bottom; }
+.server-info-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-green); }
 </style>
 </head>
 <body>
@@ -160,11 +145,11 @@ body::before {
         <div class="section-header"><span class="section-title">Weekly Overview</span><span class="section-badge">📊 Live</span></div>
         <div class="chart-container">
             {% for day in weekly_data %}
-            <div class="chart-bar-group"><div class="chart-bar" style="height:{{ day.users_pct }}%;animation-delay:{{ 0.3 + loop.index0 * 0.08 }}s"></div><div class="chart-bar-label">{{ day.day }}</div></div>
+            <div class="chart-bar-group"><div class="chart-bar" style="height:{{ day.users_pct }}%;"></div><div class="chart-bar-label">{{ day.day }}</div></div>
             {% endfor %}
         </div>
     </div>
-    <div class="section-card" style="animation-delay:.35s">
+    <div class="section-card">
         <div class="section-header"><span class="section-title">Recent Activity</span><span class="section-badge">🔔 Today</span></div>
         {% for a in activities %}
         <div class="activity-item"><div class="activity-avatar" style="background:{{ a.color }}22">{{ a.icon }}</div><div class="activity-info"><div class="activity-name">{{ a.name }}</div><div class="activity-action">{{ a.action }}</div></div><div class="activity-time">{{ a.time }}</div></div>
@@ -184,7 +169,7 @@ def index():
     for d in weekly: d['users_pct'] = int(d['users'] / max_u * 85) + 15
     flask_ver = '3.0'
     try:
-        import flask as _f; flask_ver = getattr(_f, '__version__', '3.0')
+        flask_ver = importlib.metadata.version('flask')
     except: pass
     return render_template_string(DASHBOARD_HTML, weekly_data=weekly, activities=generate_activities()[:6],
         current_date=datetime.now().strftime('%B %d, %Y'), flask_version=flask_ver, python_version=f'{sys.version_info.major}.{sys.version_info.minor}')

@@ -76,7 +76,7 @@ fun ExtensionModuleSelectorCard(
                         Text(
                             Strings.extensionModuleTitle,
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.SemiBold
                         )
                         Text(
                             if (enabledModules.isEmpty()) Strings.noModuleSelected

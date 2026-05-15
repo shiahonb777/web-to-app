@@ -29,7 +29,7 @@ import com.webtoapp.core.i18n.Strings
 import com.webtoapp.ui.animation.CardExpandTransition
 import com.webtoapp.ui.animation.CardCollapseTransition
 import com.webtoapp.ui.components.EnhancedElevatedCard
-import com.webtoapp.ui.components.PremiumSwitch
+import com.webtoapp.ui.design.WtaSwitch
 import com.webtoapp.ui.components.PremiumTextField
 import com.webtoapp.ui.components.SettingsSwitch
 
@@ -105,11 +105,9 @@ fun DeviceDisguiseCard(
                             style = MaterialTheme.typography.titleMedium
                         )
                         Text(
-                            text = if (isEnabled && config.deviceModelName.isNotBlank())
-                                "${Strings.deviceDisguiseActive} ${config.deviceModelName}"
-                            else Strings.notEnabled,
+                            text = if (isEnabled) Strings.enabled else Strings.notEnabled,
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = if (isEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -147,7 +145,7 @@ fun DeviceDisguiseCard(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        PremiumSwitch(
+                        WtaSwitch(
                             checked = isEnabled,
                             onCheckedChange = { onConfigChange(config.copy(enabled = it)) }
                         )
@@ -253,7 +251,7 @@ fun DeviceDisguiseCard(
                                                 text = label,
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = contentColor,
-                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                                                 maxLines = 1
                                             )
                                         }
@@ -315,7 +313,7 @@ fun DeviceDisguiseCard(
                                                 Text(
                                                     text = preset.name,
                                                     style = MaterialTheme.typography.labelMedium,
-                                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                                                     maxLines = 1,
                                                     overflow = TextOverflow.Ellipsis
                                                 )
@@ -373,7 +371,7 @@ fun DeviceDisguiseCard(
                                                 Text(
                                                     text = config.deviceModelName,
                                                     style = MaterialTheme.typography.titleSmall,
-                                                    fontWeight = FontWeight.Bold
+                                                    fontWeight = FontWeight.SemiBold
                                                 )
                                                 Text(
                                                     text = "${config.deviceBrand.displayName} · ${config.deviceOS.displayName}",

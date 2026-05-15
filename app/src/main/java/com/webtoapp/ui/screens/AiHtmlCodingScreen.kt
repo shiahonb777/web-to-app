@@ -39,7 +39,7 @@ import com.webtoapp.ui.components.coding.*
 import com.webtoapp.ui.codepreview.HtmlPreviewActivity
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import com.webtoapp.ui.components.ThemedBackgroundBox
+import com.webtoapp.ui.design.WtaBackground
 import java.io.File
 import androidx.compose.ui.graphics.Color
 
@@ -754,7 +754,7 @@ fun AiHtmlCodingScreen(
             )
         }
     ) { padding ->
-        ThemedBackgroundBox(
+        WtaBackground(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)

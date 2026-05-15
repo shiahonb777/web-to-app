@@ -7,7 +7,6 @@ import coil.disk.DiskCache
 import coil.memory.MemoryCache
 import coil.request.CachePolicy
 import com.webtoapp.core.logging.AppLogger
-import com.webtoapp.core.cloud.GitHubHostsDns
 import okhttp3.OkHttpClient
 
 object OptimizedImageLoader {
@@ -30,7 +29,6 @@ object OptimizedImageLoader {
         return ImageLoader.Builder(context)
             .okHttpClient {
                 OkHttpClient.Builder()
-                    .dns(GitHubHostsDns)
                     .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
                     .readTimeout(20, java.util.concurrent.TimeUnit.SECONDS)
                     .followRedirects(true)

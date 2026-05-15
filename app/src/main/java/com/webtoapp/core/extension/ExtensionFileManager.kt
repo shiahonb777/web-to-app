@@ -171,7 +171,10 @@ class ExtensionFileManager(private val context: Context) {
                     return@withContext jsPackageResult
                 }
                 extractDir.deleteRecursively()
-                return@withContext ImportResult.Error("No manifest.json or JS files found in ZIP")
+                return@withContext ImportResult.Error(
+                    "No manifest.json or standalone JS/CSS files found. " +
+                        "Chrome extension import currently requires a package with content_scripts, popup/options UI, or background/declarativeNetRequest runtime assets."
+                )
             }
 
 
@@ -511,15 +514,10 @@ class ExtensionFileManager(private val context: Context) {
 
 
     private fun findManifestDirectory(dir: File): File? {
-
-        if (dir.resolve("manifest.json").exists()) return dir
-
-
-        dir.listFiles()?.filter { it.isDirectory }?.forEach { subDir ->
-            if (subDir.resolve("manifest.json").exists()) return subDir
-        }
-
-        return null
+        return dir.walkTopDown()
+            .maxDepth(4)
+            .filter { it.isDirectory && it.resolve("manifest.json").exists() }
+            .minByOrNull { it.relativeTo(dir).path.count { ch -> ch == File.separatorChar } }
     }
 
 

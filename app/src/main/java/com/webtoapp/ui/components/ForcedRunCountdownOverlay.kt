@@ -92,7 +92,7 @@ fun ForcedRunCountdownOverlay(
                     Text(
                         text = formattedTime,
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onErrorContainer
                     )
 
@@ -157,7 +157,7 @@ private fun EmergencyExitPasswordDialog(
         title = {
             Text(
                 text = Strings.enterExitPassword,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.SemiBold
             )
         },
         text = {

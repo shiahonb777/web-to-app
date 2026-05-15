@@ -6,31 +6,18 @@ import org.json.JSONObject
 import java.util.concurrent.ConcurrentHashMap
 import java.util.regex.Pattern
 
-
-
-
-
-
-
-
-
-
-
-
-
 object DeclarativeNetRequestEngine {
 
     private const val TAG = "DNREngine"
 
-
-
-
-    enum class ActionType {
-        BLOCK, ALLOW, REDIRECT, MODIFY_HEADERS, UPGRADE_SCHEME, ALLOW_ALL_REQUESTS
+    enum class ActionType(val wireName: String) {
+        BLOCK("block"),
+        ALLOW("allow"),
+        REDIRECT("redirect"),
+        MODIFY_HEADERS("modifyHeaders"),
+        UPGRADE_SCHEME("upgradeScheme"),
+        ALLOW_ALL_REQUESTS("allowAllRequests")
     }
-
-
-
 
     enum class ResourceType {
         MAIN_FRAME, SUB_FRAME, STYLESHEET, SCRIPT, IMAGE, FONT,
@@ -44,9 +31,6 @@ object DeclarativeNetRequestEngine {
             }
         }
     }
-
-
-
 
     data class DnrRule(
         val id: Int,
@@ -63,38 +47,87 @@ object DeclarativeNetRequestEngine {
         val excludedRequestMethods: Set<String>
     )
 
+    data class StaticRuleset(
+        val rulesetId: String,
+        val path: String,
+        val enabled: Boolean,
+        val rules: List<DnrRule>
+    )
 
-    private val staticRules = ConcurrentHashMap<String, List<DnrRule>>()
+    private val staticRulesets = ConcurrentHashMap<String, MutableMap<String, StaticRuleset>>()
     private val dynamicRules = ConcurrentHashMap<String, MutableList<DnrRule>>()
     private val sessionRules = ConcurrentHashMap<String, MutableList<DnrRule>>()
-
 
     @Volatile
     var matchedCount: Long = 0
         private set
 
-
-
-
-
-
-
-    fun loadStaticRules(extensionId: String, rulesJson: String) {
+    fun loadStaticRules(
+        extensionId: String,
+        rulesetId: String,
+        path: String,
+        rulesJson: String,
+        enabled: Boolean = true
+    ) {
         try {
             val rules = parseRules(rulesJson)
-            staticRules[extensionId] = rules
-            AppLogger.i(TAG, "Loaded ${rules.size} static DNR rules for $extensionId")
+            val rulesets = staticRulesets.getOrPut(extensionId) { mutableMapOf() }
+            val safeRulesetId = rulesetId.ifBlank { path.ifBlank { "ruleset_${rulesets.size}" } }
+            rulesets[safeRulesetId] = StaticRuleset(
+                rulesetId = safeRulesetId,
+                path = path,
+                enabled = enabled,
+                rules = rules
+            )
+            AppLogger.i(
+                TAG,
+                "Loaded ${rules.size} static DNR rules for $extensionId ruleset=$safeRulesetId enabled=$enabled"
+            )
         } catch (e: Exception) {
-            AppLogger.e(TAG, "Failed to load static DNR rules for $extensionId", e)
+            AppLogger.e(TAG, "Failed to load static DNR rules for $extensionId ruleset=$rulesetId", e)
         }
     }
 
+    fun updateEnabledStaticRulesets(
+        extensionId: String,
+        enableRulesetIdsJson: String,
+        disableRulesetIdsJson: String
+    ) {
+        try {
+            val rulesets = staticRulesets[extensionId] ?: return
+            val enableIds = parseStringArray(enableRulesetIdsJson).toSet()
+            val disableIds = parseStringArray(disableRulesetIdsJson).toSet()
+            if (enableIds.isEmpty() && disableIds.isEmpty()) return
 
+            val updated = rulesets.mapValues { (rulesetId, ruleset) ->
+                when {
+                    rulesetId in enableIds -> ruleset.copy(enabled = true)
+                    rulesetId in disableIds -> ruleset.copy(enabled = false)
+                    else -> ruleset
+                }
+            }
+            staticRulesets[extensionId] = updated.toMutableMap()
+            AppLogger.d(
+                TAG,
+                "Updated static rulesets for $extensionId: enable=${enableIds.size}, disable=${disableIds.size}"
+            )
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to update static rulesets for $extensionId", e)
+        }
+    }
 
+    fun getEnabledStaticRulesetIdsJson(extensionId: String): String {
+        val ids = staticRulesets[extensionId]
+            ?.values
+            ?.filter { it.enabled }
+            ?.map { it.rulesetId }
+            .orEmpty()
+        return ids.joinToString(prefix = "[", postfix = "]") { quoteJsonString(it) }
+    }
 
-
-
-
+    fun getAvailableStaticRuleCount(extensionId: String): Int {
+        return staticRulesets[extensionId]?.values?.sumOf { it.rules.size } ?: 0
+    }
 
     fun updateDynamicRules(
         extensionId: String,
@@ -109,15 +142,19 @@ object DeclarativeNetRequestEngine {
             if (removeIds.isNotEmpty()) {
                 existing.removeAll { it.id in removeIds }
             }
-            existing.addAll(addRules)
-            AppLogger.d(TAG, "Updated dynamic DNR rules for $extensionId: removed=${removeIds.size}, added=${addRules.size}, total=${existing.size}")
+            if (addRules.isNotEmpty()) {
+                val addIds = addRules.map { it.id }.toSet()
+                existing.removeAll { it.id in addIds }
+                existing.addAll(addRules)
+            }
+            AppLogger.d(
+                TAG,
+                "Updated dynamic DNR rules for $extensionId: removed=${removeIds.size}, added=${addRules.size}, total=${existing.size}"
+            )
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to update dynamic DNR rules for $extensionId", e)
         }
     }
-
-
-
 
     fun updateSessionRules(
         extensionId: String,
@@ -132,32 +169,27 @@ object DeclarativeNetRequestEngine {
             if (removeIds.isNotEmpty()) {
                 existing.removeAll { it.id in removeIds }
             }
-            existing.addAll(addRules)
-            AppLogger.d(TAG, "Updated session DNR rules for $extensionId: removed=${removeIds.size}, added=${addRules.size}")
+            if (addRules.isNotEmpty()) {
+                val addIds = addRules.map { it.id }.toSet()
+                existing.removeAll { it.id in addIds }
+                existing.addAll(addRules)
+            }
+            AppLogger.d(
+                TAG,
+                "Updated session DNR rules for $extensionId: removed=${removeIds.size}, added=${addRules.size}, total=${existing.size}"
+            )
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to update session DNR rules for $extensionId", e)
         }
     }
 
-
-
-
     fun getDynamicRulesJson(extensionId: String): String {
-        val rules = dynamicRules[extensionId] ?: return "[]"
-        return JSONArray().apply {
-            rules.forEach { rule -> put(ruleToJson(rule)) }
-        }.toString()
+        return rulesToJson(dynamicRules[extensionId].orEmpty())
     }
 
-
-
-
-
-
-
-
-
-
+    fun getSessionRulesJson(extensionId: String): String {
+        return rulesToJson(sessionRules[extensionId].orEmpty())
+    }
 
     fun evaluate(
         url: String,
@@ -167,10 +199,13 @@ object DeclarativeNetRequestEngine {
     ): EvalResult? {
         val allRuleSets = mutableListOf<List<DnrRule>>()
 
-
         for ((_, rules) in sessionRules) allRuleSets.add(rules)
         for ((_, rules) in dynamicRules) allRuleSets.add(rules)
-        for ((_, rules) in staticRules) allRuleSets.add(rules)
+        for ((_, rulesets) in staticRulesets) {
+            rulesets.values
+                .filter { it.enabled }
+                .forEach { allRuleSets.add(it.rules) }
+        }
 
         if (allRuleSets.all { it.isEmpty() }) return null
 
@@ -180,7 +215,6 @@ object DeclarativeNetRequestEngine {
         for (ruleSet in allRuleSets) {
             for (rule in ruleSet) {
                 if (!matchesRule(rule, url, resType, initiatorDomain, method)) continue
-
                 val effectivePriority = rule.priority
                 if (bestMatch == null || effectivePriority > bestMatch.second) {
                     bestMatch = rule to effectivePriority
@@ -208,26 +242,18 @@ object DeclarativeNetRequestEngine {
         val redirectUrl: String?
     )
 
-
-
-
     fun clearExtension(extensionId: String) {
-        staticRules.remove(extensionId)
+        staticRulesets.remove(extensionId)
         dynamicRules.remove(extensionId)
         sessionRules.remove(extensionId)
     }
 
-
-
-
     fun clear() {
-        staticRules.clear()
+        staticRulesets.clear()
         dynamicRules.clear()
         sessionRules.clear()
         matchedCount = 0
     }
-
-
 
     private fun matchesRule(
         rule: DnrRule,
@@ -236,7 +262,6 @@ object DeclarativeNetRequestEngine {
         initiatorDomain: String,
         method: String
     ): Boolean {
-
         val urlMatched = when {
             rule.urlFilter != null -> rule.urlFilter.matcher(url).find()
             rule.regexFilter != null -> rule.regexFilter.matcher(url).find()
@@ -244,18 +269,15 @@ object DeclarativeNetRequestEngine {
         }
         if (!urlMatched) return false
 
-
         if (resType != null) {
             if (rule.resourceTypes.isNotEmpty() && resType !in rule.resourceTypes) return false
             if (resType in rule.excludedResourceTypes) return false
         }
 
-
         if (initiatorDomain.isNotEmpty()) {
             if (rule.domains.isNotEmpty() && !matchesDomain(initiatorDomain, rule.domains)) return false
             if (matchesDomain(initiatorDomain, rule.excludedDomains)) return false
         }
-
 
         val upperMethod = method.uppercase()
         if (rule.requestMethods.isNotEmpty() && upperMethod !in rule.requestMethods) return false
@@ -266,13 +288,8 @@ object DeclarativeNetRequestEngine {
 
     private fun matchesDomain(domain: String, domainSet: Set<String>): Boolean {
         if (domainSet.isEmpty()) return false
-        return domainSet.any { d ->
-            domain == d || domain.endsWith(".$d")
-        }
+        return domainSet.any { d -> domain == d || domain.endsWith(".$d") }
     }
-
-
-
 
     private fun parseRules(json: String): List<DnrRule> {
         val trimmed = json.trim()
@@ -297,7 +314,6 @@ object DeclarativeNetRequestEngine {
 
         val priority = obj.optInt("priority", 1)
 
-
         val actionObj = obj.optJSONObject("action") ?: return null
         val actionType = when (actionObj.optString("type", "")) {
             "block" -> ActionType.BLOCK
@@ -312,13 +328,16 @@ object DeclarativeNetRequestEngine {
         val redirectUrl = actionObj.optJSONObject("redirect")?.optString("url")
             ?: actionObj.optJSONObject("redirect")?.optString("extensionPath")
 
-
         val condition = obj.optJSONObject("condition")
         val urlFilter = condition?.optString("urlFilter", "")?.takeIf { it.isNotEmpty() }?.let {
             compileUrlFilter(it)
         }
         val regexFilter = condition?.optString("regexFilter", "")?.takeIf { it.isNotEmpty() }?.let {
-            try { Pattern.compile(it, Pattern.CASE_INSENSITIVE) } catch (_: Exception) { null }
+            try {
+                Pattern.compile(it, Pattern.CASE_INSENSITIVE)
+            } catch (_: Exception) {
+                null
+            }
         }
 
         val resourceTypes = parseResourceTypes(condition?.optJSONArray("resourceTypes"))
@@ -346,20 +365,11 @@ object DeclarativeNetRequestEngine {
         )
     }
 
-
-
-
-
-
-
-
-
     private fun compileUrlFilter(filter: String): Pattern? {
         return try {
             val sb = StringBuilder()
             var i = 0
             val len = filter.length
-
 
             if (filter.startsWith("||")) {
                 sb.append("^https?://([^/]*\\.)?")
@@ -408,7 +418,54 @@ object DeclarativeNetRequestEngine {
         return try {
             val arr = JSONArray(trimmed)
             (0 until arr.length()).map { arr.getInt(it) }
-        } catch (_: Exception) { emptyList() }
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    private fun parseStringArray(json: String): List<String> {
+        val trimmed = json.trim()
+        if (trimmed.isEmpty() || trimmed == "[]") return emptyList()
+        return try {
+            val arr = JSONArray(trimmed)
+            (0 until arr.length()).mapNotNull { index ->
+                arr.optString(index, "").takeIf { it.isNotBlank() }
+            }
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    private fun rulesToJson(rules: List<DnrRule>): String {
+        return rules.joinToString(prefix = "[", postfix = "]") { rule ->
+            ruleToJson(rule).toString()
+        }
+    }
+
+    private fun quoteJsonString(value: String): String {
+        return buildString {
+            append('"')
+            value.forEach { ch ->
+                when (ch) {
+                    '\\' -> append("\\\\")
+                    '"' -> append("\\\"")
+                    '\b' -> append("\\b")
+                    '\u000C' -> append("\\f")
+                    '\n' -> append("\\n")
+                    '\r' -> append("\\r")
+                    '\t' -> append("\\t")
+                    else -> {
+                        if (ch.code < 0x20) {
+                            append("\\u")
+                            append(ch.code.toString(16).padStart(4, '0'))
+                        } else {
+                            append(ch)
+                        }
+                    }
+                }
+            }
+            append('"')
+        }
     }
 
     private fun ruleToJson(rule: DnrRule): JSONObject {
@@ -416,7 +473,7 @@ object DeclarativeNetRequestEngine {
             put("id", rule.id)
             put("priority", rule.priority)
             put("action", JSONObject().apply {
-                put("type", rule.action.name.lowercase())
+                put("type", rule.action.wireName)
                 if (rule.redirectUrl != null) {
                     put("redirect", JSONObject().put("url", rule.redirectUrl))
                 }

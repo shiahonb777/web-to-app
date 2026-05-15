@@ -177,7 +177,7 @@ fun CodeSnippetSelectorDialog(
                                     Text(
                                         category.name,
                                         style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.SemiBold
                                     )
                                     Text(
                                         "${category.description} · ${com.webtoapp.core.i18n.Strings.codeBlocksCount.format(category.snippets.size)}",

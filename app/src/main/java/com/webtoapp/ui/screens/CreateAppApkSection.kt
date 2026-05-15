@@ -1,7 +1,5 @@
 package com.webtoapp.ui.screens
 
-import com.webtoapp.ui.theme.AppColors
-import com.webtoapp.ui.components.PremiumOutlinedButton
 import com.webtoapp.ui.components.PremiumFilterChip
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -11,20 +9,16 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import com.webtoapp.core.i18n.Strings
@@ -43,9 +37,7 @@ import androidx.compose.foundation.verticalScroll
 private val PACKAGE_NAME_REGEX = AppConstants.PACKAGE_NAME_REGEX
 
 
-
-
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ApkExportSection(
     config: ApkExportConfig,
@@ -76,188 +68,152 @@ fun ApkExportSection(
         }
     }
 
-    Column {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+    val packageName = config.customPackageName ?: ""
+    val isPackageNameInvalid = packageName.isNotBlank() &&
+        !packageName.matches(PACKAGE_NAME_REGEX)
+
+    Column(verticalArrangement = Arrangement.spacedBy(WtaSpacing.SectionGap)) {
+
+        // ── 基本信息 ──────────────────────────────────────────
+        WtaSection(
+            title = Strings.apkConfigNote,
+            headerStyle = WtaSectionHeaderStyle.Quiet
         ) {
-            Icon(
-                Icons.Outlined.Android,
-                null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = Strings.apkExportConfig,
-                style = MaterialTheme.typography.titleSmall
-            )
-        }
-
-        Text(
-            text = Strings.apkConfigNote,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
-        )
-
-
-        val packageName = config.customPackageName ?: ""
-        val isPackageNameInvalid = packageName.isNotBlank() &&
-            !packageName.matches(PACKAGE_NAME_REGEX)
-
-        OutlinedTextField(
-            value = packageName,
-            onValueChange = {
-                onConfigChange(config.copy(customPackageName = it.ifBlank { null }))
-            },
-            label = { Text(Strings.customPackageName) },
-            placeholder = { Text(Strings.apkPackageNamePlaceholder) },
-            singleLine = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .bringIntoViewRequester(packageNameBringIntoViewRequester)
-                .onFocusEvent { focusState ->
-                    if (focusState.isFocused) {
-                        coroutineScope.launch {
-                            packageNameBringIntoViewRequester.bringIntoView()
+            WtaSettingCard {
+                Column(
+                    modifier = Modifier.padding(
+                        horizontal = WtaSpacing.RowHorizontal,
+                        vertical = WtaSpacing.ContentGap
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(WtaSpacing.ContentGap)
+                ) {
+                    OutlinedTextField(
+                        value = packageName,
+                        onValueChange = {
+                            onConfigChange(config.copy(customPackageName = it.ifBlank { null }))
+                        },
+                        label = { Text(Strings.customPackageName) },
+                        placeholder = { Text(Strings.apkPackageNamePlaceholder) },
+                        singleLine = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .bringIntoViewRequester(packageNameBringIntoViewRequester)
+                            .onFocusEvent { focusState ->
+                                if (focusState.isFocused) {
+                                    coroutineScope.launch {
+                                        packageNameBringIntoViewRequester.bringIntoView()
+                                    }
+                                }
+                            },
+                        isError = isPackageNameInvalid,
+                        supportingText = {
+                            if (isPackageNameInvalid) {
+                                Text(
+                                    Strings.packageNameInvalidFormat,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            } else {
+                                Text(Strings.packageNameHint)
+                            }
                         }
-                    }
-                },
-            isError = isPackageNameInvalid,
-            supportingText = {
-                if (isPackageNameInvalid) {
-                    Text(
-                        Strings.packageNameInvalidFormat,
-                        color = MaterialTheme.colorScheme.error
                     )
-                } else {
-                    Text(Strings.packageNameHint)
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(WtaSpacing.ContentGap)
+                    ) {
+                        OutlinedTextField(
+                            value = config.customVersionName ?: "",
+                            onValueChange = {
+                                onConfigChange(config.copy(customVersionName = it.ifBlank { null }))
+                            },
+                            label = { Text(Strings.versionName) },
+                            placeholder = { Text(Strings.apkVersionNamePlaceholder) },
+                            singleLine = true,
+                            modifier = Modifier
+                                .weight(1f)
+                                .bringIntoViewRequester(versionNameBringIntoViewRequester)
+                                .onFocusEvent { focusState ->
+                                    if (focusState.isFocused) {
+                                        coroutineScope.launch {
+                                            versionNameBringIntoViewRequester.bringIntoView()
+                                        }
+                                    }
+                                }
+                        )
+
+                        OutlinedTextField(
+                            value = config.customVersionCode?.toString() ?: "",
+                            onValueChange = { input ->
+                                val code = input.filter { it.isDigit() }.toIntOrNull()
+                                onConfigChange(config.copy(customVersionCode = code))
+                            },
+                            label = { Text(Strings.versionCode) },
+                            placeholder = { Text(Strings.apkVersionCodePlaceholder) },
+                            singleLine = true,
+                            modifier = Modifier
+                                .weight(1f)
+                                .bringIntoViewRequester(versionCodeBringIntoViewRequester)
+                                .onFocusEvent { focusState ->
+                                    if (focusState.isFocused) {
+                                        coroutineScope.launch {
+                                            versionCodeBringIntoViewRequester.bringIntoView()
+                                        }
+                                    }
+                                },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+                    }
                 }
             }
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            OutlinedTextField(
-                value = config.customVersionName ?: "",
-                onValueChange = {
-                    onConfigChange(config.copy(customVersionName = it.ifBlank { null }))
-                },
-                label = { Text(Strings.versionName) },
-                placeholder = { Text(Strings.apkVersionNamePlaceholder) },
-                singleLine = true,
-                modifier = Modifier
-                    .weight(weight = 1f, fill = true)
-                    .bringIntoViewRequester(versionNameBringIntoViewRequester)
-                    .onFocusEvent { focusState ->
-                        if (focusState.isFocused) {
-                            coroutineScope.launch {
-                                versionNameBringIntoViewRequester.bringIntoView()
-                            }
-                        }
-                    }
-            )
-
-            OutlinedTextField(
-                value = config.customVersionCode?.toString() ?: "",
-                onValueChange = { input ->
-                    val code = input.filter { it.isDigit() }.toIntOrNull()
-                    onConfigChange(config.copy(customVersionCode = code))
-                },
-                label = { Text(Strings.versionCode) },
-                placeholder = { Text(Strings.apkVersionCodePlaceholder) },
-                singleLine = true,
-                modifier = Modifier
-                    .weight(weight = 1f, fill = true)
-                    .bringIntoViewRequester(versionCodeBringIntoViewRequester)
-                    .onFocusEvent { focusState ->
-                        if (focusState.isFocused) {
-                            coroutineScope.launch {
-                                versionCodeBringIntoViewRequester.bringIntoView()
-                            }
-                        }
-                    },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-            )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-
-        Text(
-            text = Strings.apkArchitecture,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        // ── 架构选择 ──────────────────────────────────────────
+        WtaSection(
+            title = Strings.apkArchitecture,
+            headerStyle = WtaSectionHeaderStyle.Quiet
         ) {
-            ApkArchitecture.entries.forEach { arch ->
-                val isSelected = config.architecture == arch
-                PremiumFilterChip(
-                    selected = isSelected,
-                    onClick = { onConfigChange(config.copy(architecture = arch)) },
-                    label = { Text(arch.displayName) },
-                    modifier = Modifier.weight(weight = 1f, fill = true),
-                )
+            WtaSettingCard {
+                Column(
+                    modifier = Modifier.padding(
+                        horizontal = WtaSpacing.RowHorizontal,
+                        vertical = WtaSpacing.ContentGap
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(WtaSpacing.ContentGap)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(WtaSpacing.ContentGap)
+                    ) {
+                        ApkArchitecture.entries.forEach { arch ->
+                            val isSelected = config.architecture == arch
+                            PremiumFilterChip(
+                                selected = isSelected,
+                                onClick = { onConfigChange(config.copy(architecture = arch)) },
+                                label = { Text(arch.displayName) },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                    }
+
+                    Text(
+                        text = config.architecture.description,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
 
-        Text(
-            text = config.architecture.description,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-        HorizontalDivider()
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                Icons.Outlined.Security,
-                null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = Strings.runtimePermissions,
-                style = MaterialTheme.typography.titleSmall
+        // ── 权限配置 ──────────────────────────────────────────
+        if (onOpenPermissionConfig != null) {
+            PermissionSummaryCard(
+                permissions = config.runtimePermissions,
+                onClick = onOpenPermissionConfig
             )
         }
 
-        Text(
-            text = Strings.runtimePermissionsDesc,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
-        )
-
-
-        PermissionSummaryCard(
-            permissions = config.runtimePermissions,
-            onClick = onOpenPermissionConfig
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-        HorizontalDivider()
-        Spacer(modifier = Modifier.height(16.dp))
-
+        // ── 网络信任 ──────────────────────────────────────────
         NetworkTrustConfigPanel(
             config = config.networkTrustConfig,
             importError = caImportError,
@@ -277,175 +233,166 @@ fun ApkExportSection(
             }
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
-        HorizontalDivider()
-        Spacer(modifier = Modifier.height(16.dp))
+        // ── 性能优化 ──────────────────────────────────────────
+        PerformanceOptimizationSection(
+            config = config,
+            onConfigChange = onConfigChange
+        )
+
+        // ── 自定义签名 ──────────────────────────────────────────
+        CustomSigningSection()
+    }
+}
 
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                Icons.Outlined.Speed,
-                null,
-                tint = AppColors.Success,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = Strings.performanceOptimization,
-                style = MaterialTheme.typography.titleSmall
+@Composable
+private fun PerformanceOptimizationSection(
+    config: ApkExportConfig,
+    onConfigChange: (ApkExportConfig) -> Unit
+) {
+    WtaSection(
+        title = Strings.performanceOptimization,
+        headerStyle = WtaSectionHeaderStyle.Quiet
+    ) {
+        WtaSettingCard {
+            WtaToggleRow(
+                title = Strings.performanceOptimization,
+                subtitle = if (config.performanceOptimization) Strings.perfEnabled else Strings.perfDisabled,
+                icon = Icons.Outlined.Speed,
+                checked = config.performanceOptimization,
+                onCheckedChange = { onConfigChange(config.copy(performanceOptimization = it)) }
             )
         }
-
-        Text(
-            text = Strings.performanceOptimizationDesc,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
-        )
-
-        SettingsSwitch(
-            title = Strings.performanceOptimization,
-            subtitle = if (config.performanceOptimization) Strings.perfEnabled else Strings.perfDisabled,
-            checked = config.performanceOptimization,
-            onCheckedChange = { onConfigChange(config.copy(performanceOptimization = it)) }
-        )
 
         AnimatedVisibility(
             visible = config.performanceOptimization,
             enter = CardExpandTransition,
             exit = CardCollapseTransition
         ) {
-            Column(modifier = Modifier.padding(start = 16.dp, top = 8.dp)) {
-
-                Text(
-                    text = Strings.perfResourceOptimize,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = AppColors.Success,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                )
-                SettingsSwitch(
-                    title = Strings.perfCompressImages,
-                    subtitle = Strings.perfCompressImagesHint,
-                    checked = config.performanceConfig.compressImages,
-                    onCheckedChange = {
-                        onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(compressImages = it)))
+            Column(verticalArrangement = Arrangement.spacedBy(WtaSpacing.SectionGap)) {
+                // 资源优化
+                WtaSection(
+                    title = Strings.perfResourceOptimize,
+                    headerStyle = WtaSectionHeaderStyle.Quiet
+                ) {
+                    WtaSettingCard {
+                        WtaToggleRow(
+                            title = Strings.perfCompressImages,
+                            subtitle = Strings.perfCompressImagesHint,
+                            checked = config.performanceConfig.compressImages,
+                            onCheckedChange = {
+                                onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(compressImages = it)))
+                            }
+                        )
+                        WtaSectionDivider()
+                        WtaToggleRow(
+                            title = Strings.perfConvertWebP,
+                            subtitle = Strings.perfConvertWebPHint,
+                            checked = config.performanceConfig.convertToWebP,
+                            onCheckedChange = {
+                                onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(convertToWebP = it)))
+                            }
+                        )
+                        WtaSectionDivider()
+                        WtaToggleRow(
+                            title = Strings.perfMinifyCode,
+                            subtitle = Strings.perfMinifyCodeHint,
+                            checked = config.performanceConfig.minifyCode,
+                            onCheckedChange = {
+                                onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(minifyCode = it)))
+                            }
+                        )
+                        WtaSectionDivider()
+                        WtaToggleRow(
+                            title = Strings.perfRemoveUnused,
+                            subtitle = Strings.perfRemoveUnusedHint,
+                            checked = config.performanceConfig.removeUnusedResources,
+                            onCheckedChange = {
+                                onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(removeUnusedResources = it)))
+                            }
+                        )
                     }
-                )
-                SettingsSwitch(
-                    title = Strings.perfConvertWebP,
-                    subtitle = Strings.perfConvertWebPHint,
-                    checked = config.performanceConfig.convertToWebP,
-                    onCheckedChange = {
-                        onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(convertToWebP = it)))
-                    }
-                )
-                SettingsSwitch(
-                    title = Strings.perfMinifyCode,
-                    subtitle = Strings.perfMinifyCodeHint,
-                    checked = config.performanceConfig.minifyCode,
-                    onCheckedChange = {
-                        onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(minifyCode = it)))
-                    }
-                )
-                SettingsSwitch(
-                    title = Strings.perfRemoveUnused,
-                    subtitle = Strings.perfRemoveUnusedHint,
-                    checked = config.performanceConfig.removeUnusedResources,
-                    onCheckedChange = {
-                        onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(removeUnusedResources = it)))
-                    }
-                )
+                }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-
-                Text(
-                    text = Strings.perfBuildOptimize,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                )
-                SettingsSwitch(
-                    title = Strings.perfParallelProcessing,
-                    subtitle = Strings.perfParallelProcessingHint,
-                    checked = config.performanceConfig.parallelProcessing,
-                    onCheckedChange = {
-                        onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(parallelProcessing = it)))
+                // 构建优化
+                WtaSection(
+                    title = Strings.perfBuildOptimize,
+                    headerStyle = WtaSectionHeaderStyle.Quiet
+                ) {
+                    WtaSettingCard {
+                        WtaToggleRow(
+                            title = Strings.perfParallelProcessing,
+                            subtitle = Strings.perfParallelProcessingHint,
+                            checked = config.performanceConfig.parallelProcessing,
+                            onCheckedChange = {
+                                onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(parallelProcessing = it)))
+                            }
+                        )
+                        WtaSectionDivider()
+                        WtaToggleRow(
+                            title = Strings.perfEnableCache,
+                            subtitle = Strings.perfEnableCacheHint,
+                            checked = config.performanceConfig.enableCache,
+                            onCheckedChange = {
+                                onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(enableCache = it)))
+                            }
+                        )
                     }
-                )
-                SettingsSwitch(
-                    title = Strings.perfEnableCache,
-                    subtitle = Strings.perfEnableCacheHint,
-                    checked = config.performanceConfig.enableCache,
-                    onCheckedChange = {
-                        onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(enableCache = it)))
+                }
+
+                // 加载优化
+                WtaSection(
+                    title = Strings.perfLoadOptimize,
+                    headerStyle = WtaSectionHeaderStyle.Quiet
+                ) {
+                    WtaSettingCard {
+                        WtaToggleRow(
+                            title = Strings.perfPreloadHints,
+                            subtitle = Strings.perfPreloadHintsHint,
+                            checked = config.performanceConfig.injectPreloadHints,
+                            onCheckedChange = {
+                                onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(injectPreloadHints = it)))
+                            }
+                        )
+                        WtaSectionDivider()
+                        WtaToggleRow(
+                            title = Strings.perfLazyLoading,
+                            subtitle = Strings.perfLazyLoadingHint,
+                            checked = config.performanceConfig.injectLazyLoading,
+                            onCheckedChange = {
+                                onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(injectLazyLoading = it)))
+                            }
+                        )
+                        WtaSectionDivider()
+                        WtaToggleRow(
+                            title = Strings.perfOptimizeScripts,
+                            subtitle = Strings.perfOptimizeScriptsHint,
+                            checked = config.performanceConfig.optimizeScripts,
+                            onCheckedChange = {
+                                onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(optimizeScripts = it)))
+                            }
+                        )
                     }
-                )
+                }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-
-                Text(
-                    text = Strings.perfLoadOptimize,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = AppColors.Warning,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                )
-                SettingsSwitch(
-                    title = Strings.perfPreloadHints,
-                    subtitle = Strings.perfPreloadHintsHint,
-                    checked = config.performanceConfig.injectPreloadHints,
-                    onCheckedChange = {
-                        onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(injectPreloadHints = it)))
+                // 运行时优化
+                WtaSection(
+                    title = Strings.perfRuntimeOptimize,
+                    headerStyle = WtaSectionHeaderStyle.Quiet
+                ) {
+                    WtaSettingCard {
+                        WtaToggleRow(
+                            title = Strings.perfRuntimeScript,
+                            subtitle = Strings.perfRuntimeScriptHint,
+                            checked = config.performanceConfig.injectPerformanceScript,
+                            onCheckedChange = {
+                                onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(injectPerformanceScript = it)))
+                            }
+                        )
                     }
-                )
-                SettingsSwitch(
-                    title = Strings.perfLazyLoading,
-                    subtitle = Strings.perfLazyLoadingHint,
-                    checked = config.performanceConfig.injectLazyLoading,
-                    onCheckedChange = {
-                        onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(injectLazyLoading = it)))
-                    }
-                )
-                SettingsSwitch(
-                    title = Strings.perfOptimizeScripts,
-                    subtitle = Strings.perfOptimizeScriptsHint,
-                    checked = config.performanceConfig.optimizeScripts,
-                    onCheckedChange = {
-                        onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(optimizeScripts = it)))
-                    }
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-
-                Text(
-                    text = Strings.perfRuntimeOptimize,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.tertiary,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                )
-                SettingsSwitch(
-                    title = Strings.perfRuntimeScript,
-                    subtitle = Strings.perfRuntimeScriptHint,
-                    checked = config.performanceConfig.injectPerformanceScript,
-                    onCheckedChange = {
-                        onConfigChange(config.copy(performanceConfig = config.performanceConfig.copy(injectPerformanceScript = it)))
-                    }
-                )
+                }
             }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-        HorizontalDivider()
-        Spacer(modifier = Modifier.height(16.dp))
-
-
-        CustomSigningSection()
-
     }
 }
 
@@ -462,14 +409,11 @@ private fun NetworkTrustConfigPanel(
     var showSavePresetDialog by remember { mutableStateOf(false) }
     var presetName by remember { mutableStateOf("") }
 
-    Column(verticalArrangement = Arrangement.spacedBy(WtaSpacing.ContentGap)) {
-        WtaSettingRow(
-            title = Strings.networkTrustTitle,
-            subtitle = Strings.networkTrustHint,
-            icon = Icons.Outlined.GppGood,
-            contentPadding = PaddingValues(horizontal = 0.dp, vertical = WtaSpacing.ContentGap)
-        )
-
+    WtaSection(
+        title = Strings.networkTrustTitle,
+        description = Strings.networkTrustHint,
+        headerStyle = WtaSectionHeaderStyle.Quiet
+    ) {
         WtaSettingCard {
             WtaToggleRow(
                 title = Strings.trustSystemCa,
@@ -536,6 +480,7 @@ private fun NetworkTrustConfigPanel(
             )
         }
 
+        // 已导入的证书列表
         config.customCaCertificates.forEach { cert ->
             WtaSettingCard {
                 WtaSettingRow(
@@ -558,6 +503,7 @@ private fun NetworkTrustConfigPanel(
             }
         }
 
+        // 已保存的预设列表
         if (presets.isNotEmpty()) {
             WtaSettingCard {
                 presets.forEachIndexed { index, preset ->
@@ -623,9 +569,6 @@ private fun NetworkTrustConfigPanel(
 }
 
 
-
-
-
 @Composable
 fun CustomSigningSection() {
     val context = LocalContext.current
@@ -635,7 +578,6 @@ fun CustomSigningSection() {
     var signerType by remember { mutableStateOf(signer.getSignerType()) }
     var certInfo by remember { mutableStateOf(signer.getCertificateInfo()) }
 
-
     var showImportPasswordDialog by remember { mutableStateOf(false) }
     var showExportPasswordDialog by remember { mutableStateOf(false) }
     var showRemoveConfirmDialog by remember { mutableStateOf(false) }
@@ -644,7 +586,6 @@ fun CustomSigningSection() {
     var passwordVisible by remember { mutableStateOf(false) }
     var importError by remember { mutableStateOf<String?>(null) }
     var snackbarMessage by remember { mutableStateOf<String?>(null) }
-
 
     val keystorePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
@@ -657,7 +598,6 @@ fun CustomSigningSection() {
         }
     }
 
-
     val keystoreExportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/x-pkcs12")
     ) { uri: Uri? ->
@@ -668,148 +608,61 @@ fun CustomSigningSection() {
         }
     }
 
-    Column {
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                Icons.Outlined.Key,
-                null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = Strings.customSigning,
-                style = MaterialTheme.typography.titleSmall
-            )
-        }
-
-        Text(
-            text = Strings.customSigningDesc,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
-        )
-
-
-        WtaSettingCard(contentPadding = PaddingValues(12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    if (signerType == com.webtoapp.core.apkbuilder.JarSigner.SignerType.PKCS12_CUSTOM)
-                        Icons.Outlined.VerifiedUser else Icons.Outlined.Shield,
-                    null,
-                    tint = if (signerType == com.webtoapp.core.apkbuilder.JarSigner.SignerType.PKCS12_CUSTOM)
-                        MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = Strings.currentSigningStatus,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = when (signerType) {
+    WtaSection(
+        title = Strings.currentSigningStatus,
+        headerStyle = WtaSectionHeaderStyle.Quiet
+    ) {
+        // 签名状态
+        WtaSettingCard {
+            WtaSettingRow(
+                title = when (signerType) {
                     com.webtoapp.core.apkbuilder.JarSigner.SignerType.PKCS12_CUSTOM -> Strings.signingTypeCustom
                     com.webtoapp.core.apkbuilder.JarSigner.SignerType.PKCS12_AUTO -> Strings.signingTypeAutoGenerated
                     com.webtoapp.core.apkbuilder.JarSigner.SignerType.ANDROID_KEYSTORE -> Strings.signingTypeAndroidKeyStore
                 },
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium,
-                color = if (signerType == com.webtoapp.core.apkbuilder.JarSigner.SignerType.PKCS12_CUSTOM)
-                    MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                subtitle = certInfo,
+                icon = if (signerType == com.webtoapp.core.apkbuilder.JarSigner.SignerType.PKCS12_CUSTOM)
+                    Icons.Outlined.VerifiedUser else Icons.Outlined.Shield,
+                subtitleMaxLines = 5
             )
-            if (certInfo != null) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = certInfo!!,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 5,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-
+        // 提示信息
         WtaStatusBanner(
             title = Strings.customSigningNote,
             message = Strings.supportedKeystoreFormats,
             tone = WtaStatusTone.Info
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-
-            PremiumOutlinedButton(
-                onClick = {
-                    keystorePickerLauncher.launch(arrayOf("*/*"))
-                },
-                modifier = Modifier.weight(weight = 1f, fill = true),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
-            ) {
-                Icon(
-                    Icons.Outlined.FileUpload,
-                    null,
-                    modifier = Modifier.size(16.dp)
+        // 操作按钮
+        WtaSettingCard {
+            WtaSettingRow(
+                title = Strings.importKeystore,
+                subtitle = null,
+                icon = Icons.Outlined.FileUpload,
+                onClick = { keystorePickerLauncher.launch(arrayOf("*/*")) }
+            )
+            WtaSectionDivider()
+            WtaSettingRow(
+                title = Strings.exportKeystore,
+                subtitle = null,
+                icon = Icons.Outlined.FileDownload,
+                onClick = { keystoreExportLauncher.launch("webtoapp_signing.p12") }
+            )
+            if (signerType == com.webtoapp.core.apkbuilder.JarSigner.SignerType.PKCS12_CUSTOM) {
+                WtaSectionDivider()
+                WtaSettingRow(
+                    title = Strings.removeCustomKeystore,
+                    subtitle = null,
+                    icon = Icons.Outlined.Delete,
+                    onClick = { showRemoveConfirmDialog = true },
+                    tone = WtaRowTone.Danger
                 )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(Strings.importKeystore, style = MaterialTheme.typography.labelMedium)
-            }
-
-
-            PremiumOutlinedButton(
-                onClick = {
-                    keystoreExportLauncher.launch("webtoapp_signing.p12")
-                },
-                modifier = Modifier.weight(weight = 1f, fill = true),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
-            ) {
-                Icon(
-                    Icons.Outlined.FileDownload,
-                    null,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(Strings.exportKeystore, style = MaterialTheme.typography.labelMedium)
             }
         }
 
-
-        if (signerType == com.webtoapp.core.apkbuilder.JarSigner.SignerType.PKCS12_CUSTOM) {
-            Spacer(modifier = Modifier.height(8.dp))
-            TextButton(
-                onClick = { showRemoveConfirmDialog = true },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error
-                )
-            ) {
-                Icon(
-                    Icons.Outlined.Delete,
-                    null,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(Strings.removeCustomKeystore)
-            }
-        }
-
-
+        // 操作反馈
         snackbarMessage?.let { msg ->
-            Spacer(modifier = Modifier.height(8.dp))
             WtaStatusBanner(
                 message = msg,
                 tone = WtaStatusTone.Success
@@ -821,6 +674,7 @@ fun CustomSigningSection() {
         }
     }
 
+    // ── 对话框 ──────────────────────────────────────────
 
     if (showImportPasswordDialog) {
         AlertDialog(
@@ -874,7 +728,6 @@ fun CustomSigningSection() {
                         val uri = pendingKeystoreUri ?: return@TextButton
                         coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
                             try {
-
                                 val tempFile = java.io.File(context.cacheDir, "import_keystore_temp")
                                 context.contentResolver.openInputStream(uri)?.use { input ->
                                     tempFile.outputStream().use { output ->
@@ -922,7 +775,6 @@ fun CustomSigningSection() {
             }
         )
     }
-
 
     if (showExportPasswordDialog) {
         AlertDialog(
@@ -1010,7 +862,6 @@ fun CustomSigningSection() {
             }
         )
     }
-
 
     if (showRemoveConfirmDialog) {
         AlertDialog(

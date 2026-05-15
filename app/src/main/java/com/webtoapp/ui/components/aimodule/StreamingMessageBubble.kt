@@ -389,7 +389,7 @@ private fun parseMarkdownToAnnotatedString(text: String, baseColor: Color): Anno
                 text.startsWith("**", i) -> {
                     val end = text.indexOf("**", i + 2)
                     if (end != -1) {
-                        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                        withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) {
                             append(text.substring(i + 2, end))
                         }
                         i = end + 2

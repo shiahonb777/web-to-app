@@ -52,7 +52,7 @@ import com.webtoapp.core.i18n.Strings
 import com.webtoapp.ui.components.QrCodeShareDialog
 import com.webtoapp.ui.design.WtaRadius
 import kotlinx.coroutines.launch
-import com.webtoapp.ui.components.ThemedBackgroundBox
+import com.webtoapp.ui.design.WtaBackground
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
@@ -70,6 +70,7 @@ fun ExtensionModuleScreen(
     onNavigateBack: () -> Unit,
     onNavigateToEditor: (String?) -> Unit,
     onNavigateToAiDeveloper: () -> Unit = {},
+    onNavigateToMarket: () -> Unit = {},
 
 ) {
     val context = LocalContext.current
@@ -249,13 +250,13 @@ fun ExtensionModuleScreen(
             is ExtensionLoadError.ParsingFailed -> {
                 val backup = error.backupFileName
                 if (backup != null) {
-                    "${Strings.storeLoadFailed}: modules.json corrupted, backup: $backup"
+                    "${Strings.loadFailed}: modules.json corrupted, backup: $backup"
                 } else {
-                    "${Strings.storeLoadFailed}: modules.json corrupted"
+                    "${Strings.loadFailed}: modules.json corrupted"
                 }
             }
             is ExtensionLoadError.IoFailure -> {
-                "${Strings.storeLoadFailed}: ${error.message}"
+                "${Strings.loadFailed}: ${error.message}"
             }
         }
         snackbarHostState.showSnackbar(message)
@@ -274,6 +275,9 @@ fun ExtensionModuleScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onNavigateToMarket) {
+                        Icon(Icons.Default.Storefront, contentDescription = Strings.moduleMarketTitle)
+                    }
                     IconButton(onClick = { showImportDialog = true }) {
                         Icon(Icons.Default.Download, contentDescription = Strings.btnImport)
                     }
@@ -420,7 +424,7 @@ fun ExtensionModuleScreen(
             }
         }
     ) { padding ->
-        ThemedBackgroundBox(
+        WtaBackground(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
@@ -512,7 +516,7 @@ fun ExtensionModuleScreen(
                                             "$count",
                                             modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
                                             style = MaterialTheme.typography.labelSmall,
-                                            fontWeight = FontWeight.Bold,
+                                            fontWeight = FontWeight.SemiBold,
                                             color = if (isSelected) MaterialTheme.colorScheme.primary
                                                 else MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -879,7 +883,7 @@ fun ExtensionModuleScreen(
                             Text(
                                 parseResult.module.name,
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.SemiBold
                             )
                             Text(
                                 "v${parseResult.module.version.name}",
@@ -1008,7 +1012,7 @@ fun ExtensionModuleScreen(
                             Text(
                                 "${jsPackage.fileCount} ${Strings.filesDetected}",
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.SemiBold
                             )
                             Text(
                                 "${formatFileSize(jsPackage.totalSize)} ${Strings.totalSize}",
@@ -1177,7 +1181,7 @@ fun ExtensionModuleScreen(
                             Text(
                                 parseResult.extensionName,
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.SemiBold
                             )
                             Text(
                                 "v${parseResult.extensionVersion}",
@@ -1278,7 +1282,6 @@ fun ModuleCard(
     extensionManager: ExtensionManager,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
-    onPublish: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -1441,13 +1444,6 @@ fun ModuleCard(
                             leadingIcon = { Icon(Icons.Outlined.Share, null) }
                         )
 
-                        onPublish?.let { publish ->
-                            DropdownMenuItem(
-                                text = { Text(Strings.publishToMarket) },
-                                onClick = { showMenu = false; publish() },
-                                leadingIcon = { Icon(Icons.Outlined.CloudUpload, null) }
-                            )
-                        }
                         if (!module.builtIn) {
                             Box(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).height(0.5.dp).background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)))
                             DropdownMenuItem(
@@ -1726,7 +1722,7 @@ private fun StatItem(
         Text(
             value,
             style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.SemiBold,
             color = primary
         )
         Spacer(modifier = Modifier.height(4.dp))
@@ -1849,12 +1845,6 @@ private fun ExtensionModulesTabContent(
                             Toast.makeText(context, Strings.deleted, Toast.LENGTH_SHORT).show()
                         }
                     },
-                    onPublish = if (!module.builtIn) {
-                        {
-                            val cloudVm: com.webtoapp.ui.viewmodel.CloudViewModel = org.koin.java.KoinJavaComponent.get(com.webtoapp.ui.viewmodel.CloudViewModel::class.java)
-                            cloudVm.publishModule(module)
-                        }
-                    } else null
                 )
             }
 

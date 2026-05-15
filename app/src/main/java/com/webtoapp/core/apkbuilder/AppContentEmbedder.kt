@@ -43,6 +43,7 @@ class EmbedContext(
     val htmlFiles: List<com.webtoapp.data.model.HtmlFile>,
     val galleryItems: List<com.webtoapp.data.model.GalleryItem>,
     val projectDir: File?,
+    val secondaryProjectDir: File?,
 
     val fnAddMediaContent: (ZipOutputStream, String, Boolean, AssetEncryptor?, EncryptionConfig) -> Unit,
     val fnAddHtmlFiles: (ZipOutputStream, List<com.webtoapp.data.model.HtmlFile>, AssetEncryptor?, EncryptionConfig) -> Int,
@@ -80,6 +81,7 @@ object AppContentEmbedderFactory {
             "PHP_APP" -> PhpAppContentEmbedder()
             "PYTHON_APP" -> PythonAppContentEmbedder()
             "GO_APP" -> GoAppContentEmbedder()
+            "MULTI_WEB" -> MultiWebContentEmbedder()
             "WEB" -> null
             else -> null
         }
@@ -248,5 +250,22 @@ class GoAppContentEmbedder : AppContentEmbedder {
         ctx.logger.section("Embed Go App Files")
         ctx.fnAddGoAppFiles(zipOut, dir)
         return EmbedResult(true, message = "Go app files embedded")
+    }
+}
+
+class MultiWebContentEmbedder : AppContentEmbedder {
+    override fun embed(zipOut: ZipOutputStream, ctx: EmbedContext): EmbedResult {
+        val dir = ctx.secondaryProjectDir
+        if (dir == null || !dir.exists()) {
+            return EmbedResult(true, message = "No multi-web local project files to embed")
+        }
+        ctx.logger.section("Embed Multi-Web Local Site Files")
+        RuntimeAssetEmbedder.embedProjectFiles(
+            zipOut = zipOut,
+            projectDir = dir,
+            config = RuntimeAssetEmbedder.multiWebConfig(),
+            logger = ctx.logger
+        )
+        return EmbedResult(true, message = "Multi-web local site files embedded")
     }
 }

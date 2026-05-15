@@ -1,6 +1,7 @@
 package com.webtoapp.ui.components
 
 import com.webtoapp.core.logging.AppLogger
+import com.webtoapp.ui.design.WtaSwitch
 import android.content.Context
 import android.media.MediaPlayer
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -512,7 +513,7 @@ fun BgmSelectorDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(Strings.autoPlay, style = MaterialTheme.typography.bodyMedium)
-                        PremiumSwitch(checked = autoPlay, onCheckedChange = { autoPlay = it })
+                        WtaSwitch(checked = autoPlay, onCheckedChange = { autoPlay = it })
                     }
 
 
@@ -522,7 +523,7 @@ fun BgmSelectorDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(Strings.showLyrics, style = MaterialTheme.typography.bodyMedium)
-                        PremiumSwitch(checked = showLyrics, onCheckedChange = { showLyrics = it })
+                        WtaSwitch(checked = showLyrics, onCheckedChange = { showLyrics = it })
                     }
 
 

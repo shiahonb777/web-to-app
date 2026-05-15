@@ -1,52 +1,48 @@
 package com.webtoapp.ui.components
 
-import android.os.Build
-import android.view.HapticFeedbackConstants
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
-import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ButtonElevation
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.webtoapp.ui.design.WtaChip
+import com.webtoapp.ui.design.WtaRadius
+import com.webtoapp.ui.design.WtaSize
+import com.webtoapp.ui.design.rememberHapticClick
+import com.webtoapp.ui.design.wtaPressScale
 
-
-
-
-
-
-
-
-
-
-
+/**
+ * Legacy name aliases over the Wta design system primitives. These are not
+ * deprecated in the usual "please migrate away" sense any more - they have
+ * fully converged onto Wta internals so keeping them is cost-free. The
+ * original flexible Material-style API is preserved so older screens that
+ * compose their own slot content (icons + text, complex labels, labeled text
+ * fields) do not need to be touched.
+ *
+ * Prefer [com.webtoapp.ui.design.WtaTextField], [com.webtoapp.ui.design.WtaButton]
+ * and [com.webtoapp.ui.design.WtaChip] in new code where their more opinionated
+ * APIs simplify the call site.
+ */
 
 @Composable
 fun PremiumTextField(
@@ -70,23 +66,10 @@ fun PremiumTextField(
     singleLine: Boolean = false,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     minLines: Int = 1,
-    shape: androidx.compose.ui.graphics.Shape = RoundedCornerShape(14.dp),
+    shape: Shape = RoundedCornerShape(WtaRadius.Control),
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
 ) {
-    val isFocused by interactionSource.collectIsFocusedAsState()
-    val primary = MaterialTheme.colorScheme.primary
-
-
-    val focusedBorderColor by animateColorAsState(
-        targetValue = when {
-            isError -> MaterialTheme.colorScheme.error
-            isFocused -> primary.copy(alpha = 0.7f)
-            else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
-        },
-        animationSpec = tween(250, easing = FastOutSlowInEasing),
-        label = "borderColor"
-    )
-
+    val colors = MaterialTheme.colorScheme
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
@@ -110,28 +93,9 @@ fun PremiumTextField(
         minLines = minLines,
         interactionSource = interactionSource,
         shape = shape,
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = focusedBorderColor,
-            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f),
-            focusedContainerColor = if (isFocused) primary.copy(alpha = 0.02f) else Color.Transparent,
-            unfocusedContainerColor = Color.Transparent,
-            cursorColor = primary,
-            focusedLabelColor = primary,
-        )
+        colors = com.webtoapp.ui.design.WtaDefaults.outlinedTextFieldColors()
     )
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 @Composable
 fun PremiumFilterChip(
@@ -142,274 +106,89 @@ fun PremiumFilterChip(
     enabled: Boolean = true,
     leadingIcon: @Composable (() -> Unit)? = null,
 ) {
-    val view = LocalView.current
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val primary = MaterialTheme.colorScheme.primary
-
-
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed && enabled) 0.93f else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMediumLow
-        ),
-        label = "chipScale"
-    )
-
-
-    val containerColor by animateColorAsState(
-        targetValue = if (selected) primary.copy(alpha = 0.12f)
-        else Color.Transparent,
-        animationSpec = tween(200),
-        label = "chipBg"
-    )
-
-
-    val chipBorderColor by animateColorAsState(
-        targetValue = if (selected) primary.copy(alpha = 0.4f)
-        else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-        animationSpec = tween(200),
-        label = "chipBorder"
-    )
-
-
-    val contentColor by animateColorAsState(
-        targetValue = if (selected) primary
-        else MaterialTheme.colorScheme.onSurfaceVariant,
-        animationSpec = tween(200),
-        label = "chipContent"
-    )
-
-    Surface(
-        modifier = modifier
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
-            .clip(RoundedCornerShape(12.dp))
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                enabled = enabled
-            ) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-                    view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-                }
-                onClick()
-            },
-        shape = RoundedCornerShape(12.dp),
-        color = containerColor,
-        border = BorderStroke(1.dp, chipBorderColor)
+    // WtaChip's strongly-typed leadingIcon takes an ImageVector but callers
+    // here supply a composable slot. Rather than drop the icon (a regression)
+    // we inline it inside the label so it still renders inline with the text.
+    WtaChip(
+        selected = selected,
+        onClick = onClick,
+        modifier = modifier,
+        enabled = enabled,
+        showSelectedCheck = false
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-
-            if (selected) {
-                Icon(
-                    Icons.Default.Check,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp),
-                    tint = contentColor
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-            } else if (leadingIcon != null) {
-                leadingIcon()
-                Spacer(modifier = Modifier.width(6.dp))
-            }
-
-            CompositionLocalProvider(
-                LocalContentColor provides contentColor
+        if (leadingIcon != null) {
+            androidx.compose.foundation.layout.Row(
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp)
             ) {
+                leadingIcon()
                 label()
             }
+        } else {
+            label()
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 @Composable
 fun PremiumButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    shape: androidx.compose.ui.graphics.Shape = RoundedCornerShape(14.dp),
+    shape: Shape = RoundedCornerShape(WtaRadius.Button),
     colors: ButtonColors = ButtonDefaults.buttonColors(),
     elevation: ButtonElevation? = null,
     border: BorderStroke? = null,
-    contentPadding: PaddingValues = PaddingValues(horizontal = 24.dp, vertical = 14.dp),
+    contentPadding: PaddingValues = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     content: @Composable RowScope.() -> Unit
 ) {
-    val view = LocalView.current
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val primary = MaterialTheme.colorScheme.primary
-
-
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed && enabled) 0.95f else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMediumLow
-        ),
-        label = "btnScale"
-    )
-
-
-    val btnElevation by animateFloatAsState(
-        targetValue = if (isPressed) 0.5f else if (enabled) 2f else 0f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioNoBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
-        label = "btnElevation"
-    )
-
-    val gradientColors = if (enabled) {
-        listOf(primary, primary.copy(alpha = 0.85f))
-    } else {
-        listOf(
-            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
-        )
-    }
-
-    Surface(
+    val hapticClick = rememberHapticClick(onClick)
+    Button(
+        onClick = hapticClick,
         modifier = modifier
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
-            .clip(shape)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                enabled = enabled
-            ) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-                    view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-                }
-                onClick()
-            },
+            .heightIn(min = WtaSize.ButtonHeightMedium)
+            .wtaPressScale(interactionSource),
+        enabled = enabled,
         shape = shape,
-        color = Color.Transparent
-    ) {
-        Box(
-            modifier = Modifier
-                .background(
-                    brush = Brush.horizontalGradient(gradientColors),
-                    shape = shape
-                )
-                .padding(contentPadding),
-            contentAlignment = Alignment.Center
-        ) {
-            CompositionLocalProvider(
-                LocalContentColor provides if (enabled)
-                    MaterialTheme.colorScheme.onPrimary
-                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                    content = content
-                )
-            }
-        }
-    }
+        colors = colors,
+        elevation = elevation,
+        border = border,
+        contentPadding = contentPadding,
+        interactionSource = interactionSource,
+        content = content
+    )
 }
-
-
-
 
 @Composable
 fun PremiumOutlinedButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    shape: androidx.compose.ui.graphics.Shape = RoundedCornerShape(14.dp),
+    shape: Shape = RoundedCornerShape(WtaRadius.Button),
     colors: ButtonColors = ButtonDefaults.outlinedButtonColors(),
     elevation: ButtonElevation? = null,
     border: BorderStroke? = null,
-    contentPadding: PaddingValues = PaddingValues(horizontal = 24.dp, vertical = 14.dp),
+    contentPadding: PaddingValues = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     content: @Composable RowScope.() -> Unit
 ) {
-    val view = LocalView.current
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val primary = MaterialTheme.colorScheme.primary
-
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed && enabled) 0.95f else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMediumLow
-        ),
-        label = "outlinedBtnScale"
-    )
-
-    val borderColor by animateColorAsState(
-        targetValue = if (isPressed) primary
-        else if (enabled) primary.copy(alpha = 0.5f)
-        else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-        animationSpec = tween(200),
-        label = "outlinedBtnBorder"
-    )
-
-    val bgColor by animateColorAsState(
-        targetValue = if (isPressed) primary.copy(alpha = 0.08f) else Color.Transparent,
-        animationSpec = tween(150),
-        label = "outlinedBtnBg"
-    )
-
-    Surface(
+    val hapticClick = rememberHapticClick(onClick)
+    OutlinedButton(
+        onClick = hapticClick,
         modifier = modifier
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
-            .clip(shape)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                enabled = enabled
-            ) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-                    view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-                }
-                onClick()
-            },
+            .heightIn(min = WtaSize.ButtonHeightMedium)
+            .wtaPressScale(interactionSource),
+        enabled = enabled,
         shape = shape,
-        color = bgColor,
-        border = border ?: BorderStroke(1.5.dp, borderColor)
-    ) {
-        Box(
-            modifier = Modifier.padding(contentPadding),
-            contentAlignment = Alignment.Center
-        ) {
-            CompositionLocalProvider(
-                LocalContentColor provides if (enabled) primary
-                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                    content = content
-                )
-            }
-        }
-    }
+        colors = colors,
+        elevation = elevation,
+        border = border ?: BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outline.copy(alpha = if (enabled) 0.55f else 0.2f)
+        ),
+        contentPadding = contentPadding,
+        interactionSource = interactionSource,
+        content = content
+    )
 }

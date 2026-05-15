@@ -87,7 +87,7 @@ fun SplashScreenCard(
             WtaToggleRow(
                 icon = Icons.Outlined.Wallpaper,
                 title = Strings.splashScreen,
-                subtitle = Strings.splashHint,
+                subtitle = null,
                 checked = editState.splashEnabled,
                 onCheckedChange = onEnabledChange
             )

@@ -690,6 +690,7 @@ class WebViewActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         webView?.onResume()
+        webView?.resumeTimers()
         if (trackedAppId > 0) usageTracker?.trackResume(trackedAppId)
     }
 
@@ -1766,9 +1767,9 @@ fun WebViewScreen(
                 goAppPreviewState = GoAppPreviewState.Ready(url)
                 delay(200)
                 webViewRef?.loadUrl(url)
-            } else if (config.binaryName.isNotBlank() && goRuntime.detectBinary(projectDir) != null) {
+            } else if (config.binaryName.isNotBlank() || goRuntime.detectBinary(projectDir) != null) {
 
-                AppLogger.i("GoAppPreview", "检测到 Go 二进制，启动后端服务器")
+                AppLogger.i("GoAppPreview", "启动 Go 后端服务器（仅使用预编译二进制）")
                 goAppPreviewState = GoAppPreviewState.StartingServer
 
                 val serverPort = goRuntime.startServer(
@@ -2063,7 +2064,7 @@ fun WebViewScreen(
                                     const blobUrl = $safeBlobUrl;
                                     const filename = $safeFilename;
                                     const LARGE_FILE_THRESHOLD = 10 * 1024 * 1024;
-                                    const CHUNK_SIZE = 1024 * 1024;
+                                    const CHUNK_SIZE = 512 * 1024;
 
                                     function uint8ToBase64(u8) {
                                         const S = 8192; const p = [];
@@ -2111,21 +2112,28 @@ fun WebViewScreen(
                                             window.AndroidDownload.saveBase64File(base64Data, filename, mimeType);
                                         }
                                     } else if (blobUrl.startsWith('blob:')) {
-                                        fetch(blobUrl)
-                                            .then(function(r) { return r.blob(); })
-                                            .then(function(blob) {
-                                                if (blob.size > LARGE_FILE_THRESHOLD) {
-                                                    processChunked(blob, filename);
-                                                } else {
-                                                    processSmall(blob, filename);
-                                                }
-                                            })
-                                            .catch(function(err) {
-                                                console.error('[DownloadHelper] Blob fetch failed:', err);
-                                                if (window.AndroidDownload && window.AndroidDownload.showToast) {
-                                                    window.AndroidDownload.showToast('${Strings.downloadFailedWithReason}' + err.message);
-                                                }
-                                            });
+                                        // 优先从 DownloadBridge 的缓存里拿 Blob（页面可能已同步 revoke URL）
+                                        const cachedBlob = window.__wtaBlobMap && window.__wtaBlobMap.get(blobUrl);
+                                        function dispatch(blob) {
+                                            if (blob.size > LARGE_FILE_THRESHOLD) {
+                                                processChunked(blob, filename);
+                                            } else {
+                                                processSmall(blob, filename);
+                                            }
+                                        }
+                                        if (cachedBlob) {
+                                            dispatch(cachedBlob);
+                                        } else {
+                                            fetch(blobUrl)
+                                                .then(function(r) { return r.blob(); })
+                                                .then(dispatch)
+                                                .catch(function(err) {
+                                                    console.error('[DownloadHelper] Blob fetch failed:', err);
+                                                    if (window.AndroidDownload && window.AndroidDownload.showToast) {
+                                                        window.AndroidDownload.showToast('${Strings.downloadFailedWithReason}' + err.message);
+                                                    }
+                                                });
+                                        }
                                     }
                                 } catch(e) {
                                     console.error('[DownloadHelper] Error:', e);
@@ -2824,7 +2832,10 @@ fun WebViewScreen(
 
 
 
-            if (((hideToolbar && !showToolbarInPreview) || hideBrowserToolbar) && canGoBack) {
+            if (webApp?.webViewConfig?.showFloatingBackButton == true &&
+                ((hideToolbar && !showToolbarInPreview) || hideBrowserToolbar) &&
+                canGoBack
+            ) {
                 var fabAlpha by remember { mutableFloatStateOf(0.9f) }
                 var fadeKey by remember { mutableIntStateOf(0) }
 

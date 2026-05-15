@@ -37,17 +37,19 @@ fun ShimmerBrush(target: @Composable (brush: Brush) -> Unit) {
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1200),
+            animation = tween(durationMillis = 1400, easing = androidx.compose.animation.core.LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
         label = "shimmerProgress"
     )
+    val isDark = com.webtoapp.ui.theme.LocalIsDarkTheme.current
+    // Highlights slightly brighter than the surrounding surface so the shimmer
+    // reads as a subtle sweep rather than a grey stripe. Values hand-picked
+    // for both light and dark mode to sit just above the noise floor.
+    val baseColor = if (isDark) Color(0x14FFFFFF) else Color(0x14000000)
+    val peakColor = if (isDark) Color(0x2EFFFFFF) else Color(0x1F000000)
     val brush = Brush.linearGradient(
-        colors = listOf(
-            Color(0x1A888888),
-            Color(0x33888888),
-            Color(0x1A888888),
-        ),
+        colors = listOf(baseColor, peakColor, baseColor),
         start = Offset(progress * 600f, 0f),
         end = Offset(progress * 600f + 300f, 0f)
     )

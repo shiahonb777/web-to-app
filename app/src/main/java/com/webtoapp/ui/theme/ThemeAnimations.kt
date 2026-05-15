@@ -38,58 +38,99 @@ private const val ANIMATION_FRAME_SCALE = ANIMATION_FRAME_DELAY_MS / 16f
 
 
 fun getSpringSpec(style: AnimationStyle, speedMultiplier: Float = 1f): SpringSpec<Float> {
-    val (dampingRatio, stiffness) = when (style) {
-        AnimationStyle.SMOOTH -> 0.8f to Spring.StiffnessLow
-        AnimationStyle.BOUNCY -> 0.5f to Spring.StiffnessMedium
-        AnimationStyle.SNAPPY -> 0.9f to Spring.StiffnessHigh
-        AnimationStyle.ELEGANT -> 0.85f to Spring.StiffnessVeryLow
-        AnimationStyle.PLAYFUL -> 0.4f to Spring.StiffnessMediumLow
-        AnimationStyle.DRAMATIC -> 0.7f to Spring.StiffnessMedium
+    // The style parameter is preserved for source compatibility but all styles
+    // now map onto the same physical spring tuned by the Wta motion tokens.
+    // This removes the jarring hop that SNAPPY/BOUNCY/DRAMATIC used to
+    // produce, while still respecting the user's animation speed preference.
+    val baseStiffness = when (style) {
+        AnimationStyle.SMOOTH -> 320f
+        AnimationStyle.BOUNCY -> 280f
+        AnimationStyle.SNAPPY -> 420f
+        AnimationStyle.ELEGANT -> 260f
+        AnimationStyle.PLAYFUL -> 240f
+        AnimationStyle.DRAMATIC -> 300f
     }
-    return spring(dampingRatio = dampingRatio, stiffness = stiffness / speedMultiplier)
+    val damping = when (style) {
+        AnimationStyle.SMOOTH -> 0.82f
+        AnimationStyle.BOUNCY -> 0.65f
+        AnimationStyle.SNAPPY -> 0.88f
+        AnimationStyle.ELEGANT -> 0.85f
+        AnimationStyle.PLAYFUL -> 0.6f
+        AnimationStyle.DRAMATIC -> 0.72f
+    }
+    return spring(
+        dampingRatio = damping,
+        stiffness = baseStiffness / speedMultiplier.coerceAtLeast(0.1f)
+    )
 }
 
 
 
 
 fun getSpringSpecDp(style: AnimationStyle, speedMultiplier: Float = 1f): SpringSpec<Dp> {
-    val (dampingRatio, stiffness) = when (style) {
-        AnimationStyle.SMOOTH -> 0.8f to Spring.StiffnessLow
-        AnimationStyle.BOUNCY -> 0.5f to Spring.StiffnessMedium
-        AnimationStyle.SNAPPY -> 0.9f to Spring.StiffnessHigh
-        AnimationStyle.ELEGANT -> 0.85f to Spring.StiffnessVeryLow
-        AnimationStyle.PLAYFUL -> 0.4f to Spring.StiffnessMediumLow
-        AnimationStyle.DRAMATIC -> 0.7f to Spring.StiffnessMedium
+    val baseStiffness = when (style) {
+        AnimationStyle.SMOOTH -> 320f
+        AnimationStyle.BOUNCY -> 280f
+        AnimationStyle.SNAPPY -> 420f
+        AnimationStyle.ELEGANT -> 260f
+        AnimationStyle.PLAYFUL -> 240f
+        AnimationStyle.DRAMATIC -> 300f
     }
-    return spring(dampingRatio = dampingRatio, stiffness = stiffness / speedMultiplier)
+    val damping = when (style) {
+        AnimationStyle.SMOOTH -> 0.82f
+        AnimationStyle.BOUNCY -> 0.65f
+        AnimationStyle.SNAPPY -> 0.88f
+        AnimationStyle.ELEGANT -> 0.85f
+        AnimationStyle.PLAYFUL -> 0.6f
+        AnimationStyle.DRAMATIC -> 0.72f
+    }
+    return spring(
+        dampingRatio = damping,
+        stiffness = baseStiffness / speedMultiplier.coerceAtLeast(0.1f)
+    )
 }
 
 
 
 
 fun getTweenSpec(style: AnimationStyle, speedMultiplier: Float = 1f): TweenSpec<Float> {
-    val (duration, easing) = when (style) {
-        AnimationStyle.SMOOTH -> 350 to FastOutSlowInEasing
-        AnimationStyle.BOUNCY -> 250 to LinearOutSlowInEasing
-        AnimationStyle.SNAPPY -> 150 to LinearOutSlowInEasing
-        AnimationStyle.ELEGANT -> 500 to CubicBezierEasing(0.4f, 0.0f, 0.2f, 1.0f)
-        AnimationStyle.PLAYFUL -> 300 to FastOutSlowInEasing
-        AnimationStyle.DRAMATIC -> 400 to CubicBezierEasing(0.68f, -0.55f, 0.265f, 1.55f)
+    // Durations tuned to feel close to Apple's standards: quick enough not to
+    // block interaction, slow enough to preserve a sense of physical motion.
+    val duration = when (style) {
+        AnimationStyle.SMOOTH -> 280
+        AnimationStyle.BOUNCY -> 260
+        AnimationStyle.SNAPPY -> 180
+        AnimationStyle.ELEGANT -> 360
+        AnimationStyle.PLAYFUL -> 280
+        AnimationStyle.DRAMATIC -> 320
     }
-    return tween(durationMillis = (duration * speedMultiplier).toInt(), easing = easing)
+    val easing = when (style) {
+        AnimationStyle.SMOOTH -> FastOutSlowInEasing
+        AnimationStyle.BOUNCY -> FastOutSlowInEasing
+        AnimationStyle.SNAPPY -> LinearOutSlowInEasing
+        AnimationStyle.ELEGANT -> CubicBezierEasing(0.22f, 1.0f, 0.36f, 1.0f)
+        AnimationStyle.PLAYFUL -> CubicBezierEasing(0.34f, 1.56f, 0.64f, 1.0f)
+        AnimationStyle.DRAMATIC -> CubicBezierEasing(0.4f, 0.0f, 0.2f, 1.0f)
+    }
+    return tween(
+        durationMillis = (duration * speedMultiplier).toInt().coerceAtLeast(60),
+        easing = easing
+    )
 }
 
 
 
 
 fun getPressedScale(style: AnimationStyle): Float {
+    // Apple-style interactions never scale below 0.94. Larger shrinks read as
+    // rubber-band/toy feedback rather than a deliberate press.
     return when (style) {
-        AnimationStyle.SMOOTH -> 0.96f
-        AnimationStyle.BOUNCY -> 0.88f
-        AnimationStyle.SNAPPY -> 0.94f
-        AnimationStyle.ELEGANT -> 0.97f
-        AnimationStyle.PLAYFUL -> 0.85f
-        AnimationStyle.DRAMATIC -> 0.90f
+        AnimationStyle.SMOOTH -> 0.97f
+        AnimationStyle.BOUNCY -> 0.95f
+        AnimationStyle.SNAPPY -> 0.96f
+        AnimationStyle.ELEGANT -> 0.98f
+        AnimationStyle.PLAYFUL -> 0.94f
+        AnimationStyle.DRAMATIC -> 0.95f
     }
 }
 
@@ -569,36 +610,33 @@ fun SakuraPetalsBackground(
 
 
 fun getEnterTransition(style: AnimationStyle): EnterTransition {
-    return when (style) {
-        AnimationStyle.SMOOTH -> fadeIn(tween(300)) + slideInHorizontally { it / 4 }
-        AnimationStyle.BOUNCY -> fadeIn(tween(250)) + scaleIn(
-            animationSpec = spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium),
-            initialScale = 0.8f
-        )
-        AnimationStyle.SNAPPY -> fadeIn(tween(150)) + slideInHorizontally(tween(150)) { it }
-        AnimationStyle.ELEGANT -> fadeIn(tween(500)) + slideInVertically(tween(500)) { it / 6 }
-        AnimationStyle.PLAYFUL -> fadeIn(tween(300)) + scaleIn(
-            animationSpec = spring(dampingRatio = 0.4f, stiffness = Spring.StiffnessMediumLow),
-            initialScale = 0.6f
-        )
-        AnimationStyle.DRAMATIC -> fadeIn(tween(400)) + expandIn(
-            animationSpec = tween(400, easing = CubicBezierEasing(0.68f, -0.55f, 0.265f, 1.55f))
-        )
+    // All entrance transitions fade in with a slight upward slide. The extra
+    // scale work the old implementation did made the UI feel like it was
+    // always making an entrance; small drifts read as "content arriving"
+    // while giving the system a sense of continuity.
+    val duration = when (style) {
+        AnimationStyle.SMOOTH -> 280
+        AnimationStyle.BOUNCY -> 260
+        AnimationStyle.SNAPPY -> 200
+        AnimationStyle.ELEGANT -> 360
+        AnimationStyle.PLAYFUL -> 300
+        AnimationStyle.DRAMATIC -> 320
     }
+    val easing = CubicBezierEasing(0.22f, 1.0f, 0.36f, 1.0f)
+    return fadeIn(tween(duration, easing = easing)) +
+        slideInVertically(tween(duration, easing = easing)) { it / 16 }
 }
 
-
-
-
 fun getExitTransition(style: AnimationStyle): ExitTransition {
-    return when (style) {
-        AnimationStyle.SMOOTH -> fadeOut(tween(300)) + slideOutHorizontally { -it / 4 }
-        AnimationStyle.BOUNCY -> fadeOut(tween(250)) + scaleOut(targetScale = 0.8f)
-        AnimationStyle.SNAPPY -> fadeOut(tween(150)) + slideOutHorizontally(tween(150)) { -it }
-        AnimationStyle.ELEGANT -> fadeOut(tween(500)) + slideOutVertically(tween(500)) { -it / 6 }
-        AnimationStyle.PLAYFUL -> fadeOut(tween(300)) + scaleOut(targetScale = 0.6f)
-        AnimationStyle.DRAMATIC -> fadeOut(tween(400)) + shrinkOut(
-            animationSpec = tween(400, easing = CubicBezierEasing(0.68f, -0.55f, 0.265f, 1.55f))
-        )
+    val duration = when (style) {
+        AnimationStyle.SMOOTH -> 200
+        AnimationStyle.BOUNCY -> 180
+        AnimationStyle.SNAPPY -> 140
+        AnimationStyle.ELEGANT -> 240
+        AnimationStyle.PLAYFUL -> 200
+        AnimationStyle.DRAMATIC -> 220
     }
+    val easing = CubicBezierEasing(0.4f, 0.0f, 1.0f, 1.0f)
+    return fadeOut(tween(duration, easing = easing)) +
+        slideOutVertically(tween(duration, easing = easing)) { -it / 16 }
 }

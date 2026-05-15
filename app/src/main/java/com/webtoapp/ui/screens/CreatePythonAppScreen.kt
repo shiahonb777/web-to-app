@@ -60,7 +60,8 @@ fun CreatePythonAppScreen(
         pythonAppConfig: PythonAppConfig,
         iconUri: Uri?,
         themeType: String
-    ) -> Unit
+    ) -> Unit,
+    onOpenLinuxEnv: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -367,16 +368,7 @@ fun CreatePythonAppScreen(
 
     val canCreate = projectId != null
 
-    // 获取框架品牌色
-    val frameworkColor = remember(detectedFramework) {
-        when (detectedFramework?.lowercase()) {
-            "flask" -> Color(0xFF333333)
-            "django" -> Color(0xFF0C4B33)
-            "fastapi" -> Color(0xFF009688)
-            "tornado" -> Color(0xFF4285F4)
-            else -> Color(0xFF3776AB) // Python 默认蓝
-        }
-    }
+    val accentColor = MaterialTheme.colorScheme.onSurface
 
     WtaCreateFlowScaffold(
         title = Strings.createPythonApp,
@@ -417,7 +409,7 @@ fun CreatePythonAppScreen(
             // ========== 1. 框架品牌化 Hero 区域 ==========
             PythonHeroSection(
                 detectedFramework = detectedFramework,
-                frameworkColor = frameworkColor,
+                accentColor = accentColor,
                 pythonVersion = pythonVersion
             )
 
@@ -509,19 +501,19 @@ fun CreatePythonAppScreen(
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             shape = MaterialTheme.shapes.small,
-                            color = frameworkColor.copy(alpha = 0.08f)
+                            color = accentColor.copy(alpha = 0.08f)
                         ) {
                             Column(modifier = Modifier.padding(12.dp)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Default.CheckCircle, null, tint = frameworkColor, modifier = Modifier.size(20.dp))
+                                    Icon(Icons.Default.CheckCircle, null, tint = accentColor, modifier = Modifier.size(20.dp))
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text(Strings.pyProjectReady, style = MaterialTheme.typography.bodyMedium, color = frameworkColor)
+                                    Text(Strings.pyProjectReady, style = MaterialTheme.typography.bodyMedium, color = accentColor)
                                 }
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
                                     selectedProjectDir!!.substringAfterLast("/"),
                                     style = MaterialTheme.typography.bodySmall,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.SemiBold
                                 )
                                 if (detectedFramework != null && detectedFramework != "raw") {
                                     Text(
@@ -568,7 +560,7 @@ fun CreatePythonAppScreen(
                 PythonVenvIndicator(
                     venvDetected = venvDetected,
                     venvPath = venvPath,
-                    frameworkColor = frameworkColor
+                    accentColor = accentColor
                 )
 
                 // ========== 6. 依赖面板 ==========
@@ -578,7 +570,17 @@ fun CreatePythonAppScreen(
                         source = requirementsSource,
                         showAll = showAllDeps,
                         onToggleShowAll = { showAllDeps = !showAllDeps },
-                        frameworkColor = frameworkColor
+                        accentColor = accentColor
+                    )
+                }
+
+                // 在 App 内一键 pip install -r requirements.txt
+                if (selectedProjectDir != null && File(selectedProjectDir!!, "requirements.txt").exists()) {
+                    InstallProjectDepsCard(
+                        kind = DepsKind.PYTHON,
+                        projectDir = selectedProjectDir,
+                        accentColor = accentColor,
+                        onOpenBuildEnvScreen = onOpenLinuxEnv,
                     )
                 }
 
@@ -587,7 +589,7 @@ fun CreatePythonAppScreen(
                     serverType = serverType,
                     detectedFramework = detectedFramework,
                     onServerTypeChange = { serverType = it },
-                    frameworkColor = frameworkColor
+                    accentColor = accentColor
                 )
 
                 // ========== 8. WSGI/ASGI 模块配置 ==========
@@ -662,7 +664,7 @@ fun CreatePythonAppScreen(
 @Composable
 private fun PythonHeroSection(
     detectedFramework: String?,
-    frameworkColor: Color,
+    accentColor: Color,
     pythonVersion: String?
 ) {
     val title = if (detectedFramework != null && detectedFramework != "raw")
@@ -670,14 +672,14 @@ private fun PythonHeroSection(
     else Strings.pyHeroTitle
 
     val tags = buildList {
-        pythonVersion?.let { add("Python $it" to frameworkColor) }
+        pythonVersion?.let { add("Python $it" to accentColor) }
     }
 
     RuntimeHeroSection(
         icon = Icons.Outlined.Code,
         title = title,
         subtitle = Strings.pyHeroDesc,
-        brandColor = frameworkColor,
+        brandColor = accentColor,
         tags = tags
     )
 }
@@ -689,12 +691,12 @@ private fun PythonHeroSection(
 private fun PythonVenvIndicator(
     venvDetected: Boolean,
     venvPath: String?,
-    frameworkColor: Color
+    accentColor: Color
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        color = if (venvDetected) frameworkColor.copy(alpha = 0.08f)
+        color = if (venvDetected) accentColor.copy(alpha = 0.08f)
         else if (com.webtoapp.ui.theme.LocalIsDarkTheme.current) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.72f)
     ) {
         Row(
@@ -704,7 +706,7 @@ private fun PythonVenvIndicator(
             Icon(
                 if (venvDetected) Icons.Outlined.CheckCircle else Icons.Outlined.Info,
                 null,
-                tint = if (venvDetected) frameworkColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = if (venvDetected) accentColor else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(12.dp))
@@ -713,7 +715,7 @@ private fun PythonVenvIndicator(
                     text = Strings.pyVenvDetected,
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold,
-                    color = if (venvDetected) frameworkColor else MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (venvDetected) accentColor else MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
                     text = if (venvDetected) "${Strings.pyVenvFound} ($venvPath/)"
@@ -725,14 +727,14 @@ private fun PythonVenvIndicator(
             if (venvDetected) {
                 Surface(
                     shape = RoundedCornerShape(4.dp),
-                    color = frameworkColor.copy(alpha = 0.12f)
+                    color = accentColor.copy(alpha = 0.12f)
                 ) {
                     Text(
                         text = "venv",
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                         style = MaterialTheme.typography.labelSmall,
                         fontFamily = FontFamily.Monospace,
-                        color = frameworkColor
+                        color = accentColor
                     )
                 }
             }
@@ -749,25 +751,25 @@ private fun PythonRequirementsCard(
     source: String,
     showAll: Boolean,
     onToggleShowAll: () -> Unit,
-    frameworkColor: Color
+    accentColor: Color
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             RuntimeSectionHeader(
                 icon = Icons.Outlined.Extension,
                 title = Strings.pyRequirements,
-                brandColor = frameworkColor
+                brandColor = accentColor
             ) {
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = frameworkColor.copy(alpha = 0.1f)
+                    color = accentColor.copy(alpha = 0.1f)
                 ) {
                     Text(
                         text = "${requirements.size}",
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelMedium,
-                        color = frameworkColor,
-                        fontWeight = FontWeight.Bold
+                        color = accentColor,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
             }
@@ -822,7 +824,7 @@ private fun PythonServerTypeCard(
     serverType: String,
     detectedFramework: String?,
     onServerTypeChange: (String) -> Unit,
-    frameworkColor: Color
+    accentColor: Color
 ) {
     val recommendedServer = when (detectedFramework?.lowercase()) {
         "fastapi" -> "uvicorn"
@@ -846,7 +848,7 @@ private fun PythonServerTypeCard(
                 selected = serverType == "builtin",
                 isRecommended = recommendedServer == null,
                 onClick = { onServerTypeChange("builtin") },
-                accentColor = frameworkColor
+                accentColor = accentColor
             )
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -857,7 +859,7 @@ private fun PythonServerTypeCard(
                 selected = serverType == "gunicorn",
                 isRecommended = recommendedServer == "gunicorn",
                 onClick = { onServerTypeChange("gunicorn") },
-                accentColor = frameworkColor
+                accentColor = accentColor
             )
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -868,7 +870,7 @@ private fun PythonServerTypeCard(
                 selected = serverType == "uvicorn",
                 isRecommended = recommendedServer == "uvicorn",
                 onClick = { onServerTypeChange("uvicorn") },
-                accentColor = frameworkColor
+                accentColor = accentColor
             )
         }
     }
@@ -1003,7 +1005,7 @@ private fun PythonDjangoCard(
             RuntimeSectionHeader(
                 icon = Icons.Outlined.Settings,
                 title = Strings.pyDjangoSettings,
-                brandColor = Color(0xFF0C4B33)
+                brandColor = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -1029,15 +1031,15 @@ private fun PythonDjangoCard(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
-                color = Color(0xFF0C4B33).copy(alpha = 0.06f)
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
             ) {
                 Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Outlined.Info, null, tint = Color(0xFF0C4B33), modifier = Modifier.size(16.dp))
+                    Icon(Icons.Outlined.Info, null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         Strings.pyDjangoAllowedHosts,
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF0C4B33)
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -1058,21 +1060,21 @@ private fun PythonFastapiCard(
             RuntimeSectionHeader(
                 icon = Icons.Outlined.Api,
                 title = Strings.pyFastapiConfig,
-                brandColor = Color(0xFF009688)
+                brandColor = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(12.dp))
 
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
-                color = Color(0xFF009688).copy(alpha = 0.06f)
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text(
                         Strings.pyFastapiDocsEndpoint,
                         style = MaterialTheme.typography.bodySmall,
                         fontFamily = FontFamily.Monospace,
-                        color = Color(0xFF009688)
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
@@ -1095,8 +1097,7 @@ private fun PythonFrameworkTipCard(framework: String?) {
 
     val tipText = Strings.pyFrameworkTip(framework)
     val tipColor = when (framework?.lowercase()) {
-        "flask" -> Color(0xFF333333)
-        "tornado" -> Color(0xFF4285F4)
+        "flask", "tornado" -> MaterialTheme.colorScheme.onSurface
         else -> null
     }
     val tipData = if (tipText != null && tipColor != null) FrameworkTip(tipText, tipColor) else null

@@ -604,6 +604,7 @@ data class BuildResult(
  */
 enum class BuildMethod {
     EXISTING_DIST,  // 使用已有的构建输出
+    NODE_PACKAGE_SCRIPT, // 使用真实 Node 包管理器与 package script
     ESBUILD,        // 使用 esbuild
     PURE_KOTLIN     // 使用纯 Kotlin 打包器
 }

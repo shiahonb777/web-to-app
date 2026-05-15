@@ -81,6 +81,24 @@ fun MultiWebShellMode(
             val projectId = multiWebConfig.projectId
             if (projectId.isNotBlank()) {
                 val projectDir = java.io.File(context.filesDir, "html_projects/$projectId")
+                val marker = java.io.File(projectDir, ".multiweb_extracted")
+                val extractionToken = buildExtractionToken(
+                    context = context,
+                    scope = "multiweb",
+                    configVersionCode = config.versionCode,
+                    extra = "${multiWebConfig.projectId}|${sites.map { "${it.id}:${it.localFilePath}:${it.type}:${it.enabled}" }}"
+                )
+                val bundledAssetPath = "html_projects/$projectId"
+                val bundledChildren = try {
+                    context.assets.list(bundledAssetPath)
+                } catch (_: Exception) {
+                    null
+                }
+                if (!bundledChildren.isNullOrEmpty() && shouldReextractAssets(marker, extractionToken)) {
+                    projectDir.deleteRecursively()
+                    extractAssetsRecursive(context, bundledAssetPath, projectDir)
+                    writeExtractionMarker(marker, extractionToken)
+                }
                 if (projectDir.exists()) {
                     localBaseUrl = httpServer.start(projectDir)
                 }

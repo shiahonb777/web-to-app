@@ -375,7 +375,7 @@ fun ThinkingStepItem(
                     Text(
                         "$step",
                         style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = if (isActive) {
                             MaterialTheme.colorScheme.tertiary
                         } else {

@@ -1,5 +1,6 @@
 package com.webtoapp.core.background
 
+import android.app.AlarmManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -12,6 +13,7 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.os.PowerManager
+import android.os.SystemClock
 import com.webtoapp.core.logging.AppLogger
 import androidx.core.app.NotificationCompat
 import com.webtoapp.R
@@ -31,6 +33,10 @@ class BackgroundRunService : Service() {
         private const val WAKELOCK_TIMEOUT_MS = 4 * 60 * 60 * 1000L
         private const val WAKELOCK_RENEWAL_INTERVAL_MS = 3 * 60 * 60 * 1000L
         private const val ACTION_STOP = "com.webtoapp.action.STOP_BACKGROUND_RUN"
+        private const val ACTION_RESTART = "com.webtoapp.action.RESTART_BACKGROUND_RUN"
+        private const val PREFS_NAME = "background_run_config"
+        private const val RESTART_REQUEST_CODE = 41001
+        private const val RESTART_DELAY_MS = 60_000L
 
         private const val EXTRA_APP_NAME = "app_name"
         private const val EXTRA_NOTIFICATION_TITLE = "notification_title"
@@ -81,6 +87,8 @@ class BackgroundRunService : Service() {
 
         fun stop(context: Context) {
             try {
+                clearPersistedConfig(context)
+                cancelRestart(context)
                 context.stopService(Intent(context, BackgroundRunService::class.java))
                 AppLogger.w(TAG, "后台运行服务停止请求已发送")
             } catch (e: Exception) {
@@ -118,11 +126,109 @@ class BackgroundRunService : Service() {
                 AppLogger.e(TAG, "请求忽略电池优化失败", e)
             }
         }
+
+        private fun persistConfig(
+            context: Context,
+            appName: String,
+            notificationTitle: String?,
+            notificationContent: String?,
+            showNotification: Boolean,
+            keepCpuAwake: Boolean
+        ) {
+            context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+                .putString(EXTRA_APP_NAME, appName)
+                .putString(EXTRA_NOTIFICATION_TITLE, notificationTitle)
+                .putString(EXTRA_NOTIFICATION_CONTENT, notificationContent)
+                .putBoolean(EXTRA_SHOW_NOTIFICATION, showNotification)
+                .putBoolean(EXTRA_KEEP_CPU_AWAKE, keepCpuAwake)
+                .apply()
+        }
+
+        private fun clearPersistedConfig(context: Context) {
+            context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit().clear().apply()
+        }
+
+        private fun restoreIntent(context: Context): Intent? {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val appName = prefs.getString(EXTRA_APP_NAME, "") ?: ""
+            val showNotification = prefs.getBoolean(EXTRA_SHOW_NOTIFICATION, true)
+            val keepCpuAwake = prefs.getBoolean(EXTRA_KEEP_CPU_AWAKE, true)
+            val notificationTitle = prefs.getString(EXTRA_NOTIFICATION_TITLE, null)
+            val notificationContent = prefs.getString(EXTRA_NOTIFICATION_CONTENT, null)
+
+            if (appName.isBlank() && notificationTitle.isNullOrBlank() && notificationContent.isNullOrBlank()) {
+                return null
+            }
+
+            return Intent(context, BackgroundRunService::class.java).apply {
+                action = ACTION_RESTART
+                putExtra(EXTRA_APP_NAME, appName)
+                putExtra(EXTRA_NOTIFICATION_TITLE, notificationTitle)
+                putExtra(EXTRA_NOTIFICATION_CONTENT, notificationContent)
+                putExtra(EXTRA_SHOW_NOTIFICATION, showNotification)
+                putExtra(EXTRA_KEEP_CPU_AWAKE, keepCpuAwake)
+            }
+        }
+
+        private fun cancelRestart(context: Context) {
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
+            val intent = Intent(context, BackgroundRunService::class.java).apply { action = ACTION_RESTART }
+            val pendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                PendingIntent.getForegroundService(
+                    context,
+                    RESTART_REQUEST_CODE,
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_NO_CREATE
+                )
+            } else {
+                PendingIntent.getService(
+                    context,
+                    RESTART_REQUEST_CODE,
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_NO_CREATE
+                )
+            }
+            pendingIntent?.let {
+                alarmManager.cancel(it)
+                it.cancel()
+            }
+        }
+
+        private fun scheduleRestart(context: Context, reason: String) {
+            val restartIntent = restoreIntent(context) ?: run {
+                AppLogger.w(TAG, "无可恢复配置，跳过后台服务重启调度: $reason")
+                return
+            }
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
+            val pendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                PendingIntent.getForegroundService(
+                    context,
+                    RESTART_REQUEST_CODE,
+                    restartIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+            } else {
+                PendingIntent.getService(
+                    context,
+                    RESTART_REQUEST_CODE,
+                    restartIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+            }
+            val triggerAtMs = SystemClock.elapsedRealtime() + RESTART_DELAY_MS
+            alarmManager.setAndAllowWhileIdle(
+                AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                triggerAtMs,
+                pendingIntent
+            )
+            AppLogger.w(TAG, "已调度后台服务重启: reason=$reason, delay=${RESTART_DELAY_MS}ms")
+        }
     }
 
     private var wakeLock: PowerManager.WakeLock? = null
     private var appName: String = ""
     private var keepCpuAwake: Boolean = true
+    private var allowAutoRestart: Boolean = false
     private val wakeLockRenewalHandler = Handler(Looper.getMainLooper())
     private val wakeLockRenewalRunnable = object : Runnable {
         override fun run() {
@@ -140,22 +246,39 @@ class BackgroundRunService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
         if (intent?.action == ACTION_STOP) {
+            allowAutoRestart = false
+            cancelRestart(this)
+            clearPersistedConfig(this)
             stopSelf()
             return START_NOT_STICKY
         }
 
         AppLogger.w(TAG, "后台运行服务启动")
 
-        appName = intent?.getStringExtra(EXTRA_APP_NAME) ?: ""
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        appName = intent?.getStringExtra(EXTRA_APP_NAME)
+            ?: prefs.getString(EXTRA_APP_NAME, "") ?: ""
         val notificationTitle = intent?.getStringExtra(EXTRA_NOTIFICATION_TITLE)
+            ?: prefs.getString(EXTRA_NOTIFICATION_TITLE, null)
         val notificationContent = intent?.getStringExtra(EXTRA_NOTIFICATION_CONTENT)
-        val showNotification = intent?.getBooleanExtra(EXTRA_SHOW_NOTIFICATION, true) ?: true
-        keepCpuAwake = intent?.getBooleanExtra(EXTRA_KEEP_CPU_AWAKE, true) ?: true
+            ?: prefs.getString(EXTRA_NOTIFICATION_CONTENT, null)
+        val showNotification = when {
+            intent?.hasExtra(EXTRA_SHOW_NOTIFICATION) == true -> intent.getBooleanExtra(EXTRA_SHOW_NOTIFICATION, true)
+            else -> prefs.getBoolean(EXTRA_SHOW_NOTIFICATION, true)
+        }
+        keepCpuAwake = when {
+            intent?.hasExtra(EXTRA_KEEP_CPU_AWAKE) == true -> intent.getBooleanExtra(EXTRA_KEEP_CPU_AWAKE, true)
+            else -> prefs.getBoolean(EXTRA_KEEP_CPU_AWAKE, true)
+        }
+
+        persistConfig(this, appName, notificationTitle, notificationContent, showNotification, keepCpuAwake)
+        cancelRestart(this)
+        allowAutoRestart = true
 
 
         try {
             val notification = createNotification(
-                title = notificationTitle ?: (if (appName.isNotEmpty()) appName else "App") + " ${Strings.appRunningInBackground}",
+                title = notificationTitle ?: (if (appName.isNotEmpty()) appName else Strings.genericAppLabel) + " ${Strings.appRunningInBackground}",
                 content = notificationContent ?: Strings.tapToReturnToApp
             )
 
@@ -188,10 +311,20 @@ class BackgroundRunService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        if (allowAutoRestart) {
+            scheduleRestart(this, "task_removed")
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         AppLogger.w(TAG, "后台运行服务销毁")
 
+        if (allowAutoRestart) {
+            scheduleRestart(this, "service_destroyed")
+        }
         isRunning = false
         wakeLockRenewalHandler.removeCallbacks(wakeLockRenewalRunnable)
         releaseWakeLock()
@@ -201,10 +334,10 @@ class BackgroundRunService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "Background Run",
+                Strings.backgroundRunChannelName,
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "Keep app running in background"
+                description = Strings.backgroundRunChannelDescription
                 setShowBadge(false)
                 enableLights(false)
                 enableVibration(false)

@@ -198,8 +198,9 @@ private fun ActivationDialogHeader(
         label = "pulse"
     )
 
+    val semantic = com.webtoapp.ui.design.WtaColors.semantic
     val iconBgColor = when (result) {
-        is ActivationResult.Success -> Color(0xFF2E7D32)
+        is ActivationResult.Success -> semantic.success
         is ActivationResult.Invalid, is ActivationResult.DeviceMismatch,
         is ActivationResult.Expired, is ActivationResult.UsageExceeded -> MaterialTheme.colorScheme.error
         is ActivationResult.AlreadyActivated -> MaterialTheme.colorScheme.primary
@@ -262,7 +263,7 @@ private fun ActivationDialogHeader(
                 else -> title
             },
             style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center
         )
 
@@ -289,13 +290,14 @@ private fun ActivationDialogHeader(
 
 @Composable
 private fun ActivationResultCard(result: ActivationResult) {
+    val semantic = com.webtoapp.ui.design.WtaColors.semantic
     val (icon, title, message, containerColor, contentColor, suggestion) = when (result) {
         is ActivationResult.Success -> ResultCardData(
             icon = Icons.Filled.CheckCircle,
             title = Strings.activationSuccess,
             message = Strings.activationSuccessDetail,
-            containerColor = Color(0xFF1B5E20).copy(alpha = 0.1f),
-            contentColor = Color(0xFF2E7D32),
+            containerColor = semantic.successContainer,
+            contentColor = semantic.success,
             suggestion = null
         )
         is ActivationResult.Invalid -> ResultCardData(
@@ -318,16 +320,16 @@ private fun ActivationResultCard(result: ActivationResult) {
             icon = Icons.Filled.TimerOff,
             title = Strings.activationCodeExpired,
             message = Strings.expiredDetail,
-            containerColor = Color(0xFFF57F17).copy(alpha = 0.1f),
-            contentColor = Color(0xFFE65100),
+            containerColor = semantic.warningContainer,
+            contentColor = semantic.warning,
             suggestion = Strings.expiredSuggestion
         )
         is ActivationResult.UsageExceeded -> ResultCardData(
             icon = Icons.Filled.Block,
             title = Strings.activationCodeUsageExceeded,
             message = Strings.usageExceededDetail,
-            containerColor = Color(0xFFF57F17).copy(alpha = 0.1f),
-            contentColor = Color(0xFFE65100),
+            containerColor = semantic.warningContainer,
+            contentColor = semantic.warning,
             suggestion = Strings.usageExceededSuggestion
         )
         is ActivationResult.AlreadyActivated -> ResultCardData(
@@ -369,7 +371,7 @@ private fun ActivationResultCard(result: ActivationResult) {
                     Text(
                         text = title,
                         style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = contentColor
                     )
                 }
@@ -417,8 +419,9 @@ private fun ActivationResultCard(result: ActivationResult) {
 @Composable
 private fun EnhancedActivationStatusCard(status: ActivationStatus) {
     val isValid = status.isValid
-    val primaryColor = if (isValid) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error
-    val bgColor = if (isValid) Color(0xFF1B5E20).copy(alpha = 0.08f)
+    val semantic = com.webtoapp.ui.design.WtaColors.semantic
+    val primaryColor = if (isValid) semantic.success else MaterialTheme.colorScheme.error
+    val bgColor = if (isValid) semantic.successContainer
                   else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
 
     Surface(
@@ -449,7 +452,7 @@ private fun EnhancedActivationStatusCard(status: ActivationStatus) {
                     Text(
                         text = if (isValid) Strings.activated else Strings.activationExpired,
                         style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = primaryColor
                     )
                 }
@@ -505,7 +508,7 @@ private fun EnhancedActivationStatusCard(status: ActivationStatus) {
                                     .fillMaxWidth()
                                     .height(6.dp)
                                     .clip(RoundedCornerShape(3.dp)),
-                                color = if (progress > 0.8f) Color(0xFFE65100) else primaryColor,
+                                color = if (progress > 0.8f) semantic.warning else primaryColor,
                                 trackColor = primaryColor.copy(alpha = 0.1f)
                             )
                         }
@@ -536,7 +539,7 @@ private fun EnhancedActivationStatusCard(status: ActivationStatus) {
                         .fillMaxWidth()
                         .height(6.dp)
                         .clip(RoundedCornerShape(3.dp)),
-                    color = if (progress > 0.8f) Color(0xFFE65100) else primaryColor,
+                    color = if (progress > 0.8f) semantic.warning else primaryColor,
                     trackColor = primaryColor.copy(alpha = 0.1f)
                 )
             }

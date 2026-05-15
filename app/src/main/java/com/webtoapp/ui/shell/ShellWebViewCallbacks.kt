@@ -15,6 +15,12 @@ import com.webtoapp.core.shell.ShellConfig
 import com.webtoapp.core.webview.LongPressHandler
 import com.webtoapp.core.webview.WebViewCallbacks
 
+private fun isLocalRuntimeShellUrl(url: String?): Boolean {
+    if (url.isNullOrBlank()) return false
+    return url.startsWith("http://127.0.0.1:", ignoreCase = true) ||
+        url.startsWith("http://localhost:", ignoreCase = true)
+}
+
 
 
 
@@ -45,17 +51,6 @@ fun createShellWebViewCallbacks(
             updateLoading(true)
             updateUrl(url ?: "")
             com.webtoapp.core.shell.ShellLogger.logWebView("开始加载", url ?: "")
-
-
-            webViewRefProvider()?.let { wv ->
-                (context as? ShellActivity)?.cloudSdkManager?.let { sdkManager ->
-                    val code = sdkManager.getRemoteScriptCode("document_start", url ?: "")
-                    if (code.isNotBlank()) {
-                        wv.evaluateJavascript(code, null)
-                        AppLogger.d("ShellActivity", "Injected document_start scripts for: $url")
-                    }
-                }
-            }
         }
 
         override fun onUrlChanged(webView: WebView?, url: String?) {
@@ -72,33 +67,22 @@ fun createShellWebViewCallbacks(
             updateUrl(url ?: "")
             com.webtoapp.core.shell.ShellLogger.logWebView("Loading complete", url ?: "")
             webViewRefProvider()?.let {
+                val isLocalRuntimePage = isLocalRuntimeShellUrl(url)
                 updateNavigation(it.canGoBack(), it.canGoForward())
 
 
-                if (config.translateEnabled) {
+                if (config.translateEnabled && !isLocalRuntimePage) {
                     injectTranslateScript(it, config.translateTargetLanguage, config.translateShowButton)
                 }
 
 
-                longPressHandler.injectLongPressEnhancer(it)
-
-
-                (context as? ShellActivity)?.cloudSdkManager?.let { sdkManager ->
-                    val endCode = sdkManager.getRemoteScriptCode("document_end", url ?: "")
-                    if (endCode.isNotBlank()) {
-                        it.evaluateJavascript(endCode, null)
-                        AppLogger.d("ShellActivity", "Injected document_end scripts for: $url")
-                    }
-
-
-                    val idleCode = sdkManager.getRemoteScriptCode("document_idle", url ?: "")
-                    if (idleCode.isNotBlank()) {
-                        it.postDelayed({
-                            it.evaluateJavascript(idleCode, null)
-                            AppLogger.d("ShellActivity", "Injected document_idle scripts for: $url")
-                        }, 300)
-                    }
+                if (!isLocalRuntimePage) {
+                    longPressHandler.injectLongPressEnhancer(it)
+                } else {
+                    AppLogger.d("ShellActivity", "Skip Shell onPageFinished enhancements for local runtime page: $url")
                 }
+
+
             }
         }
 

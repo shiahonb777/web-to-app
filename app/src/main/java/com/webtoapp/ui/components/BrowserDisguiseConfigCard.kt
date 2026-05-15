@@ -1,6 +1,7 @@
 package com.webtoapp.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import com.webtoapp.ui.design.WtaSwitch
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -142,11 +143,11 @@ fun BrowserDisguiseConfigCard(
     val levelColor by animateColorAsState(
         targetValue = when {
             !enabled -> MaterialTheme.colorScheme.surfaceVariant
-            coverage < 0.3f -> Color(0xFF4CAF50)
-            coverage < 0.5f -> Color(0xFF2196F3)
-            coverage < 0.75f -> Color(0xFF9C27B0)
-            coverage < 0.95f -> Color(0xFFFF5722)
-            else -> Color(0xFFE91E63)
+            coverage < 0.3f -> com.webtoapp.ui.design.WtaColors.semantic.success
+            coverage < 0.5f -> com.webtoapp.ui.design.WtaColors.semantic.info
+            coverage < 0.75f -> MaterialTheme.colorScheme.tertiary
+            coverage < 0.95f -> com.webtoapp.ui.design.WtaColors.semantic.warning
+            else -> com.webtoapp.ui.design.WtaColors.semantic.error
         },
         label = "levelColor"
     )
@@ -227,7 +228,7 @@ fun BrowserDisguiseConfigCard(
                             Text(Strings.browserDisguiseEnable, style = MaterialTheme.typography.bodyLarge)
                             Text(Strings.browserDisguiseEnableDesc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                        PremiumSwitch(
+                        WtaSwitch(
                             checked = enabled,
                             onCheckedChange = {
                                 enabled = it
@@ -259,10 +260,10 @@ fun BrowserDisguiseConfigCard(
                                 presets.forEach { p ->
                                     val isSelected = preset == p
                                     val chipColor = when (p.level) {
-                                        1 -> Color(0xFF4CAF50)
-                                        2 -> Color(0xFF2196F3)
-                                        3 -> Color(0xFF9C27B0)
-                                        4 -> Color(0xFFE91E63)
+                                        1 -> com.webtoapp.ui.design.WtaColors.semantic.success
+                                        2 -> com.webtoapp.ui.design.WtaColors.semantic.info
+                                        3 -> MaterialTheme.colorScheme.tertiary
+                                        4 -> com.webtoapp.ui.design.WtaColors.semantic.error
                                         else -> MaterialTheme.colorScheme.primary
                                     }
 
@@ -479,7 +480,7 @@ private fun VectorSwitch(
                 maxLines = 2
             )
         }
-        PremiumSwitch(
+        WtaSwitch(
             checked = checked,
             onCheckedChange = onCheckedChange
         )
@@ -516,7 +517,7 @@ private fun CoverageDashboard(
                         level,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                         style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = levelColor
                     )
                 }
@@ -550,7 +551,7 @@ private fun CoverageDashboard(
                     Text(
                         "$activeVectors / 22",
                         style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = levelColor
                     )
                 }
@@ -563,7 +564,7 @@ private fun CoverageDashboard(
                     Text(
                         "${"%.0f".format(coverage * 100)}%",
                         style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = levelColor
                     )
                 }

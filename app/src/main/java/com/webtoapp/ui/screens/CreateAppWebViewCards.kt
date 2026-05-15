@@ -26,9 +26,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.painterResource
 import com.webtoapp.R
 import com.webtoapp.core.i18n.Strings
@@ -45,17 +43,7 @@ fun LongPressMenuCard(
     style: LongPressMenuStyle,
     onStyleChange: (LongPressMenuStyle) -> Unit
 ) {
-    var expanded by remember { mutableStateOf(false) }
-
-
-    val contentAlpha by animateFloatAsState(
-        targetValue = if (expanded) 1f else 0f,
-        animationSpec = tween(
-            durationMillis = if (expanded) 400 else 200,
-            easing = FastOutSlowInEasing
-        ),
-        label = "contentAlpha"
-    )
+    val enabled = style != LongPressMenuStyle.DISABLED
 
     data class StyleOption(
         val style: LongPressMenuStyle,
@@ -66,33 +54,34 @@ fun LongPressMenuCard(
     )
 
     val styleOptions = listOf(
-        StyleOption(LongPressMenuStyle.FULL, Strings.longPressMenuStyleFull, Strings.longPressMenuStyleFullDesc, Icons.AutoMirrored.Outlined.ViewList, Color(0xFF6366F1)),
-        StyleOption(LongPressMenuStyle.SIMPLE, Strings.longPressMenuStyleSimple, Strings.longPressMenuStyleSimpleDesc, Icons.Outlined.ViewAgenda, Color(0xFF22C55E)),
-        StyleOption(LongPressMenuStyle.IOS, Strings.longPressMenuStyleIos, Strings.longPressMenuStyleIosDesc, Icons.Outlined.PhoneIphone, Color(0xFF3B82F6)),
-        StyleOption(LongPressMenuStyle.FLOATING, Strings.longPressMenuStyleFloating, Strings.longPressMenuStyleFloatingDesc, Icons.Outlined.BubbleChart, Color(0xFFF97316)),
-        StyleOption(LongPressMenuStyle.CONTEXT, Strings.longPressMenuStyleContext, Strings.longPressMenuStyleContextDesc, Icons.Outlined.Mouse, Color(0xFF8B5CF6)),
-        StyleOption(LongPressMenuStyle.DISABLED, Strings.longPressMenuStyleDisabled, Strings.longPressMenuStyleDisabledDesc, Icons.Outlined.Block, Color(0xFF9CA3AF))
+        StyleOption(LongPressMenuStyle.FULL, Strings.longPressMenuStyleFull, Strings.longPressMenuStyleFullDesc, Icons.AutoMirrored.Outlined.ViewList, com.webtoapp.ui.theme.AppColors.NeutralAccent),
+        StyleOption(LongPressMenuStyle.SIMPLE, Strings.longPressMenuStyleSimple, Strings.longPressMenuStyleSimpleDesc, Icons.Outlined.ViewAgenda, com.webtoapp.ui.theme.AppColors.NeutralAccent),
+        StyleOption(LongPressMenuStyle.IOS, Strings.longPressMenuStyleIos, Strings.longPressMenuStyleIosDesc, Icons.Outlined.PhoneIphone, com.webtoapp.ui.theme.AppColors.NeutralAccent),
+        StyleOption(LongPressMenuStyle.FLOATING, Strings.longPressMenuStyleFloating, Strings.longPressMenuStyleFloatingDesc, Icons.Outlined.BubbleChart, com.webtoapp.ui.theme.AppColors.NeutralAccent),
+        StyleOption(LongPressMenuStyle.CONTEXT, Strings.longPressMenuStyleContext, Strings.longPressMenuStyleContextDesc, Icons.Outlined.Mouse, com.webtoapp.ui.theme.AppColors.NeutralAccent)
     )
 
     val selectedOption = styleOptions.find { it.style == style } ?: styleOptions[0]
 
     WtaSettingCard {
-            WtaChoiceRow(
-                title = Strings.longPressMenuSettings,
-                subtitle = selectedOption.name,
+            WtaToggleRow(
                 icon = Icons.AutoMirrored.Outlined.ListAlt,
-                value = if (expanded) Strings.collapse else Strings.expand,
-                onClick = { expanded = !expanded }
+                title = Strings.longPressMenuSettings,
+                checked = enabled,
+                onCheckedChange = { checked ->
+                    onStyleChange(
+                        if (checked) LongPressMenuStyle.FULL
+                        else LongPressMenuStyle.DISABLED
+                    )
+                }
             )
 
             AnimatedVisibility(
-                visible = expanded,
+                visible = enabled,
                 enter = CardExpandTransition,
                 exit = CardCollapseTransition
             ) {
                 Column(
-                    modifier = Modifier
-                        .graphicsLayer { alpha = contentAlpha },
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     WtaSectionDivider()
@@ -538,9 +527,10 @@ fun BrowserAdvancedConfigCard(
         Column {
             WtaChoiceRow(
                 title = Strings.advancedSettings,
-                subtitle = Strings.webViewAdvancedConfig,
+                subtitle = null,
                 icon = Icons.Outlined.SettingsApplications,
-                value = if (expanded) Strings.collapse else Strings.expand,
+                value = "",
+                isExpanded = expanded,
                 onClick = { expanded = !expanded }
             )
 
@@ -550,142 +540,153 @@ fun BrowserAdvancedConfigCard(
                 exit = CardCollapseTransition
             ) {
                 Column(
-                    modifier = Modifier.padding(top = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                    modifier = Modifier.padding(
+                        horizontal = WtaSpacing.RowHorizontal,
+                        vertical = WtaSpacing.ContentGap
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(WtaSpacing.SectionGap)
                 ) {
 
-                    AdvancedSettingsSection(
+                    WtaSection(
                         title = Strings.sectionWebEngine,
-                        icon = Icons.Outlined.Memory
+                        headerStyle = WtaSectionHeaderStyle.Quiet
                     ) {
-                        SettingsSwitch(
-                            title = "JavaScript",
-                            subtitle = Strings.enableJavaScript,
-                            checked = config.javaScriptEnabled,
-                            onCheckedChange = { onConfigChange(config.copy(javaScriptEnabled = it)) }
-                        )
-
-                        SettingsSwitch(
-                            title = Strings.domStorageSetting,
-                            subtitle = Strings.domStorageSettingHint,
-                            checked = config.domStorageEnabled,
-                            onCheckedChange = { onConfigChange(config.copy(domStorageEnabled = it)) }
-                        )
-
-                        SettingsSwitch(
-                            title = Strings.crossOriginIsolationSetting,
-                            subtitle = Strings.crossOriginIsolationSettingHint,
-                            checked = config.enableCrossOriginIsolation,
-                            onCheckedChange = { onConfigChange(config.copy(enableCrossOriginIsolation = it)) }
-                        )
+                        WtaSettingCard {
+                            WtaToggleRow(
+                                title = "JavaScript",
+                                subtitle = Strings.enableJavaScript,
+                                checked = config.javaScriptEnabled,
+                                onCheckedChange = { onConfigChange(config.copy(javaScriptEnabled = it)) }
+                            )
+                            WtaSectionDivider()
+                            WtaToggleRow(
+                                title = Strings.domStorageSetting,
+                                subtitle = Strings.domStorageSettingHint,
+                                checked = config.domStorageEnabled,
+                                onCheckedChange = { onConfigChange(config.copy(domStorageEnabled = it)) }
+                            )
+                            WtaSectionDivider()
+                            WtaToggleRow(
+                                title = Strings.crossOriginIsolationSetting,
+                                subtitle = Strings.crossOriginIsolationSettingHint,
+                                checked = config.enableCrossOriginIsolation,
+                                onCheckedChange = { onConfigChange(config.copy(enableCrossOriginIsolation = it)) }
+                            )
+                        }
                     }
 
-
-                    AdvancedSettingsSection(
+                    WtaSection(
                         title = Strings.sectionContentDisplay,
-                        icon = Icons.Outlined.Visibility
+                        headerStyle = WtaSectionHeaderStyle.Quiet
                     ) {
-                        SettingsSwitch(
-                            title = Strings.zoomSetting,
-                            subtitle = Strings.zoomSettingHint,
-                            checked = config.zoomEnabled,
-                            onCheckedChange = { onConfigChange(config.copy(zoomEnabled = it)) }
-                        )
-
-                        SettingsSwitch(
-                            title = Strings.fullscreenVideoSetting,
-                            subtitle = Strings.fullscreenVideoSettingHint,
-                            checked = config.fullscreenEnabled,
-                            onCheckedChange = { onConfigChange(config.copy(fullscreenEnabled = it)) }
-                        )
-
-
+                        WtaSettingCard {
+                            WtaToggleRow(
+                                title = Strings.zoomSetting,
+                                subtitle = Strings.zoomSettingHint,
+                                checked = config.zoomEnabled,
+                                onCheckedChange = { onConfigChange(config.copy(zoomEnabled = it)) }
+                            )
+                            WtaSectionDivider()
+                            WtaToggleRow(
+                                title = Strings.fullscreenVideoSetting,
+                                subtitle = Strings.fullscreenVideoSettingHint,
+                                checked = config.fullscreenEnabled,
+                                onCheckedChange = { onConfigChange(config.copy(fullscreenEnabled = it)) }
+                            )
+                        }
                         ViewportModeSelector(config = config, onConfigChange = onConfigChange)
                     }
 
-
-                    AdvancedSettingsSection(
+                    WtaSection(
                         title = Strings.sectionNavigation,
-                        icon = Icons.Outlined.Navigation
+                        headerStyle = WtaSectionHeaderStyle.Quiet
                     ) {
-                        SettingsSwitch(
-                            title = Strings.swipeRefreshSetting,
-                            subtitle = Strings.swipeRefreshSettingHint,
-                            checked = config.swipeRefreshEnabled,
-                            onCheckedChange = { onConfigChange(config.copy(swipeRefreshEnabled = it)) }
-                        )
-
-                        SettingsSwitch(
-                            title = Strings.externalLinksSetting,
-                            subtitle = Strings.externalLinksSettingHint,
-                            checked = config.openExternalLinks,
-                            onCheckedChange = { onConfigChange(config.copy(openExternalLinks = it)) }
-                        )
-
-                        SettingsSwitch(
-                            title = Strings.popupBlockerSetting,
-                            subtitle = Strings.popupBlockerSettingHint,
-                            checked = config.popupBlockerEnabled,
-                            onCheckedChange = { onConfigChange(config.copy(popupBlockerEnabled = it)) }
-                        )
-
-                        SettingsSwitch(
-                            title = Strings.showFloatingBackButtonLabel,
-                            subtitle = Strings.showFloatingBackButtonHint,
-                            checked = config.showFloatingBackButton,
-                            onCheckedChange = { onConfigChange(config.copy(showFloatingBackButton = it)) }
-                        )
+                        WtaSettingCard {
+                            WtaToggleRow(
+                                title = Strings.swipeRefreshSetting,
+                                subtitle = Strings.swipeRefreshSettingHint,
+                                checked = config.swipeRefreshEnabled,
+                                onCheckedChange = { onConfigChange(config.copy(swipeRefreshEnabled = it)) }
+                            )
+                            WtaSectionDivider()
+                            WtaToggleRow(
+                                title = Strings.externalLinksSetting,
+                                subtitle = Strings.externalLinksSettingHint,
+                                checked = config.openExternalLinks,
+                                onCheckedChange = { onConfigChange(config.copy(openExternalLinks = it)) }
+                            )
+                            WtaSectionDivider()
+                            WtaToggleRow(
+                                title = Strings.popupBlockerSetting,
+                                subtitle = Strings.popupBlockerSettingHint,
+                                checked = config.popupBlockerEnabled,
+                                onCheckedChange = { onConfigChange(config.copy(popupBlockerEnabled = it)) }
+                            )
+                            WtaSectionDivider()
+                            WtaToggleRow(
+                                title = Strings.showFloatingBackButtonLabel,
+                                subtitle = Strings.showFloatingBackButtonHint,
+                                checked = config.showFloatingBackButton,
+                                onCheckedChange = { onConfigChange(config.copy(showFloatingBackButton = it)) }
+                            )
+                        }
                     }
 
-
-                    AdvancedSettingsSection(
+                    WtaSection(
                         title = Strings.sectionOfflinePerformance,
-                        icon = Icons.Outlined.CloudOff
+                        headerStyle = WtaSectionHeaderStyle.Quiet
                     ) {
-                        SettingsSwitch(
-                            title = Strings.pwaOfflineTitle,
-                            subtitle = Strings.pwaOfflineSubtitle,
-                            checked = config.pwaOfflineEnabled,
-                            onCheckedChange = { onConfigChange(config.copy(pwaOfflineEnabled = it)) }
-                        )
+                        WtaSettingCard {
+                            WtaToggleRow(
+                                title = Strings.pwaOfflineTitle,
+                                subtitle = Strings.pwaOfflineSubtitle,
+                                checked = config.pwaOfflineEnabled,
+                                onCheckedChange = { onConfigChange(config.copy(pwaOfflineEnabled = it)) }
+                            )
 
-                        AnimatedVisibility(
-                            visible = config.pwaOfflineEnabled,
-                            enter = CardExpandTransition,
-                            exit = CardCollapseTransition
-                        ) {
-                            Column(modifier = Modifier.padding(start = 8.dp, top = 4.dp, bottom = 4.dp)) {
-                                Text(
-                                    text = Strings.pwaOfflineStrategyLabel,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.padding(bottom = 4.dp)
-                                )
+                            AnimatedVisibility(
+                                visible = config.pwaOfflineEnabled,
+                                enter = CardExpandTransition,
+                                exit = CardCollapseTransition
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(
+                                        horizontal = WtaSpacing.RowHorizontal,
+                                        vertical = WtaSpacing.ContentGap
+                                    )
+                                ) {
+                                    Text(
+                                        text = Strings.pwaOfflineStrategyLabel,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.padding(bottom = 4.dp)
+                                    )
 
-                                val strategies = listOf(
-                                    "NETWORK_FIRST" to Strings.pwaStrategyNetworkFirst,
-                                    "CACHE_FIRST" to Strings.pwaStrategyCacheFirst,
-                                    "STALE_WHILE_REVALIDATE" to Strings.pwaStrategyStaleWhileRevalidate
-                                )
+                                    val strategies = listOf(
+                                        "NETWORK_FIRST" to Strings.pwaStrategyNetworkFirst,
+                                        "CACHE_FIRST" to Strings.pwaStrategyCacheFirst,
+                                        "STALE_WHILE_REVALIDATE" to Strings.pwaStrategyStaleWhileRevalidate
+                                    )
 
-                                strategies.forEach { (value, label) ->
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clip(MaterialTheme.shapes.small)
-                                            .clickable { onConfigChange(config.copy(pwaOfflineStrategy = value)) }
-                                            .padding(vertical = 4.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        RadioButton(
-                                            selected = config.pwaOfflineStrategy == value,
-                                            onClick = { onConfigChange(config.copy(pwaOfflineStrategy = value)) }
-                                        )
-                                        Spacer(Modifier.width(4.dp))
-                                        Text(
-                                            text = label,
-                                            style = MaterialTheme.typography.bodySmall
-                                        )
+                                    strategies.forEach { (value, label) ->
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clip(MaterialTheme.shapes.small)
+                                                .clickable { onConfigChange(config.copy(pwaOfflineStrategy = value)) }
+                                                .padding(vertical = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            RadioButton(
+                                                selected = config.pwaOfflineStrategy == value,
+                                                onClick = { onConfigChange(config.copy(pwaOfflineStrategy = value)) }
+                                            )
+                                            Spacer(Modifier.width(4.dp))
+                                            Text(
+                                                text = label,
+                                                style = MaterialTheme.typography.bodySmall
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -697,17 +698,14 @@ fun BrowserAdvancedConfigCard(
                         )
                     }
 
-
-                    AdvancedSettingsSection(
+                    WtaSection(
                         title = Strings.sectionDeveloper,
-                        icon = Icons.Outlined.Code
+                        headerStyle = WtaSectionHeaderStyle.Quiet
                     ) {
                         KeyboardAdjustModeCard(
                             mode = config.keyboardAdjustMode,
                             onModeChange = { onConfigChange(config.copy(keyboardAdjustMode = it)) }
                         )
-
-                        Spacer(modifier = Modifier.height(4.dp))
 
                         UserScriptsSection(
                             scripts = config.injectScripts,
@@ -716,226 +714,301 @@ fun BrowserAdvancedConfigCard(
                     }
 
 
-                    AdvancedSettingsSection(
+                    WtaSection(
                         title = Strings.proxySectionTitle,
-                        icon = Icons.Outlined.VpnKey
+                        description = Strings.proxySectionSubtitle,
+                        headerStyle = WtaSectionHeaderStyle.Quiet
                     ) {
-                        Text(
-                            text = Strings.proxySectionSubtitle,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-
-                        Text(
-                            text = Strings.proxyModeLabel,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
-
-                        @OptIn(ExperimentalLayoutApi::class)
-                        FlowRow(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        ) {
-                            val proxyModes = listOf(
-                                "NONE" to Strings.proxyModeNone,
-                                "STATIC" to Strings.proxyModeStatic,
-                                "PAC" to Strings.proxyModePac
-                            )
-                            proxyModes.forEach { (mode, label) ->
-                                FilterChip(
-                                    selected = config.proxyMode == mode,
-                                    onClick = { onConfigChange(config.copy(proxyMode = mode)) },
-                                    label = { Text(label, style = MaterialTheme.typography.bodySmall) },
-                                    leadingIcon = if (config.proxyMode == mode) {{
-                                        Icon(
-                                            Icons.Filled.Check,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                    }} else null
+                        // 代理模式选择
+                        WtaSettingCard {
+                            Column(
+                                modifier = Modifier.padding(
+                                    horizontal = WtaSpacing.RowHorizontal,
+                                    vertical = WtaSpacing.ContentGap
                                 )
+                            ) {
+                                Text(
+                                    text = Strings.proxyModeLabel,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(bottom = 4.dp)
+                                )
+
+                                @OptIn(ExperimentalLayoutApi::class)
+                                FlowRow(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    val proxyModes = listOf(
+                                        "NONE" to Strings.proxyModeNone,
+                                        "STATIC" to Strings.proxyModeStatic,
+                                        "PAC" to Strings.proxyModePac
+                                    )
+                                    proxyModes.forEach { (mode, label) ->
+                                        FilterChip(
+                                            selected = config.proxyMode == mode,
+                                            onClick = { onConfigChange(config.copy(proxyMode = mode)) },
+                                            label = { Text(label, style = MaterialTheme.typography.bodySmall) },
+                                            leadingIcon = if (config.proxyMode == mode) {{
+                                                Icon(
+                                                    Icons.Filled.Check,
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                            }} else null
+                                        )
+                                    }
+                                }
                             }
                         }
 
-
+                        // 静态代理配置
                         AnimatedVisibility(
                             visible = config.proxyMode == "STATIC",
                             enter = CardExpandTransition,
                             exit = CardCollapseTransition
                         ) {
-                            Column(modifier = Modifier.padding(start = 8.dp, top = 4.dp, bottom = 4.dp)) {
-                                Text(
-                                    text = Strings.proxyTypeLabel,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.padding(bottom = 4.dp)
-                                )
-                                @OptIn(ExperimentalLayoutApi::class)
-                                FlowRow(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    modifier = Modifier.padding(bottom = 8.dp)
+                            WtaSettingCard {
+                                Column(
+                                    modifier = Modifier.padding(
+                                        horizontal = WtaSpacing.RowHorizontal,
+                                        vertical = WtaSpacing.ContentGap
+                                    ),
+                                    verticalArrangement = Arrangement.spacedBy(WtaSpacing.ContentGap)
                                 ) {
-                                    listOf("HTTP", "HTTPS", "SOCKS5").forEach { type ->
-                                        FilterChip(
-                                            selected = config.proxyType == type,
-                                            onClick = { onConfigChange(config.copy(proxyType = type)) },
-                                            label = { Text(type, style = MaterialTheme.typography.bodySmall) }
-                                        )
-                                    }
-                                }
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    PremiumTextField(
-                                        value = config.proxyHost,
-                                        onValueChange = { onConfigChange(config.copy(proxyHost = it.trim())) },
-                                        modifier = Modifier.weight(1f),
-                                        label = { Text(Strings.proxyHostLabel) },
-                                        placeholder = { Text(Strings.proxyHostHint) },
-                                        singleLine = true,
-                                        textStyle = MaterialTheme.typography.bodySmall
+                                    Text(
+                                        text = Strings.proxyTypeLabel,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.primary
                                     )
-                                    PremiumTextField(
-                                        value = if (config.proxyPort > 0) config.proxyPort.toString() else "",
-                                        onValueChange = { input ->
-                                            val port = input.filter { it.isDigit() }.take(5).toIntOrNull() ?: 0
-                                            onConfigChange(config.copy(proxyPort = port))
-                                        },
-                                        modifier = Modifier.width(100.dp),
-                                        label = { Text(Strings.proxyPortLabel) },
-                                        placeholder = { Text(Strings.proxyPortHint) },
-                                        singleLine = true,
-                                        textStyle = MaterialTheme.typography.bodySmall
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.height(8.dp))
-
-
-                                AnimatedVisibility(
-                                    visible = config.proxyType == "SOCKS5" || config.proxyType == "HTTPS",
-                                    enter = CardExpandTransition,
-                                    exit = CardCollapseTransition
-                                ) {
-                                    Column {
-                                        Text(
-                                            text = Strings.proxyAuthLabel,
-                                            style = MaterialTheme.typography.labelMedium,
-                                            color = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.padding(bottom = 4.dp, top = 4.dp)
-                                        )
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                        ) {
-                                            PremiumTextField(
-                                                value = config.proxyUsername,
-                                                onValueChange = { onConfigChange(config.copy(proxyUsername = it.trim())) },
-                                                modifier = Modifier.weight(1f),
-                                                label = { Text(Strings.proxyUsernameLabel) },
-                                                singleLine = true,
-                                                textStyle = MaterialTheme.typography.bodySmall
-                                            )
-                                            PremiumTextField(
-                                                value = config.proxyPassword,
-                                                onValueChange = { onConfigChange(config.copy(proxyPassword = it)) },
-                                                modifier = Modifier.weight(1f),
-                                                label = { Text(Strings.proxyPasswordLabel) },
-                                                singleLine = true,
-                                                textStyle = MaterialTheme.typography.bodySmall
+                                    @OptIn(ExperimentalLayoutApi::class)
+                                    FlowRow(
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        listOf("HTTP", "HTTPS", "SOCKS5").forEach { type ->
+                                            FilterChip(
+                                                selected = config.proxyType == type,
+                                                onClick = { onConfigChange(config.copy(proxyType = type)) },
+                                                label = { Text(type, style = MaterialTheme.typography.bodySmall) }
                                             )
                                         }
-                                        Spacer(modifier = Modifier.height(8.dp))
                                     }
-                                }
 
-                                var bypassText by remember(config.proxyBypassRules) {
-                                    mutableStateOf(config.proxyBypassRules.joinToString("\n"))
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        PremiumTextField(
+                                            value = config.proxyHost,
+                                            onValueChange = { onConfigChange(config.copy(proxyHost = it.trim())) },
+                                            modifier = Modifier.weight(1f),
+                                            label = { Text(Strings.proxyHostLabel) },
+                                            placeholder = { Text(Strings.proxyHostHint) },
+                                            singleLine = true,
+                                            textStyle = MaterialTheme.typography.bodySmall
+                                        )
+                                        PremiumTextField(
+                                            value = if (config.proxyPort > 0) config.proxyPort.toString() else "",
+                                            onValueChange = { input ->
+                                                val port = input.filter { it.isDigit() }.take(5).toIntOrNull() ?: 0
+                                                onConfigChange(config.copy(proxyPort = port))
+                                            },
+                                            modifier = Modifier.width(100.dp),
+                                            label = { Text(Strings.proxyPortLabel) },
+                                            placeholder = { Text(Strings.proxyPortHint) },
+                                            singleLine = true,
+                                            textStyle = MaterialTheme.typography.bodySmall
+                                        )
+                                    }
+
+                                    AnimatedVisibility(
+                                        visible = config.proxyType == "SOCKS5" || config.proxyType == "HTTPS",
+                                        enter = CardExpandTransition,
+                                        exit = CardCollapseTransition
+                                    ) {
+                                        Column(verticalArrangement = Arrangement.spacedBy(WtaSpacing.ContentGap)) {
+                                            Text(
+                                                text = Strings.proxyAuthLabel,
+                                                style = MaterialTheme.typography.labelMedium,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                            ) {
+                                                PremiumTextField(
+                                                    value = config.proxyUsername,
+                                                    onValueChange = { onConfigChange(config.copy(proxyUsername = it.trim())) },
+                                                    modifier = Modifier.weight(1f),
+                                                    label = { Text(Strings.proxyUsernameLabel) },
+                                                    singleLine = true,
+                                                    textStyle = MaterialTheme.typography.bodySmall
+                                                )
+                                                PremiumTextField(
+                                                    value = config.proxyPassword,
+                                                    onValueChange = { onConfigChange(config.copy(proxyPassword = it)) },
+                                                    modifier = Modifier.weight(1f),
+                                                    label = { Text(Strings.proxyPasswordLabel) },
+                                                    singleLine = true,
+                                                    textStyle = MaterialTheme.typography.bodySmall
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    var bypassText by remember(config.proxyBypassRules) {
+                                        mutableStateOf(config.proxyBypassRules.joinToString("\n"))
+                                    }
+                                    Text(
+                                        text = Strings.proxyBypassLabel,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Text(
+                                        text = Strings.proxyBypassHint,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    PremiumTextField(
+                                        value = bypassText,
+                                        onValueChange = { newText ->
+                                            bypassText = newText
+                                            val rules = newText.split("\n")
+                                                .map { it.trim() }
+                                                .filter { it.isNotBlank() }
+                                            onConfigChange(config.copy(proxyBypassRules = rules))
+                                        },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        placeholder = { Text("*.local\n192.168.0.0/16") },
+                                        minLines = 2,
+                                        maxLines = 4,
+                                        textStyle = MaterialTheme.typography.bodySmall
+                                    )
                                 }
-                                Text(
-                                    text = Strings.proxyBypassLabel,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.padding(bottom = 4.dp, top = 4.dp)
-                                )
-                                Text(
-                                    text = Strings.proxyBypassHint,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(bottom = 4.dp)
-                                )
-                                PremiumTextField(
-                                    value = bypassText,
-                                    onValueChange = { newText ->
-                                        bypassText = newText
-                                        val rules = newText.split("\n")
-                                            .map { it.trim() }
-                                            .filter { it.isNotBlank() }
-                                        onConfigChange(config.copy(proxyBypassRules = rules))
-                                    },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    placeholder = { Text("*.local\n192.168.0.0/16") },
-                                    minLines = 2,
-                                    maxLines = 4,
-                                    textStyle = MaterialTheme.typography.bodySmall
-                                )
                             }
                         }
 
-
+                        // PAC 代理配置
                         AnimatedVisibility(
                             visible = config.proxyMode == "PAC",
                             enter = CardExpandTransition,
                             exit = CardCollapseTransition
                         ) {
-                            Column(modifier = Modifier.padding(start = 8.dp, top = 4.dp, bottom = 4.dp)) {
-                                PremiumTextField(
-                                    value = config.pacUrl,
-                                    onValueChange = { onConfigChange(config.copy(pacUrl = it.trim())) },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    label = { Text(Strings.pacUrlLabel) },
-                                    placeholder = { Text(Strings.pacUrlHint) },
-                                    singleLine = true,
-                                    textStyle = MaterialTheme.typography.bodySmall
-                                )
+                            WtaSettingCard {
+                                Column(
+                                    modifier = Modifier.padding(
+                                        horizontal = WtaSpacing.RowHorizontal,
+                                        vertical = WtaSpacing.ContentGap
+                                    ),
+                                    verticalArrangement = Arrangement.spacedBy(WtaSpacing.ContentGap)
+                                ) {
+                                    PremiumTextField(
+                                        value = config.pacUrl,
+                                        onValueChange = { onConfigChange(config.copy(pacUrl = it.trim())) },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        label = { Text(Strings.pacUrlLabel) },
+                                        placeholder = { Text(Strings.pacUrlHint) },
+                                        singleLine = true,
+                                        textStyle = MaterialTheme.typography.bodySmall
+                                    )
 
-                                Spacer(modifier = Modifier.height(8.dp))
-
-                                var pacBypassText by remember(config.proxyBypassRules) {
-                                    mutableStateOf(config.proxyBypassRules.joinToString("\n"))
+                                    var pacBypassText by remember(config.proxyBypassRules) {
+                                        mutableStateOf(config.proxyBypassRules.joinToString("\n"))
+                                    }
+                                    Text(
+                                        text = Strings.proxyBypassLabel,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Text(
+                                        text = Strings.proxyBypassHint,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    PremiumTextField(
+                                        value = pacBypassText,
+                                        onValueChange = { newText ->
+                                            pacBypassText = newText
+                                            val rules = newText.split("\n")
+                                                .map { it.trim() }
+                                                .filter { it.isNotBlank() }
+                                            onConfigChange(config.copy(proxyBypassRules = rules))
+                                        },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        placeholder = { Text("*.local\n192.168.0.0/16") },
+                                        minLines = 2,
+                                        maxLines = 4,
+                                        textStyle = MaterialTheme.typography.bodySmall
+                                    )
                                 }
-                                Text(
-                                    text = Strings.proxyBypassLabel,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.padding(bottom = 4.dp, top = 4.dp)
-                                )
-                                Text(
-                                    text = Strings.proxyBypassHint,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(bottom = 4.dp)
-                                )
-                                PremiumTextField(
-                                    value = pacBypassText,
-                                    onValueChange = { newText ->
-                                        pacBypassText = newText
-                                        val rules = newText.split("\n")
-                                            .map { it.trim() }
-                                            .filter { it.isNotBlank() }
-                                        onConfigChange(config.copy(proxyBypassRules = rules))
-                                    },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    placeholder = { Text("*.local\n192.168.0.0/16") },
-                                    minLines = 2,
-                                    maxLines = 4,
-                                    textStyle = MaterialTheme.typography.bodySmall
-                                )
+                            }
+                        }
+
+                        // Hosts 映射
+                        var hostsMappingsText by remember(config.hostsMappings) {
+                            mutableStateOf(
+                                config.hostsMappings.joinToString("\n") { "${it.ip} ${it.host}" }
+                            )
+                        }
+                        val parsedHostsMappings = remember(hostsMappingsText) {
+                            parseHostsMappingsInput(hostsMappingsText)
+                        }
+
+                        WtaSettingCard {
+                            WtaToggleRow(
+                                title = Strings.hostsMappingTitle,
+                                subtitle = when {
+                                    config.proxyMode != "NONE" -> Strings.hostsMappingProxyConflict
+                                    parsedHostsMappings.isNotEmpty() -> Strings.hostsMappingParsedCount(parsedHostsMappings.size)
+                                    else -> Strings.hostsMappingSubtitle
+                                },
+                                icon = Icons.Outlined.Route,
+                                checked = config.hostsMappingEnabled,
+                                enabled = config.proxyMode == "NONE",
+                                onCheckedChange = { enabled ->
+                                    onConfigChange(config.copy(hostsMappingEnabled = enabled))
+                                }
+                            )
+
+                            AnimatedVisibility(
+                                visible = config.hostsMappingEnabled || hostsMappingsText.isNotBlank(),
+                                enter = CardExpandTransition,
+                                exit = CardCollapseTransition
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(
+                                        horizontal = WtaSpacing.RowHorizontal,
+                                        vertical = WtaSpacing.ContentGap
+                                    ),
+                                    verticalArrangement = Arrangement.spacedBy(WtaSpacing.ContentGap)
+                                ) {
+                                    Text(
+                                        text = Strings.hostsMappingDescription,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = Strings.hostsMappingHint,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    PremiumTextField(
+                                        value = hostsMappingsText,
+                                        onValueChange = { newText ->
+                                            hostsMappingsText = newText
+                                            onConfigChange(config.copy(hostsMappings = parseHostsMappingsInput(newText)))
+                                        },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        placeholder = { Text("1.2.3.4 example.com\n203.0.113.10 api.example.com") },
+                                        minLines = 4,
+                                        maxLines = 8,
+                                        textStyle = MaterialTheme.typography.bodySmall
+                                    )
+                                    Text(
+                                        text = Strings.hostsMappingWarning,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.tertiary
+                                    )
+                                }
                             }
                         }
                     }
@@ -945,6 +1018,44 @@ fun BrowserAdvancedConfigCard(
     }
 }
 
+private fun parseHostsMappingsInput(text: String): List<HostMappingEntry> {
+    val mappings = linkedMapOf<String, String>()
+    text.lineSequence().forEach { rawLine ->
+        val line = rawLine.substringBefore('#').trim()
+        if (line.isBlank()) return@forEach
+        val parts = line.split(Regex("\\s+")).filter { it.isNotBlank() }
+        if (parts.size < 2) return@forEach
+
+        val first = normalizeIpv4(parts.first())
+        val last = normalizeIpv4(parts.last())
+        val pair = when {
+            first != null -> parts.drop(1).firstOrNull()?.let { host -> host to first }
+            last != null -> parts.firstOrNull()?.let { host -> host to last }
+            else -> null
+        } ?: return@forEach
+
+        val host = normalizeHostMappingHost(pair.first) ?: return@forEach
+        mappings[host] = pair.second
+    }
+    return mappings.map { HostMappingEntry(host = it.key, ip = it.value) }
+}
+
+private fun normalizeHostMappingHost(raw: String): String? {
+    val host = raw.trim().trim('.').lowercase()
+    if (host.isBlank()) return null
+    if (!host.contains('.')) return null
+    if (host.any { it.isWhitespace() || it == ':' || it == '/' }) return null
+    return host
+}
+
+private fun normalizeIpv4(raw: String): String? {
+    val parts = raw.trim().split('.')
+    if (parts.size != 4) return null
+    val normalized = parts.map { it.toIntOrNull() ?: return null }
+    if (normalized.any { it !in 0..255 }) return null
+    return normalized.joinToString(".")
+}
+
 
 @Composable
 fun ApkExportSettingsCard(
@@ -952,12 +1063,13 @@ fun ApkExportSettingsCard(
     onConfigChange: (ApkExportConfig) -> Unit,
     onOpenPermissionConfig: (() -> Unit)? = null
 ) {
-    WtaSettingCard(contentPadding = PaddingValues(16.dp)) {
-        Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
-            AdvancedSettingsSection(
-                title = Strings.sectionNavigation,
-                icon = Icons.Outlined.Link
-            ) {
+    Column(verticalArrangement = Arrangement.spacedBy(WtaSpacing.SectionGap)) {
+        // ── 深度链接 ──────────────────────────────────────────
+        WtaSection(
+            title = Strings.sectionNavigation,
+            headerStyle = WtaSectionHeaderStyle.Quiet
+        ) {
+            WtaSettingCard {
                 WtaToggleRow(
                     title = Strings.deepLinkSetting,
                     subtitle = Strings.deepLinkSettingHint,
@@ -1010,64 +1122,19 @@ fun ApkExportSettingsCard(
                     }
                 }
             }
-
-            ApkExportSection(
-                config = config,
-                onConfigChange = onConfigChange,
-                onOpenPermissionConfig = onOpenPermissionConfig
-            )
         }
+
+        // ── APK 导出核心配置 ──────────────────────────────────────────
+        ApkExportSection(
+            config = config,
+            onConfigChange = onConfigChange,
+            onOpenPermissionConfig = onOpenPermissionConfig
+        )
     }
 }
 
 
 
-
-@Composable
-private fun AdvancedSettingsSection(
-    title: String,
-    icon: ImageVector,
-    content: @Composable ColumnScope.() -> Unit
-) {
-    val isDark = com.webtoapp.ui.theme.LocalIsDarkTheme.current
-    val sectionBg = if (isDark)
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
-    else
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
-
-    Column {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = 8.dp, start = 4.dp)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-                modifier = Modifier.size(14.dp)
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = title,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                fontWeight = FontWeight.SemiBold,
-                letterSpacing = 0.5.sp
-            )
-        }
-
-        Surface(
-            shape = RoundedCornerShape(14.dp),
-            color = sectionBg,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(
-                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                content = content
-            )
-        }
-    }
-}
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -1445,6 +1512,22 @@ fun UserAgentCard(
 
 
 @Composable
+fun HideBrowserToolbarCard(
+    enabled: Boolean,
+    onEnabledChange: (Boolean) -> Unit
+) {
+    WtaSettingCard {
+        WtaToggleRow(
+            icon = Icons.Outlined.WebAsset,
+            title = Strings.hideBrowserToolbarLabel,
+            checked = enabled,
+            onCheckedChange = onEnabledChange
+        )
+    }
+}
+
+
+@Composable
 fun FullscreenModeCard(
     enabled: Boolean,
     showStatusBar: Boolean = false,
@@ -1486,13 +1569,6 @@ fun FullscreenModeCard(
                     subtitle = Strings.showNavigationBarHint,
                     checked = showNavigationBar,
                     onCheckedChange = onShowNavigationBarChange
-                )
-                WtaSectionDivider()
-                WtaToggleRow(
-                    title = Strings.hideBrowserToolbarLabel,
-                    subtitle = Strings.hideBrowserToolbarHint,
-                    checked = hideBrowserToolbarInFullscreen,
-                    onCheckedChange = onHideBrowserToolbarInFullscreenChange
                 )
 
                 if (showStatusBar) {
@@ -2337,6 +2413,305 @@ fun ErrorPageConfigCard(
                             )
                         }
                     }
+            }
+        }
+    }
+}
+
+
+/**
+ * 特殊设置卡片（抽屉式）：
+ * - 默认收起，只显示标题行 + 图标
+ * - 点击展开后显示 25 个开关，按逻辑分组
+ * - 与 BrowserAdvancedConfigCard 的交互模式完全一致
+ */
+@Composable
+fun SpecialSettingsCard(
+    config: com.webtoapp.data.model.WebViewConfig,
+    onConfigChange: (com.webtoapp.data.model.WebViewConfig) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    WtaSettingCard {
+        Column {
+            WtaChoiceRow(
+                title = Strings.specialSettingsTitle,
+                subtitle = null,
+                icon = Icons.Outlined.Science,
+                value = "",
+                isExpanded = expanded,
+                onClick = { expanded = !expanded }
+            )
+
+            AnimatedVisibility(
+                visible = expanded,
+                enter = CardExpandTransition,
+                exit = CardCollapseTransition
+            ) {
+                Column(
+                    modifier = Modifier.padding(
+                        horizontal = WtaSpacing.RowHorizontal,
+                        vertical = WtaSpacing.ContentGap
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(WtaSpacing.SectionGap)
+                ) {
+
+                    // ── 链接与导航 ──────────────────────────────────────────
+                    WtaSection(
+                        title = Strings.specialSectionLinksNav,
+                        headerStyle = WtaSectionHeaderStyle.Quiet
+                    ) {
+                        WtaSettingCard {
+                            WtaToggleRow(
+                                title = Strings.decodeBase64DeepLinksTitle,
+                                subtitle = Strings.decodeBase64DeepLinksDesc,
+                                icon = Icons.Outlined.Link,
+                                checked = config.decodeBase64DeepLinks,
+                                onCheckedChange = { onConfigChange(config.copy(decodeBase64DeepLinks = it)) }
+                            )
+                            WtaSectionDivider()
+                            WtaToggleRow(
+                                title = Strings.oauthExternalTitle,
+                                subtitle = Strings.oauthExternalDesc,
+                                icon = Icons.Outlined.OpenInNew,
+                                checked = config.enableOAuthExternalRedirect,
+                                onCheckedChange = { onConfigChange(config.copy(enableOAuthExternalRedirect = it)) }
+                            )
+                            WtaSectionDivider()
+                            WtaToggleRow(
+                                title = Strings.jsCanOpenWindowsTitle,
+                                subtitle = Strings.jsCanOpenWindowsDesc,
+                                icon = Icons.Outlined.OpenInBrowser,
+                                checked = config.javaScriptCanOpenWindows,
+                                onCheckedChange = { onConfigChange(config.copy(javaScriptCanOpenWindows = it)) }
+                            )
+                        }
+                    }
+
+                    // ── 媒体与内容 ──────────────────────────────────────────
+                    WtaSection(
+                        title = Strings.specialSectionMedia,
+                        headerStyle = WtaSectionHeaderStyle.Quiet
+                    ) {
+                        WtaSettingCard {
+                            WtaToggleRow(
+                                title = Strings.mediaAutoplayTitle,
+                                subtitle = Strings.mediaAutoplayDesc,
+                                icon = Icons.Outlined.PlayCircle,
+                                checked = config.mediaAutoplayEnabled,
+                                onCheckedChange = { onConfigChange(config.copy(mediaAutoplayEnabled = it)) }
+                            )
+                            WtaSectionDivider()
+                            WtaToggleRow(
+                                title = Strings.imageRepairTitle,
+                                subtitle = Strings.imageRepairDesc,
+                                icon = Icons.Outlined.Image,
+                                checked = config.enableImageRepair,
+                                onCheckedChange = { onConfigChange(config.copy(enableImageRepair = it)) }
+                            )
+                            WtaSectionDivider()
+                            WtaToggleRow(
+                                title = Strings.scrollMemoryTitle,
+                                subtitle = Strings.scrollMemoryDesc,
+                                icon = Icons.Outlined.BookmarkBorder,
+                                checked = config.enableScrollMemory,
+                                onCheckedChange = { onConfigChange(config.copy(enableScrollMemory = it)) }
+                            )
+                        }
+                    }
+
+                    // ── 安全与网络 ──────────────────────────────────────────
+                    WtaSection(
+                        title = Strings.specialSectionSecurity,
+                        headerStyle = WtaSectionHeaderStyle.Quiet
+                    ) {
+                        WtaSettingCard {
+                            WtaToggleRow(
+                                title = Strings.kernelDisguiseTitle,
+                                subtitle = Strings.kernelDisguiseDesc,
+                                icon = Icons.Outlined.Security,
+                                checked = config.enableKernelDisguise,
+                                onCheckedChange = { onConfigChange(config.copy(enableKernelDisguise = it)) }
+                            )
+                            WtaSectionDivider()
+                            WtaToggleRow(
+                                title = Strings.httpsUpgradeTitle,
+                                subtitle = Strings.httpsUpgradeDesc,
+                                icon = Icons.Outlined.Lock,
+                                checked = config.enableHttpsUpgrade,
+                                onCheckedChange = { onConfigChange(config.copy(enableHttpsUpgrade = it)) }
+                            )
+                            WtaSectionDivider()
+                            WtaToggleRow(
+                                title = Strings.safeBrowsingTitle,
+                                subtitle = Strings.safeBrowsingDesc,
+                                icon = Icons.Outlined.Shield,
+                                checked = config.safeBrowsingEnabled,
+                                onCheckedChange = { onConfigChange(config.copy(safeBrowsingEnabled = it)) }
+                            )
+                            WtaSectionDivider()
+                            WtaToggleRow(
+                                title = Strings.mixedContentTitle,
+                                subtitle = Strings.mixedContentDesc,
+                                icon = Icons.Outlined.Http,
+                                checked = config.allowMixedContent,
+                                onCheckedChange = { onConfigChange(config.copy(allowMixedContent = it)) }
+                            )
+                            WtaSectionDivider()
+                            WtaToggleRow(
+                                title = Strings.privateNetworkBridgeTitle,
+                                subtitle = Strings.privateNetworkBridgeDesc,
+                                icon = Icons.Outlined.Lan,
+                                checked = config.enablePrivateNetworkBridge,
+                                onCheckedChange = { onConfigChange(config.copy(enablePrivateNetworkBridge = it)) }
+                            )
+                        }
+                    }
+
+                    // ── 隐私保护 ──────────────────────────────────────────
+                    WtaSection(
+                        title = Strings.specialSectionPrivacy,
+                        headerStyle = WtaSectionHeaderStyle.Quiet
+                    ) {
+                        WtaSettingCard {
+                            WtaToggleRow(
+                                title = Strings.gpcTitle,
+                                subtitle = Strings.gpcDesc,
+                                icon = Icons.Outlined.PrivacyTip,
+                                checked = config.enableGpc,
+                                onCheckedChange = { onConfigChange(config.copy(enableGpc = it)) }
+                            )
+                            WtaSectionDivider()
+                            WtaToggleRow(
+                                title = Strings.cookieConsentBlockTitle,
+                                subtitle = Strings.cookieConsentBlockDesc,
+                                icon = Icons.Outlined.DoNotDisturb,
+                                checked = config.enableCookieConsentBlock,
+                                onCheckedChange = { onConfigChange(config.copy(enableCookieConsentBlock = it)) }
+                            )
+                            WtaSectionDivider()
+                            WtaToggleRow(
+                                title = Strings.referrerPolicyTitle,
+                                subtitle = Strings.referrerPolicyDesc,
+                                icon = Icons.Outlined.Policy,
+                                checked = config.enableReferrerPolicy,
+                                onCheckedChange = { onConfigChange(config.copy(enableReferrerPolicy = it)) }
+                            )
+                            WtaSectionDivider()
+                            WtaToggleRow(
+                                title = Strings.trackerBlockingTitle,
+                                subtitle = Strings.trackerBlockingDesc,
+                                icon = Icons.Outlined.RemoveCircleOutline,
+                                checked = config.enableTrackerBlocking,
+                                onCheckedChange = { onConfigChange(config.copy(enableTrackerBlocking = it)) }
+                            )
+                        }
+                    }
+
+                    // ── Cookie 与存储 ──────────────────────────────────────────
+                    WtaSection(
+                        title = Strings.specialSectionStorage,
+                        headerStyle = WtaSectionHeaderStyle.Quiet
+                    ) {
+                        WtaSettingCard {
+                            WtaToggleRow(
+                                title = Strings.thirdPartyCookiesTitle,
+                                subtitle = Strings.thirdPartyCookiesDesc,
+                                icon = Icons.Outlined.Cookie,
+                                checked = config.acceptThirdPartyCookies,
+                                onCheckedChange = { onConfigChange(config.copy(acceptThirdPartyCookies = it)) }
+                            )
+                            WtaSectionDivider()
+                            WtaToggleRow(
+                                title = Strings.databaseStorageTitle,
+                                subtitle = Strings.databaseStorageDesc,
+                                icon = Icons.Outlined.Storage,
+                                checked = config.databaseEnabled,
+                                onCheckedChange = { onConfigChange(config.copy(databaseEnabled = it)) }
+                            )
+                            WtaSectionDivider()
+                            WtaToggleRow(
+                                title = Strings.cookiePersistenceTitle,
+                                subtitle = Strings.cookiePersistenceDesc,
+                                icon = Icons.Outlined.Save,
+                                checked = config.enableCookiePersistence,
+                                onCheckedChange = { onConfigChange(config.copy(enableCookiePersistence = it)) }
+                            )
+                        }
+                    }
+
+                    // ── 兼容性与补丁 ──────────────────────────────────────────
+                    WtaSection(
+                        title = Strings.specialSectionPolyfills,
+                        headerStyle = WtaSectionHeaderStyle.Quiet
+                    ) {
+                        WtaSettingCard {
+                            WtaToggleRow(
+                                title = Strings.clipboardPolyfillTitle,
+                                subtitle = Strings.clipboardPolyfillDesc,
+                                icon = Icons.Outlined.ContentPaste,
+                                checked = config.enableClipboardPolyfill,
+                                onCheckedChange = { onConfigChange(config.copy(enableClipboardPolyfill = it)) }
+                            )
+                            WtaSectionDivider()
+                            WtaToggleRow(
+                                title = Strings.notificationPolyfillTitle,
+                                subtitle = Strings.notificationPolyfillDesc,
+                                icon = Icons.Outlined.Notifications,
+                                checked = config.enableNotificationPolyfill,
+                                onCheckedChange = { onConfigChange(config.copy(enableNotificationPolyfill = it)) }
+                            )
+                            WtaSectionDivider()
+                            WtaToggleRow(
+                                title = Strings.orientationPolyfillTitle,
+                                subtitle = Strings.orientationPolyfillDesc,
+                                icon = Icons.Outlined.ScreenRotation,
+                                checked = config.enableOrientationPolyfill,
+                                onCheckedChange = { onConfigChange(config.copy(enableOrientationPolyfill = it)) }
+                            )
+                            WtaSectionDivider()
+                            WtaToggleRow(
+                                title = Strings.compatPolyfillsTitle,
+                                subtitle = Strings.compatPolyfillsDesc,
+                                icon = Icons.Outlined.Build,
+                                checked = config.enableCompatPolyfills,
+                                onCheckedChange = { onConfigChange(config.copy(enableCompatPolyfills = it)) }
+                            )
+                            WtaSectionDivider()
+                            WtaToggleRow(
+                                title = Strings.nativeBridgeTitle,
+                                subtitle = Strings.nativeBridgeDesc,
+                                icon = Icons.Outlined.Api,
+                                checked = config.enableNativeBridge,
+                                onCheckedChange = { onConfigChange(config.copy(enableNativeBridge = it)) }
+                            )
+                        }
+                    }
+
+                    // ── 其他 ──────────────────────────────────────────
+                    WtaSection(
+                        title = Strings.specialSectionMisc,
+                        headerStyle = WtaSectionHeaderStyle.Quiet
+                    ) {
+                        WtaSettingCard {
+                            WtaToggleRow(
+                                title = Strings.geolocationTitle,
+                                subtitle = Strings.geolocationDesc,
+                                icon = Icons.Outlined.LocationOn,
+                                checked = config.geolocationEnabled,
+                                onCheckedChange = { onConfigChange(config.copy(geolocationEnabled = it)) }
+                            )
+                            WtaSectionDivider()
+                            WtaToggleRow(
+                                title = Strings.blobDownloadTitle,
+                                subtitle = Strings.blobDownloadDesc,
+                                icon = Icons.Outlined.CloudDownload,
+                                checked = config.enableBlobDownloadInterception,
+                                onCheckedChange = { onConfigChange(config.copy(enableBlobDownloadInterception = it)) }
+                            )
+                        }
+                    }
+                }
             }
         }
     }

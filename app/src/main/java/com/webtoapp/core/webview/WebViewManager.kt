@@ -1,14 +1,19 @@
 package com.webtoapp.core.webview
 
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.app.Dialog
 import com.webtoapp.core.logging.AppLogger
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
+import android.view.ViewGroup
 import android.webkit.*
 import androidx.annotation.RequiresApi
+import androidx.webkit.ScriptHandler
 import androidx.webkit.WebSettingsCompat
+import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
 import com.webtoapp.core.adblock.AdBlocker
 import com.webtoapp.core.crypto.SecureAssetLoader
@@ -25,10 +30,6 @@ import com.webtoapp.core.engine.shields.BrowserShields
 import com.webtoapp.core.errorpage.ErrorPageManager
 import com.webtoapp.core.errorpage.ErrorPageMode
 import java.io.ByteArrayInputStream
-import java.net.URL
-import okhttp3.OkHttpClient
-import okhttp3.ConnectionSpec
-import okhttp3.Request
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -38,8 +39,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import okhttp3.Response
-import okhttp3.TlsVersion
+import org.json.JSONObject
 
 
 
@@ -53,6 +53,8 @@ class WebViewManager(
     private var extensionPanelSyncJob: Job? = null
     private var extensionPanelDeferredInjectionJob: Job? = null
     private var extensionPanelInjected = false
+    private val privateNetworkScriptHandlers = java.util.WeakHashMap<WebView, ScriptHandler>()
+    private val downloadBridgeScriptHandlers = java.util.WeakHashMap<WebView, ScriptHandler>()
 
     companion object {
 
@@ -344,24 +346,7 @@ class WebViewManager(
 
 
 
-        private val cleartextProxyClient: OkHttpClient by lazy {
-            OkHttpClient.Builder()
-                .connectionPool(okhttp3.ConnectionPool(4, 30, java.util.concurrent.TimeUnit.SECONDS))
-                .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
-                .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
-                .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
-                .connectionSpecs(
-                    listOf(
-                        okhttp3.ConnectionSpec.Builder(okhttp3.ConnectionSpec.MODERN_TLS)
-                            .tlsVersions(TlsVersion.TLS_1_2, TlsVersion.TLS_1_3)
-                            .build(),
 
-                        okhttp3.ConnectionSpec.CLEARTEXT
-                    )
-                )
-                .retryOnConnectionFailure(true)
-                .build()
-        }
 
 
 
@@ -611,86 +596,49 @@ class WebViewManager(
                 window.__wtaImageRepairActive = true;
 
                 var repaired = new WeakSet();
-                var MAX_RETRIES = 1;
 
                 function repairImage(img) {
                     if (!img || !img.src || repaired.has(img)) return;
                     if (img.src.startsWith('data:') || img.src.startsWith('blob:')) return;
-                    if (img.naturalWidth > 0 && img.naturalHeight > 0) return;
-
+                    // 只修复真正加载失败的图片（error 事件触发后才进入此函数）
                     repaired.add(img);
                     var originalSrc = img.src;
 
-                    // 方法1: 设置 referrerPolicy 属性并重新加载
+                    // 尝试用 no-referrer 重新加载
                     img.referrerPolicy = 'no-referrer';
-                    img.crossOrigin = 'anonymous';
-
-                    // 方法2: 通过 fetch + no-referrer 获取图片并转为 blob URL
-                    fetch(originalSrc, {
-                        referrerPolicy: 'no-referrer',
-                        mode: 'cors',
-                        credentials: 'omit'
-                    }).then(function(resp) {
-                        if (!resp.ok) throw new Error(resp.status);
-                        return resp.blob();
-                    }).then(function(blob) {
-                        if (blob.size > 0) {
-                            var blobUrl = URL.createObjectURL(blob);
-                            img.src = blobUrl;
-                            // 清理: 图片加载后释放 Object URL
-                            img.addEventListener('load', function() {
-                                setTimeout(function() { URL.revokeObjectURL(blobUrl); }, 5000);
-                            }, { once: true });
-                        }
-                    }).catch(function() {
-                        // fetch 也失败了（CORS 限制），回退: 仅设置 referrerPolicy 后重触发
-                        img.src = '';
-                        img.referrerPolicy = 'no-referrer';
-                        setTimeout(function() { img.src = originalSrc; }, 50);
-                    });
+                    img.src = '';
+                    setTimeout(function() { img.src = originalSrc; }, 50);
                 }
 
-                function scanBrokenImages() {
-                    var images = document.querySelectorAll('img');
-                    for (var i = 0; i < images.length; i++) {
-                        var img = images[i];
-                        // 检测图片是否加载失败: 有 src 但 naturalWidth=0 且已完成加载
-                        if (img.src && img.complete && img.naturalWidth === 0 && img.naturalHeight === 0) {
-                            repairImage(img);
-                        }
-                    }
+                // 只监听 error 事件，不主动扫描 naturalWidth=0 的图片
+                // （懒加载图片在加载前 naturalWidth=0 是正常的）
+                function attachErrorListener(img) {
+                    if (img.__wtaErrorListening) return;
+                    img.__wtaErrorListening = true;
+                    img.addEventListener('error', function() {
+                        repairImage(img);
+                    }, { once: true });
                 }
 
-                // 为所有现有图片添加 error 监听
-                function attachErrorListeners() {
-                    var images = document.querySelectorAll('img');
-                    for (var i = 0; i < images.length; i++) {
-                        (function(img) {
-                            if (img.__wtaErrorListening) return;
-                            img.__wtaErrorListening = true;
-                            img.addEventListener('error', function() {
-                                repairImage(img);
-                            }, { once: true });
-                        })(images[i]);
-                    }
+                // 为现有图片添加 error 监听
+                var images = document.querySelectorAll('img');
+                for (var i = 0; i < images.length; i++) {
+                    attachErrorListener(images[i]);
                 }
 
-                // 监听 DOM 变化，修复动态加载的图片（懒加载等）
+                // 监听 DOM 变化，为动态加载的图片添加 error 监听
                 var observer = new MutationObserver(function(mutations) {
-                    var needsScan = false;
                     for (var m = 0; m < mutations.length; m++) {
                         var nodes = mutations[m].addedNodes;
                         for (var n = 0; n < nodes.length; n++) {
                             var node = nodes[n];
                             if (node.nodeName === 'IMG') {
-                                node.addEventListener('error', function() { repairImage(this); }, { once: true });
-                                needsScan = true;
+                                attachErrorListener(node);
                             } else if (node.querySelectorAll) {
                                 var imgs = node.querySelectorAll('img');
                                 for (var j = 0; j < imgs.length; j++) {
-                                    imgs[j].addEventListener('error', function() { repairImage(this); }, { once: true });
+                                    attachErrorListener(imgs[j]);
                                 }
-                                if (imgs.length > 0) needsScan = true;
                             }
                         }
                     }
@@ -700,12 +648,7 @@ class WebViewManager(
                     observer.observe(observerTarget, { childList: true, subtree: true });
                 }
 
-                // 初始扫描：延迟检测已加载失败的图片
-                attachErrorListeners();
-                setTimeout(scanBrokenImages, 1500);
-                setTimeout(scanBrokenImages, 5000);
-
-                // 自动停止 observer 防止性能问题
+                // 30 秒后停止 observer 防止性能问题
                 setTimeout(function() { observer.disconnect(); }, 30000);
             })();
         """
@@ -819,6 +762,264 @@ class WebViewManager(
                 }
             })();
         """
+
+        private const val ORIENTATION_POLYFILL_JS = """
+            (function() {
+                'use strict';
+
+                if (window.__webtoapp_orientation_polyfill__) return;
+                window.__webtoapp_orientation_polyfill__ = true;
+
+                var bridge = window.NativeBridge;
+                var screenObj = window.screen;
+                if (!bridge || !screenObj) return;
+
+                var listeners = [];
+                var onchangeHandler = null;
+                var lastRequestedType = null;
+                var baseOrientation = screenObj.orientation && typeof screenObj.orientation === 'object'
+                    ? screenObj.orientation
+                    : {};
+
+                function normalizeType(value) {
+                    var normalized = String(value || '').toLowerCase();
+                    switch (normalized) {
+                        case 'portrait':
+                        case 'portrait-primary':
+                            return 'portrait-primary';
+                        case 'portrait-secondary':
+                            return 'portrait-secondary';
+                        case 'landscape':
+                        case 'landscape-primary':
+                            return 'landscape-primary';
+                        case 'landscape-secondary':
+                            return 'landscape-secondary';
+                        default:
+                            return '';
+                    }
+                }
+
+                function readNativeType() {
+                    try {
+                        var orientation = String(bridge.getOrientation() || '').toLowerCase();
+                        if (orientation === 'landscape') return 'landscape-primary';
+                        if (orientation === 'portrait') return 'portrait-primary';
+                    } catch (e) {}
+                    return lastRequestedType || 'portrait-primary';
+                }
+
+                function currentType() {
+                    return normalizeType(lastRequestedType) || readNativeType();
+                }
+
+                function currentAngle() {
+                    switch (currentType()) {
+                        case 'portrait-secondary':
+                            return 180;
+                        case 'landscape-primary':
+                            return 90;
+                        case 'landscape-secondary':
+                            return 270;
+                        default:
+                            return 0;
+                    }
+                }
+
+                function createChangeEvent() {
+                    try {
+                        return new Event('change');
+                    } catch (e) {
+                        var legacyEvent = document.createEvent('Event');
+                        legacyEvent.initEvent('change', false, false);
+                        return legacyEvent;
+                    }
+                }
+
+                function emitChange() {
+                    var event = createChangeEvent();
+                    if (typeof baseOrientation.onchange === 'function') {
+                        try {
+                            baseOrientation.onchange.call(baseOrientation, event);
+                        } catch (e) {}
+                    }
+                    listeners.slice().forEach(function(listener) {
+                        try {
+                            listener.call(baseOrientation, event);
+                        } catch (e) {}
+                    });
+                }
+
+                function scheduleChange() {
+                    setTimeout(emitChange, 0);
+                }
+
+                function applyLock(lockType) {
+                    var requestedType = String(lockType || '').toLowerCase();
+                    switch (requestedType) {
+                        case 'portrait':
+                        case 'portrait-primary':
+                            bridge.setOrientation('portrait');
+                            lastRequestedType = 'portrait-primary';
+                            break;
+                        case 'portrait-secondary':
+                            bridge.setOrientation('reverse_portrait');
+                            lastRequestedType = 'portrait-secondary';
+                            break;
+                        case 'landscape':
+                        case 'landscape-primary':
+                            bridge.setOrientation('landscape');
+                            lastRequestedType = 'landscape-primary';
+                            break;
+                        case 'landscape-secondary':
+                            bridge.setOrientation('reverse_landscape');
+                            lastRequestedType = 'landscape-secondary';
+                            break;
+                        case 'any':
+                        case 'auto':
+                        case 'default':
+                            bridge.unlockOrientation();
+                            lastRequestedType = null;
+                            break;
+                        case 'natural':
+                            bridge.lockOrientation();
+                            lastRequestedType = readNativeType();
+                            break;
+                        default:
+                            bridge.lockOrientation();
+                            lastRequestedType = readNativeType();
+                            break;
+                    }
+                    scheduleChange();
+                }
+
+                function safeDefineProperty(target, key, descriptor) {
+                    try {
+                        Object.defineProperty(target, key, descriptor);
+                        return true;
+                    } catch (e) {
+                        return false;
+                    }
+                }
+
+                function assignProperty(target, key, value) {
+                    if (safeDefineProperty(target, key, {
+                        configurable: true,
+                        writable: true,
+                        value: value
+                    })) {
+                        return true;
+                    }
+                    try {
+                        target[key] = value;
+                        return target[key] === value;
+                    } catch (e) {
+                        return false;
+                    }
+                }
+
+                var lockFn = function(lockType) {
+                    try {
+                        applyLock(lockType);
+                        return Promise.resolve();
+                    } catch (error) {
+                        return Promise.reject(error);
+                    }
+                };
+
+                var unlockFn = function() {
+                    bridge.unlockOrientation();
+                    lastRequestedType = null;
+                    scheduleChange();
+                };
+
+                var addEventListenerFn = function(type, listener) {
+                    if (type !== 'change' || typeof listener !== 'function') return;
+                    if (listeners.indexOf(listener) === -1) {
+                        listeners.push(listener);
+                    }
+                };
+
+                var removeEventListenerFn = function(type, listener) {
+                    if (type !== 'change' || typeof listener !== 'function') return;
+                    listeners = listeners.filter(function(item) {
+                        return item !== listener;
+                    });
+                };
+
+                assignProperty(baseOrientation, 'lock', lockFn);
+                assignProperty(baseOrientation, 'unlock', unlockFn);
+                assignProperty(baseOrientation, 'addEventListener', addEventListenerFn);
+                assignProperty(baseOrientation, 'removeEventListener', removeEventListenerFn);
+
+                if (typeof baseOrientation.dispatchEvent !== 'function') {
+                    assignProperty(baseOrientation, 'dispatchEvent', function() {
+                        return true;
+                    });
+                }
+
+                safeDefineProperty(baseOrientation, 'type', {
+                    configurable: true,
+                    get: currentType
+                });
+
+                safeDefineProperty(baseOrientation, 'angle', {
+                    configurable: true,
+                    get: currentAngle
+                });
+
+                safeDefineProperty(baseOrientation, 'onchange', {
+                    configurable: true,
+                    get: function() {
+                        return onchangeHandler;
+                    },
+                    set: function(listener) {
+                        onchangeHandler = typeof listener === 'function' ? listener : null;
+                    }
+                });
+
+                if (!screenObj.orientation) {
+                    if (!safeDefineProperty(screenObj, 'orientation', {
+                        configurable: true,
+                        value: baseOrientation
+                    })) {
+                        try {
+                            screenObj.orientation = baseOrientation;
+                        } catch (e) {}
+                    }
+                }
+
+                if (typeof screenObj.lockOrientation !== 'function') {
+                    screenObj.lockOrientation = function(lockType) {
+                        try {
+                            applyLock(lockType);
+                            return true;
+                        } catch (e) {
+                            return false;
+                        }
+                    };
+                }
+
+                if (typeof screenObj.unlockOrientation !== 'function') {
+                    screenObj.unlockOrientation = function() {
+                        try {
+                            bridge.unlockOrientation();
+                            lastRequestedType = null;
+                            scheduleChange();
+                            return true;
+                        } catch (e) {
+                            return false;
+                        }
+                    };
+                }
+
+                window.addEventListener('orientationchange', function() {
+                    lastRequestedType = null;
+                    emitChange();
+                }, { passive: true });
+
+                console.log('[WebToApp] Screen orientation polyfill loaded');
+            })();
+        """
     }
 
 
@@ -838,6 +1039,7 @@ class WebViewManager(
 
 
     private var extensionRuntimes: MutableMap<String, com.webtoapp.core.extension.ChromeExtensionRuntime> = mutableMapOf()
+    private val extensionPopupDialogs = mutableMapOf<String, Dialog>()
 
 
     private val extensionFileManager by lazy {
@@ -846,6 +1048,12 @@ class WebViewManager(
 
 
     private val managedWebViews = java.util.WeakHashMap<WebView, Boolean>()
+
+    private val userscriptInjectionState =
+        java.util.WeakHashMap<WebView, MutableSet<String>>()
+
+    private val pagePhaseExecutionState =
+        java.util.WeakHashMap<WebView, MutableSet<String>>()
 
 
 
@@ -879,6 +1087,34 @@ class WebViewManager(
     private var fileRetryUrl: String? = null
     private val FILE_MAX_RETRIES = 3
     private val FILE_RETRY_DELAY_MS = 500L
+    private var loopbackMainFrameRetryCount = 0
+    private var loopbackMainFrameRetryUrl: String? = null
+    private var loopbackMainFrameRetryPending = false
+    private var loopbackMainFrameRetryRunnable: Runnable? = null
+    private var loopbackMainFrameRetryView: WebView? = null
+    private val LOOPBACK_MAIN_FRAME_MAX_RETRIES = 3
+    private val LOOPBACK_MAIN_FRAME_RETRY_DELAY_MS = 150L
+
+    /**
+     * 集中清理 loopback 主帧重试状态：
+     * - 取消任何已用 [WebView.postDelayed] 排定但尚未执行的重试任务，避免在页面已恢复后还跑一次
+     * - 重置计数器、url 标记和 pending 标志
+     *
+     * 调用场景：页面真正加载成功（onPageFinished 且无 onReceivedError）、
+     *          重试达到上限放弃、WebView 切换到新 URL 等。
+     */
+    private fun cancelLoopbackMainFrameRetry() {
+        val pending = loopbackMainFrameRetryRunnable
+        val view = loopbackMainFrameRetryView
+        if (pending != null && view != null) {
+            view.removeCallbacks(pending)
+        }
+        loopbackMainFrameRetryRunnable = null
+        loopbackMainFrameRetryView = null
+        loopbackMainFrameRetryCount = 0
+        loopbackMainFrameRetryUrl = null
+        loopbackMainFrameRetryPending = false
+    }
 
 
     @Volatile
@@ -985,6 +1221,15 @@ class WebViewManager(
                 language = com.webtoapp.core.i18n.Strings.currentLanguage.value.name
             )
             errorPageManager = ErrorPageManager(errorConfig)
+        } else {
+            // Even in DEFAULT mode we keep an ErrorPageManager around so that high-value
+            // socket-level errors (EADDRNOTAVAIL / ECONNREFUSED / ETIMEDOUT …) can be
+            // translated into actionable guidance instead of raw errno strings. The manager
+            // returns null for any error it can't explain, letting the system page render.
+            val errorConfig = config.errorPageConfig.copy(
+                language = com.webtoapp.core.i18n.Strings.currentLanguage.value.name
+            )
+            errorPageManager = ErrorPageManager(errorConfig)
         }
 
 
@@ -993,8 +1238,21 @@ class WebViewManager(
             AppLogger.d("WebViewManager", "  Embedded module: id=${module.id}, name=${module.name}, enabled=${module.enabled}, runAt=${module.runAt}")
         }
 
+        val dnsManager = com.webtoapp.core.dns.DnsManager(context)
+        val hostsMappingEnabled = config.hostsMappingEnabled && config.hostsMappings.isNotEmpty()
+        val hostsMappingCanApply = hostsMappingEnabled && config.proxyMode == "NONE"
+
+        if (config.dnsMode != "SYSTEM") {
+            AppLogger.d("WebViewManager", "Applying DoH DNS: mode=${config.dnsMode}, provider=${config.dnsConfig.provider}")
+            dnsManager.applyDnsConfig(config.dnsConfig)
+            com.webtoapp.core.engine.GeckoViewEngine.applyDnsConfig(config.dnsConfig)
+        } else {
+            dnsManager.clearDnsConfig()
+            com.webtoapp.core.engine.GeckoViewEngine.applyDnsConfig(config.dnsConfig)
+        }
 
         if (config.proxyMode != "NONE") {
+            LocalHttpHostMappingBridge.stop()
             AppLogger.d("WebViewManager", "Applying proxy: mode=${config.proxyMode}")
 
             val proxyManager = PacProxyManager(context)
@@ -1040,16 +1298,39 @@ class WebViewManager(
             GeckoViewEngine.applyProxyConfig(
                 ProxyConfig(mode = "NONE")
             )
-        }
-
-
-        if (config.dnsMode != "SYSTEM") {
-            AppLogger.d("WebViewManager", "Applying DoH DNS: mode=${config.dnsMode}, provider=${config.dnsConfig.provider}")
-
-            val dnsManager = com.webtoapp.core.dns.DnsManager(context)
-            dnsManager.applyDnsConfig(config.dnsConfig)
-
-            com.webtoapp.core.engine.GeckoViewEngine.applyDnsConfig(config.dnsConfig)
+            if (hostsMappingCanApply) {
+                val bridgePort = LocalHttpHostMappingBridge.start(
+                    config = LocalHttpHostMappingBridge.Config(
+                        mappings = config.hostsMappings,
+                        dnsMode = config.dnsMode,
+                        dnsConfig = config.dnsConfig
+                    ),
+                    dnsManager = dnsManager
+                )
+                if (bridgePort > 0) {
+                    AppLogger.d("WebViewManager", "Applying hosts mapping proxy on 127.0.0.1:$bridgePort")
+                    proxyApplyJob = proxyScope.launch {
+                        try {
+                            PacProxyManager(context).applyProxy(
+                                proxyMode = "STATIC",
+                                staticProxyHost = "127.0.0.1",
+                                staticProxyPort = bridgePort,
+                                staticProxyType = "HTTP",
+                                bypassRules = emptyList()
+                            )
+                        } catch (e: Exception) {
+                            AppLogger.e("WebViewManager", "Failed to apply hosts mapping proxy", e)
+                        }
+                    }
+                } else {
+                    AppLogger.w("WebViewManager", "Hosts mapping bridge failed to start")
+                }
+            } else {
+                LocalHttpHostMappingBridge.stop()
+                if (hostsMappingEnabled) {
+                    AppLogger.w("WebViewManager", "Hosts mapping skipped because proxyMode=${config.proxyMode}")
+                }
+            }
         }
 
 
@@ -1074,10 +1355,10 @@ class WebViewManager(
 
 
 
-        cookieManager.setAcceptThirdPartyCookies(webView, true)
+        cookieManager.setAcceptThirdPartyCookies(webView, config.acceptThirdPartyCookies)
 
         cookieManager.flush()
-        AppLogger.d("WebViewManager", "Cookie persistence enabled (thirdParty=true, disableShields=${config.disableShields})")
+        AppLogger.d("WebViewManager", "Cookie persistence enabled (thirdParty=${config.acceptThirdPartyCookies}, disableShields=${config.disableShields})")
 
         val isDesktopModeRequested = config.userAgentMode in DESKTOP_UA_MODES || config.desktopMode || (currentDeviceDisguiseConfig?.requiresDesktopViewport() == true)
 
@@ -1088,11 +1369,11 @@ class WebViewManager(
             settings.apply {
 
                 javaScriptEnabled = config.javaScriptEnabled
-                javaScriptCanOpenWindowsAutomatically = true
+                javaScriptCanOpenWindowsAutomatically = config.javaScriptCanOpenWindows
 
 
                 domStorageEnabled = config.domStorageEnabled
-                databaseEnabled = true
+                databaseEnabled = config.databaseEnabled
 
 
                 allowFileAccess = config.allowFileAccess
@@ -1183,15 +1464,15 @@ class WebViewManager(
 
 
 
-                mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                mixedContentMode = if (config.allowMixedContent) WebSettings.MIXED_CONTENT_ALWAYS_ALLOW else WebSettings.MIXED_CONTENT_NEVER_ALLOW
 
 
-                mediaPlaybackRequiresUserGesture = false
+                mediaPlaybackRequiresUserGesture = !config.mediaAutoplayEnabled
 
 
 
                 @Suppress("DEPRECATION")
-                setGeolocationEnabled(true)
+                setGeolocationEnabled(config.geolocationEnabled)
 
                 @Suppress("DEPRECATION")
                 setGeolocationDatabasePath(context.filesDir.absolutePath)
@@ -1203,16 +1484,13 @@ class WebViewManager(
                 allowUniversalAccessFromFileURLs = config.allowUniversalAccessFromFileURLs
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    safeBrowsingEnabled = true
+                    safeBrowsingEnabled = config.safeBrowsingEnabled
                 }
             }
 
 
             isScrollbarFadingEnabled = true
             scrollBarStyle = WebView.SCROLLBARS_INSIDE_OVERLAY
-
-
-            setLayerType(WebView.LAYER_TYPE_HARDWARE, null)
 
 
             com.webtoapp.core.perf.NativePerfEngine.optimizeWebViewSettings(this)
@@ -1242,10 +1520,19 @@ class WebViewManager(
 
             webChromeClient = createWebChromeClient(config, callbacks)
 
+            if (config.enablePrivateNetworkBridge) {
+                installPrivateNetworkApiBridge(this, config)
+            }
+
 
             if (config.downloadEnabled) {
                 setDownloadListener { url, userAgent, contentDisposition, mimeType, contentLength ->
                     callbacks.onDownloadStart(url, userAgent, contentDisposition, mimeType, contentLength)
+                }
+                // 在页面任何 JS 之前注入 DownloadBridge，确保 URL.createObjectURL 能被第一时间 hook
+                // 这是唯一可靠的时机——页面自己的 inline script 可能在 onPageStarted 之前就已经执行
+                if (config.enableBlobDownloadInterception) {
+                    installDownloadBridgeDocumentStart(this)
                 }
             }
 
@@ -1277,7 +1564,9 @@ class WebViewManager(
             initChromeExtensionRuntimes(webView)
 
 
-            com.webtoapp.core.kernel.BrowserKernel.configureWebView(webView)
+            if (config.enableKernelDisguise) {
+                com.webtoapp.core.kernel.BrowserKernel.configureWebView(webView)
+            }
 
 
 
@@ -1481,6 +1770,7 @@ class WebViewManager(
 
                     if (!bypassAggressiveNetworkHooks &&
                         !config.disableShields &&
+                        config.enableTrackerBlocking &&
                         isThirdParty &&
                         !isMapTile &&
                         !isCaptchaRequest &&
@@ -1532,6 +1822,7 @@ class WebViewManager(
                     if (!bypassAggressiveNetworkHooks &&
                         config.enableCrossOriginIsolation &&
                         isHttpOrHttps &&
+                        !it.isForMainFrame &&
                         !isCaptchaRequest &&
                         !isOAuthRequest &&
                         !isOAuthPageSubResource) {
@@ -1550,15 +1841,19 @@ class WebViewManager(
 
 
 
-                    if (url.startsWith("http://")) {
-                        val httpHost = extractHostFromUrl(url)
-                        if (httpHost != null && !isLocalCleartextHost(httpHost)) {
-                            val cleartextResponse = fetchCleartextResource(it)
-                            if (cleartextResponse != null) {
-                                return cleartextResponse
-                            }
-                        }
-                    }
+                    // NOTE: 这里曾经把所有非本地 http:// 请求转交给一个独立的 OkHttp
+                    // 客户端再喂回 WebView。这会造成：
+                    //   1. cookie 隔离（cleartextProxyClient 没有 CookieJar，与
+                    //      android.webkit.CookieManager 完全不通），所以 SPA / SSO /
+                    //      鉴权站点的二跳页会丢登录态（B 站视频页空白即此症状）；
+                    //   2. main frame 被代理时 WebView 的真实 URL 会与渲染内容错位，
+                    //      WebBackForwardList 的条目失效，导致 goBack() 时 URL 切换
+                    //      但页面不刷新；
+                    //   3. POST/PUT/PATCH 的 body 被 WebResourceRequest 接口吞掉，
+                    //      代理端收到的全是空 body。
+                    // AndroidManifest 里 cleartextTrafficPermitted 已经为 true，
+                    // 留给 WebView 自己处理 http:// 即可。私网 host 的 http 资源也
+                    // 会走系统正常路径。
                 }
 
                 return super.shouldInterceptRequest(view, request)
@@ -1581,7 +1876,7 @@ class WebViewManager(
 
 
 
-                if (request.isForMainFrame && OAuthCompatEngine.shouldRedirectToCustomTab(url)) {
+                if (request.isForMainFrame && config.enableOAuthExternalRedirect && OAuthCompatEngine.shouldRedirectToCustomTab(url)) {
                     val provider = OAuthCompatEngine.getProviderType(url)
                     AppLogger.i("WebViewManager", "Google OAuth detected [$provider] — opening outside WebView: $url")
                     view?.stopLoading()
@@ -1606,7 +1901,7 @@ class WebViewManager(
 
                 val targetHost = runCatching { Uri.parse(url).host?.lowercase() }.getOrNull()
                 val isPrivateNetworkHost = targetHost != null && isLocalCleartextHost(targetHost)
-                if (!config.disableShields && !isPrivateNetworkHost && ::shields.isInitialized && shields.isEnabled() && shields.getConfig().httpsUpgrade) {
+                if (config.enableHttpsUpgrade && !config.disableShields && !isPrivateNetworkHost && ::shields.isInitialized && shields.isEnabled() && shields.getConfig().httpsUpgrade) {
                     val upgradedUrl = shields.httpsUpgrader.tryUpgrade(url)
                     if (upgradedUrl != null) {
                         shields.stats.recordHttpsUpgrade()
@@ -1618,6 +1913,17 @@ class WebViewManager(
 
                 if (handleSpecialUrl(url, isUserGesture)) {
                     return true
+                }
+
+                // Base64 编码的 deep link 解码：某些 App（如 B 站）的网页版"下载 App"按钮
+                // 会把 bilibili://video/xxx 这类 scheme URL 做 base64 编码后作为 location.href 跳转。
+                // WebView 收到的 URL 是一串无 scheme 的 base64 文本，正常流程无法处理。
+                // 开启此功能后，尝试 base64 解码，如果解码结果是合法的 deep link 就走 handleSpecialUrl。
+                if (currentConfig?.decodeBase64DeepLinks == true && isUserGesture) {
+                    val decoded = tryDecodeBase64DeepLink(url)
+                    if (decoded != null && handleSpecialUrl(decoded, true)) {
+                        return true
+                    }
                 }
 
 
@@ -1633,6 +1939,10 @@ class WebViewManager(
                 super.onPageStarted(view, url, favicon)
                 currentMainFrameUrl = url
                 extensionPanelInjected = false
+                view?.let {
+                    userscriptInjectionState.remove(it)
+                    pagePhaseExecutionState.remove(it)
+                }
 
 
 
@@ -1678,6 +1988,9 @@ class WebViewManager(
                     fileRetryCount = 0
                     fileRetryUrl = null
                 }
+                if (url != null && url != loopbackMainFrameRetryUrl) {
+                    cancelLoopbackMainFrameRetry()
+                }
 
                 if (::shields.isInitialized) shields.onPageStarted(url)
 
@@ -1701,11 +2014,19 @@ class WebViewManager(
                 }
 
 
-                view?.evaluateJavascript(CLIPBOARD_POLYFILL_JS, null)
+                if (config.enableClipboardPolyfill) {
+                    view?.evaluateJavascript(CLIPBOARD_POLYFILL_JS, null)
+                }
 
-                view?.let { injectNotificationPolyfill(it) }
+                if (config.enableNotificationPolyfill) {
+                    view?.let { injectNotificationPolyfill(it) }
+                }
 
-                view?.evaluateJavascript(SCROLL_SAVE_JS, null)
+                view?.let { injectPrivateNetworkApiBridgeFallback(it, url) }
+
+                if (config.enableScrollMemory) {
+                    view?.evaluateJavascript(SCROLL_SAVE_JS, null)
+                }
 
                 if (config.viewportMode == com.webtoapp.data.model.ViewportMode.FIT_SCREEN) {
                     view?.evaluateJavascript(VIEWPORT_FIT_SCREEN_JS, null)
@@ -1718,16 +2039,15 @@ class WebViewManager(
                 }
 
 
-                if (!isBack) {
-                    view?.let { com.webtoapp.core.perf.NativePerfEngine.injectPerfOptimizations(it, com.webtoapp.core.perf.NativePerfEngine.Phase.DOCUMENT_START) }
-                }
-
                 view?.let { injectScripts(it, config.injectScripts, ScriptRunTime.DOCUMENT_START, url) }
             }
 
             override fun onPageCommitVisible(view: WebView?, url: String?) {
                 super.onPageCommitVisible(view, url)
                 currentMainFrameUrl = url ?: currentMainFrameUrl
+                // 注意：commit visible 对 WebView 的内置错误页（"Webpage not available"）也会触发，
+                // 不能仅靠 url 匹配判断 loopback 主帧加载成功——会误清状态导致 retry 永久循环。
+                // recovered 的清理改到 onPageFinished 中，按 diagErrorCount==0 才判成功。
                 val elapsed = System.currentTimeMillis() - diagPageStartTime
                 AppLogger.d("WebViewManager", "Page commit visible: +${elapsed}ms blocked=$diagBlockedCount")
                 callbacks.onPageCommitVisible(url)
@@ -1755,6 +2075,24 @@ class WebViewManager(
                     fileRetryCount = 0
                     fileRetryUrl = null
                 }
+                // 权威成功判定：Loopback URL 真正加载成功的唯一可靠信号是
+                // onPageFinished 时主帧没收到任何 onReceivedError（diagErrorCount==0）。
+                // 此时无论是否还在 pending retry，都要立即取消（包括撤掉 postDelayed 排好的任务），
+                // 否则会出现"已经成功又被假重试覆盖"的循环。
+                if (url != null && isLocalRuntimeUrl(url) && diagErrorCount == 0) {
+                    cancelLoopbackMainFrameRetry()
+                }
+
+                val currentUrl = url ?: view?.url
+                val endPhaseKey = buildPagePhaseExecutionKey(currentUrl, ScriptRunTime.DOCUMENT_END)
+                val idlePhaseKey = buildPagePhaseExecutionKey(currentUrl, ScriptRunTime.DOCUMENT_IDLE)
+                val shouldRunDocumentEnd = view != null && markPagePhaseExecuted(view, endPhaseKey)
+                val shouldRunDocumentIdle = view != null && markPagePhaseExecuted(view, idlePhaseKey)
+
+                if (!shouldRunDocumentEnd) {
+                    AppLogger.d("WebViewManager", "Skip duplicate DOCUMENT_END processing for: $currentUrl")
+                    return
+                }
 
                 view?.let { injectScripts(it, config.injectScripts, ScriptRunTime.DOCUMENT_END, url) }
 
@@ -1771,17 +2109,16 @@ class WebViewManager(
                     view?.evaluateJavascript(customJs, null)
                 }
 
-                view?.let { com.webtoapp.core.perf.NativePerfEngine.injectPerfOptimizations(it, com.webtoapp.core.perf.NativePerfEngine.Phase.DOCUMENT_END) }
-
-
-                if (url != null && (url.startsWith("http://") || url.startsWith("https://"))) {
+                if (url != null && (url.startsWith("http://") || url.startsWith("https://")) && config.enableImageRepair) {
                     view?.evaluateJavascript(IMAGE_REPAIR_JS, null)
                 }
                 callbacks.onPageFinished(url)
 
 
 
-                view?.evaluateJavascript(SCROLL_RESTORE_JS, null)
+                if (config.enableScrollMemory) {
+                    view?.evaluateJavascript(SCROLL_RESTORE_JS, null)
+                }
 
                 isNavigatingBack = false
 
@@ -1874,11 +2211,15 @@ class WebViewManager(
 
 
                 val finishedUrl = url
-                view?.postDelayed({
-                    if (view.url == finishedUrl) {
-                        injectScripts(view, config.injectScripts, ScriptRunTime.DOCUMENT_IDLE, view.url)
-                    }
-                }, 500)
+                if (shouldRunDocumentIdle) {
+                    view?.postDelayed({
+                        if (view.url == finishedUrl) {
+                            injectScripts(view, config.injectScripts, ScriptRunTime.DOCUMENT_IDLE, view.url)
+                        }
+                    }, 500)
+                } else {
+                    AppLogger.d("WebViewManager", "Skip duplicate DOCUMENT_IDLE processing for: $finishedUrl")
+                }
 
 
                 if (config.performanceOptimization) {
@@ -1911,7 +2252,9 @@ class WebViewManager(
 
 
                 view?.removeCallbacks(cookieFlushRunnable)
-                view?.postDelayed(cookieFlushRunnable, 3000)
+                if (config.enableCookiePersistence) {
+                    view?.postDelayed(cookieFlushRunnable, 3000)
+                }
 
 
                 view?.requestFocus()
@@ -1922,14 +2265,23 @@ class WebViewManager(
                 request: WebResourceRequest?,
                 error: WebResourceError?
             ) {
-                super.onReceivedError(view, request, error)
-
                 val errUrl = request?.url?.toString() ?: "unknown"
                 val errCode = error?.errorCode ?: -1
                 val errDesc = error?.description?.toString() ?: "unknown"
                 val isMain = request?.isForMainFrame == true
+                val normalizedErrDesc = normalizeNetworkErrorDescription(errDesc)
+                val shouldSuppressDefaultHandling = isMain && view != null && errUrl != "unknown" && errUrl != "about:blank" && (
+                    (upgradeInsecureHttpUrl(errUrl) != null && isCleartextBlockedError(errCode, errDesc, normalizedErrDesc)) ||
+                        shouldRetryLoopbackMainFrameRequest(errUrl, errCode, errDesc, normalizedErrDesc)
+                    )
+                if (!shouldSuppressDefaultHandling) {
+                    super.onReceivedError(view, request, error)
+                }
                 diagErrorCount++
-                AppLogger.d("WebViewManager", "Load error [${if (isMain) "main" else "sub"}] code=$errCode")
+                AppLogger.d(
+                    "WebViewManager",
+                    "Load error [${if (isMain) "main" else "sub"}] code=$errCode desc=$errDesc url=$errUrl"
+                )
                 if (request?.isForMainFrame == true) {
                     val errorCode = error?.errorCode ?: -1
                     val rawDescription = error?.description?.toString() ?: "Unknown error"
@@ -1952,6 +2304,48 @@ class WebViewManager(
                     }
 
 
+
+                    if (view != null && shouldRetryLoopbackMainFrameRequest(failedUrl, errorCode, rawDescription, description)) {
+                        val isSameRetry = failedUrl == loopbackMainFrameRetryUrl
+                        val currentRetry = if (isSameRetry) loopbackMainFrameRetryCount else 0
+                        if (currentRetry < LOOPBACK_MAIN_FRAME_MAX_RETRIES) {
+                            // 排定新 retry 前，先取消同一个 view 上可能还挂着的旧 retry runnable
+                            // （避免上次错误后排队的回调与本次错误叠加，导致同一个 url 被多次 loadUrl）
+                            loopbackMainFrameRetryRunnable?.let { view.removeCallbacks(it) }
+
+                            loopbackMainFrameRetryUrl = failedUrl
+                            loopbackMainFrameRetryCount = currentRetry + 1
+                            loopbackMainFrameRetryPending = true
+                            loopbackMainFrameRetryView = view
+                            AppLogger.i(
+                                "WebViewManager",
+                                "Loopback main-frame load failed (code=$errorCode, desc=$rawDescription), auto-retry ${loopbackMainFrameRetryCount}/$LOOPBACK_MAIN_FRAME_MAX_RETRIES after ${LOOPBACK_MAIN_FRAME_RETRY_DELAY_MS}ms: $failedUrl"
+                            )
+                            val retryRunnable = Runnable {
+                                val currentUrl = view.url
+                                if (currentUrl == null || currentUrl == "about:blank" || currentUrl == failedUrl || currentMainFrameUrl == failedUrl) {
+                                    AppLogger.d("WebViewManager", "Retrying loopback main-frame request: $failedUrl")
+                                    view.loadUrl(failedUrl)
+                                } else {
+                                    AppLogger.d(
+                                        "WebViewManager",
+                                        "Skip loopback auto-retry because WebView navigated away: current=$currentUrl, failed=$failedUrl"
+                                    )
+                                }
+                                // retry 已发出，清掉本任务引用避免下一次 onReceivedError 试图取消已执行的回调
+                                loopbackMainFrameRetryRunnable = null
+                            }
+                            loopbackMainFrameRetryRunnable = retryRunnable
+                            view.postDelayed(retryRunnable, LOOPBACK_MAIN_FRAME_RETRY_DELAY_MS)
+                            return
+                        } else {
+                            AppLogger.w(
+                                "WebViewManager",
+                                "Loopback main-frame load failed after $LOOPBACK_MAIN_FRAME_MAX_RETRIES retries: $failedUrl"
+                            )
+                            cancelLoopbackMainFrameRetry()
+                        }
+                    }
 
                     if (view != null && failedUrl.startsWith("file://")) {
                         val isSameRetry = failedUrl == fileRetryUrl
@@ -1981,7 +2375,7 @@ class WebViewManager(
 
                     val manager = errorPageManager
                     if (manager != null && view != null) {
-                        val errorHtml = manager.generateErrorPage(errorCode, description, failedUrl)
+                        val errorHtml = manager.generateErrorPage(errorCode, description, rawDescription, failedUrl)
                         if (errorHtml != null) {
                             lastFailedUrl = failedUrl
                             view.loadDataWithBaseURL(null, errorHtml, "text/html", "UTF-8", failedUrl)
@@ -2244,6 +2638,8 @@ class WebViewManager(
                 AppLogger.e("WebViewManager", "$reason, rendererPriority=${detail?.rendererPriorityAtExit()}")
 
                 view?.let { goneView ->
+                    userscriptInjectionState.remove(goneView)
+                    pagePhaseExecutionState.remove(goneView)
                     managedWebViews.remove(goneView)
                     goneView.stopLoading()
                     goneView.webChromeClient = null
@@ -2274,12 +2670,43 @@ class WebViewManager(
         return rawDescription
     }
 
+    private fun isLocalRuntimeUrl(url: String?): Boolean {
+        val uri = runCatching { Uri.parse(url) }.getOrNull() ?: return false
+        val scheme = uri.scheme?.lowercase() ?: return false
+        if (scheme != "http" && scheme != "https") return false
+        val host = uri.host?.lowercase() ?: return false
+        return isLocalCleartextHost(host)
+    }
+
     private fun isCleartextBlockedError(errorCode: Int, rawDescription: String, normalizedDescription: String): Boolean {
         if (errorCode == WebViewClient.ERROR_UNSAFE_RESOURCE) return true
         val merged = "$rawDescription $normalizedDescription".uppercase()
         return merged.contains("CLEARTEXT") ||
             merged.contains("ERR_CLEARTEXT_NOT_PERMITTED") ||
             merged.contains("SECURITY POLICY")
+    }
+
+    private fun shouldRetryLoopbackMainFrameRequest(
+        failedUrl: String,
+        errorCode: Int,
+        rawDescription: String,
+        normalizedDescription: String
+    ): Boolean {
+        if (!isLocalRuntimeUrl(failedUrl)) return false
+        if (isCleartextBlockedError(errorCode, rawDescription, normalizedDescription)) return false
+
+        val merged = "$rawDescription $normalizedDescription".uppercase()
+        return errorCode == WebViewClient.ERROR_UNKNOWN ||
+            errorCode == WebViewClient.ERROR_CONNECT ||
+            errorCode == WebViewClient.ERROR_TIMEOUT ||
+            errorCode == WebViewClient.ERROR_IO ||
+            errorCode == WebViewClient.ERROR_HOST_LOOKUP ||
+            merged.contains("ERR_EMPTY_RESPONSE") ||
+            merged.contains("ERR_CONNECTION") ||
+            merged.contains("CONNECTION_REFUSED") ||
+            merged.contains("CONNECTION RESET") ||
+            merged.contains("ERR_ABORTED") ||
+            merged.contains("TIMED_OUT")
     }
 
 
@@ -2423,6 +2850,10 @@ class WebViewManager(
         return STRICT_COMPAT_HOST_SUFFIXES.any { suffix ->
             host == suffix || host.endsWith(".$suffix")
         }
+    }
+
+    private fun shouldMinimizeLocalRuntimeInjection(pageUrl: String?): Boolean {
+        return isLocalRuntimeUrl(pageUrl)
     }
 
 
@@ -2576,63 +3007,7 @@ class WebViewManager(
 
 
 
-    private fun fetchCleartextResource(request: WebResourceRequest): WebResourceResponse? {
-        return try {
-            val url = request.url.toString()
 
-            val method = request.method?.uppercase() ?: "GET"
-            val body: okhttp3.RequestBody? = if (method == "POST" || method == "PUT" || method == "PATCH")
-                okhttp3.RequestBody.create(null, ByteArray(0)) else null
-
-            val okRequestBuilder = Request.Builder()
-                .url(url)
-                .method(method, body)
-
-            request.requestHeaders?.forEach { (key, value) ->
-                if (key.lowercase() !in SKIP_HEADERS) {
-                    okRequestBuilder.addHeader(key, value)
-                }
-            }
-
-            val okRequest = okRequestBuilder.build()
-
-            val okResponse: Response = cleartextProxyClient.newCall(okRequest).execute()
-            val responseCode = okResponse.code
-            val responseMessage = okResponse.message.ifBlank { "OK" }
-
-            val contentType = okResponse.header("Content-Type") ?: "application/octet-stream"
-            val mimeType = contentType.split(";").firstOrNull() ?: "application/octet-stream"
-            val charset = contentType.substringAfter("charset=", "").ifBlank { "UTF-8" }
-
-
-            val responseHeaders = mutableMapOf<String, String>()
-            okResponse.headers.forEach { (name, value) ->
-                responseHeaders[name] = value
-            }
-
-
-
-            val inputStream = if (responseCode in 200..299) {
-                okResponse.body?.byteStream() ?: ByteArrayInputStream(ByteArray(0))
-            } else {
-                okResponse.body?.byteStream() ?: ByteArrayInputStream(ByteArray(0))
-            }
-
-            AppLogger.d("WebViewManager", "CleartextProxy fetched: $url -> $responseCode")
-
-            WebResourceResponse(
-                mimeType,
-                charset,
-                responseCode,
-                responseMessage,
-                responseHeaders,
-                inputStream
-            )
-        } catch (e: Exception) {
-            AppLogger.e("WebViewManager", "CleartextProxy failed: ${request.url}", e)
-            null
-        }
-    }
 
 
 
@@ -2962,10 +3337,8 @@ class WebViewManager(
     }
 
     private fun upgradeInsecureHttpUrl(url: String): String? {
-        if (!url.startsWith("http://", ignoreCase = true)) return null
-        val host = runCatching { Uri.parse(url).host?.lowercase() }.getOrNull() ?: return null
-        if (isLocalCleartextHost(host)) return null
-        return url.replaceFirst(Regex("(?i)^http://"), "https://")
+        // 不做任何 HTTP→HTTPS 强制升级
+        return null
     }
 
 
@@ -3054,6 +3427,48 @@ class WebViewManager(
         val path = uri.path?.lowercase().orEmpty()
         if (scheme !in setOf("bytedance", "snssdk", "douyin")) return false
         return host == "dispatch_message" || path.contains("dispatch_message")
+    }
+
+    /**
+     * 尝试将 URL 作为 base64 解码，判断解码结果是否是合法的 deep link（含 :// 的非 http(s) scheme）。
+     *
+     * B 站等 App 的网页版会把 `bilibili://video/xxx` 做 base64 编码后赋给 location.href，
+     * WebView 收到的 URL 形如 `2233DGYSNSYmlsaWJpbGk6Ly92aWRlby8xMTY1NjY5...`——
+     * 没有 scheme，无法被 handleSpecialUrl 识别。
+     *
+     * 安全约束：
+     * - 只在用户手势触发时尝试（防止恶意页面自动跳转）
+     * - 解码结果必须包含 `://` 且 scheme 不在 BLOCKED_SPECIAL_SCHEMES 里
+     * - 解码失败（非法 base64 / 解码后不含 scheme）直接返回 null，不影响正常流程
+     */
+    private fun tryDecodeBase64DeepLink(url: String): String? {
+        // 快速排除：正常 URL 都有 scheme（含 ://），base64 编码的 deep link 不会有
+        if (url.contains("://")) return null
+        // base64 字符集：A-Z a-z 0-9 + / = 以及 URL-safe 变体 - _
+        // 如果 URL 含有 base64 不可能出现的字符，直接跳过
+        if (!url.matches(Regex("^[A-Za-z0-9+/=_-]+$"))) return null
+        // 太短的不可能是有效 deep link
+        if (url.length < 10) return null
+
+        return try {
+            // 尝试标准 base64 和 URL-safe base64 两种
+            val decoded = try {
+                String(android.util.Base64.decode(url, android.util.Base64.DEFAULT), Charsets.UTF_8)
+            } catch (_: Exception) {
+                String(android.util.Base64.decode(url, android.util.Base64.URL_SAFE), Charsets.UTF_8)
+            }
+            // 解码结果必须是 scheme://... 格式
+            val schemeEnd = decoded.indexOf("://")
+            if (schemeEnd <= 0) return null
+            val scheme = decoded.substring(0, schemeEnd).lowercase()
+            // 安全检查
+            if (scheme in BLOCKED_SPECIAL_SCHEMES) return null
+            if (scheme == "http" || scheme == "https") return null // 不处理普通 URL
+            AppLogger.d("WebViewManager", "Decoded base64 deep link: $decoded (from: ${url.take(30)}...)")
+            decoded
+        } catch (_: Exception) {
+            null
+        }
     }
 
 
@@ -3273,6 +3688,14 @@ class WebViewManager(
     fun destroyAll() {
         proxyApplyJob?.cancel()
         proxyApplyJob = null
+        privateNetworkScriptHandlers.values.toList().forEach { handler ->
+            runCatching { handler.remove() }
+        }
+        privateNetworkScriptHandlers.clear()
+        downloadBridgeScriptHandlers.values.toList().forEach { handler ->
+            runCatching { handler.remove() }
+        }
+        downloadBridgeScriptHandlers.clear()
         managedWebViews.keys.toList().forEach { webView ->
             destroyWebView(webView)
         }
@@ -3295,6 +3718,60 @@ class WebViewManager(
 
     fun getShields(): BrowserShields? = if (::shields.isInitialized) shields else null
 
+    private fun installPrivateNetworkApiBridge(webView: WebView, config: WebViewConfig) {
+        if (!config.javaScriptEnabled) return
+        if (!config.domStorageEnabled) return
+        if (privateNetworkScriptHandlers.containsKey(webView)) return
+
+        val rules = setOf("*")
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
+            try {
+                privateNetworkScriptHandlers[webView] = WebViewCompat.addDocumentStartJavaScript(
+                    webView,
+                    PrivateNetworkApiBridgeScriptHolder.SCRIPT,
+                    rules
+                )
+                AppLogger.d("WebViewManager", "Private network API bridge installed at document start")
+            } catch (e: Exception) {
+                AppLogger.w("WebViewManager", "Document-start private network bridge install failed", e)
+            }
+        } else {
+            AppLogger.d("WebViewManager", "Document-start script unsupported; private network bridge will use runtime fallback")
+        }
+    }
+
+    // 在页面任何 JS 之前注入 DownloadBridge
+    // 真正的 document-start 时机，保证 URL.createObjectURL 和 <a>.click 的 hook
+    // 在页面 inline script 执行前就已就位，避免 blob: URL 下载因 hook 晚到而失效
+    private fun installDownloadBridgeDocumentStart(webView: WebView) {
+        if (downloadBridgeScriptHandlers.containsKey(webView)) return
+        if (!WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
+            AppLogger.i("WebViewManager", "[DownloadBridge] Document-start script unsupported on this WebView version; falling back to onPageStarted/onPageFinished injection")
+            return
+        }
+        try {
+            downloadBridgeScriptHandlers[webView] = WebViewCompat.addDocumentStartJavaScript(
+                webView,
+                DownloadBridge.getInjectionScript(),
+                setOf("*")
+            )
+            AppLogger.i("WebViewManager", "[DownloadBridge] Installed at document start (applies to all hosts)")
+        } catch (e: Exception) {
+            AppLogger.w("WebViewManager", "[DownloadBridge] Document-start install failed, will use onPageStarted fallback", e)
+        }
+    }
+
+    private fun injectPrivateNetworkApiBridgeFallback(webView: WebView, pageUrl: String?) {
+        if (!isLocalRuntimeUrl(pageUrl ?: webView.url)) return
+        try {
+            webView.evaluateJavascript(PrivateNetworkApiBridgeScriptHolder.SCRIPT, null)
+        } catch (e: Exception) {
+            AppLogger.w("WebViewManager", "Private network bridge fallback injection failed", e)
+        }
+    }
+
+    internal fun getPrivateNetworkApiBridgeScript(): String = PrivateNetworkApiBridgeScriptHolder.SCRIPT
+
 
     private var currentConfig: WebViewConfig? = null
 
@@ -3316,16 +3793,21 @@ class WebViewManager(
         extensionRuntimes.clear()
 
         try {
-            val chromeExtModules = getActiveModulesForCurrentApp().filter { module ->
+            val allChromeExtModules = getActiveModulesForCurrentApp().filter { module ->
                 module.sourceType == com.webtoapp.core.extension.ModuleSourceType.CHROME_EXTENSION &&
-                module.chromeExtId.isNotEmpty() &&
-                module.backgroundScript.isNotEmpty()
+                module.chromeExtId.isNotEmpty()
             }
 
-            if (chromeExtModules.isEmpty()) return
+            if (allChromeExtModules.isEmpty()) return
+
+            val chromeExtRuntimeModules = allChromeExtModules.filter { module ->
+                module.sourceType == com.webtoapp.core.extension.ModuleSourceType.CHROME_EXTENSION &&
+                    module.chromeExtId.isNotEmpty() &&
+                    (module.backgroundScript.isNotEmpty() || module.manifestJson.contains("declarative_net_request"))
+            }
 
 
-            val extensionGroups = chromeExtModules.groupBy { it.chromeExtId }
+            val extensionGroups = chromeExtRuntimeModules.groupBy { it.chromeExtId }
 
             for ((extId, modules) in extensionGroups) {
                 val primaryModule = modules.first()
@@ -3335,18 +3817,28 @@ class WebViewManager(
                     context = context,
                     extensionId = extId,
                     backgroundScriptPath = primaryModule.backgroundScript,
-                    originUrl = originUrl
+                    originUrl = originUrl,
+                    manifestJson = primaryModule.manifestJson.ifBlank { "{}" }
                 )
                 runtime.initialize(webView)
                 extensionRuntimes[extId] = runtime
+                loadDeclarativeNetRequestRules(extId, primaryModule.manifestJson)
                 AppLogger.d("WebViewManager", "Created background runtime for extension: $extId")
             }
 
 
-            if (extensionRuntimes.isNotEmpty()) {
-                val contentBridge = com.webtoapp.core.extension.ContentExtensionBridge(extensionRuntimes)
+            if (allChromeExtModules.isNotEmpty()) {
+                val contentBridge = com.webtoapp.core.extension.ContentExtensionBridge(
+                    runtimes = extensionRuntimes,
+                    currentWebViewProvider = { webView },
+                    openPopupHandler = { extId, popupPath -> showChromeExtensionPage(extId, popupPath) },
+                    openOptionsPageHandler = { extId, optionsPath -> showChromeExtensionPage(extId, optionsPath) }
+                )
                 webView.addJavascriptInterface(contentBridge, com.webtoapp.core.extension.ChromeExtensionRuntime.JS_BRIDGE_NAME)
-                AppLogger.d("WebViewManager", "Registered WtaExtBridge for ${extensionRuntimes.size} extension(s)")
+                AppLogger.d(
+                    "WebViewManager",
+                    "Registered WtaExtBridge for ${allChromeExtModules.map { it.chromeExtId }.distinct().size} extension(s)"
+                )
             }
         } catch (e: Exception) {
             AppLogger.e("WebViewManager", "Failed to init Chrome Extension runtimes", e)
@@ -3365,32 +3857,63 @@ class WebViewManager(
         val url = pageUrl ?: webView.url ?: ""
         val conservativeMode = shouldUseConservativeScriptMode(url)
         val scriptlessMode = shouldUseScriptlessMode(url)
+        val minimizeLocalRuntimeInjection = shouldMinimizeLocalRuntimeInjection(url)
 
+
+        if (runAt == ScriptRunTime.DOCUMENT_END &&
+            !minimizeLocalRuntimeInjection &&
+            currentConfig?.downloadEnabled == true &&
+            currentConfig?.enableBlobDownloadInterception == true) {
+            // DOCUMENT_END 兜底注入一次（脚本自身幂等，_downloadBridgeInjected 会防止重复执行）
+            // 防止 onPageStarted 时机因某些页面错过
+            injectDownloadBridgeScript(webView)
+        }
 
         if (runAt == ScriptRunTime.DOCUMENT_START) {
-            if (!conservativeMode && currentConfig?.downloadEnabled == true) {
+            // Download bridge 对 blob/data URL 下载是必需的（Android WebView 原生不支持 blob: 下载 scheme）
+            // 它只 hook URL.createObjectURL/revokeObjectURL 和 <a>.click，无兼容性风险
+            // 不受 conservativeMode/scriptlessMode 限制——对所有远程 https 站点都要装
+            if (!minimizeLocalRuntimeInjection && currentConfig?.downloadEnabled == true && currentConfig?.enableBlobDownloadInterception == true) {
                 injectDownloadBridgeScript(webView)
-            } else if (conservativeMode) {
-                AppLogger.d("WebViewManager", "Skip download bridge for conservative page: $url")
+            } else if (minimizeLocalRuntimeInjection) {
+                AppLogger.d("WebViewManager", "Skip download bridge for local runtime page: $url")
             }
-
-
-            if (!scriptlessMode) {
+            if (!scriptlessMode && !minimizeLocalRuntimeInjection) {
                 injectExtensionPanelScript(webView)
             } else {
-                AppLogger.d("WebViewManager", "Skip extension panel injection for scriptless page: $url")
+                AppLogger.d(
+                    "WebViewManager",
+                    if (minimizeLocalRuntimeInjection) {
+                        "Skip extension panel injection for local runtime page: $url"
+                    } else {
+                        "Skip extension panel injection for scriptless page: $url"
+                    }
+                )
             }
 
 
-            if (!conservativeMode) {
+            if (!conservativeMode && !minimizeLocalRuntimeInjection) {
                 injectIsolationScript(webView)
+            } else if (minimizeLocalRuntimeInjection) {
+                AppLogger.d("WebViewManager", "Skip isolation script for local runtime page: $url")
+            }
+
+            if (minimizeLocalRuntimeInjection) {
+                injectPrivateNetworkApiBridgeFallback(webView, url)
             }
 
 
-            if (!scriptlessMode) {
+            if (!scriptlessMode && !minimizeLocalRuntimeInjection) {
                 injectCompatibilityScripts(webView, url, conservativeMode)
             } else {
-                AppLogger.d("WebViewManager", "Scriptless mode enabled for strict host: $url")
+                AppLogger.d(
+                    "WebViewManager",
+                    if (minimizeLocalRuntimeInjection) {
+                        "Skip compatibility scripts for local runtime page: $url"
+                    } else {
+                        "Scriptless mode enabled for strict host: $url"
+                    }
+                )
             }
         }
 
@@ -3403,6 +3926,10 @@ class WebViewManager(
         scripts.filter { it.enabled && it.runAt == runAt }
             .forEach { script ->
                 try {
+                    if (minimizeLocalRuntimeInjection && script.name in setOf("__kernel__", "__perf_start__", "__perf_end__")) {
+                        AppLogger.d("WebViewManager", "Skip shell script ${script.name} for local runtime page: $url")
+                        return@forEach
+                    }
 
                     val actualCode = if (com.webtoapp.core.script.UserScriptStorage.isFileReference(script.code)) {
                         com.webtoapp.core.script.UserScriptStorage.loadScriptCode(context, script.code)
@@ -3429,8 +3956,22 @@ class WebViewManager(
                 }
             }
 
+        if (minimizeLocalRuntimeInjection) {
+            AppLogger.d("WebViewManager", "Skip extension/module injections for local runtime page (${runAt.name}): $url")
+            return
+        }
+
 
         injectAllExtensionModules(webView, url, runAt)
+    }
+
+    private fun buildPagePhaseExecutionKey(url: String?, runAt: ScriptRunTime): String {
+        return "${runAt.name}|${url ?: "about:blank"}"
+    }
+
+    private fun markPagePhaseExecuted(webView: WebView, key: String): Boolean {
+        val executed = pagePhaseExecutionState.getOrPut(webView) { mutableSetOf() }
+        return executed.add(key)
     }
 
 
@@ -3465,17 +4006,18 @@ class WebViewManager(
 
     private fun getExtensionPanelEligibility(): ExtensionPanelEligibility {
         val extensionManager = ExtensionManager.getInstance(context)
-        val hasEmbeddedModules = embeddedModules.any { it.enabled }
+        val hasEmbeddedModules = embeddedModules.any { it.enabled && it.shouldRegisterInPanel() }
         val appModules = if (appExtensionModuleIds.isNotEmpty()) {
             runCatching { extensionManager.getModulesByIds(appExtensionModuleIds) }.getOrElse { emptyList() }
         } else {
             emptyList()
         }
+        val hasAppModules = appModules.any { it.enabled && it.shouldRegisterInPanel() }
         val enabledModules = runCatching { extensionManager.getEnabledModules() }.getOrElse { emptyList() }
-        val hasGlobalModules = allowGlobalModuleFallback && enabledModules.isNotEmpty()
+        val hasGlobalModules = allowGlobalModuleFallback && enabledModules.any { it.shouldRegisterInPanel() }
         return ExtensionPanelEligibility(
             hasEmbeddedModules = hasEmbeddedModules,
-            hasAppModules = appModules.isNotEmpty(),
+            hasAppModules = hasAppModules,
             hasGlobalModules = hasGlobalModules,
             isLoading = extensionManager.isLoading.value,
             totalEnabledModules = enabledModules.size,
@@ -3808,6 +4350,10 @@ class WebViewManager(
 
             if (!conservativeMode) {
                 scripts.add(getNotificationPolyfillScript())
+            }
+
+            if (config.enableOrientationPolyfill) {
+                scripts.add(ORIENTATION_POLYFILL_JS)
             }
 
 
@@ -4247,66 +4793,68 @@ class WebViewManager(
             }
 
 
-            scripts.add("""
-                // Compatibility fixes
-                (function() {
-                    'use strict';
+            if (config.enableCompatPolyfills) {
+                scripts.add("""
+                    // Compatibility fixes
+                    (function() {
+                        'use strict';
 
-                    // Fix requestIdleCallback (some WebViews don't support)
-                    if (!window.requestIdleCallback) {
-                        window.requestIdleCallback = function(callback, options) {
-                            var timeout = (options && options.timeout) || 1;
-                            var start = Date.now();
-                            return setTimeout(function() {
-                                callback({
-                                    didTimeout: false,
-                                    timeRemaining: function() {
-                                        return Math.max(0, 50 - (Date.now() - start));
-                                    }
-                                });
-                            }, timeout);
-                        };
-                        window.cancelIdleCallback = function(id) {
-                            clearTimeout(id);
-                        };
-                    }
+                        // Fix requestIdleCallback (some WebViews don't support)
+                        if (!window.requestIdleCallback) {
+                            window.requestIdleCallback = function(callback, options) {
+                                var timeout = (options && options.timeout) || 1;
+                                var start = Date.now();
+                                return setTimeout(function() {
+                                    callback({
+                                        didTimeout: false,
+                                        timeRemaining: function() {
+                                            return Math.max(0, 50 - (Date.now() - start));
+                                        }
+                                    });
+                                }, timeout);
+                            };
+                            window.cancelIdleCallback = function(id) {
+                                clearTimeout(id);
+                            };
+                        }
 
-                    // Fix ResizeObserver (some old WebViews don't support)
-                    if (!window.ResizeObserver) {
-                        window.ResizeObserver = function(callback) {
-                            this.callback = callback;
-                            this.elements = [];
-                        };
-                        window.ResizeObserver.prototype.observe = function(el) {
-                            this.elements.push(el);
-                        };
-                        window.ResizeObserver.prototype.unobserve = function(el) {
-                            this.elements = this.elements.filter(function(e) { return e !== el; });
-                        };
-                        window.ResizeObserver.prototype.disconnect = function() {
-                            this.elements = [];
-                        };
-                    }
+                        // Fix ResizeObserver (some old WebViews don't support)
+                        if (!window.ResizeObserver) {
+                            window.ResizeObserver = function(callback) {
+                                this.callback = callback;
+                                this.elements = [];
+                            };
+                            window.ResizeObserver.prototype.observe = function(el) {
+                                this.elements.push(el);
+                            };
+                            window.ResizeObserver.prototype.unobserve = function(el) {
+                                this.elements = this.elements.filter(function(e) { return e !== el; });
+                            };
+                            window.ResizeObserver.prototype.disconnect = function() {
+                                this.elements = [];
+                            };
+                        }
 
-                    console.log('[WebToApp] Compatibility fixes loaded');
-                })();
-            """.trimIndent())
+                        console.log('[WebToApp] Compatibility fixes loaded');
+                    })();
+                """.trimIndent())
+            }
 
             val canInjectShieldsJs = !conservativeMode
 
 
-            if (canInjectShieldsJs && !config.disableShields && ::shields.isInitialized && shields.isEnabled() && shields.getConfig().gpcEnabled) {
+            if (canInjectShieldsJs && !config.disableShields && config.enableGpc && ::shields.isInitialized && shields.isEnabled() && shields.getConfig().gpcEnabled) {
                 scripts.add(shields.gpcInjector.generateScript())
             }
 
 
-            if (canInjectShieldsJs && !config.disableShields && ::shields.isInitialized && shields.isEnabled() && shields.getConfig().cookieConsentBlock) {
+            if (canInjectShieldsJs && !config.disableShields && config.enableCookieConsentBlock && ::shields.isInitialized && shields.isEnabled() && shields.getConfig().cookieConsentBlock) {
                 scripts.add(shields.cookieConsentBlocker.generateScript())
                 shields.stats.recordCookieConsentBlocked()
             }
 
 
-            if (canInjectShieldsJs && !config.disableShields && ::shields.isInitialized && shields.isEnabled()) {
+            if (canInjectShieldsJs && !config.disableShields && config.enableReferrerPolicy && ::shields.isInitialized && shields.isEnabled()) {
                 val referrerPolicy = shields.getConfig().referrerPolicy.value
                 scripts.add("""
                     // Shields: Referrer Policy
@@ -4388,7 +4936,7 @@ class WebViewManager(
 
 
     private fun resolveActiveExtensionModules(): List<com.webtoapp.core.extension.ExtensionModule> {
-        return when {
+        val baseModules = when {
             appExtensionModuleIds.isNotEmpty() -> {
                 ExtensionManager.getInstance(context).getModulesByIds(appExtensionModuleIds)
             }
@@ -4396,6 +4944,28 @@ class WebViewManager(
                 ExtensionManager.getInstance(context).getEnabledModules()
             }
             else -> emptyList()
+        }
+        if (baseModules.isEmpty()) return emptyList()
+
+        val dynamicScripts = baseModules
+            .asSequence()
+            .filter {
+                it.sourceType == com.webtoapp.core.extension.ModuleSourceType.CHROME_EXTENSION &&
+                    it.chromeExtId.isNotEmpty()
+            }
+            .map { it.chromeExtId }
+            .distinct()
+            .flatMap { extId ->
+                com.webtoapp.core.extension.ChromeExtensionContentScriptRegistry
+                    .buildModules(context, extId)
+                    .asSequence()
+            }
+            .toList()
+
+        return if (dynamicScripts.isEmpty()) {
+            baseModules
+        } else {
+            baseModules + dynamicScripts
         }
     }
 
@@ -4485,22 +5055,33 @@ class WebViewManager(
                 return
             }
 
+            val userscriptModules = matchingModules.filter { it.isUserscript() }
+            val standardModules = matchingModules.filterNot { it.isUserscript() }
 
-            val injectionCode = matchingModules.joinToString("\n\n") { module ->
-                """
-                // ========== ${module.name} ==========
-                (function() {
-                    try {
-                        ${module.generateExecutableCode()}
-                    } catch(__moduleError__) {
-                        console.error('[WebToApp Module Error] ${module.name}:', __moduleError__);
-                    }
-                })();
-                """.trimIndent()
+            if (userscriptModules.isNotEmpty()) {
+                injectEmbeddedUserscriptModules(webView, userscriptModules)
             }
 
-            webView.evaluateJavascript(injectionCode, null)
-            AppLogger.d("WebViewManager", "Injected ${matchingModules.size} embedded module(s) (${runAt.name})")
+            if (standardModules.isNotEmpty()) {
+                val injectionCode = standardModules.joinToString("\n\n") { module ->
+                    """
+                    // ========== ${module.name} ==========
+                    (function() {
+                        try {
+                            ${module.generateExecutableCode()}
+                        } catch(__moduleError__) {
+                            console.error('[WebToApp Module Error] ${module.name}:', __moduleError__);
+                        }
+                    })();
+                    """.trimIndent()
+                }
+                webView.evaluateJavascript(injectionCode, null)
+            }
+
+            AppLogger.d(
+                "WebViewManager",
+                "Injected ${standardModules.size} embedded module(s) + ${userscriptModules.size} embedded userscript(s) (${runAt.name})"
+            )
         } catch (e: Exception) {
             AppLogger.e("WebViewManager", "Embedded module injection failed", e)
         }
@@ -4580,8 +5161,13 @@ class WebViewManager(
                 }
 
                 for ((extId, extModules) in extensionGroups) {
-
-                    codeBuilder.appendLine(com.webtoapp.core.extension.ChromeExtensionPolyfill.generatePolyfill(extensionId = extId))
+                    val manifestJson = extModules.firstOrNull()?.manifestJson ?: "{}"
+                    codeBuilder.appendLine(
+                        com.webtoapp.core.extension.ChromeExtensionPolyfill.generatePolyfill(
+                            extensionId = extId,
+                            manifestJson = manifestJson
+                        )
+                    )
                     codeBuilder.appendLine()
 
 
@@ -4608,7 +5194,13 @@ class WebViewManager(
                 }
                 for ((extId, extModules) in extensionGroups) {
                     val extBuilder = StringBuilder()
-                    extBuilder.appendLine(com.webtoapp.core.extension.ChromeExtensionPolyfill.generatePolyfill(extensionId = extId))
+                    val manifestJson = extModules.firstOrNull()?.manifestJson ?: "{}"
+                    extBuilder.appendLine(
+                        com.webtoapp.core.extension.ChromeExtensionPolyfill.generatePolyfill(
+                            extensionId = extId,
+                            manifestJson = manifestJson
+                        )
+                    )
                     appendChromeExtCss(extBuilder, extId, extModules)
                     appendChromeExtScripts(extBuilder, extModules)
                     webView.evaluateJavascript(extBuilder.toString(), null)
@@ -4710,11 +5302,23 @@ class WebViewManager(
         modules: List<com.webtoapp.core.extension.ExtensionModule>
     ) {
         try {
+            ensureUserscriptBootstrap(webView)
 
-            val windowManagerJs = com.webtoapp.core.extension.UserScriptWindowScript.getWindowManagerScript()
+            val injectedKeys = userscriptInjectionState.getOrPut(webView) { mutableSetOf() }
+            var injectedCount = 0
+            var skippedCount = 0
 
+            for (module in modules) {
+                val moduleKey = buildUserscriptInjectionKey(module)
+                if (!injectedKeys.add(moduleKey)) {
+                    skippedCount += 1
+                    AppLogger.d(
+                        "WebViewManager",
+                        "Skip duplicate userscript injection: ${module.name} key=$moduleKey"
+                    )
+                    continue
+                }
 
-            val combinedCode = windowManagerJs + "\n\n" + modules.joinToString("\n\n") { module ->
                 val scriptInfo = mapOf(
                     "name" to module.name,
                     "version" to module.version.name,
@@ -4722,7 +5326,6 @@ class WebViewManager(
                     "author" to (module.author?.name ?: ""),
                     "namespace" to module.id
                 )
-
 
                 val resolvedResources = module.resources.mapValues { (name, url) ->
                     extensionFileManager.getCachedResource(name, url) ?: url
@@ -4735,30 +5338,217 @@ class WebViewManager(
                     resources = resolvedResources
                 )
 
-
-                val requireJs = module.requireUrls.mapNotNull { url ->
-                    extensionFileManager.getCachedRequire(url)
-                }.joinToString("\n\n")
-
-
-                """
-                // ========== [Userscript] ${module.name} ==========
-                (function() {
-                    try {
-                        $polyfill
-                        $requireJs
-                        ${module.code}
-                    } catch(__usError__) {
-                        console.error('[WebToApp Userscript Error] ${module.name}:', __usError__);
+                val requireBlocks = module.requireUrls.mapNotNull { url ->
+                    extensionFileManager.getCachedRequire(url)?.let { requireCode ->
+                        url to requireCode
                     }
-                })();
-                """.trimIndent()
+                }
+
+                val totalRequireChars = requireBlocks.sumOf { it.second.length }
+                AppLogger.d(
+                    "WebViewManager",
+                    "Userscript payload: name=${module.name}, body=${module.code.length}, requires=${requireBlocks.size}, requireChars=$totalRequireChars"
+                )
+
+                webView.evaluateJavascript(buildUserscriptPolyfillEval(module.id, polyfill), null)
+
+                requireBlocks.forEachIndexed { index, (_, requireCode) ->
+                    webView.evaluateJavascript(
+                        buildUserscriptRequireEval(module.name, module.id, index, requireCode),
+                        null
+                    )
+                }
+
+                if (module.code.isNotBlank()) {
+                    webView.evaluateJavascript(buildUserscriptModuleEval(module.name, module.id, module.code), null)
+                }
+
+                injectedCount += 1
             }
 
-            webView.evaluateJavascript(combinedCode, null)
-            AppLogger.d("WebViewManager", "Injected ${modules.size} userscript module(s) with GM polyfills")
+            AppLogger.d(
+                "WebViewManager",
+                "Injected $injectedCount userscript module(s); skipped $skippedCount duplicate(s)"
+            )
         } catch (e: Exception) {
             AppLogger.e("WebViewManager", "Userscript module injection failed", e)
+        }
+    }
+
+    private fun ensureUserscriptBootstrap(webView: WebView) {
+        val bootstrap = """
+            (function() {
+                if (window.__WTA_USERSCRIPT_BOOTSTRAPPED__) return;
+                window.__WTA_USERSCRIPT_BOOTSTRAPPED__ = true;
+                window.__WTA_USERSCRIPT_POLYFILLS__ = window.__WTA_USERSCRIPT_POLYFILLS__ || {};
+                window.__WTA_USERSCRIPT_REQUIRE_CACHE__ = window.__WTA_USERSCRIPT_REQUIRE_CACHE__ || {};
+                ${com.webtoapp.core.extension.UserScriptWindowScript.getWindowManagerScript()}
+            })();
+        """.trimIndent()
+        webView.evaluateJavascript(bootstrap, null)
+    }
+
+    private fun buildUserscriptInjectionKey(
+        module: com.webtoapp.core.extension.ExtensionModule
+    ): String {
+        val version = module.version.name.ifBlank { "0" }
+        return "${module.id}:$version:${module.runAt.name}"
+    }
+
+    private fun buildEmbeddedUserscriptInjectionKey(
+        module: com.webtoapp.core.shell.EmbeddedShellModule
+    ): String {
+        val version = module.versionName.ifBlank { "0" }
+        return "${module.id}:$version:${module.runAt}"
+    }
+
+    private fun buildUserscriptPolyfillEval(
+        scriptId: String,
+        polyfill: String
+    ): String {
+        val encoded = JSONObject.quote(polyfill)
+        return """
+            (function() {
+                window.__WTA_USERSCRIPT_POLYFILLS__ = window.__WTA_USERSCRIPT_POLYFILLS__ || {};
+                if (window.__WTA_USERSCRIPT_POLYFILLS__[${
+                    JSONObject.quote(scriptId)
+                }]) return;
+                window.__WTA_USERSCRIPT_POLYFILLS__[${
+                    JSONObject.quote(scriptId)
+                }] = true;
+                try {
+                    eval($encoded);
+                } catch(__wtaPolyfillError__) {
+                    console.error('[WebToApp Userscript Polyfill Error] ${escapeForJsSingleQuoted(scriptId)}:', __wtaPolyfillError__);
+                }
+            })();
+        """.trimIndent()
+    }
+
+    private fun buildUserscriptRequireEval(
+        moduleName: String,
+        scriptId: String,
+        index: Int,
+        requireCode: String
+    ): String {
+        val encodedScriptId = JSONObject.quote(scriptId)
+        val requireKey = JSONObject.quote("$scriptId#$index")
+        val encodedCode = JSONObject.quote(requireCode)
+        return """
+            (function() {
+                window.__WTA_USERSCRIPT_REQUIRE_CACHE__ = window.__WTA_USERSCRIPT_REQUIRE_CACHE__ || {};
+                if (window.__WTA_USERSCRIPT_REQUIRE_CACHE__[$requireKey]) return;
+                window.__WTA_USERSCRIPT_REQUIRE_CACHE__[$requireKey] = true;
+                try {
+                    eval($encodedCode);
+                } catch(__wtaRequireError__) {
+                    console.error('[WebToApp Userscript Require Error] ${escapeForJsSingleQuoted(moduleName)} (${escapeForJsSingleQuoted(scriptId)}):', __wtaRequireError__);
+                    delete window.__WTA_USERSCRIPT_REQUIRE_CACHE__[$requireKey];
+                }
+            })();
+        """.trimIndent()
+    }
+
+    private fun buildUserscriptModuleEval(
+        moduleName: String,
+        scriptId: String,
+        moduleCode: String
+    ): String {
+        val encodedCode = JSONObject.quote(moduleCode)
+        return """
+            (function() {
+                try {
+                    eval($encodedCode);
+                } catch(__usError__) {
+                    console.error('[WebToApp Userscript Error] ${escapeForJsSingleQuoted(moduleName)} (${escapeForJsSingleQuoted(scriptId)}):', __usError__);
+                }
+            })();
+        """.trimIndent()
+    }
+
+    private fun escapeForJsSingleQuoted(input: String): String {
+        return input
+            .replace("\\", "\\\\")
+            .replace("'", "\\'")
+            .replace("\n", "\\n")
+            .replace("\r", "\\r")
+            .replace("\u2028", "\\u2028")
+            .replace("\u2029", "\\u2029")
+    }
+
+    private fun injectEmbeddedUserscriptModules(
+        webView: WebView,
+        modules: List<com.webtoapp.core.shell.EmbeddedShellModule>
+    ) {
+        try {
+            ensureUserscriptBootstrap(webView)
+
+            val injectedKeys = userscriptInjectionState.getOrPut(webView) { mutableSetOf() }
+            var injectedCount = 0
+            var skippedCount = 0
+
+            for (module in modules) {
+                val moduleKey = buildEmbeddedUserscriptInjectionKey(module)
+                if (!injectedKeys.add(moduleKey)) {
+                    skippedCount += 1
+                    AppLogger.d(
+                        "WebViewManager",
+                        "Skip duplicate embedded userscript injection: ${module.name} key=$moduleKey"
+                    )
+                    continue
+                }
+
+                val scriptInfo = mapOf(
+                    "name" to module.name,
+                    "version" to module.versionName,
+                    "description" to module.description,
+                    "author" to module.authorName,
+                    "namespace" to module.id
+                )
+
+                val polyfill = com.webtoapp.core.extension.GreasemonkeyBridge.generatePolyfillScript(
+                    scriptId = module.id,
+                    grants = module.gmGrants,
+                    scriptInfo = scriptInfo,
+                    resources = module.resources
+                )
+
+                val requireBlocks = module.requireUrls.mapNotNull { url ->
+                    module.requireContents[url]?.let { requireCode ->
+                        url to requireCode
+                    }
+                }
+
+                AppLogger.d(
+                    "WebViewManager",
+                    "Embedded userscript payload: name=${module.name}, body=${module.code.length}, requires=${requireBlocks.size}, declaredRequires=${module.requireUrls.size}"
+                )
+
+                webView.evaluateJavascript(buildUserscriptPolyfillEval(module.id, polyfill), null)
+
+                requireBlocks.forEachIndexed { index, (_, requireCode) ->
+                    webView.evaluateJavascript(
+                        buildUserscriptRequireEval(module.name, module.id, index, requireCode),
+                        null
+                    )
+                }
+
+                if (module.code.isNotBlank()) {
+                    webView.evaluateJavascript(
+                        buildUserscriptModuleEval(module.name, module.id, module.code),
+                        null
+                    )
+                }
+
+                injectedCount += 1
+            }
+
+            AppLogger.d(
+                "WebViewManager",
+                "Injected $injectedCount embedded userscript module(s); skipped $skippedCount duplicate(s)"
+            )
+        } catch (e: Exception) {
+            AppLogger.e("WebViewManager", "Embedded userscript module injection failed", e)
         }
     }
 
@@ -4820,7 +5610,8 @@ class WebViewManager(
 
 
             val nonChromeModules = allModules.filter { module ->
-                module.sourceType != com.webtoapp.core.extension.ModuleSourceType.CHROME_EXTENSION
+                module.sourceType != com.webtoapp.core.extension.ModuleSourceType.CHROME_EXTENSION &&
+                module.shouldRegisterInPanel()
             }
 
             if (chromeModules.isEmpty() && nonChromeModules.isEmpty()) return
@@ -4859,6 +5650,8 @@ class WebViewManager(
                     .map { it.name }
                     .distinct()
                 val permsJs = perms.joinToString(",") { "'$it'" }
+                val jsPopupPath = module.popupPath.replace("\\", "\\\\").replace("'", "\\'")
+                val jsOptionsPagePath = module.optionsPagePath.replace("\\", "\\\\").replace("'", "\\'")
 
 
                 val matchesPage = extModules.any { it.matchesUrl(url) }
@@ -4878,9 +5671,21 @@ class WebViewManager(
                                 active: $matchesPage,
                                 urlMatches: [${urlMatchesJs}],
                                 permissions: [${permsJs}],
-                                world: ""${module.world}"",
-                                runAt: ""${module.runAt.name}"",
-                                runMode: ""${module.runMode.name}""
+                                world: '${module.world}',
+                                runAt: '${module.runAt.name}',
+                                runMode: '${module.runMode.name}',
+                                popupPath: '$jsPopupPath',
+                                optionsPagePath: '$jsOptionsPagePath',
+                                onAction: function(container) {
+                                    var html = '';
+                                    if ('$jsPopupPath') {
+                                        html += '<button style="width:100%;padding:12px;border-radius:10px;border:1px solid rgba(0,0,0,0.08);background:rgba(59,130,246,0.08);color:#2563eb;font-weight:600;cursor:pointer;margin-bottom:10px" onclick="if(window.__WTA_EXT_ACTIONS__)window.__WTA_EXT_ACTIONS__.openPopup(\\'$extId\\', \\'$jsPopupPath\\')">Open popup</button>';
+                                    }
+                                    if ('$jsOptionsPagePath') {
+                                        html += '<button style="width:100%;padding:12px;border-radius:10px;border:1px solid rgba(0,0,0,0.08);background:rgba(16,185,129,0.08);color:#047857;font-weight:600;cursor:pointer" onclick="if(window.__WTA_EXT_ACTIONS__)window.__WTA_EXT_ACTIONS__.openOptions(\\'$extId\\', \\'$jsOptionsPagePath\\')">Open options</button>';
+                                    }
+                                    container.innerHTML = html;
+                                }
                             });
                         }
                         setTimeout(_reg, 50);
@@ -4904,19 +5709,19 @@ class WebViewManager(
                         function _reg() {
                             if (typeof __WTA_MODULE_UI__ === 'undefined') { setTimeout(_reg, 100); return; }
                             __WTA_MODULE_UI__.register({
-                                id: ""${module.id.replace("'", "\\" + "'")}"",
+                                id: '${module.id.replace("\\", "\\\\").replace("'", "\\'")}',
                                 name: '$jsName',
                                 description: '$jsDesc',
                                 version: '$jsVersion',
                                 author: '$jsAuthor',
                                 icon: '$iconHtml',
-                                sourceType: ""${module.sourceType.name}"",
+                                sourceType: '${module.sourceType.name}',
                                 active: $matchesPage,
                                 urlMatches: [],
                                 permissions: [],
-                                world: ""${module.world}"",
-                                runAt: ""${module.runAt.name}"",
-                                runMode: ""${module.runMode.name}""
+                                world: '${module.world}',
+                                runAt: '${module.runAt.name}',
+                                runMode: '${module.runMode.name}'
                             });
                         }
                         setTimeout(_reg, 50);
@@ -4934,6 +5739,82 @@ class WebViewManager(
     }
 
     internal fun getNotificationPolyfillScript(): String = NotificationPolyfillHolder.SCRIPT
+
+    private fun loadDeclarativeNetRequestRules(extId: String, manifestJson: String) {
+        try {
+            com.webtoapp.core.extension.DeclarativeNetRequestEngine.clearExtension(extId)
+            com.webtoapp.core.extension.WebRequestBridge.unregisterAll(extId)
+            if (manifestJson.isBlank()) return
+            val manifest = JSONObject(manifestJson)
+            val ruleResources = manifest.optJSONObject("declarative_net_request")
+                ?.optJSONArray("rule_resources")
+                ?: return
+            for (i in 0 until ruleResources.length()) {
+                val resource = ruleResources.optJSONObject(i) ?: continue
+                val enabled = resource.optBoolean("enabled", true)
+                val rulesetId = resource.optString("id", "").trim()
+                val path = resource.optString("path", "").trim().trimStart('/')
+                if (path.isBlank()) continue
+                val url = "chrome-extension://$extId/$path"
+                val response = com.webtoapp.core.extension.ExtensionResourceInterceptor.intercept(context, url)
+                    ?: continue
+                val rulesJson = response.data?.bufferedReader(Charsets.UTF_8)?.use { it.readText() } ?: continue
+                com.webtoapp.core.extension.DeclarativeNetRequestEngine.loadStaticRules(
+                    extensionId = extId,
+                    rulesetId = rulesetId,
+                    path = path,
+                    rulesJson = rulesJson,
+                    enabled = enabled
+                )
+            }
+        } catch (e: Exception) {
+            AppLogger.e("WebViewManager", "Failed to load static DNR rules for $extId", e)
+        }
+    }
+
+    private fun showChromeExtensionPage(extId: String, pagePath: String) {
+        if (pagePath.isBlank()) return
+        val activity = context as? Activity ?: return
+        val primaryModule = getActiveModulesForCurrentApp().firstOrNull {
+            it.sourceType == com.webtoapp.core.extension.ModuleSourceType.CHROME_EXTENSION &&
+                it.chromeExtId == extId
+        } ?: return
+
+        activity.runOnUiThread {
+            extensionPopupDialogs.remove(extId)?.dismiss()
+
+            val popupManager = com.webtoapp.core.extension.ExtensionPopupManager(
+                context = activity,
+                extensionId = extId,
+                popupPath = pagePath,
+                runtime = extensionRuntimes[extId],
+                targetWebViewProvider = { managedWebViews.keys.firstOrNull() },
+                manifestJson = primaryModule.manifestJson.ifBlank { "{}" },
+                openPopupHandler = { nextExtId, nextPath -> showChromeExtensionPage(nextExtId, nextPath) },
+                openOptionsPageHandler = { nextExtId, nextPath -> showChromeExtensionPage(nextExtId, nextPath) }
+            )
+            val popupWebView = popupManager.createPopupWebView()
+            val dialog = Dialog(activity).apply {
+                setContentView(
+                    popupWebView,
+                    ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                )
+                window?.setLayout(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
+                setOnDismissListener {
+                    popupManager.destroy()
+                    extensionPopupDialogs.remove(extId)
+                }
+            }
+            extensionPopupDialogs[extId] = dialog
+            dialog.show()
+        }
+    }
 
     internal object NotificationPolyfillHolder {
         val SCRIPT: String = """
@@ -5071,8 +5952,329 @@ class WebViewManager(
         """.trimIndent()
     }
 
+    internal object PrivateNetworkApiBridgeScriptHolder {
+        val SCRIPT: String = """
+            (function() {
+                'use strict';
+
+                function isPrivateHost(host) {
+                    if (!host) return false;
+                    host = String(host).toLowerCase().replace(/^\[/, '').replace(/\]$/, '');
+                    if (host === 'localhost' || host === '127.0.0.1' || host === '10.0.2.2' || host === '::1') return true;
+                    if (host.endsWith('.local')) return true;
+                    var parts = host.split('.');
+                    if (parts.length !== 4) return false;
+                    var nums = [];
+                    for (var i = 0; i < parts.length; i++) {
+                        if (!/^\d+$/.test(parts[i])) return false;
+                        var n = Number(parts[i]);
+                        if (n < 0 || n > 255) return false;
+                        nums.push(n);
+                    }
+                    return nums[0] === 10 ||
+                        (nums[0] === 172 && nums[1] >= 16 && nums[1] <= 31) ||
+                        (nums[0] === 192 && nums[1] === 168) ||
+                        nums[0] === 127;
+                }
+
+                function isLocalPackagedPage() {
+                    return isPrivateHost(window.location.hostname);
+                }
+
+                if (!isLocalPackagedPage()) return;
+                if (window.__wta_private_network_api_bridge__) return;
+                window.__wta_private_network_api_bridge__ = true;
+
+                var nativeFetch = window.fetch ? window.fetch.bind(window) : null;
+                var NativeXHR = window.XMLHttpRequest;
+
+                function shouldBridge(url) {
+                    try {
+                        var parsed = new URL(String(url), window.location.href);
+                        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return false;
+                        if (!isPrivateHost(parsed.hostname)) return false;
+                        if (parsed.hostname.toLowerCase() === window.location.hostname.toLowerCase() && parsed.port === window.location.port) {
+                            return false;
+                        }
+                        return true;
+                    } catch (e) {
+                        return false;
+                    }
+                }
+
+                function headersToObject(headers) {
+                    var obj = {};
+                    try {
+                        if (!headers) return obj;
+                        if (typeof Headers !== 'undefined' && headers instanceof Headers) {
+                            headers.forEach(function(value, key) { obj[key] = String(value); });
+                        } else if (Array.isArray(headers)) {
+                            headers.forEach(function(pair) {
+                                if (pair && pair.length >= 2) obj[String(pair[0])] = String(pair[1]);
+                            });
+                        } else if (typeof headers === 'object') {
+                            Object.keys(headers).forEach(function(key) { obj[key] = String(headers[key]); });
+                        }
+                    } catch (e) {}
+                    return obj;
+                }
+
+                function bytesToBase64(bytes) {
+                    var binary = '';
+                    var chunkSize = 0x8000;
+                    for (var i = 0; i < bytes.length; i += chunkSize) {
+                        var chunk = bytes.subarray(i, i + chunkSize);
+                        binary += String.fromCharCode.apply(null, chunk);
+                    }
+                    return btoa(binary);
+                }
+
+                function textToBase64(text) {
+                    return bytesToBase64(new TextEncoder().encode(String(text)));
+                }
+
+                function base64ToBytes(base64) {
+                    var binary = atob(base64 || '');
+                    var bytes = new Uint8Array(binary.length);
+                    for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+                    return bytes;
+                }
+
+                function bodyToBase64(body) {
+                    if (body == null) return Promise.resolve('');
+                    if (typeof body === 'string') return Promise.resolve(textToBase64(body));
+                    if (body instanceof URLSearchParams) return Promise.resolve(textToBase64(body.toString()));
+                    if (body instanceof ArrayBuffer) return Promise.resolve(bytesToBase64(new Uint8Array(body)));
+                    if (ArrayBuffer.isView(body)) return Promise.resolve(bytesToBase64(new Uint8Array(body.buffer, body.byteOffset, body.byteLength)));
+                    if (typeof Blob !== 'undefined' && body instanceof Blob) {
+                        return new Promise(function(resolve, reject) {
+                            var reader = new FileReader();
+                            reader.onload = function() {
+                                var result = String(reader.result || '');
+                                resolve(result.indexOf(',') >= 0 ? result.split(',').pop() : '');
+                            };
+                            reader.onerror = function() { reject(reader.error || new Error('Blob read failed')); };
+                            reader.readAsDataURL(body);
+                        });
+                    }
+                    try {
+                        return Promise.resolve(textToBase64(JSON.stringify(body)));
+                    } catch (e) {
+                        return Promise.resolve(textToBase64(String(body)));
+                    }
+                }
+
+                function normalizeFetchInput(input, init) {
+                    var url = '';
+                    var method = 'GET';
+                    var headers = {};
+                    var body = null;
+                    if (typeof Request !== 'undefined' && input instanceof Request) {
+                        url = input.url;
+                        method = input.method || method;
+                        headers = headersToObject(input.headers);
+                        if (!init && method !== 'GET' && method !== 'HEAD') body = input.clone();
+                    } else {
+                        url = String(input);
+                    }
+                    if (init) {
+                        if (init.method) method = String(init.method);
+                        Object.assign(headers, headersToObject(init.headers));
+                        if ('body' in init) body = init.body;
+                    }
+                    return { url: url, method: method.toUpperCase(), headers: headers, body: body };
+                }
+
+                function nativeHttpRequest(payload) {
+                    if (!window.NativeBridge || typeof window.NativeBridge.httpRequest !== 'function') {
+                        return Promise.reject(new TypeError('Native private network bridge is unavailable'));
+                    }
+                    return bodyToBase64(payload.body).then(function(bodyBase64) {
+                        var raw = window.NativeBridge.httpRequest(JSON.stringify({
+                            url: payload.url,
+                            method: payload.method || 'GET',
+                            headers: payload.headers || {},
+                            bodyBase64: bodyBase64
+                        }));
+                        var result = JSON.parse(raw || '{}');
+                        if (!result.ok) {
+                            throw new TypeError(result.message || result.error || 'Private network request failed');
+                        }
+                        return result;
+                    });
+                }
+
+                if (nativeFetch) {
+                    window.fetch = function(input, init) {
+                        var payload = normalizeFetchInput(input, init);
+                        if (!shouldBridge(payload.url)) return nativeFetch(input, init);
+                        return nativeHttpRequest(payload).then(function(result) {
+                            var bytes = base64ToBytes(result.bodyBase64 || '');
+                            return new Response(bytes, {
+                                status: Number(result.status || 0),
+                                statusText: String(result.statusText || ''),
+                                headers: result.headers || {}
+                            });
+                        });
+                    };
+                }
+
+                if (NativeXHR) {
+                    function BridgedXHR() {
+                        this._xhr = new NativeXHR();
+                        this._listeners = {};
+                        this._headers = {};
+                        this._method = 'GET';
+                        this._url = '';
+                        this._async = true;
+                        this.readyState = 0;
+                        this.response = null;
+                        this.responseText = '';
+                        this.responseType = '';
+                        this.responseURL = '';
+                        this.status = 0;
+                        this.statusText = '';
+                        this.timeout = 0;
+                        this.withCredentials = false;
+                        this.onreadystatechange = null;
+                        this.onload = null;
+                        this.onerror = null;
+                        this.onloadend = null;
+
+                        var self = this;
+                        ['readystatechange', 'load', 'error', 'loadend', 'timeout', 'abort', 'progress'].forEach(function(name) {
+                            self._xhr.addEventListener(name, function(event) {
+                                self._syncFromNative();
+                                self._dispatch(name, event);
+                            });
+                        });
+                    }
+
+                    BridgedXHR.prototype._syncFromNative = function() {
+                        this.readyState = this._xhr.readyState;
+                        this.response = this._xhr.response;
+                        this.responseText = this._xhr.responseText || '';
+                        this.responseURL = this._xhr.responseURL || this._url;
+                        this.status = this._xhr.status || 0;
+                        this.statusText = this._xhr.statusText || '';
+                    };
+
+                    BridgedXHR.prototype._dispatch = function(type, sourceEvent) {
+                        var event = sourceEvent || { type: type, target: this, currentTarget: this };
+                        var list = this._listeners[type] || [];
+                        for (var i = 0; i < list.length; i++) {
+                            try { list[i].call(this, event); } catch (e) { setTimeout(function() { throw e; }); }
+                        }
+                        var handler = this['on' + type];
+                        if (typeof handler === 'function') handler.call(this, event);
+                    };
+
+                    BridgedXHR.prototype.open = function(method, url, async, user, password) {
+                        this._method = String(method || 'GET').toUpperCase();
+                        this._url = new URL(String(url), window.location.href).href;
+                        this._async = async !== false;
+                        this.readyState = 1;
+                        if (!shouldBridge(this._url)) {
+                            this._native = true;
+                            return this._xhr.open(method, url, async, user, password);
+                        }
+                        this._native = false;
+                        this._dispatch('readystatechange');
+                    };
+
+                    BridgedXHR.prototype.setRequestHeader = function(name, value) {
+                        if (this._native) return this._xhr.setRequestHeader(name, value);
+                        this._headers[String(name)] = String(value);
+                    };
+
+                    BridgedXHR.prototype.getResponseHeader = function(name) {
+                        if (this._native) return this._xhr.getResponseHeader(name);
+                        if (!this._responseHeaders) return null;
+                        return this._responseHeaders[String(name).toLowerCase()] || null;
+                    };
+
+                    BridgedXHR.prototype.getAllResponseHeaders = function() {
+                        if (this._native) return this._xhr.getAllResponseHeaders();
+                        var headers = this._responseHeaders || {};
+                        return Object.keys(headers).map(function(name) { return name + ': ' + headers[name]; }).join('\r\n');
+                    };
+
+                    BridgedXHR.prototype.send = function(body) {
+                        if (this._native) return this._xhr.send(body);
+                        if (this._async === false) throw new Error('Synchronous private network XHR is not supported');
+                        var self = this;
+                        nativeHttpRequest({ url: this._url, method: this._method, headers: this._headers, body: body })
+                            .then(function(result) {
+                                var headers = {};
+                                Object.keys(result.headers || {}).forEach(function(name) {
+                                    headers[name.toLowerCase()] = String(result.headers[name]);
+                                });
+                                self._responseHeaders = headers;
+                                self.status = Number(result.status || 0);
+                                self.statusText = String(result.statusText || '');
+                                self.responseURL = String(result.url || self._url);
+                                var bytes = base64ToBytes(result.bodyBase64 || '');
+                                if (self.responseType === 'arraybuffer') {
+                                    self.response = bytes.buffer;
+                                    self.responseText = '';
+                                } else if (self.responseType === 'blob') {
+                                    self.response = new Blob([bytes], { type: headers['content-type'] || '' });
+                                    self.responseText = '';
+                                } else if (self.responseType === 'json') {
+                                    self.responseText = new TextDecoder().decode(bytes);
+                                    try { self.response = JSON.parse(self.responseText); } catch (e) { self.response = null; }
+                                } else {
+                                    self.responseText = new TextDecoder().decode(bytes);
+                                    self.response = self.responseText;
+                                }
+                                self.readyState = 4;
+                                self._dispatch('readystatechange');
+                                self._dispatch('load');
+                                self._dispatch('loadend');
+                            }).catch(function(error) {
+                                self.status = 0;
+                                self.statusText = '';
+                                self.readyState = 4;
+                                self._dispatch('readystatechange');
+                                self._dispatch('error', { type: 'error', error: error, target: self, currentTarget: self });
+                                self._dispatch('loadend');
+                            });
+                    };
+
+                    BridgedXHR.prototype.abort = function() {
+                        if (this._native) return this._xhr.abort();
+                        this.readyState = 0;
+                        this._dispatch('abort');
+                        this._dispatch('loadend');
+                    };
+
+                    BridgedXHR.prototype.addEventListener = function(type, listener) {
+                        if (!this._listeners[type]) this._listeners[type] = [];
+                        this._listeners[type].push(listener);
+                    };
+
+                    BridgedXHR.prototype.removeEventListener = function(type, listener) {
+                        var list = this._listeners[type] || [];
+                        this._listeners[type] = list.filter(function(item) { return item !== listener; });
+                    };
+
+                    BridgedXHR.prototype.overrideMimeType = function(mimeType) {
+                        if (this._native) return this._xhr.overrideMimeType(mimeType);
+                    };
+
+                    window.XMLHttpRequest = BridgedXHR;
+                }
+            })();
+        """.trimIndent()
+    }
+
     private fun injectNotificationPolyfill(webView: WebView) {
         try {
+            val url = webView.url
+            if (shouldMinimizeLocalRuntimeInjection(url)) {
+                AppLogger.d("WebViewManager", "Skip notification polyfill for local runtime page: $url")
+                return
+            }
             val script = getNotificationPolyfillScript()
             webView.evaluateJavascript(script, null)
             AppLogger.d("WebViewManager", "Notification polyfill injected early")

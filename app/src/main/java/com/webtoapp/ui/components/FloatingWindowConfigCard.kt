@@ -1,6 +1,7 @@
 package com.webtoapp.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import com.webtoapp.ui.design.WtaSwitch
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -53,7 +54,7 @@ fun FloatingWindowConfigCard(
 
     val arrowRotation by animateFloatAsState(
         targetValue = if (showAdvanced) 180f else 0f,
-        animationSpec = tween(300),
+        animationSpec = com.webtoapp.ui.design.WtaMotion.settleSpring(),
         label = "arrowRotation"
     )
 
@@ -100,7 +101,7 @@ fun FloatingWindowConfigCard(
                     }
                 }
                 Spacer(Modifier.width(8.dp))
-                PremiumSwitch(
+                WtaSwitch(
                     checked = config.enabled,
                     onCheckedChange = { onConfigChange(config.copy(enabled = it)) }
                 )
@@ -182,7 +183,7 @@ fun FloatingWindowConfigCard(
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
-                        PremiumSwitch(
+                        WtaSwitch(
                             checked = config.lockAspectRatio,
                             onCheckedChange = { locked ->
                                 if (locked) {
@@ -473,7 +474,7 @@ private fun ToggleRow(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        PremiumSwitch(
+        WtaSwitch(
             checked = checked,
             onCheckedChange = onCheckedChange
         )

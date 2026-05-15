@@ -246,6 +246,16 @@ internal object ApkConfigJsonFactory {
         "announcementShowOnce" to announcementShowOnce,
         "announcementRequireConfirmation" to announcementRequireConfirmation,
         "announcementAllowNeverShow" to announcementAllowNeverShow,
+        "announcementTriggerOnLaunch" to announcementTriggerOnLaunch,
+        "announcementTriggerOnNoNetwork" to announcementTriggerOnNoNetwork,
+        "announcementTriggerIntervalMinutes" to announcementTriggerIntervalMinutes,
+        "adsEnabled" to adsEnabled,
+        "adBannerEnabled" to adBannerEnabled,
+        "adBannerId" to adBannerId,
+        "adInterstitialEnabled" to adInterstitialEnabled,
+        "adInterstitialId" to adInterstitialId,
+        "adSplashEnabled" to adSplashEnabled,
+        "adSplashId" to adSplashId,
         "splashEnabled" to splashEnabled,
         "splashType" to splashType,
         "splashDuration" to splashDuration,
@@ -272,6 +282,7 @@ internal object ApkConfigJsonFactory {
         "translateEnabled" to translateEnabled,
         "translateTargetLanguage" to translateTargetLanguage,
         "translateShowButton" to translateShowButton,
+        "extensionEnabled" to extensionEnabled,
         "extensionFabIcon" to extensionFabIcon,
         "extensionModuleIds" to extensionModuleIds,
         "embeddedExtensionModules" to embeddedExtensionModules.map { it.toPayload() },
@@ -297,8 +308,7 @@ internal object ApkConfigJsonFactory {
         "phpAppConfig" to phpAppConfigPayload(),
         "pythonAppConfig" to pythonAppConfigPayload(),
         "goAppConfig" to goAppConfigPayload(),
-        "multiWebConfig" to multiWebConfigPayload(),
-        "cloudSdkConfig" to cloudSdkConfigPayload()
+        "multiWebConfig" to multiWebConfigPayload()
     )
 
     internal fun ApkConfig.toEncryptedStubPayload(): Map<String, Any?> = linkedMapOf(
@@ -374,6 +384,31 @@ internal object ApkConfigJsonFactory {
         "enableCrossOriginIsolation" to enableCrossOriginIsolation,
         "hideUrlPreview" to hideUrlPreview,
         "disableShields" to disableShields,
+        "decodeBase64DeepLinks" to decodeBase64DeepLinks,
+        "mediaAutoplayEnabled" to mediaAutoplayEnabled,
+        "acceptThirdPartyCookies" to acceptThirdPartyCookies,
+        "enableKernelDisguise" to enableKernelDisguise,
+        "enableImageRepair" to enableImageRepair,
+        "enableScrollMemory" to enableScrollMemory,
+        "enableHttpsUpgrade" to enableHttpsUpgrade,
+        "enableOAuthExternalRedirect" to enableOAuthExternalRedirect,
+        "enableClipboardPolyfill" to enableClipboardPolyfill,
+        "enableNotificationPolyfill" to enableNotificationPolyfill,
+        "safeBrowsingEnabled" to safeBrowsingEnabled,
+        "geolocationEnabled" to geolocationEnabled,
+        "enableOrientationPolyfill" to enableOrientationPolyfill,
+        "enableCompatPolyfills" to enableCompatPolyfills,
+        "enableNativeBridge" to enableNativeBridge,
+        "javaScriptCanOpenWindows" to javaScriptCanOpenWindows,
+        "databaseEnabled" to databaseEnabled,
+        "enableCookiePersistence" to enableCookiePersistence,
+        "enablePrivateNetworkBridge" to enablePrivateNetworkBridge,
+        "allowMixedContent" to allowMixedContent,
+        "enableGpc" to enableGpc,
+        "enableCookieConsentBlock" to enableCookieConsentBlock,
+        "enableReferrerPolicy" to enableReferrerPolicy,
+        "enableTrackerBlocking" to enableTrackerBlocking,
+        "enableBlobDownloadInterception" to enableBlobDownloadInterception,
         "keepScreenOn" to keepScreenOn,
         "screenAwakeMode" to screenAwakeMode,
         "screenAwakeTimeoutMinutes" to screenAwakeTimeoutMinutes,
@@ -389,6 +424,13 @@ internal object ApkConfigJsonFactory {
         "proxyBypassRules" to proxyBypassRules,
         "proxyUsername" to proxyUsername,
         "proxyPassword" to proxyPassword,
+        "hostsMappingEnabled" to hostsMappingEnabled,
+        "hostsMappings" to hostsMappings.map { entry ->
+            linkedMapOf(
+                "host" to entry.host,
+                "ip" to entry.ip
+            )
+        },
         "dnsMode" to dnsMode,
         "dnsConfig" to dnsConfig,
         "showFloatingBackButton" to showFloatingBackButton,
@@ -452,7 +494,12 @@ internal object ApkConfigJsonFactory {
         "showMediaInfo" to galleryShowMediaInfo,
         "orientation" to galleryOrientation,
         "enableAudio" to galleryEnableAudio,
-        "videoAutoNext" to galleryVideoAutoNext
+        "videoAutoNext" to galleryVideoAutoNext,
+        "shuffleOnLoop" to galleryShuffleOnLoop,
+        "defaultView" to galleryDefaultView,
+        "gridColumns" to galleryGridColumns,
+        "sortOrder" to gallerySortOrder,
+        "rememberPosition" to galleryRememberPosition
     )
 
     private fun ApkConfig.autoStartConfigPayload(): Map<String, Any?>? =
@@ -574,6 +621,7 @@ internal object ApkConfigJsonFactory {
     private fun ApkConfig.goAppConfigPayload(): Map<String, Any?> = linkedMapOf(
         "framework" to goAppFramework,
         "binaryName" to goAppBinaryName,
+        "targetArch" to goAppTargetArch,
         "port" to goAppPort,
         "staticDir" to goAppStaticDir,
         "envVars" to goAppEnvVars,
@@ -589,24 +637,28 @@ internal object ApkConfigJsonFactory {
         "projectId" to multiWebProjectId
     )
 
-    private fun ApkConfig.cloudSdkConfigPayload(): Any =
-        if (cloudSdkConfig.enabled) {
-            cloudSdkConfig
-        } else {
-            linkedMapOf("enabled" to false)
-        }
-
     private fun EmbeddedExtensionModule.toPayload(): Map<String, Any?> = linkedMapOf(
         "id" to id,
         "name" to name,
         "description" to description,
         "icon" to icon,
         "category" to category,
+        "versionName" to versionName,
+        "authorName" to authorName,
         "code" to code,
         "cssCode" to cssCode,
         "runAt" to runAt,
+        "sourceType" to sourceType,
+        "runMode" to runMode,
+        "uiConfig" to uiConfig,
         "urlMatches" to urlMatches,
         "configValues" to configValues,
+        "configItemCount" to configItemCount,
+        "gmGrants" to gmGrants,
+        "requireUrls" to requireUrls,
+        "requireContents" to requireContents,
+        "resources" to resources,
+        "noframes" to noframes,
         "enabled" to enabled
     )
 }
@@ -688,6 +740,18 @@ data class ApkConfig(
     val announcementShowOnce: Boolean = true,
     val announcementRequireConfirmation: Boolean = false,
     val announcementAllowNeverShow: Boolean = false,
+    val announcementTriggerOnLaunch: Boolean = true,
+    val announcementTriggerOnNoNetwork: Boolean = false,
+    val announcementTriggerIntervalMinutes: Int = 0,
+
+
+    val adsEnabled: Boolean = false,
+    val adBannerEnabled: Boolean = false,
+    val adBannerId: String = "",
+    val adInterstitialEnabled: Boolean = false,
+    val adInterstitialId: String = "",
+    val adSplashEnabled: Boolean = false,
+    val adSplashId: String = "",
 
 
     val javaScriptEnabled: Boolean = true,
@@ -742,12 +806,37 @@ data class ApkConfig(
     val enableCrossOriginIsolation: Boolean = false,
     val hideUrlPreview: Boolean = false,
     val disableShields: Boolean = true,
+    val decodeBase64DeepLinks: Boolean = false,
+    val mediaAutoplayEnabled: Boolean = true,
+    val acceptThirdPartyCookies: Boolean = true,
+    val enableKernelDisguise: Boolean = true,
+    val enableImageRepair: Boolean = true,
+    val enableScrollMemory: Boolean = true,
+    val enableHttpsUpgrade: Boolean = true,
+    val enableOAuthExternalRedirect: Boolean = true,
+    val enableClipboardPolyfill: Boolean = true,
+    val enableNotificationPolyfill: Boolean = true,
+    val safeBrowsingEnabled: Boolean = true,
+    val geolocationEnabled: Boolean = true,
+    val enableOrientationPolyfill: Boolean = true,
+    val enableCompatPolyfills: Boolean = true,
+    val enableNativeBridge: Boolean = true,
+    val javaScriptCanOpenWindows: Boolean = true,
+    val databaseEnabled: Boolean = true,
+    val enableCookiePersistence: Boolean = true,
+    val enablePrivateNetworkBridge: Boolean = true,
+    val allowMixedContent: Boolean = true,
+    val enableGpc: Boolean = true,
+    val enableCookieConsentBlock: Boolean = true,
+    val enableReferrerPolicy: Boolean = true,
+    val enableTrackerBlocking: Boolean = true,
+    val enableBlobDownloadInterception: Boolean = true,
     val keepScreenOn: Boolean = false,
     val screenAwakeMode: String = "OFF",
     val screenAwakeTimeoutMinutes: Int = 30,
     val screenBrightness: Int = -1,
     val keyboardAdjustMode: String = "RESIZE",
-    val showFloatingBackButton: Boolean = true,
+    val showFloatingBackButton: Boolean = false,
     val swipeRefreshEnabled: Boolean = true,
     val fullscreenEnabled: Boolean = true,
     val performanceOptimization: Boolean = false,
@@ -763,6 +852,8 @@ data class ApkConfig(
     val proxyBypassRules: List<String> = emptyList(),
     val proxyUsername: String = "",
     val proxyPassword: String = "",
+    val hostsMappingEnabled: Boolean = false,
+    val hostsMappings: List<com.webtoapp.data.model.HostMappingEntry> = emptyList(),
 
 
     val dnsMode: String = "SYSTEM",
@@ -833,6 +924,11 @@ data class ApkConfig(
     val galleryOrientation: String = "PORTRAIT",
     val galleryEnableAudio: Boolean = true,
     val galleryVideoAutoNext: Boolean = true,
+    val galleryShuffleOnLoop: Boolean = false,
+    val galleryDefaultView: String = "GRID",
+    val galleryGridColumns: Int = 3,
+    val gallerySortOrder: String = "CUSTOM",
+    val galleryRememberPosition: Boolean = true,
 
 
     val bgmEnabled: Boolean = false,
@@ -853,6 +949,7 @@ data class ApkConfig(
     val translateShowButton: Boolean = true,
 
 
+    val extensionEnabled: Boolean = false,
     val extensionModuleIds: List<String> = emptyList(),
     val embeddedExtensionModules: List<EmbeddedExtensionModule> = emptyList(),
     val extensionFabIcon: String = "",
@@ -942,6 +1039,7 @@ data class ApkConfig(
 
     val goAppFramework: String = "",
     val goAppBinaryName: String = "",
+    val goAppTargetArch: String = "arm64-v8a",
     val goAppPort: Int = 0,
     val goAppStaticDir: String = "",
     val goAppEnvVars: Map<String, String> = emptyMap(),
@@ -953,10 +1051,7 @@ data class ApkConfig(
     val multiWebRefreshInterval: Int = 30,
     val multiWebShowSiteIcons: Boolean = true,
     val multiWebLandscapeMode: Boolean = false,
-    val multiWebProjectId: String = "",
-
-
-    val cloudSdkConfig: com.webtoapp.core.shell.CloudSdkConfig = com.webtoapp.core.shell.CloudSdkConfig()
+    val multiWebProjectId: String = ""
 )
 
 
@@ -1003,12 +1098,31 @@ data class EmbeddedExtensionModule(
     val description: String = "",
     val icon: String = "package",
     val category: String = "OTHER",
+    val versionName: String = "1.0.0",
+    val authorName: String = "",
     val code: String = "",
     val cssCode: String = "",
     val runAt: String = "DOCUMENT_END",
+    val sourceType: String = "CUSTOM",
+    val runMode: String = "INTERACTIVE",
+    val uiConfig: EmbeddedExtensionModuleUiConfig = EmbeddedExtensionModuleUiConfig(),
     val urlMatches: List<EmbeddedUrlMatchRule> = emptyList(),
     val configValues: Map<String, String> = emptyMap(),
+    val configItemCount: Int = 0,
+    val gmGrants: List<String> = emptyList(),
+    val requireUrls: List<String> = emptyList(),
+    val requireContents: Map<String, String> = emptyMap(),
+    val resources: Map<String, String> = emptyMap(),
+    val noframes: Boolean = false,
     val enabled: Boolean = true
+)
+
+data class EmbeddedExtensionModuleUiConfig(
+    val type: String = "FLOATING_BUTTON",
+    val autoHide: Boolean = false,
+    val autoHideDelay: Int = 3000,
+    val initiallyHidden: Boolean = false,
+    val showOnlyOnMatch: Boolean = true
 )
 
 

@@ -1,7 +1,6 @@
 package com.webtoapp.core.frontend
 
 import android.content.Context
-import com.webtoapp.core.cloud.GitHubAccelerator
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.core.network.NetworkModule
 import kotlinx.coroutines.Dispatchers
@@ -101,7 +100,7 @@ class GitHubRepoFetcher(private val context: Context) {
         var lastError: String? = null
         for (br in branchCandidates) {
             val zipUrl = "https://github.com/${spec.owner}/${spec.repo}/archive/refs/heads/$br.zip"
-            val candidates = GitHubAccelerator.accelerateWithFallbacks(zipUrl)
+            val candidates = listOf(zipUrl)
             log("Trying branch: $br (${candidates.size} url candidate(s))")
 
             for (candidate in candidates) {

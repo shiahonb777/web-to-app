@@ -3,9 +3,12 @@ package com.webtoapp.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -41,12 +44,13 @@ fun LanguageSelectorButton(
 
     IconButton(
         onClick = { showDialog = true },
-        modifier = Modifier.size(40.dp)
+        modifier = Modifier.size(44.dp)
     ) {
         Icon(
             imageVector = Icons.Outlined.Language,
             contentDescription = stringResource(R.string.language_settings),
-            modifier = Modifier.size(20.dp)
+            modifier = Modifier.size(22.dp),
+            tint = MaterialTheme.colorScheme.onSurface
         )
     }
 
@@ -77,17 +81,10 @@ fun LanguageSelectionDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        icon = {
-            Icon(
-                imageVector = Icons.Outlined.Language,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
-            )
-        },
         title = {
             Text(
                 text = stringResource(R.string.language_settings),
-                style = MaterialTheme.typography.headlineSmall
+                style = MaterialTheme.typography.titleLarge
             )
         },
         text = {
@@ -127,11 +124,17 @@ private fun LanguageOption(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = if (isSelected) {
-                MaterialTheme.colorScheme.primaryContainer
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
             } else {
                 MaterialTheme.colorScheme.surface
             }
-        )
+        ),
+        border = androidx.compose.foundation.BorderStroke(
+            width = 1.dp,
+            color = if (isSelected) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -140,7 +143,7 @@ private fun LanguageOption(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = language.nativeName,
                     style = MaterialTheme.typography.titleMedium,
@@ -154,21 +157,33 @@ private fun LanguageOption(
                     text = language.displayName,
                     style = MaterialTheme.typography.bodySmall,
                     color = if (isSelected) {
-                        MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                        MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f)
                     } else {
                         MaterialTheme.colorScheme.onSurfaceVariant
                     }
                 )
             }
 
-            if (isSelected) {
-                RadioButton(
-                    selected = true,
-                    onClick = null,
-                    colors = RadioButtonDefaults.colors(
-                        selectedColor = MaterialTheme.colorScheme.primary
+            androidx.compose.animation.AnimatedVisibility(
+                visible = isSelected,
+                enter = androidx.compose.animation.fadeIn() +
+                    androidx.compose.animation.scaleIn(initialScale = 0.6f),
+                exit = androidx.compose.animation.fadeOut()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.Check,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = MaterialTheme.colorScheme.onPrimary
                     )
-                )
+                }
             }
         }
     }
@@ -222,28 +237,36 @@ fun FirstLaunchLanguageScreen(
             }
 
 
-            Icon(
-                imageVector = Icons.Outlined.Language,
-                contentDescription = null,
-                modifier = Modifier.size(iconSize),
-                tint = MaterialTheme.colorScheme.primary
-            )
+            Box(
+                modifier = Modifier
+                    .size(iconSize + 24.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.06f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Language,
+                    contentDescription = null,
+                    modifier = Modifier.size(iconSize),
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
 
             Spacer(modifier = Modifier.height(topSpacing))
 
 
             Text(
-                text = "Welcome / 欢迎 / مرحبا",
+                text = "Welcome · 欢迎 · مرحبا",
                 style = if (isTv) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Select Language / 选择语言 / اختر اللغة",
-                style = MaterialTheme.typography.bodyLarge,
+                text = "Select Language · 选择语言 · اختر اللغة",
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
@@ -313,6 +336,13 @@ private fun FirstLaunchLanguageOption(
     onClick: () -> Unit,
     isTv: Boolean = false
 ) {
+    val borderBrush = if (isSelected) {
+        androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.primary)
+    } else {
+        androidx.compose.ui.graphics.SolidColor(
+            MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
+        )
+    }
     Card(
         onClick = onClick,
         modifier = Modifier
@@ -320,29 +350,25 @@ private fun FirstLaunchLanguageOption(
             .focusable(),
         colors = CardDefaults.cardColors(
             containerColor = if (isSelected) {
-                MaterialTheme.colorScheme.primaryContainer
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
             } else {
-                MaterialTheme.colorScheme.surfaceVariant
+                MaterialTheme.colorScheme.surface
             }
         ),
-        border = if (isSelected) {
-            CardDefaults.outlinedCardBorder().copy(
-                brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.primary)
-            )
-        } else null
+        border = CardDefaults.outlinedCardBorder().copy(brush = borderBrush),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(if (isTv) 14.dp else 20.dp),
+                .padding(if (isTv) 14.dp else 18.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = language.nativeName,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Medium,
+                    style = MaterialTheme.typography.titleMedium,
                     color = if (isSelected) {
                         MaterialTheme.colorScheme.onPrimaryContainer
                     } else {
@@ -351,23 +377,36 @@ private fun FirstLaunchLanguageOption(
                 )
                 Text(
                     text = language.displayName,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodySmall,
                     color = if (isSelected) {
-                        MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                        MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f)
                     } else {
                         MaterialTheme.colorScheme.onSurfaceVariant
                     }
                 )
             }
 
-            RadioButton(
-                selected = isSelected,
-                onClick = null,
-                colors = RadioButtonDefaults.colors(
-                    selectedColor = MaterialTheme.colorScheme.primary,
-                    unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            )
+            androidx.compose.animation.AnimatedVisibility(
+                visible = isSelected,
+                enter = androidx.compose.animation.fadeIn() +
+                    androidx.compose.animation.scaleIn(initialScale = 0.6f),
+                exit = androidx.compose.animation.fadeOut()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.Check,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+            }
         }
     }
 }

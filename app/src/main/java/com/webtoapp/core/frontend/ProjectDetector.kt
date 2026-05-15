@@ -319,7 +319,12 @@ object ProjectDetector {
 
 
 
-    private fun detectPackageManager(projectDir: File): PackageManager {
+    /**
+     * 检测项目里使用的包管理器（npm/pnpm/yarn/bun）。
+     * 暴露成 public 是为了让 InstallProjectDepsCard 在不解析整个项目的前提下，
+     * 也能正确选择 install 命令——避免重复实现锁文件嗅探逻辑。
+     */
+    fun detectPackageManager(projectDir: File): PackageManager {
         return when {
             File(projectDir, "pnpm-lock.yaml").exists() -> PackageManager.PNPM
             File(projectDir, "yarn.lock").exists() -> PackageManager.YARN

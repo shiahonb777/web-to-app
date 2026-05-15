@@ -132,6 +132,7 @@ class PacProxyManager(private val context: Context) {
 
 
         LocalHttpToSocksBridge.stop()
+        LocalHttpHostMappingBridge.stop()
     }
 
 

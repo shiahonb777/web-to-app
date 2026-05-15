@@ -1,6 +1,7 @@
 package com.webtoapp.ui.components
 
 import android.content.Intent
+import com.webtoapp.ui.design.WtaSwitch
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
@@ -162,23 +163,15 @@ fun AutoStartCard(
                             Strings.autoStartSettings,
                             style = MaterialTheme.typography.titleMedium
                         )
-                        if (!bootStartEnabled && !scheduledStartEnabled) {
-                            Text(
-                                Strings.notEnabled,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        } else {
-
-                            val statusParts = mutableListOf<String>()
-                            if (bootStartEnabled) statusParts.add(Strings.bootAutoStart)
-                            if (scheduledStartEnabled) statusParts.add(scheduledTime)
-                            Text(
-                                statusParts.joinToString(" · "),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
-                            )
-                        }
+                        Text(
+                            if (bootStartEnabled || scheduledStartEnabled) Strings.enabled else Strings.notEnabled,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (bootStartEnabled || scheduledStartEnabled) {
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            }
+                        )
                     }
                 }
                 Icon(
@@ -208,7 +201,7 @@ fun AutoStartCard(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        PremiumSwitch(
+                        WtaSwitch(
                             checked = bootStartEnabled,
                             onCheckedChange = {
                                 bootStartEnabled = it
@@ -270,7 +263,7 @@ fun AutoStartCard(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        PremiumSwitch(
+                        WtaSwitch(
                             checked = scheduledStartEnabled,
                             onCheckedChange = {
                                 scheduledStartEnabled = it

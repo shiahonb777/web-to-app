@@ -59,7 +59,7 @@ fun AnnouncementCard(
             WtaToggleRow(
                 icon = Icons.Outlined.Campaign,
                 title = Strings.popupAnnouncement,
-                subtitle = if (editState.announcementEnabled) Strings.enabled else Strings.disabled,
+                subtitle = null,
                 checked = editState.announcementEnabled,
                 onCheckedChange = onEnabledChange
             )

@@ -1,9 +1,9 @@
 package com.webtoapp.ui.screens
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.webtoapp.ui.design.WtaSwitch
 import com.webtoapp.ui.components.PremiumButton
 import com.webtoapp.ui.components.PremiumOutlinedButton
 
-import com.webtoapp.ui.theme.AppColors
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -74,7 +74,7 @@ fun CreateWordPressAppScreen(
     val scope = rememberCoroutineScope()
 
 
-    val wpBlue = AppColors.WordPress
+    val accentColor = MaterialTheme.colorScheme.onSurface
 
 
     var appName by remember { mutableStateOf("") }
@@ -265,7 +265,7 @@ fun CreateWordPressAppScreen(
             WtaCreateFlowSection(title = Strings.importProject) {
 
                     WpHeroSection(
-                        wpBlue = wpBlue,
+                        accentColor = accentColor,
                         wpVersion = wpVersion
                     )
 
@@ -338,7 +338,7 @@ fun CreateWordPressAppScreen(
                     RuntimeSectionHeader(
                         icon = Icons.Outlined.Settings,
                         title = Strings.wpBasicConfig,
-                        brandColor = wpBlue
+                        brandColor = accentColor
                     )
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -370,7 +370,7 @@ fun CreateWordPressAppScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(Strings.wpLandscapeMode)
-                        PremiumSwitch(checked = landscapeMode, onCheckedChange = { landscapeMode = it })
+                        WtaSwitch(checked = landscapeMode, onCheckedChange = { landscapeMode = it })
                     }
                 }
             }
@@ -381,7 +381,7 @@ fun CreateWordPressAppScreen(
                     RuntimeSectionHeader(
                         icon = Icons.Outlined.Image,
                         title = Strings.labelIcon,
-                        brandColor = wpBlue
+                        brandColor = accentColor
                     )
                     Spacer(modifier = Modifier.height(12.dp))
 
@@ -399,7 +399,7 @@ fun CreateWordPressAppScreen(
                                 )
                             } else {
                                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                    Icon(Icons.Outlined.Language, null, tint = wpBlue)
+                                    Icon(Icons.Outlined.Language, null, tint = accentColor)
                                 }
                             }
                         }
@@ -417,7 +417,7 @@ fun CreateWordPressAppScreen(
                     RuntimeSectionHeader(
                         icon = Icons.Outlined.FolderOpen,
                         title = Strings.wpImportProject,
-                        brandColor = wpBlue
+                        brandColor = accentColor
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
@@ -462,7 +462,7 @@ fun CreateWordPressAppScreen(
                         onClick = { createNewSite() },
                         enabled = !isCreating,
                         modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = wpBlue)
+                        colors = ButtonDefaults.buttonColors(containerColor = accentColor)
                     ) {
                         Icon(Icons.Outlined.Add, null)
                         Spacer(modifier = Modifier.width(8.dp))
@@ -491,7 +491,7 @@ fun CreateWordPressAppScreen(
                     onAdminEmailChange = { adminEmail = it },
                     adminPassword = adminPassword,
                     onAdminPasswordChange = { adminPassword = it },
-                    wpBlue = wpBlue
+                    accentColor = accentColor
                 )
 
 
@@ -499,7 +499,7 @@ fun CreateWordPressAppScreen(
                     themes = detectedThemes,
                     activeTheme = activeTheme,
                     onActiveThemeChange = { activeTheme = it },
-                    wpBlue = wpBlue
+                    accentColor = accentColor
                 )
 
 
@@ -513,32 +513,32 @@ fun CreateWordPressAppScreen(
                             activePlugins + plugin
                         }
                     },
-                    wpBlue = wpBlue
+                    accentColor = accentColor
                 )
 
 
                 WpPermalinkCard(
                     selected = permalink,
                     onSelect = { permalink = it },
-                    wpBlue = wpBlue
+                    accentColor = accentColor
                 )
 
 
                 WpLanguageCard(
                     selected = siteLanguage,
                     onSelect = { siteLanguage = it },
-                    wpBlue = wpBlue
+                    accentColor = accentColor
                 )
 
 
-                WpDbInfoCard(wpBlue = wpBlue)
+                WpDbInfoCard(accentColor = accentColor)
             }
             }
 
 
             WtaCreateFlowSection(title = Strings.preview) {
                 if (isCreating) {
-                    RuntimeBrandedLoadingCard(creationPhase = creationPhase, brandColor = wpBlue)
+                    RuntimeBrandedLoadingCard(creationPhase = creationPhase, brandColor = accentColor)
                 }
 
 
@@ -551,7 +551,7 @@ fun CreateWordPressAppScreen(
                     RuntimeSuccessCard(
                         title = Strings.wpProjectReady,
                         subtitle = "ID: $projectId",
-                        brandColor = wpBlue
+                        brandColor = accentColor
                     )
                 }
             }
@@ -574,7 +574,7 @@ fun CreateWordPressAppScreen(
                             LinearProgressIndicator(
                                 progress = { state.progress },
                                 modifier = Modifier.fillMaxWidth(),
-                                color = wpBlue
+                                color = accentColor
                             )
                             Text(
                                 text = "${(state.progress * 100).toInt()}%",
@@ -585,17 +585,17 @@ fun CreateWordPressAppScreen(
                         is WordPressDependencyManager.DownloadState.Extracting -> {
                             Text("${Strings.wpExtracting}: ${state.fileName}")
                             Spacer(modifier = Modifier.height(8.dp))
-                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = wpBlue)
+                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = accentColor)
                         }
                         is WordPressDependencyManager.DownloadState.Verifying -> {
                             Text(Strings.verifyingFile.replaceFirst("%s", state.fileName))
                             Spacer(modifier = Modifier.height(8.dp))
-                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = wpBlue)
+                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = accentColor)
                         }
                         else -> {
                             Text(Strings.wpCheckingDeps)
                             Spacer(modifier = Modifier.height(8.dp))
-                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = wpBlue)
+                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = accentColor)
                         }
                     }
 
@@ -625,20 +625,20 @@ fun CreateWordPressAppScreen(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun WpHeroSection(
-    wpBlue: Color,
+    accentColor: Color,
     wpVersion: String?
 ) {
     val tags = buildList {
-        wpVersion?.let { add("WP $it" to wpBlue) }
-        add("PHP" to AppColors.Php)
-        add("SQLite" to AppColors.SQLite)
+        wpVersion?.let { add("WP $it" to accentColor) }
+        add("PHP" to accentColor)
+        add("SQLite" to accentColor)
     }
 
     RuntimeHeroSection(
         icon = Icons.Outlined.Language,
         title = Strings.wpHeroTitle,
         subtitle = Strings.wpHeroDesc,
-        brandColor = wpBlue,
+        brandColor = accentColor,
         tags = tags
     )
 }
@@ -654,14 +654,14 @@ private fun WpAdminConfigCard(
     onAdminEmailChange: (String) -> Unit,
     adminPassword: String,
     onAdminPasswordChange: (String) -> Unit,
-    wpBlue: Color
+    accentColor: Color
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             RuntimeSectionHeader(
                 icon = Icons.Outlined.AdminPanelSettings,
                 title = Strings.wpAdminConfig,
-                brandColor = wpBlue
+                brandColor = accentColor
             )
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -708,27 +708,27 @@ private fun WpThemeCard(
     themes: List<String>,
     activeTheme: String?,
     onActiveThemeChange: (String) -> Unit,
-    wpBlue: Color
+    accentColor: Color
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             RuntimeSectionHeader(
                 icon = Icons.Outlined.Palette,
                 title = Strings.wpThemePanel,
-                brandColor = wpBlue
+                brandColor = accentColor
             ) {
                 if (themes.isNotEmpty()) {
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(WtaRadius.Button))
-                            .background(wpBlue.copy(alpha = 0.12f))
+                            .background(accentColor.copy(alpha = 0.12f))
                     ) {
                         Text(
                             "${themes.size}",
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                             style = MaterialTheme.typography.labelSmall,
-                            color = wpBlue,
-                            fontWeight = FontWeight.Bold
+                            color = accentColor,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
@@ -742,13 +742,13 @@ private fun WpThemeCard(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(WtaRadius.Button))
-                            .background(wpBlue.copy(alpha = 0.06f))
+                            .background(accentColor.copy(alpha = 0.06f))
                     ) {
                         Row(
                             modifier = Modifier.padding(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Outlined.CheckCircle, null, tint = wpBlue, modifier = Modifier.size(20.dp))
+                            Icon(Icons.Outlined.CheckCircle, null, tint = accentColor, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))
                             Column {
                                 Text(
@@ -759,8 +759,8 @@ private fun WpThemeCard(
                                 Text(
                                     theme,
                                     style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = wpBlue
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = accentColor
                                 )
                             }
                         }
@@ -783,7 +783,7 @@ private fun WpThemeCard(
                             .padding(vertical = 2.dp)
                             .clip(RoundedCornerShape(WtaRadius.Button))
                             .background(
-                                if (isActive) wpBlue.copy(alpha = 0.08f)
+                                if (isActive) accentColor.copy(alpha = 0.08f)
                                 else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                             )
                             .clickable { onActiveThemeChange(theme) }
@@ -796,13 +796,13 @@ private fun WpThemeCard(
                                 selected = isActive,
                                 onClick = { onActiveThemeChange(theme) },
                                 modifier = Modifier.size(20.dp),
-                                colors = RadioButtonDefaults.colors(selectedColor = wpBlue)
+                                colors = RadioButtonDefaults.colors(selectedColor = accentColor)
                             )
                             Spacer(modifier = Modifier.width(10.dp))
                             Text(
                                 text = theme,
                                 style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal
+                                fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal
                             )
                         }
                     }
@@ -844,27 +844,27 @@ private fun WpPluginCard(
     plugins: List<String>,
     activePlugins: Set<String>,
     onPluginToggled: (String) -> Unit,
-    wpBlue: Color
+    accentColor: Color
 ) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             RuntimeSectionHeader(
                 icon = Icons.Outlined.Extension,
                 title = Strings.wpPluginPanel,
-                brandColor = wpBlue
+                brandColor = accentColor
             ) {
                 if (plugins.isNotEmpty()) {
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(WtaRadius.Button))
-                            .background(wpBlue.copy(alpha = 0.12f))
+                            .background(accentColor.copy(alpha = 0.12f))
                     ) {
                         Text(
                             "${plugins.size}",
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                             style = MaterialTheme.typography.labelSmall,
-                            color = wpBlue,
-                            fontWeight = FontWeight.Bold
+                            color = accentColor,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
@@ -889,7 +889,7 @@ private fun WpPluginCard(
                             Checkbox(
                                 checked = isActive,
                                 onCheckedChange = { onPluginToggled(plugin) },
-                                colors = CheckboxDefaults.colors(checkedColor = wpBlue)
+                                colors = CheckboxDefaults.colors(checkedColor = accentColor)
                             )
                             Spacer(modifier = Modifier.width(10.dp))
                             Text(
@@ -902,7 +902,7 @@ private fun WpPluginCard(
                             Text(
                                 if (isActive) Strings.wpPluginActive else Strings.wpPluginInactive,
                                 style = MaterialTheme.typography.labelSmall,
-                                color = if (isActive) AppColors.Success else MaterialTheme.colorScheme.onSurfaceVariant
+                                color = if (isActive) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -943,7 +943,7 @@ private fun WpPluginCard(
 private fun WpPermalinkCard(
     selected: String,
     onSelect: (String) -> Unit,
-    wpBlue: Color
+    accentColor: Color
 ) {
     val options = listOf(
         Triple("plain", Strings.wpPermalinkPlain, Icons.Outlined.Tag),
@@ -956,7 +956,7 @@ private fun WpPermalinkCard(
             RuntimeSectionHeader(
                 icon = Icons.Outlined.Link,
                 title = Strings.wpPermalink,
-                brandColor = wpBlue
+                brandColor = accentColor
             )
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -967,7 +967,7 @@ private fun WpPermalinkCard(
                         .fillMaxWidth()
                         .padding(vertical = 2.dp)
                         .clip(RoundedCornerShape(WtaRadius.Button))
-                        .background(if (isSelected) wpBlue.copy(alpha = 0.08f) else Color.Transparent)
+                        .background(if (isSelected) accentColor.copy(alpha = 0.08f) else Color.Transparent)
                         .clickable { onSelect(value) }
                 ) {
                     Row(
@@ -977,15 +977,15 @@ private fun WpPermalinkCard(
                         RadioButton(
                             selected = isSelected,
                             onClick = { onSelect(value) },
-                            colors = RadioButtonDefaults.colors(selectedColor = wpBlue)
+                            colors = RadioButtonDefaults.colors(selectedColor = accentColor)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Icon(icon, null, modifier = Modifier.size(18.dp), tint = if (isSelected) wpBlue else MaterialTheme.colorScheme.onSurfaceVariant)
+                        Icon(icon, null, modifier = Modifier.size(18.dp), tint = if (isSelected) accentColor else MaterialTheme.colorScheme.onSurfaceVariant)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = label,
                             style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                             fontFamily = FontFamily.Monospace
                         )
                     }
@@ -1003,7 +1003,7 @@ private fun WpPermalinkCard(
 private fun WpLanguageCard(
     selected: String,
     onSelect: (String) -> Unit,
-    wpBlue: Color
+    accentColor: Color
 ) {
     val languages = listOf(
         "zh_CN" to Strings.langChineseSimplified,
@@ -1023,7 +1023,7 @@ private fun WpLanguageCard(
             RuntimeSectionHeader(
                 icon = Icons.Outlined.Translate,
                 title = Strings.wpSiteLanguage,
-                brandColor = wpBlue
+                brandColor = accentColor
             )
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -1048,13 +1048,13 @@ private fun WpLanguageCard(
 
 
 @Composable
-private fun WpDbInfoCard(wpBlue: Color) {
+private fun WpDbInfoCard(accentColor: Color) {
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             RuntimeSectionHeader(
                 icon = Icons.Outlined.Storage,
                 title = Strings.wpDbInfo,
-                brandColor = wpBlue
+                brandColor = accentColor
             )
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -1062,14 +1062,14 @@ private fun WpDbInfoCard(wpBlue: Color) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(WtaRadius.Button))
-                    .background(AppColors.SQLite.copy(alpha = 0.06f))
+                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f))
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             Icons.Outlined.CheckCircle, null,
                             modifier = Modifier.size(18.dp),
-                            tint = AppColors.Success
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
@@ -1084,7 +1084,7 @@ private fun WpDbInfoCard(wpBlue: Color) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(WtaRadius.Button))
-                            .background(AppColors.SQLite.copy(alpha = 0.06f))
+                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f))
                     ) {
                         Column(modifier = Modifier.padding(10.dp)) {
                             Row(
@@ -1100,7 +1100,7 @@ private fun WpDbInfoCard(wpBlue: Color) {
                                     "SQLite 3",
                                     style = MaterialTheme.typography.bodySmall,
                                     fontFamily = FontFamily.Monospace,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.SemiBold
                                 )
                             }
                             Spacer(modifier = Modifier.height(4.dp))
@@ -1117,7 +1117,7 @@ private fun WpDbInfoCard(wpBlue: Color) {
                                     Strings.wpDbOfflineMode,
                                     style = MaterialTheme.typography.bodySmall,
                                     fontFamily = FontFamily.Monospace,
-                                    color = AppColors.Success
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                             Spacer(modifier = Modifier.height(4.dp))

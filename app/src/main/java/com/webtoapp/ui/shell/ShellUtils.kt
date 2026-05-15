@@ -26,17 +26,24 @@ internal fun formatTimeMs(ms: Long): String {
 internal fun normalizeShellTargetUrlForSecurity(rawUrl: String): String {
     val trimmed = rawUrl.trim()
 
-
-
     val withScheme = if (!trimmed.startsWith("http://", ignoreCase = true) &&
                           !trimmed.startsWith("https://", ignoreCase = true)) {
-
-        "https://$trimmed"
+        // 没有协议头时默认 http，不做假设
+        "http://$trimmed"
     } else {
-
         trimmed
     }
     return withScheme
+}
+
+internal fun buildPackagedHtmlShellBaseUrl(packageName: String): String {
+    val stablePort = com.webtoapp.core.webview.LocalHttpServer.stablePortForPackageName(packageName)
+    return "http://127.0.0.1:$stablePort"
+}
+
+internal fun buildPackagedHtmlShellEntryUrl(packageName: String, entryFile: String): String {
+    val normalizedEntry = entryFile.removePrefix("/").ifBlank { "index.html" }
+    return "${buildPackagedHtmlShellBaseUrl(packageName)}/${android.net.Uri.encode(normalizedEntry, "/")}"
 }
 
 

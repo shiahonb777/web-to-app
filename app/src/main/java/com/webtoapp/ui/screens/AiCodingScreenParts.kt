@@ -67,7 +67,7 @@ internal fun WelcomeContent(
         Text(
             Strings.htmlCodingAssistant,
             style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.SemiBold
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -347,7 +347,7 @@ internal fun TemplatesSheetContent(
             Text(
                 Strings.selectStyleTemplate,
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.SemiBold
             )
 
             if (selectedTemplateId != null || selectedStyleId != null) {
@@ -481,7 +481,7 @@ internal fun TutorialSheetContent(
             Text(
                 Strings.usageTutorial,
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.SemiBold
             )
             Text(
                 Strings.chapters.replace("%d", "${chapters.size}"),
@@ -639,12 +639,12 @@ internal fun TutorialSheetContent(
                             Spacer(modifier = Modifier.height(8.dp))
                             Surface(
                                 shape = RoundedCornerShape(12.dp),
-                                color = Color(0xFF1E1E1E)
+                                color = com.webtoapp.ui.theme.AppColors.EditorDark
                             ) {
                                 Text(
                                     code,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = Color(0xFFD4D4D4),
+                                    color = com.webtoapp.ui.theme.AppColors.CodeForeground,
                                     modifier = Modifier.padding(16.dp),
                                     fontFamily = FontFamily.Monospace
                                 )
@@ -936,7 +936,7 @@ internal fun CodeLibrarySheetContent(
             Text(
                 Strings.codeLibrary,
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.SemiBold
             )
             Row {
                 PremiumFilterChip(
@@ -1021,7 +1021,7 @@ private fun CodeLibraryItemCard(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        color = if (com.webtoapp.ui.theme.LocalIsDarkTheme.current) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.72f)
+        color = MaterialTheme.colorScheme.surfaceContainer
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Row(
@@ -1034,7 +1034,7 @@ private fun CodeLibraryItemCard(
                         Icon(
                             Icons.Default.Favorite,
                             null,
-                            tint = Color(0xFFE91E63),
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
@@ -1141,9 +1141,9 @@ private fun CodeLibraryItemCard(
                             leadingIcon = { Icon(Icons.Outlined.FolderCopy, null) }
                         )
                         DropdownMenuItem(
-                            text = { Text(Strings.delete, color = Color(0xFFE53935)) },
+                            text = { Text(Strings.delete, color = MaterialTheme.colorScheme.error) },
                             onClick = { onDelete(); showMenu = false },
-                            leadingIcon = { Icon(Icons.Outlined.Delete, null, tint = Color(0xFFE53935)) }
+                            leadingIcon = { Icon(Icons.Outlined.Delete, null, tint = MaterialTheme.colorScheme.error) }
                         )
                     }
                 }
@@ -1172,7 +1172,7 @@ internal fun ConversationCheckpointsSheetContent(
         Text(
             Strings.conversationCheckpoints,
             style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.SemiBold
         )
 
         Spacer(modifier = Modifier.height(8.dp))

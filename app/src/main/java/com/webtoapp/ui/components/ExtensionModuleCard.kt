@@ -1,5 +1,6 @@
 package com.webtoapp.ui.components
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.webtoapp.ui.design.WtaSwitch
 
 import android.content.Intent
 import android.graphics.Bitmap
@@ -148,21 +149,12 @@ fun ExtensionModuleCard(
                         )
                     }
                     Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text(
-                            text = Strings.extensionModule,
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        if (enabled && selectedModuleIds.isNotEmpty()) {
-                            Text(
-                                text = Strings.selectedCountFormat.format(selectedModuleIds.size),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
+                    Text(
+                        text = Strings.extensionModule,
+                        style = MaterialTheme.typography.titleMedium
+                    )
                 }
-                PremiumSwitch(
+                WtaSwitch(
                     checked = enabled,
                     onCheckedChange = onEnabledChange
                 )
@@ -899,7 +891,7 @@ fun ExtensionModuleSelectorDialog(
                                     Text(
                                         category.getDisplayName(),
                                         style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.Bold,
+                                        fontWeight = FontWeight.SemiBold,
                                         modifier = Modifier.padding(vertical = 8.dp)
                                     )
                                 }
@@ -1166,7 +1158,7 @@ fun ModuleTestDialog(
                                 Text(
                                     Strings.willTestModulesFormat.format(selectedModules.size),
                                     style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.SemiBold
                                 )
                                 Text(
                                     selectedModules.joinToString { it.name },
@@ -1183,7 +1175,7 @@ fun ModuleTestDialog(
                     Text(
                         Strings.selectTestPageTitle,
                         style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.SemiBold
                     )
 
                     LazyRow(
@@ -1333,7 +1325,7 @@ fun ModuleDetailDialog(
                         Text(
                             Strings.configurableItems.format(module.configItems.size),
                             style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.SemiBold
                         )
                         module.configItems.forEach { item ->
                             Row(
@@ -1355,7 +1347,7 @@ fun ModuleDetailDialog(
                         Text(
                             Strings.requiredPermissions,
                             style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.SemiBold
                         )
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             items(module.permissions) { perm ->

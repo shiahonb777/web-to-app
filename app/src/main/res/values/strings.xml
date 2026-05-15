@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     
     <string name="app_name" translatable="false">WebToApp</string>
@@ -113,49 +113,12 @@
     <string name="module_disabled">已禁用</string>
     <string name="ai_module_developer">AI 模块开发</string>
 
-    <string name="store_get_download_link_failed">获取下载链接失败: %1$s</string>
-    <string name="store_network_error">网络错误: %1$s</string>
-    <string name="store_report_failed">举报失败: %1$s</string>
-
     <string name="njs_package_json_not_found">未找到 package.json，请选有效项目目录</string>
 
-
-    <string name="community_recipe_json_supporting">贴配置 JSON，供他人导入</string>
-    <string name="community_tutorial_title_placeholder">教程标题 *</string>
-    <string name="community_difficulty_label">难度</string>
-    <string name="community_question_title_placeholder">问题标题 *</string>
-    <string name="community_showcase_content_placeholder">介绍你的作品...</string>
-    <string name="community_tutorial_content_placeholder">写下教程内容...</string>
-    <string name="community_question_content_placeholder">详细描述你的问题...</string>
-
-    <string name="community_post_type_showcase">作品展示</string>
-    <string name="community_post_type_tutorial">教程</string>
-    <string name="community_post_type_question">提问</string>
-    <string name="community_post_type_update">动态</string>
-    <string name="community_difficulty_beginner">入门</string>
-    <string name="community_difficulty_intermediate">进阶</string>
-    <string name="community_difficulty_advanced">高级</string>
-    <string name="community_resolved">已解决</string>
-    <string name="community_work_default">作品</string>
-    <string name="community_source_website">网站</string>
-    <string name="community_source_html">HTML</string>
-    <string name="community_source_media">多媒体</string>
-    <string name="community_source_frontend">前端框架</string>
-    <string name="community_source_server">服务端</string>
-    <string name="community_source_format">来源: %1$s</string>
-    <string name="community_recipe_imported">配方已导入</string>
-    <string name="community_import_recipe_one_tap">导入配方</string>
-    <string name="community_import_count">%1$d 次导入</string>
-    <string name="community_import">导入</string>
 
     <string name="theme_dark">深色模式</string>
     <string name="theme_light">浅色模式</string>
 
-    <string name="community_developer_role">开发者</string>
-
-
-
-    
     <string name="ai_generating">AI 生成中…</string>
     <string name="ai_analyzing">正在分析需求…</string>
     <string name="ai_planning">制定开发计划…</string>
@@ -614,30 +577,13 @@
     
     <string name="about">关于</string>
     <string name="independent_developer">独立开发者 · AI 爱好者</string>
-    <string name="check_update">检查更新</string>
     <string name="checking">正在检查…</string>
     <string name="downloading">正在下载…</string>
     <string name="current_version">当前版本</string>
     <string name="about_this_app">关于这个应用</string>
     <string name="about_app_description">安卓上功能最完善的WEB转APK工具型应用。</string>
-    <string name="social_media">社交媒体</string>
-    <string name="exchange_group">交流群</string>
-    <string name="video_tutorial">视频教程</string>
-    <string name="open_source_repo">开源仓库</string>
-    <string name="join_exchange_group">加入交流群</string>
-    <string name="learn_progress_together">一起学习进步，获取最新消息 🚀</string>
-    <string name="exchange_learning">交流学习、更新消息</string>
-    <string name="international_group">国际用户交流群</string>
-    <string name="contact_author">联系作者</string>
-    <string name="feedback_cooperation">问题反馈、合作咨询、功能建议 💬</string>
-    <string name="feedback_cooperation_short">问题反馈、合作咨询</string>
-    <string name="email_contact">邮件联系</string>
-    <string name="international_email">国际邮件</string>
     <string name="update_later">稍后更新</string>
     <string name="download_complete">下载完成，正在安装…</string>
-    <string name="check_update_failed">检查更新失败</string>
-
-    
     <string name="ai_generating_status">AI 生成中…</string>
     <string name="ai_analyzing_status">正在分析需求…</string>
     <string name="ai_completed_status">生成完成</string>

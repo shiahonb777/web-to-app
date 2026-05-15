@@ -1,7 +1,7 @@
 package com.webtoapp.ui.components.coding
 
 import com.webtoapp.ui.components.PremiumOutlinedButton
-import com.webtoapp.ui.components.PremiumSwitch
+import com.webtoapp.ui.design.WtaSwitch
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -142,7 +142,7 @@ private fun parseMarkdown(text: String, baseColor: Color): AnnotatedString {
                 text.startsWith("**", i) -> {
                     val end = text.indexOf("**", i + 2)
                     if (end != -1) {
-                        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                        withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) {
                             append(text.substring(i + 2, end))
                         }
                         i = end + 2
@@ -716,7 +716,7 @@ fun StyleTemplateCard(template: StyleTemplate, isSelected: Boolean, onClick: () 
                     }
                 }
                 Column {
-                    Text(template.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = textColor)
+                    Text(template.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = textColor)
                     Spacer(Modifier.height(4.dp))
                     Text(template.description, style = MaterialTheme.typography.bodySmall, color = textColor.copy(alpha = 0.7f), maxLines = 2, overflow = TextOverflow.Ellipsis, lineHeight = 16.sp)
                 }
@@ -779,7 +779,7 @@ fun ConfigPanel(
         Color.Black.copy(alpha = 0.06f)
 
     Column(modifier = modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text(Strings.sessionConfig, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text(Strings.sessionConfig, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
 
 
         EnhancedElevatedCard {
@@ -913,7 +913,7 @@ fun ConfigPanel(
                             }
 
                             val canEnable = !toolType.requiresImageModel || !config.imageModelId.isNullOrBlank()
-                            PremiumSwitch(
+                            WtaSwitch(
                                 checked = isEnabled && canEnable,
                                 onCheckedChange = { checked ->
                                     if ((!isRequired || checked) && canEnable) {
@@ -957,7 +957,7 @@ fun ConfigPanel(
                         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
                     ) {
                         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text("${index + 1}.", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                            Text("${index + 1}.", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
                             Spacer(Modifier.width(8.dp))
                             Text(rule, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(weight = 1f, fill = true))
                             IconButton(onClick = {

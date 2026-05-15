@@ -52,7 +52,6 @@ class WebToAppApplication : Application(), ImageLoaderFactory {
     val announcementManager: AnnouncementManager by inject()
     val adBlocker: AdBlocker by inject()
     val shellModeManager: ShellModeManager by inject()
-    val billingManager: com.webtoapp.core.billing.BillingManager by inject()
     val healthMonitor: com.webtoapp.core.stats.AppHealthMonitor by inject()
     val screenshotService: com.webtoapp.core.stats.WebsiteScreenshotService by inject()
 
@@ -86,7 +85,6 @@ class WebToAppApplication : Application(), ImageLoaderFactory {
             ),
             securityStartup = SecurityStartup(this),
             runtimeWarmupStartup = RuntimeWarmupStartup(
-                billingManager = billingManager,
                 appContext = this,
             ),
             legacyHttpUrlMigrationStartup = LegacyHttpUrlMigrationStartup(

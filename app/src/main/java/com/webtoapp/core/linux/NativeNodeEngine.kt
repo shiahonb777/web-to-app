@@ -9,6 +9,8 @@ import com.webtoapp.util.waitForCompat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.*
 import java.net.HttpURLConnection
@@ -76,6 +78,7 @@ object NativeNodeEngine {
 
     private val _state = MutableStateFlow<NodeEngineState>(NodeEngineState.NotInitialized)
     val state: StateFlow<NodeEngineState> = _state
+    private val installMutex = Mutex()
 
 
 
@@ -124,45 +127,47 @@ object NativeNodeEngine {
         context: Context,
         onProgress: (String, Float) -> Unit = { _, _ -> }
     ): Result<Unit> = withContext(Dispatchers.IO) {
-        try {
-            _state.value = NodeEngineState.Initializing("检查环境", 0f)
+        installMutex.withLock {
+            try {
+                _state.value = NodeEngineState.Initializing("检查环境", 0f)
 
-            val engineDir = getEngineDir(context)
-            engineDir.mkdirs()
+                val engineDir = getEngineDir(context)
+                engineDir.mkdirs()
 
 
-            if (isAvailable(context)) {
+                if (isAvailable(context)) {
+                    _state.value = NodeEngineState.Ready
+                    return@withLock Result.success(Unit)
+                }
+
+
+                _state.value = NodeEngineState.Initializing(Strings.nodeDownloadEsbuild, 0.1f)
+                onProgress(Strings.nodeDownloadEsbuild, 0.1f)
+
+                downloadEsbuild(context) { progress ->
+                    _state.value = NodeEngineState.Initializing(Strings.nodeDownloadEsbuild, 0.1f + progress * 0.8f)
+                    onProgress(Strings.nodeDownloadEsbuild, 0.1f + progress * 0.8f)
+                }
+
+
+                _state.value = NodeEngineState.Initializing(Strings.nodeVerifyInstall, 0.95f)
+                onProgress(Strings.nodeVerifyInstall, 0.95f)
+
+                if (!isAvailable(context)) {
+                    throw Exception(Strings.nodeEsbuildInstallFailed)
+                }
+
                 _state.value = NodeEngineState.Ready
-                return@withContext Result.success(Unit)
+                onProgress("Done", 1f)
+
+                AppLogger.w(TAG, "Node 引擎初始化完成")
+                Result.success(Unit)
+
+            } catch (e: Exception) {
+                AppLogger.e(TAG, "Initialization failed", e)
+                _state.value = NodeEngineState.Error(e.message ?: "未知错误")
+                Result.failure(e)
             }
-
-
-            _state.value = NodeEngineState.Initializing(Strings.nodeDownloadEsbuild, 0.1f)
-            onProgress(Strings.nodeDownloadEsbuild, 0.1f)
-
-            downloadEsbuild(context) { progress ->
-                _state.value = NodeEngineState.Initializing(Strings.nodeDownloadEsbuild, 0.1f + progress * 0.8f)
-                onProgress(Strings.nodeDownloadEsbuild, 0.1f + progress * 0.8f)
-            }
-
-
-            _state.value = NodeEngineState.Initializing(Strings.nodeVerifyInstall, 0.95f)
-            onProgress(Strings.nodeVerifyInstall, 0.95f)
-
-            if (!isAvailable(context)) {
-                throw Exception(Strings.nodeEsbuildInstallFailed)
-            }
-
-            _state.value = NodeEngineState.Ready
-            onProgress("Done", 1f)
-
-            AppLogger.w(TAG, "Node 引擎初始化完成")
-            Result.success(Unit)
-
-        } catch (e: Exception) {
-            AppLogger.e(TAG, "Initialization failed", e)
-            _state.value = NodeEngineState.Error(e.message ?: "未知错误")
-            Result.failure(e)
         }
     }
 

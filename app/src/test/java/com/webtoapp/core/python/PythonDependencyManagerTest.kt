@@ -103,4 +103,56 @@ class PythonDependencyManagerTest {
         assertThat(PythonDependencyManager.isPythonReady(context)).isFalse()
         assertThat(PythonDependencyManager.getMuslLinkerPath(context)).isNull()
     }
+
+    @Test
+    fun `builder musl linker path ignores downloaded non native linker`() {
+        File(PythonDependencyManager.getPythonDir(context), "lib/${PythonDependencyManager.getMuslLinkerName(PythonDependencyManager.getDeviceAbi())}").apply {
+            parentFile?.mkdirs()
+            writeBytes(ByteArray(2048) { 1 })
+            setExecutable(true)
+        }
+
+        assertThat(PythonDependencyManager.getMuslLinkerPath(context)).isNotNull()
+        assertThat(PythonDependencyManager.getBuilderMuslLinkerPath(context)).isNull()
+    }
+
+    @Test
+    fun `sanitize requirements strips android hostile packages and uvicorn extras`() {
+        val original = """
+            fastapi==0.99.1
+            uvicorn[standard]==0.27.0
+            httptools==0.6.0
+            watchfiles>=0.21
+            uvloop==0.19.0
+            pydantic==1.10.16
+        """.trimIndent()
+
+        val sanitized = PythonDependencyManager.sanitizeRequirementsForAndroid(original)
+
+        assertThat(sanitized).contains("fastapi==0.99.1")
+        assertThat(sanitized).contains("uvicorn==0.27.0")
+        assertThat(sanitized).contains("pydantic==1.10.16")
+        assertThat(sanitized).doesNotContain("uvicorn[standard]")
+        assertThat(sanitized).doesNotContain("httptools")
+        assertThat(sanitized).doesNotContain("watchfiles")
+        assertThat(sanitized).doesNotContain("uvloop")
+    }
+
+    @Test
+    fun `has installed packages ignores empty directory tree`() {
+        val emptyDir = tempDir("empty-pypackages")
+        File(emptyDir, "nested").mkdirs()
+
+        assertThat(PythonDependencyManager.hasInstalledPackages(emptyDir)).isFalse()
+
+        File(emptyDir, "nested/pkg.py").apply {
+            parentFile?.mkdirs()
+            writeText("print('ok')")
+        }
+        assertThat(PythonDependencyManager.hasInstalledPackages(emptyDir)).isTrue()
+    }
+
+    private fun tempDir(name: String): File {
+        return File(context.cacheDir, "python-dep-test-$name-${System.nanoTime()}").apply { mkdirs() }
+    }
 }
