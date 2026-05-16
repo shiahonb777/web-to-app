@@ -1,0 +1,47 @@
+name: Module Market Check
+
+# Runs the module catalog validator at `tools/ci/validate_modules.py`.
+# Triggered for any change touching the catalog or the validator itself,
+# whether on a PR or a direct push to main. Other paths bypass this job
+# so contributors who don't touch `modules/` aren't blocked by it.
+
+on:
+  pull_request:
+    paths:
+      - 'modules/**'
+      - 'tools/ci/validate_modules.py'
+      - '.github/workflows/modules-check.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'modules/**'
+      - 'tools/ci/validate_modules.py'
+      - '.github/workflows/modules-check.yml'
+  # Manual run from the Actions tab — handy when adjusting the validator
+  # rules without a real catalog change to push.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: modules-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-modules:
+    name: Validate modules/
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Download code
+        uses: actions/checkout@v6
+
+      - name: Use system Python 3
+        # Ubuntu runners ship a recent Python 3 — no setup-python step needed.
+        run: python3 --version
+
+      - name: Run module market validator
+        run: python3 tools/ci/validate_modules.py
