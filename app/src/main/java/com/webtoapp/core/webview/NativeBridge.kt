@@ -9,10 +9,12 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.content.pm.ActivityInfo
 import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -211,6 +213,43 @@ console.log(info.model, info.sdkVersion, info.screenWidth);
 ```javascript
 const info = JSON.parse(NativeBridge.getAppInfo());
 console.log(info.packageName, info.versionName);
+```
+
+### 安全与开发者选项 / Security & Developer Options
+
+#### isDeveloperOptionsEnabled()
+Check if Android Developer Options is enabled in device settings
+- Returns: boolean - true if enabled, false otherwise
+```javascript
+if (NativeBridge.isDeveloperOptionsEnabled()) {
+    console.log('Developer Options is ON');
+}
+```
+
+#### isAdbEnabled()
+Check if USB Debugging (ADB) is enabled
+- Returns: boolean - true if enabled, false otherwise
+```javascript
+if (NativeBridge.isAdbEnabled()) {
+    console.log('USB Debugging is ON');
+}
+```
+
+#### isDebuggable()
+Check if the APK was built with the debuggable flag
+- Returns: boolean - true if debuggable build
+```javascript
+if (NativeBridge.isDebuggable()) {
+    console.log('This is a debug build');
+}
+```
+
+#### getSecurityInfo()
+Get combined security status as JSON
+- Returns: string - JSON with developerOptionsEnabled, adbEnabled, isDebuggable
+```javascript
+const security = JSON.parse(NativeBridge.getSecurityInfo());
+console.log(security.developerOptionsEnabled, security.adbEnabled, security.isDebuggable);
 ```
 
 ### 网络状态
@@ -750,6 +789,71 @@ if (NativeBridge.isFullscreen()) {
     }
 
 
+
+    @JavascriptInterface
+    fun isDeveloperOptionsEnabled(): Boolean {
+        return try {
+            Settings.Secure.getInt(
+                context.contentResolver,
+                Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0
+            ) == 1
+        } catch (e: Exception) {
+            AppLogger.e("NativeBridge", "Failed to read developer options status", e)
+            false
+        }
+    }
+
+    @JavascriptInterface
+    fun isAdbEnabled(): Boolean {
+        return try {
+            Settings.Secure.getInt(
+                context.contentResolver,
+                Settings.Global.ADB_ENABLED, 0
+            ) == 1
+        } catch (e: Exception) {
+            AppLogger.e("NativeBridge", "Failed to read ADB status", e)
+            false
+        }
+    }
+
+    @JavascriptInterface
+    fun isDebuggable(): Boolean {
+        return try {
+            (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    @JavascriptInterface
+    fun getSecurityInfo(): String {
+        return try {
+            val devOptions = try {
+                Settings.Secure.getInt(
+                    context.contentResolver,
+                    Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0
+                ) == 1
+            } catch (e: Exception) { false }
+
+            val adbEnabled = try {
+                Settings.Secure.getInt(
+                    context.contentResolver,
+                    Settings.Global.ADB_ENABLED, 0
+                ) == 1
+            } catch (e: Exception) { false }
+
+            val debuggable = (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+
+            val json = org.json.JSONObject()
+            json.put("developerOptionsEnabled", devOptions)
+            json.put("adbEnabled", adbEnabled)
+            json.put("isDebuggable", debuggable)
+            json.toString()
+        } catch (e: Exception) {
+            AppLogger.e("NativeBridge", "Failed to get security info", e)
+            "{}"
+        }
+    }
 
     @JavascriptInterface
     fun isNetworkAvailable(): Boolean {
