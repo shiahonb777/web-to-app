@@ -163,6 +163,9 @@ class ModuleMarketRepository private constructor(
      * Download a module's full payload, build an [ExtensionModule], and hand
      * it to [ExtensionManager]. Re-installing an existing module overwrites
      * it (used to apply updates).
+     *
+     * When updating an already-installed module, we preserve the user's saved
+     * `configValues` so a version bump doesn't reset their settings.
      */
     suspend fun install(entry: ModuleMarketEntry): Result<ExtensionModule> = withContext(Dispatchers.IO) {
         try {
@@ -178,11 +181,24 @@ class ModuleMarketRepository private constructor(
                 return@withContext Result.failure(IllegalStateException("module.json is malformed", e))
             }
 
+            // If a module with this id is already installed, carry its saved
+            // config values forward. Drop keys the new manifest no longer
+            // declares so we don't accumulate stale settings.
+            val effectiveId = manifest.id?.takeIf { it.isNotBlank() } ?: entry.id
+            val existing = extensionManager.getAllModules().firstOrNull { it.id == effectiveId }
+            val preservedConfig: Map<String, String> = if (existing != null) {
+                val newKeys = manifest.configItems.map { it.key }.toSet()
+                existing.configValues.filterKeys { it in newKeys }
+            } else {
+                emptyMap()
+            }
+
             val module = manifest.toExtensionModule(
                 fallbackId = entry.id,
                 fallbackName = entry.name,
                 code = mainJs,
-                cssCode = styleCss
+                cssCode = styleCss,
+                preservedConfig = preservedConfig
             )
 
             // Reuse `addModule` which already handles upsert by id, validation,
@@ -280,7 +296,8 @@ class ModuleMarketRepository private constructor(
             fallbackId: String,
             fallbackName: String,
             code: String,
-            cssCode: String
+            cssCode: String,
+            preservedConfig: Map<String, String> = emptyMap()
         ): ExtensionModule {
             return ExtensionModule(
                 id = id?.takeIf { it.isNotBlank() } ?: fallbackId,
@@ -299,6 +316,7 @@ class ModuleMarketRepository private constructor(
                     runCatching { ModulePermission.valueOf(p) }.getOrNull()
                 },
                 configItems = configItems,
+                configValues = preservedConfig,
                 enabled = true,
                 builtIn = false,
                 sourceType = ModuleSourceType.CUSTOM
