@@ -694,48 +694,58 @@ fun HomeScreen(
                                     shareApkFailureReport = null
                                     snackbarHostState.showSnackbar(Strings.shareApkBuilding)
                                     val apkBuilder = sharedApkBuilder
-                                    val result = apkBuilder.buildApk(fullApp) { _, _ -> }
-                                    when (result) {
-                                        is BuildResult.Success -> {
+                                    try {
+                                        val result = apkBuilder.buildApk(fullApp) { _, _ -> }
+                                        when (result) {
+                                            is BuildResult.Success -> {
 
-                                            try {
-                                                val apkUri = androidx.core.content.FileProvider.getUriForFile(
-                                                    listContext,
-                                                    "${listContext.packageName}.fileprovider",
-                                                    result.apkFile
-                                                )
-                                                val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                                                    type = "application/vnd.android.package-archive"
-                                                    putExtra(android.content.Intent.EXTRA_STREAM, apkUri)
-                                                    putExtra(android.content.Intent.EXTRA_SUBJECT, Strings.shareApkTitle.replace("%s", fullApp.name))
-                                                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                                try {
+                                                    val apkUri = androidx.core.content.FileProvider.getUriForFile(
+                                                        listContext,
+                                                        "${listContext.packageName}.fileprovider",
+                                                        result.apkFile
+                                                    )
+                                                    val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                                        type = "application/vnd.android.package-archive"
+                                                        putExtra(android.content.Intent.EXTRA_STREAM, apkUri)
+                                                        putExtra(android.content.Intent.EXTRA_SUBJECT, Strings.shareApkTitle.replace("%s", fullApp.name))
+                                                        addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                                    }
+                                                    listContext.startActivity(android.content.Intent.createChooser(shareIntent, Strings.shareApkTitle.replace("%s", fullApp.name)))
+                                                } catch (e: Exception) {
+                                                    shareApkFailureReport = buildActionFailureReport(
+                                                        title = Strings.apkShareFailed,
+                                                        stage = "share_apk_intent",
+                                                        webApp = fullApp,
+                                                        summary = Strings.shareApkFailed.replace("%s", e.message ?: "Unknown error"),
+                                                        logPath = result.logPath,
+                                                        throwable = e,
+                                                        extraLines = listOf(
+                                                            "apkPath=${result.apkFile.absolutePath}",
+                                                            "apkSize=${result.apkFile.length()}"
+                                                        )
+                                                    )
                                                 }
-                                                listContext.startActivity(android.content.Intent.createChooser(shareIntent, Strings.shareApkTitle.replace("%s", fullApp.name)))
-                                            } catch (e: Exception) {
+                                            }
+                                            is BuildResult.Error -> {
                                                 shareApkFailureReport = buildActionFailureReport(
                                                     title = Strings.apkShareFailed,
-                                                    stage = "share_apk_intent",
+                                                    stage = result.diagnostic?.stage?.label ?: "build_apk_for_share",
                                                     webApp = fullApp,
-                                                    summary = Strings.shareApkFailed.replace("%s", e.message ?: "Unknown error"),
+                                                    summary = Strings.shareApkFailed.replace("%s", result.message),
                                                     logPath = result.logPath,
-                                                    throwable = e,
-                                                    extraLines = listOf(
-                                                        "apkPath=${result.apkFile.absolutePath}",
-                                                        "apkSize=${result.apkFile.length()}"
-                                                    )
+                                                    extraLines = buildDiagnosticLines(result)
                                                 )
                                             }
                                         }
-                                        is BuildResult.Error -> {
-                                            shareApkFailureReport = buildActionFailureReport(
-                                                title = Strings.apkShareFailed,
-                                                stage = result.diagnostic?.stage?.label ?: "build_apk_for_share",
-                                                webApp = fullApp,
-                                                summary = Strings.shareApkFailed.replace("%s", result.message),
-                                                logPath = result.logPath,
-                                                extraLines = buildDiagnosticLines(result)
-                                            )
-                                        }
+                                    } catch (t: Throwable) {
+                                        shareApkFailureReport = buildActionFailureReport(
+                                            title = Strings.apkShareFailed,
+                                            stage = "build_apk_for_share_unhandled",
+                                            webApp = fullApp,
+                                            summary = Strings.shareApkFailed.replace("%s", t.message ?: "Unhandled exception"),
+                                            throwable = t
+                                        )
                                     }
                                 }
                             },
@@ -1903,25 +1913,36 @@ fun BuildApkDialog(
         buildFailureReport = null
         analysisReport = null
         scope.launch {
-            val result = apkBuilder.buildApk(webAppWithConfig) { p, t ->
-                progress = p
-                progressText = t
-            }
-            when (result) {
-                is BuildResult.Success -> {
-                    analysisReport = result.analysisReport
-                    isBuilding = false
+            try {
+                val result = apkBuilder.buildApk(webAppWithConfig) { p, t ->
+                    progress = p
+                    progressText = t
+                }
+                when (result) {
+                    is BuildResult.Success -> {
+                        analysisReport = result.analysisReport
+                        isBuilding = false
 
-                    val installStarted = apkBuilder.installApk(result.apkFile)
-                    onResult(
-                        if (installStarted) "APK 构建成功，正在启动安装..."
-                        else "APK 构建成功，但无法自动启动安装"
-                    )
+                        val installStarted = apkBuilder.installApk(result.apkFile)
+                        onResult(
+                            if (installStarted) "APK 构建成功，正在启动安装..."
+                            else "APK 构建成功，但无法自动启动安装"
+                        )
+                    }
+                    is BuildResult.Error -> {
+                        buildFailureReport = buildBuildFailureReport(webAppWithConfig, result)
+                        isBuilding = false
+                    }
                 }
-                is BuildResult.Error -> {
-                    buildFailureReport = buildBuildFailureReport(webAppWithConfig, result)
-                    isBuilding = false
-                }
+            } catch (t: Throwable) {
+                buildFailureReport = buildActionFailureReport(
+                    title = Strings.buildFailed,
+                    stage = "build_apk_unhandled",
+                    webApp = webAppWithConfig,
+                    summary = Strings.buildFailedWithMessage.replace("%s", t.message ?: "Unhandled exception"),
+                    throwable = t
+                )
+                isBuilding = false
             }
         }
     }
