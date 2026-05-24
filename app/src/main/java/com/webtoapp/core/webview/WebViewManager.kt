@@ -1241,6 +1241,9 @@ class WebViewManager(
         val dnsManager = com.webtoapp.core.dns.DnsManager(context)
         val hostsMappingEnabled = config.hostsMappingEnabled && config.hostsMappings.isNotEmpty()
         val hostsMappingCanApply = hostsMappingEnabled && config.proxyMode == "NONE"
+        val dohCanApplyViaLocalProxy = config.dnsMode != "SYSTEM" &&
+            config.dnsConfig.effectiveDohUrl.isNotBlank() &&
+            config.proxyMode == "NONE"
 
         if (config.dnsMode != "SYSTEM") {
             AppLogger.d("WebViewManager", "Applying DoH DNS: mode=${config.dnsMode}, provider=${config.dnsConfig.provider}")
@@ -1248,7 +1251,9 @@ class WebViewManager(
             com.webtoapp.core.engine.GeckoViewEngine.applyDnsConfig(config.dnsConfig)
         } else {
             dnsManager.clearDnsConfig()
-            com.webtoapp.core.engine.GeckoViewEngine.applyDnsConfig(config.dnsConfig)
+            com.webtoapp.core.engine.GeckoViewEngine.applyDnsConfig(
+                com.webtoapp.data.model.DnsConfig(provider = "custom", customDohUrl = "")
+            )
         }
 
         if (config.proxyMode != "NONE") {
@@ -1298,17 +1303,24 @@ class WebViewManager(
             GeckoViewEngine.applyProxyConfig(
                 ProxyConfig(mode = "NONE")
             )
-            if (hostsMappingCanApply) {
+            if (hostsMappingCanApply || dohCanApplyViaLocalProxy) {
                 val bridgePort = LocalHttpHostMappingBridge.start(
                     config = LocalHttpHostMappingBridge.Config(
-                        mappings = config.hostsMappings,
+                        mappings = if (hostsMappingCanApply) config.hostsMappings else emptyList(),
                         dnsMode = config.dnsMode,
                         dnsConfig = config.dnsConfig
                     ),
                     dnsManager = dnsManager
                 )
                 if (bridgePort > 0) {
-                    AppLogger.d("WebViewManager", "Applying hosts mapping proxy on 127.0.0.1:$bridgePort")
+                    val bridgeMode = if (hostsMappingCanApply && dohCanApplyViaLocalProxy) {
+                        "hosts mapping + DoH"
+                    } else if (dohCanApplyViaLocalProxy) {
+                        "DoH"
+                    } else {
+                        "hosts mapping"
+                    }
+                    AppLogger.d("WebViewManager", "Applying $bridgeMode proxy on 127.0.0.1:$bridgePort")
                     proxyApplyJob = proxyScope.launch {
                         try {
                             PacProxyManager(context).applyProxy(
@@ -1319,11 +1331,11 @@ class WebViewManager(
                                 bypassRules = emptyList()
                             )
                         } catch (e: Exception) {
-                            AppLogger.e("WebViewManager", "Failed to apply hosts mapping proxy", e)
+                            AppLogger.e("WebViewManager", "Failed to apply local DNS/hosts proxy", e)
                         }
                     }
                 } else {
-                    AppLogger.w("WebViewManager", "Hosts mapping bridge failed to start")
+                    AppLogger.w("WebViewManager", "Local DNS/hosts bridge failed to start")
                 }
             } else {
                 LocalHttpHostMappingBridge.stop()
