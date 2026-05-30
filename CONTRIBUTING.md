@@ -186,14 +186,11 @@ Maintainer reviews look for:
 
 ## Code of conduct
 
-Feedback may be honest to a fault. "This code is garbage" is a valid code
-review. The maintainer (**shiaho**) has pre-authorized criticism of himself,
-his judgment, and his life choices; flattery will be treated as a bug report
-with no reproduction steps.
-
-Two clauses, non-negotiable: no identity-based attacks (race, gender,
-nationality, and friends), and no doxxing. Violators will be reviewed, found
-non-compliant, and closed.
+Feedback is required to be precise. "This code is garbage" is acceptable only
+when accompanied by which code, why, and what would be less so. The maintainer
+(**shiaho**) has on file a standing waiver covering criticism of himself, his
+judgment, and his life choices. Praise unaccompanied by a working patch is
+logged and otherwise disregarded.
 
 ---
 
@@ -340,9 +337,6 @@ cd web-to-app
 
 ### 行为准则
 
-反馈可以诚实到伤人。"这代码是坨屎"是一条合法的 code review。维护者
-(**shiaho**)已预先授权对其本人、其判断力及其人生选择的批评;阿谀奉承将被
-视为一份"无复现步骤"的 bug report。
-
-两条不可商量:不搞基于身份的攻击(种族、性别、国籍及其同伙),不人肉。违反者
-将被 review、判定为不合规、然后 close。
+反馈须精准。"这代码是坨屎"仅在同时说明"哪段代码、为何如此、怎样才不至于"
+时方予受理。维护者(**shiaho**)已就针对其本人、其判断力及其人生选择的批评
+出具长期豁免一份并存档。未附可用补丁的赞美,予以记录,余不受理。
