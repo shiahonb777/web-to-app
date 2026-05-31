@@ -934,6 +934,9 @@ class WebViewManager(
     private val pagePhaseExecutionState =
         java.util.WeakHashMap<WebView, MutableSet<String>>()
 
+    private val extensionModuleDeferredJobs =
+        java.util.WeakHashMap<WebView, MutableMap<String, Job>>()
+
     private val primeUserActivationDone = java.util.WeakHashMap<WebView, Boolean>()
 
     @Volatile
@@ -1649,6 +1652,7 @@ class WebViewManager(
                 view?.let {
                     userscriptInjectionState.remove(it)
                     pagePhaseExecutionState.remove(it)
+                    cancelDeferredExtensionModuleInjection(it)
                 }
 
                 view?.let { wv ->
@@ -2294,6 +2298,7 @@ class WebViewManager(
                 view?.let { goneView ->
                     userscriptInjectionState.remove(goneView)
                     pagePhaseExecutionState.remove(goneView)
+                    cancelDeferredExtensionModuleInjection(goneView)
                     managedWebViews.remove(goneView)
                     primeUserActivationDone.remove(goneView)
                     failoverCursor.remove(goneView)
@@ -2935,6 +2940,7 @@ class WebViewManager(
             primeUserActivationDone.remove(webView)
             failoverCursor.remove(webView)
             cancelFailoverTimeout(webView)
+            cancelDeferredExtensionModuleInjection(webView)
             extensionPanelSyncJob?.cancel()
             extensionPanelSyncJob = null
             extensionPanelDeferredInjectionJob?.cancel()
@@ -4257,6 +4263,52 @@ class WebViewManager(
             injectEmbeddedModules(webView, url, runAt)
             return
         }
+
+        if (appExtensionModuleIds.isEmpty() && !allowGlobalModuleFallback) {
+            return
+        }
+
+        val extensionManager = ExtensionManager.getInstance(context)
+        if (extensionManager.isLoading.value && resolveActiveExtensionModules().isEmpty()) {
+            scheduleDeferredExtensionModuleInjection(webView, url, runAt)
+            return
+        }
+
+        performExtensionModuleInjection(webView, url, runAt)
+    }
+
+    private fun scheduleDeferredExtensionModuleInjection(
+        webView: WebView,
+        url: String,
+        runAt: ScriptRunTime
+    ) {
+        val jobs = extensionModuleDeferredJobs.getOrPut(webView) { mutableMapOf() }
+        val jobKey = buildPagePhaseExecutionKey(url, runAt)
+        jobs[jobKey]?.cancel()
+        AppLogger.d(
+            "WebViewManager",
+            "injectAllExtensionModules: modules still loading, deferring injection (${runAt.name}, url=$url)"
+        )
+        jobs[jobKey] = proxyScope.launch {
+            val extensionManager = ExtensionManager.getInstance(context)
+            extensionManager.isLoading.filter { !it }.first()
+            val currentUrl = webView.url?.takeIf { it.isNotBlank() && it != "about:blank" }
+            if (currentUrl == null || currentUrl != url) {
+                AppLogger.d(
+                    "WebViewManager",
+                    "Deferred extension module injection skipped: url changed ($url -> $currentUrl)"
+                )
+                return@launch
+            }
+            performExtensionModuleInjection(webView, url, runAt)
+        }
+    }
+
+    private fun cancelDeferredExtensionModuleInjection(webView: WebView) {
+        extensionModuleDeferredJobs.remove(webView)?.values?.forEach { it.cancel() }
+    }
+
+    private fun performExtensionModuleInjection(webView: WebView, url: String, runAt: ScriptRunTime) {
 
         val moduleRunAt = runAt.toModuleRunTime()
 
