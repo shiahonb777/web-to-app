@@ -4857,6 +4857,67 @@ object Strings {
         AppLanguage.ARABIC -> "تطبيق أدوات Web-to-APK الأكثر اكتمالاً على Android."
     }
 
+    val updateCheckTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "检查更新"
+        AppLanguage.ENGLISH -> "Check for Updates"
+        AppLanguage.ARABIC -> "التحقق من التحديثات"
+    }
+    val updateChecking: String get() = when (lang) {
+        AppLanguage.CHINESE -> "正在检查更新…"
+        AppLanguage.ENGLISH -> "Checking for updates…"
+        AppLanguage.ARABIC -> "جارٍ التحقق من التحديثات…"
+    }
+    val updateUpToDate: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已是最新版本"
+        AppLanguage.ENGLISH -> "You're on the latest version"
+        AppLanguage.ARABIC -> "أنت تستخدم أحدث إصدار"
+    }
+    val updateAvailableTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "发现新版本"
+        AppLanguage.ENGLISH -> "Update available"
+        AppLanguage.ARABIC -> "يتوفّر تحديث"
+    }
+    val updateNewVersionLabel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "最新版本"
+        AppLanguage.ENGLISH -> "Latest version"
+        AppLanguage.ARABIC -> "أحدث إصدار"
+    }
+    val updateCurrentVersionLabel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "当前版本"
+        AppLanguage.ENGLISH -> "Current version"
+        AppLanguage.ARABIC -> "الإصدار الحالي"
+    }
+    val updateDownloadButton: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下载并安装"
+        AppLanguage.ENGLISH -> "Download & install"
+        AppLanguage.ARABIC -> "تنزيل وتثبيت"
+    }
+    val updateCheckFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "检查更新失败"
+        AppLanguage.ENGLISH -> "Update check failed"
+        AppLanguage.ARABIC -> "فشل التحقق من التحديثات"
+    }
+    val updateDownloadStarted: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已开始下载，完成后将提示安装"
+        AppLanguage.ENGLISH -> "Download started; you'll be prompted to install when it finishes"
+        AppLanguage.ARABIC -> "بدأ التنزيل؛ ستتم مطالبتك بالتثبيت عند الانتهاء"
+    }
+    val updateReleaseNotesLabel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "更新说明"
+        AppLanguage.ENGLISH -> "Release notes"
+        AppLanguage.ARABIC -> "ملاحظات الإصدار"
+    }
+    val updateSizeLabel: String get() = when (lang) {
+        AppLanguage.CHINESE -> "安装包大小"
+        AppLanguage.ENGLISH -> "Download size"
+        AppLanguage.ARABIC -> "حجم التنزيل"
+    }
+    val updateVerificationFailed: String get() = when (lang) {
+        AppLanguage.CHINESE -> "下载文件校验失败（SHA-256 不匹配），已删除以保护安全"
+        AppLanguage.ENGLISH -> "Downloaded file failed integrity check (SHA-256 mismatch); it was deleted for your safety"
+        AppLanguage.ARABIC -> "فشل التحقق من سلامة الملف الذي تم تنزيله (عدم تطابق SHA-256)؛ تم حذفه لحمايتك"
+    }
+
     val downloadComplete: String get() = when (lang) {
         AppLanguage.CHINESE -> "下载完成，正在安装..."
         AppLanguage.ENGLISH -> "Download complete, installing..."

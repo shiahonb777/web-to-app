@@ -36,6 +36,7 @@ import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.PlayCircleOutline
 import androidx.compose.material.icons.outlined.Send
+import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.Tag
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -66,6 +67,7 @@ import com.webtoapp.ui.design.WtaSectionHeaderStyle
 import com.webtoapp.ui.design.WtaSpacing
 import com.webtoapp.ui.design.rememberHapticClick
 import com.webtoapp.ui.design.wtaPressScale
+import kotlinx.coroutines.launch
 
 @Composable
 fun AboutScreen(onBack: () -> Unit) {
@@ -119,6 +121,35 @@ private fun AuthorHeroCard(
     val context = LocalContext.current
     val byLine = aboutAuthorByLine()
     val versionCopied = versionCopiedToast()
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+
+    var updateResult by androidx.compose.runtime.remember {
+        androidx.compose.runtime.mutableStateOf<com.webtoapp.core.update.UpdateChecker.Result?>(null)
+    }
+    var isCheckingUpdate by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    var showUpdateDialog by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+
+    if (showUpdateDialog) {
+        UpdateCheckDialog(
+            isChecking = isCheckingUpdate,
+            result = updateResult,
+            currentVersionName = versionName,
+            onDownload = { info ->
+                com.webtoapp.core.update.ApkUpdateInstaller.download(
+                    context = context,
+                    url = info.downloadUrl,
+                    version = info.version,
+                    expectedSha256 = info.sha256,
+                    onVerificationFailed = {
+                        Toast.makeText(context, Strings.updateVerificationFailed, Toast.LENGTH_LONG).show()
+                    }
+                )
+                Toast.makeText(context, Strings.updateDownloadStarted, Toast.LENGTH_LONG).show()
+                showUpdateDialog = false
+            },
+            onDismiss = { showUpdateDialog = false }
+        )
+    }
 
     WtaCard(
         modifier = Modifier.fillMaxWidth(),
@@ -184,6 +215,18 @@ private fun AuthorHeroCard(
             VersionPill(
                 versionName = versionName,
                 versionCode = versionCode,
+                onClick = {
+                    showUpdateDialog = true
+                    if (!isCheckingUpdate) {
+                        isCheckingUpdate = true
+                        updateResult = null
+                        scope.launch {
+                            val result = com.webtoapp.core.update.UpdateChecker.check(versionName)
+                            updateResult = result
+                            isCheckingUpdate = false
+                        }
+                    }
+                },
                 onCopy = {
                     val label = "WebToApp version"
                     val text = "WebToApp v$versionName ($versionCode)"
@@ -203,10 +246,12 @@ private fun AuthorHeroCard(
 private fun VersionPill(
     versionName: String,
     versionCode: Long,
+    onClick: () -> Unit,
     onCopy: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val hapticClick = rememberHapticClick(onCopy)
+    val hapticClick = rememberHapticClick(onClick)
+    val hapticCopy = rememberHapticClick(onCopy)
 
     Row(
         modifier = Modifier
@@ -240,9 +285,19 @@ private fun VersionPill(
         )
         Spacer(Modifier.width(8.dp))
         Icon(
+            Icons.Outlined.Sync,
+            contentDescription = Strings.updateCheckTitle,
+            modifier = Modifier.size(14.dp),
+            tint = MaterialTheme.colorScheme.primary
+        )
+        Spacer(Modifier.width(10.dp))
+        Icon(
             Icons.Outlined.ContentCopy,
             contentDescription = null,
-            modifier = Modifier.size(12.dp),
+            modifier = Modifier
+                .clip(CircleShape)
+                .clickable(onClick = hapticCopy)
+                .size(14.dp),
             tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
@@ -448,6 +503,132 @@ private fun LegalSection(title: String, content: String) {
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
+}
+
+@Composable
+private fun UpdateCheckDialog(
+    isChecking: Boolean,
+    result: com.webtoapp.core.update.UpdateChecker.Result?,
+    currentVersionName: String,
+    onDownload: (com.webtoapp.core.update.UpdateChecker.ReleaseInfo) -> Unit,
+    onDismiss: () -> Unit
+) {
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(Icons.Outlined.Sync, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+        },
+        title = { Text(Strings.updateCheckTitle) },
+        text = {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                when {
+                    isChecking || result == null -> {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            androidx.compose.material3.CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Text(Strings.updateChecking, style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                    result is com.webtoapp.core.update.UpdateChecker.Result.UpdateAvailable -> {
+                        val info = result.info
+                        Text(
+                            Strings.updateAvailableTitle,
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "${Strings.updateNewVersionLabel}: v${info.version}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Text(
+                            "${Strings.updateCurrentVersionLabel}: v${result.currentVersion}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        if (info.sizeBytes > 0) {
+                            Text(
+                                "${Strings.updateSizeLabel}: ${formatBytes(info.sizeBytes)}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        if (info.releaseNotes.isNotBlank()) {
+                            Spacer(Modifier.height(12.dp))
+                            Text(
+                                Strings.updateReleaseNotesLabel,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                info.releaseNotes,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                    result is com.webtoapp.core.update.UpdateChecker.Result.UpToDate -> {
+                        Text(Strings.updateUpToDate, style = MaterialTheme.typography.bodyMedium)
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            "v${result.version}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    result is com.webtoapp.core.update.UpdateChecker.Result.Failed -> {
+                        com.webtoapp.ui.components.WtaErrorDetailsSection(
+                            report = com.webtoapp.ui.components.buildErrorReport(
+                                scope = "Update check",
+                                message = result.message,
+                                throwable = result.throwable,
+                                contextLines = listOf("currentVersion=$currentVersionName")
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            val available = result as? com.webtoapp.core.update.UpdateChecker.Result.UpdateAvailable
+            if (available != null) {
+                androidx.compose.material3.TextButton(
+                    onClick = { onDownload(available.info) }
+                ) {
+                    Text(Strings.updateDownloadButton)
+                }
+            } else {
+                androidx.compose.material3.TextButton(onClick = onDismiss) {
+                    Text(Strings.close)
+                }
+            }
+        },
+        dismissButton = {
+            val available = result as? com.webtoapp.core.update.UpdateChecker.Result.UpdateAvailable
+            if (available != null) {
+                androidx.compose.material3.TextButton(onClick = onDismiss) {
+                    Text(Strings.close)
+                }
+            }
+        }
+    )
+}
+
+private fun formatBytes(bytes: Long): String {
+    if (bytes <= 0) return "0 B"
+    val units = arrayOf("B", "KB", "MB", "GB")
+    var value = bytes.toDouble()
+    var unit = 0
+    while (value >= 1024 && unit < units.size - 1) {
+        value /= 1024
+        unit++
+    }
+    return if (unit == 0) "${bytes} B" else "%.1f %s".format(value, units[unit])
 }
 
 @Composable
