@@ -65,20 +65,17 @@ fun ShellContentRouter(
             val nodejsMode = config.nodejsConfig.mode
             if (nodejsMode == "STATIC") {
 
-                ShellLocalFileWebView(
+                NodeJsStaticShellMode(
                     config = config,
                     webViewRecreationKey = webViewRecreationKey,
                     webViewConfig = webViewConfig,
                     webViewCallbacks = webViewCallbacks,
                     webViewManager = webViewManager,
-                    targetUrl = config.targetUrl,
-                    enableJavaScript = true,
-                    enableLocalStorage = true,
+                    onWebViewCreated = onWebViewCreated,
+                    onWebViewRefUpdated = onWebViewRefUpdated,
                     swipeRefreshEnabled = swipeRefreshEnabled,
                     isRefreshing = isRefreshing,
-                    onRefresh = onRefresh,
-                    onWebViewCreated = onWebViewCreated,
-                    onWebViewRefUpdated = onWebViewRefUpdated
+                    onRefresh = onRefresh
                 )
             } else {
 

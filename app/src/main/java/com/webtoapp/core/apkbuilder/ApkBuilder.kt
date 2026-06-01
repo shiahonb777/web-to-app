@@ -2778,7 +2778,7 @@ private fun WebApp.computeEffectiveTargetUrl(packageName: String, htmlUsesFileSc
     com.webtoapp.data.model.AppType.WORDPRESS -> "wordpress://localhost"
     com.webtoapp.data.model.AppType.NODEJS_APP -> when (nodejsConfig?.buildMode) {
         com.webtoapp.data.model.NodeJsBuildMode.STATIC ->
-            "file:///android_asset/nodejs_app/dist/index.html"
+            "nodejs://localhost"
         com.webtoapp.data.model.NodeJsBuildMode.API_BACKEND,
         com.webtoapp.data.model.NodeJsBuildMode.FULLSTACK ->
             "nodejs://localhost"

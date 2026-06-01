@@ -394,6 +394,133 @@ private fun resolveExtractedHtmlEntry(siteDir: File, configuredEntry: String): S
         ?: normalizedConfiguredEntry.ifBlank { "index.html" }
 }
 
+private fun resolveStaticDocRoot(siteDir: File): File {
+    val candidates = listOf("dist", "build", "public", "static", "www", "")
+    for (dir in candidates) {
+        val candidate = if (dir.isEmpty()) siteDir else File(siteDir, dir)
+        if (candidate.isDirectory && File(candidate, "index.html").exists()) {
+            return candidate
+        }
+    }
+    return siteDir
+}
+
+@Composable
+fun NodeJsStaticShellMode(
+    config: ShellConfig,
+    webViewRecreationKey: Int,
+    webViewConfig: WebViewConfig,
+    webViewCallbacks: WebViewCallbacks,
+    webViewManager: com.webtoapp.core.webview.WebViewManager,
+    onWebViewCreated: (WebView) -> Unit,
+    onWebViewRefUpdated: (WebView) -> Unit,
+    swipeRefreshEnabled: Boolean = false,
+    isRefreshing: Boolean = false,
+    onRefresh: () -> Unit = {}
+) {
+    val context = LocalContext.current
+    var phase by remember { mutableStateOf("extracting") }
+    var errorMsg by remember { mutableStateOf<String?>(null) }
+    var errorThrowable by remember { mutableStateOf<Throwable?>(null) }
+    var targetUrl by remember { mutableStateOf<String?>(null) }
+    val stableHttpPort = remember(config.packageName) {
+        com.webtoapp.core.webview.LocalHttpServer.stablePortForPackageName(config.packageName)
+    }
+    val httpServer = remember(stableHttpPort) {
+        com.webtoapp.core.webview.LocalHttpServer(context, stableHttpPort)
+    }
+
+    DisposableEffect(httpServer) {
+        onDispose { httpServer.stop() }
+    }
+
+    LaunchedEffect(config.versionCode) {
+        withContext(Dispatchers.IO) {
+            try {
+                val siteDir = File(context.filesDir, "nodejs_static_site")
+                val marker = File(siteDir, ".nodejs_static_extracted")
+                val extractionToken = buildExtractionToken(
+                    context = context,
+                    scope = "nodejs_static",
+                    configVersionCode = config.versionCode,
+                    extra = config.nodejsConfig.entryFile
+                )
+
+                if (shouldReextractAssets(marker, extractionToken)) {
+                    AppLogger.i("NodeJsStaticShell", "Extracting nodejs static assets to ${siteDir.absolutePath}")
+                    siteDir.deleteRecursively()
+                    extractAssetsRecursive(context, "nodejs_app", siteDir)
+                    writeExtractionMarker(marker, extractionToken)
+                }
+
+                phase = "starting"
+                val docRoot = resolveStaticDocRoot(siteDir)
+                val resolvedEntry = resolveExtractedHtmlEntry(docRoot, config.nodejsConfig.entryFile)
+                val baseUrl = httpServer.start(docRoot)
+                targetUrl = buildLocalHttpTargetUrl(baseUrl, resolvedEntry)
+                AppLogger.i(
+                    "NodeJsStaticShell",
+                    "Node static ready (HTTP server): url=$targetUrl, docRoot=${docRoot.absolutePath}, port=$stableHttpPort"
+                )
+                phase = "ready"
+            } catch (e: Exception) {
+                AppLogger.e("NodeJsStaticShell", "Node static shell launch failed", e)
+                phase = "error"
+                errorMsg = e.message ?: Strings.serverStartFailed
+                errorThrowable = e
+            }
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        when (phase) {
+            "ready" -> {
+                val url = targetUrl ?: return@Box
+                ShellLocalFileWebView(
+                    config = config,
+                    webViewRecreationKey = webViewRecreationKey,
+                    webViewConfig = webViewConfig,
+                    webViewCallbacks = webViewCallbacks,
+                    webViewManager = webViewManager,
+                    targetUrl = url,
+                    enableJavaScript = true,
+                    enableLocalStorage = true,
+                    swipeRefreshEnabled = swipeRefreshEnabled,
+                    isRefreshing = isRefreshing,
+                    onRefresh = onRefresh,
+                    onWebViewCreated = onWebViewCreated,
+                    onWebViewRefUpdated = onWebViewRefUpdated
+                )
+            }
+
+            "extracting", "starting" -> {
+                var showLoadingUi by remember { mutableStateOf(false) }
+                LaunchedEffect(phase) {
+                    delay(600)
+                    showLoadingUi = true
+                }
+                if (showLoadingUi) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+            }
+
+            "error" -> {
+                ShellErrorScreen(
+                    config = config,
+                    mode = "Node.js (static)",
+                    message = errorMsg ?: Strings.serverStartFailed,
+                    throwable = errorThrowable
+                )
+            }
+        }
+    }
+}
+
 private fun buildLocalHttpTargetUrl(baseUrl: String, relativePath: String): String {
     val normalizedPath = relativePath.removePrefix("/").ifBlank { "index.html" }
     return "$baseUrl/${Uri.encode(normalizedPath, "/")}"
