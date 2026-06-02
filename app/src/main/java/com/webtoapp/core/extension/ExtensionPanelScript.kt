@@ -217,37 +217,51 @@ object ExtensionPanelScript {
 
     // ==================== 样式定义 ====================
     const PANEL_STYLES = `
-        /* CSS 变量 - 主题色 */
+        /* CSS 变量 - 黑白灰主题 */
         :root {
-            --wta-primary: #3B82F6;
-            --wta-primary-light: #60A5FA;
-            --wta-primary-dark: #2563EB;
-            --wta-gradient: #3B82F6;
-            --wta-gradient-dark: #2563EB;
-            --wta-surface: rgba(255, 255, 255, 0.95);
-            --wta-surface-dim: rgba(255, 255, 255, 0.85);
-            --wta-on-surface: #111827;
-            --wta-on-surface-variant: #6b7280;
-            --wta-outline: rgba(0, 0, 0, 0.06);
+            --wta-primary: #111113;
+            --wta-primary-light: #5A5A5F;
+            --wta-primary-dark: #000000;
+            --wta-on-primary: #FFFFFF;
+            --wta-accent-soft: rgba(17, 17, 19, 0.08);
+            --wta-fab-bg: #1A1A1D;
+            --wta-fab-fg: #FFFFFF;
+            --wta-gradient: #111113;
+            --wta-gradient-dark: #1A1A1D;
+            --wta-surface: rgba(255, 255, 255, 0.96);
+            --wta-surface-dim: rgba(238, 238, 241, 0.92);
+            --wta-on-surface: #111113;
+            --wta-on-surface-variant: #5A5A5F;
+            --wta-outline: rgba(0, 0, 0, 0.08);
             --wta-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-            --wta-shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.12);
+            --wta-shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.14);
             --wta-radius: 16px;
             --wta-radius-sm: 10px;
             --wta-radius-lg: 24px;
-            --wta-success: #10B981;
-            --wta-warning: #F59E0B;
-            --wta-danger: #EF4444;
+            --wta-success: #111113;
+            --wta-warning: #5A5A5F;
+            --wta-danger: #1A1A1D;
         }
 
         @media (prefers-color-scheme: dark) {
             :root {
-                --wta-surface: rgba(24, 24, 27, 0.95);
-                --wta-surface-dim: rgba(24, 24, 27, 0.85);
-                --wta-on-surface: #f3f4f6;
-                --wta-on-surface-variant: #9ca3af;
-                --wta-outline: rgba(255, 255, 255, 0.08);
-                --wta-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
-                --wta-shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.4);
+                --wta-primary: #F2F2F4;
+                --wta-primary-light: #8A8A8E;
+                --wta-primary-dark: #FFFFFF;
+                --wta-on-primary: #111113;
+                --wta-accent-soft: rgba(242, 242, 244, 0.12);
+                --wta-gradient: #F2F2F4;
+                --wta-gradient-dark: #E6E6E9;
+                --wta-surface: rgba(20, 20, 23, 0.96);
+                --wta-surface-dim: rgba(34, 34, 38, 0.92);
+                --wta-on-surface: #EBEBEE;
+                --wta-on-surface-variant: #B2B2B7;
+                --wta-outline: rgba(255, 255, 255, 0.10);
+                --wta-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+                --wta-shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.55);
+                --wta-success: #EBEBEE;
+                --wta-warning: #B2B2B7;
+                --wta-danger: #E6E6E9;
             }
         }
 
@@ -283,15 +297,15 @@ object ExtensionPanelScript {
             width: 50px !important;
             height: 50px !important;
             border-radius: 14px;
-            background: var(--wta-primary) !important;
-            color: white !important;
+            background: var(--wta-fab-bg) !important;
+            color: var(--wta-fab-fg) !important;
             display: flex !important;
             align-items: center;
             justify-content: center;
             font-size: 20px;
             cursor: pointer;
             z-index: 2147483647 !important;
-            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.35);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             pointer-events: auto !important;
             -webkit-tap-highlight-color: transparent;
@@ -303,7 +317,7 @@ object ExtensionPanelScript {
 
         #wta-ext-fab:not(.dragging):hover {
             transform: scale(1.05);
-            box-shadow: 0 6px 24px rgba(59, 130, 246, 0.45);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
         }
 
         #wta-ext-fab:active:not(.dragging) {
@@ -329,17 +343,17 @@ object ExtensionPanelScript {
             transform: translateY(-50%);
             width: 14px;
             height: 72px;
-            background: var(--wta-gradient);
+            background: var(--wta-fab-bg);
             border-radius: 12px 0 0 12px;
             display: none;
             align-items: center;
             justify-content: center;
-            color: white;
+            color: var(--wta-fab-fg);
             font-size: 12px;
             cursor: pointer;
             z-index: 2147483647 !important;
             pointer-events: auto !important;
-            box-shadow: -4px 0 16px rgba(59, 130, 246, 0.4);
+            box-shadow: -4px 0 16px rgba(0, 0, 0, 0.4);
             transition: width 0.25s ease, opacity 0.25s ease;
             opacity: 0.6;
             animation: wta-pulse 2s ease-in-out infinite;
@@ -378,12 +392,12 @@ object ExtensionPanelScript {
 
         #wta-ext-hide-zone.left {
             left: 0;
-            background: linear-gradient(to right, rgba(59, 130, 246, 0.3), transparent);
+            background: linear-gradient(to right, rgba(0, 0, 0, 0.22), transparent);
         }
 
         #wta-ext-hide-zone.right {
             right: 0;
-            background: linear-gradient(to left, rgba(59, 130, 246, 0.3), transparent);
+            background: linear-gradient(to left, rgba(0, 0, 0, 0.22), transparent);
         }
 
         #wta-ext-hide-zone.active {
@@ -406,16 +420,16 @@ object ExtensionPanelScript {
             min-width: 20px;
             height: 20px;
             border-radius: 10px;
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
-            color: white;
+            background: #FFFFFF;
+            color: #111113;
             font-size: 11px;
             font-weight: 700;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 0 6px;
-            box-shadow: 0 2px 8px rgba(238, 90, 90, 0.4);
-            border: 2px solid var(--wta-surface);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+            border: 2px solid var(--wta-fab-bg);
         }
 
         /* 遮罩层 - 毛玻璃 */
@@ -507,7 +521,7 @@ object ExtensionPanelScript {
 
         .wta-panel-close:hover {
             background: var(--wta-primary);
-            color: white;
+            color: var(--wta-on-primary);
             transform: rotate(90deg);
         }
 
@@ -592,7 +606,7 @@ object ExtensionPanelScript {
 
         .wta-detail-back:hover {
             background: var(--wta-primary);
-            color: white;
+            color: var(--wta-on-primary);
             transform: translateX(-3px);
         }
 
@@ -618,7 +632,7 @@ object ExtensionPanelScript {
             left: 50%;
             transform: translate(-50%, -50%) scale(0.9);
             background: var(--wta-gradient-dark);
-            color: white;
+            color: var(--wta-on-primary);
             padding: 16px 32px;
             border-radius: var(--wta-radius);
             font-size: 15px;
@@ -683,13 +697,13 @@ object ExtensionPanelScript {
 
         .wta-btn-primary {
             background: var(--wta-gradient);
-            color: white;
-            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+            color: var(--wta-on-primary);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
         }
 
         .wta-btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
         }
 
         .wta-btn-primary:active {
@@ -704,7 +718,7 @@ object ExtensionPanelScript {
 
         .wta-btn-secondary:hover {
             background: var(--wta-primary);
-            color: white;
+            color: var(--wta-on-primary);
             border-color: var(--wta-primary);
         }
 
@@ -723,7 +737,7 @@ object ExtensionPanelScript {
 
         .wta-input:focus {
             border-color: var(--wta-primary);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+            box-shadow: 0 0 0 3px var(--wta-accent-soft);
         }
 
         .wta-input::placeholder {
@@ -754,10 +768,10 @@ object ExtensionPanelScript {
             left: 3px;
             width: 20px;
             height: 20px;
-            background: white;
+            background: var(--wta-surface);
             border-radius: 50%;
             transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
         }
 
         .wta-switch.active::after {
@@ -825,7 +839,7 @@ object ExtensionPanelScript {
         .wta-tab:active { transform: scale(0.97); }
         .wta-tab.active {
             color: var(--wta-primary);
-            background: rgba(59, 130, 246, 0.08);
+            background: var(--wta-accent-soft);
         }
         .wta-tab-count {
             display: inline-block;
@@ -842,7 +856,7 @@ object ExtensionPanelScript {
             text-align: center;
         }
         .wta-tab.active .wta-tab-count {
-            background: rgba(59, 130, 246, 0.15);
+            background: var(--wta-accent-soft);
             color: var(--wta-primary);
         }
 
@@ -882,7 +896,7 @@ object ExtensionPanelScript {
             background: var(--wta-surface-dim);
         }
         .wta-ext-row:active {
-            background: rgba(59, 130, 246, 0.06);
+            background: var(--wta-accent-soft);
         }
         .wta-ext-row-icon {
             width: 40px;
@@ -947,16 +961,16 @@ object ExtensionPanelScript {
             white-space: nowrap;
         }
         .wta-type-badge.chrome {
-            background: rgba(66, 133, 244, 0.1);
-            color: #4285F4;
+            background: var(--wta-accent-soft);
+            color: var(--wta-on-surface);
         }
         .wta-type-badge.module {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--wta-success);
+            background: var(--wta-accent-soft);
+            color: var(--wta-on-surface-variant);
         }
         .wta-type-badge.userscript {
-            background: rgba(245, 158, 11, 0.1);
-            color: var(--wta-warning);
+            background: var(--wta-accent-soft);
+            color: var(--wta-on-surface-variant);
         }
 
         /* ==================== 列表行箭头 ==================== */
@@ -1737,8 +1751,8 @@ object ExtensionPanelScript {
             var desc = m.description || T.noDescription;
             var moduleRunMode = m.runMode || RUN_MODE.INTERACTIVE;
             var runModeBadge = moduleRunMode === RUN_MODE.AUTO ?
-                '<span class="wta-type-badge" style="background:#fef3c7;color:#92400e">⚡ ' + T.runModeAuto + '</span>' :
-                '<span class="wta-type-badge" style="background:#dbeafe;color:#1e40af">🖥️ ' + T.runModeInteractive + '</span>';
+                '<span class="wta-type-badge" style="background:var(--wta-accent-soft);color:var(--wta-on-surface)">⚡ ' + T.runModeAuto + '</span>' :
+                '<span class="wta-type-badge" style="background:var(--wta-accent-soft);color:var(--wta-on-surface-variant)">🖥️ ' + T.runModeInteractive + '</span>';
             return '<div class="wta-ext-row" data-wta-action="onModuleClick" data-wta-arg="' + m.id + '">' +
                 '<div class="wta-ext-row-icon">' + icon + '</div>' +
                 '<div class="wta-ext-row-info">' +
@@ -1928,7 +1942,7 @@ object ExtensionPanelScript {
             // 运行方式
             var moduleRunMode = module.runMode || RUN_MODE.INTERACTIVE;
             var runModeText = moduleRunMode === RUN_MODE.AUTO ? ('⚡ ' + T.runModeAuto) : ('🖥️ ' + T.runModeInteractive);
-            var runModeColor = moduleRunMode === RUN_MODE.AUTO ? '#92400e' : '#1e40af';
+            var runModeColor = moduleRunMode === RUN_MODE.AUTO ? 'var(--wta-on-surface)' : 'var(--wta-on-surface-variant)';
             html += '<div class="wta-detail-row"><span class="wta-detail-label">' + T.runModeInteractive.replace(T.runModeInteractive, (LANG === 'zh' ? '运行方式' : LANG === 'ar' ? 'وضع التشغيل' : 'Run Mode')) + '</span><span class="wta-detail-value" style="color:' + runModeColor + '">' + runModeText + '</span></div>';
 
             // 状态
@@ -1996,7 +2010,7 @@ object ExtensionPanelScript {
                 var launchBtnHtml = '<div class="wta-detail-section">' +
                     '<button data-wta-action="launchModuleWindow" data-wta-arg="' + moduleId + '" ' +
                     'style="width:100%;padding:14px;border-radius:12px;border:none;font-size:15px;font-weight:500;cursor:pointer;' +
-                    'background:linear-gradient(135deg,var(--wta-primary),#8b5cf6);color:white;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px">' +
+                    'background:var(--wta-gradient);color:var(--wta-on-primary);display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px">' +
                     '<span style="font-size:18px">\ud83d\udda5\ufe0f</span> ' + T.launchWindow + '</button></div>';
 
                 // 简单 UI 操作界面（内联在管理面板中）

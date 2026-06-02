@@ -5044,10 +5044,10 @@ class WebViewManager(
                                 onAction: function(container) {
                                     var html = '';
                                     if ('$jsPopupPath') {
-                                        html += '<button style="width:100%;padding:12px;border-radius:10px;border:1px solid rgba(0,0,0,0.08);background:rgba(59,130,246,0.08);color:#2563eb;font-weight:600;cursor:pointer;margin-bottom:10px" onclick="if(window.__WTA_EXT_ACTIONS__)window.__WTA_EXT_ACTIONS__.openPopup(\\'$extId\\', \\'$jsPopupPath\\')">Open popup</button>';
+                                        html += '<button style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--wta-outline);background:var(--wta-accent-soft);color:var(--wta-on-surface);font-weight:600;cursor:pointer;margin-bottom:10px" onclick="if(window.__WTA_EXT_ACTIONS__)window.__WTA_EXT_ACTIONS__.openPopup(\\'$extId\\', \\'$jsPopupPath\\')">Open popup</button>';
                                     }
                                     if ('$jsOptionsPagePath') {
-                                        html += '<button style="width:100%;padding:12px;border-radius:10px;border:1px solid rgba(0,0,0,0.08);background:rgba(16,185,129,0.08);color:#047857;font-weight:600;cursor:pointer" onclick="if(window.__WTA_EXT_ACTIONS__)window.__WTA_EXT_ACTIONS__.openOptions(\\'$extId\\', \\'$jsOptionsPagePath\\')">Open options</button>';
+                                        html += '<button style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--wta-outline);background:var(--wta-accent-soft);color:var(--wta-on-surface-variant);font-weight:600;cursor:pointer" onclick="if(window.__WTA_EXT_ACTIONS__)window.__WTA_EXT_ACTIONS__.openOptions(\\'$extId\\', \\'$jsOptionsPagePath\\')">Open options</button>';
                                     }
                                     container.innerHTML = html;
                                 }
