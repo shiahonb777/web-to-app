@@ -246,6 +246,18 @@ class ShellActivity : AppCompatActivity() {
         com.webtoapp.core.shell.ShellLogger.i("ShellActivity", "配置加载成功: ${config.appName}")
         AppLogger.d("ShellActivity", "WebView UA config from shell: userAgentMode=${config.webViewConfig.userAgentMode}, customUserAgent=${config.webViewConfig.customUserAgent}, userAgent=${config.webViewConfig.userAgent}")
 
+        try {
+            val appLanguage = when (config.language.uppercase()) {
+                "ENGLISH" -> com.webtoapp.core.i18n.AppLanguage.ENGLISH
+                "ARABIC" -> com.webtoapp.core.i18n.AppLanguage.ARABIC
+                else -> com.webtoapp.core.i18n.AppLanguage.CHINESE
+            }
+            Strings.setLanguage(appLanguage)
+            AppLogger.d("ShellActivity", "设置界面语言: ${config.language} -> $appLanguage")
+        } catch (e: Exception) {
+            AppLogger.e("ShellActivity", "设置语言失败", e)
+        }
+
         ShellHardeningGuard.start(this, config.hardeningEnabled, config.hardeningThreatResponse)
 
         forcedRunConfig = config.forcedRunConfig

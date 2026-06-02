@@ -19,7 +19,6 @@ import com.webtoapp.WebToAppApplication
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.core.shell.ShellConfig
 import com.webtoapp.core.webview.LongPressHandler
-import com.webtoapp.core.i18n.Strings
 import com.webtoapp.data.model.Announcement
 import com.webtoapp.core.forcedrun.ForcedRunConfig
 import com.webtoapp.util.TvUtils
@@ -126,18 +125,6 @@ fun ShellScreen(
     val longPressHandler = remember { LongPressHandler(context, scope) }
 
     LaunchedEffect(Unit) {
-
-        try {
-            val appLanguage = when (config.language.uppercase()) {
-                "ENGLISH" -> com.webtoapp.core.i18n.AppLanguage.ENGLISH
-                "ARABIC" -> com.webtoapp.core.i18n.AppLanguage.ARABIC
-                else -> com.webtoapp.core.i18n.AppLanguage.CHINESE
-            }
-            Strings.setLanguage(appLanguage)
-            AppLogger.d("ShellActivity", "设置界面语言: ${config.language} -> $appLanguage")
-        } catch (e: Exception) {
-            AppLogger.e("ShellActivity", "设置语言失败", e)
-        }
 
         if (config.adBlockEnabled) {
             adBlocker.initialize(config.adBlockRules, useDefaultRules = false)
