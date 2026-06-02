@@ -2253,15 +2253,24 @@ fun WebViewScreen(
                 if (htmlDir.exists()) {
                     try {
 
-                        val enableLocalIsolation = app.webViewConfig.enableCrossOriginIsolation ||
-                            LocalHttpServer.shouldEnableCrossOriginIsolation(htmlDir)
-                        val baseUrl = localHttpServer.start(
-                            htmlDir,
-                            enableCrossOriginIsolation = enableLocalIsolation
-                        )
-                        val targetUrl = "$baseUrl/$entryFile"
-                        AppLogger.d("WebViewActivity", "Target URL: $targetUrl, crossOriginIsolation=$enableLocalIsolation")
-                        targetUrl
+                        val needsHttp = app.webViewConfig.enableCrossOriginIsolation ||
+                            LocalHttpServer.siteRequiresHttpServer(htmlDir)
+                        if (!needsHttp) {
+                            localHttpServer.stop()
+                            val fileUrl = "file://${htmlDir.absolutePath}/$entryFile"
+                            AppLogger.d("WebViewActivity", "Target URL (file://): $fileUrl (pure-static, offline)")
+                            fileUrl
+                        } else {
+                            val enableLocalIsolation = app.webViewConfig.enableCrossOriginIsolation ||
+                                LocalHttpServer.shouldEnableCrossOriginIsolation(htmlDir)
+                            val baseUrl = localHttpServer.start(
+                                htmlDir,
+                                enableCrossOriginIsolation = enableLocalIsolation
+                            )
+                            val targetUrl = "$baseUrl/$entryFile"
+                            AppLogger.d("WebViewActivity", "Target URL: $targetUrl, crossOriginIsolation=$enableLocalIsolation")
+                            targetUrl
+                        }
                     } catch (e: Exception) {
                         AppLogger.e("WebViewActivity", "Failed to start local server", e)
 

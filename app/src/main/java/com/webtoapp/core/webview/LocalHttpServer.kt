@@ -92,12 +92,21 @@ class LocalHttpServer(
                                 text.contains("serviceWorker.register") ||
                                     text.contains("navigator.serviceWorker") ||
                                     text.contains("rel=\"manifest\"") ||
-                                    text.contains("rel='manifest'")
+                                    text.contains("rel='manifest'") ||
+                                    htmlUsesEsModules(name, text)
                             }.getOrDefault(false)
                         }
                         else -> false
                     }
                 }
+        }
+
+        private fun htmlUsesEsModules(fileName: String, text: String): Boolean {
+            if (!fileName.endsWith(".html") && !fileName.endsWith(".htm")) return false
+            val lower = text.lowercase()
+            if (!lower.contains("<script")) return false
+            return Regex("<script\\b[^>]*\\btype\\s*=\\s*[\"']module[\"']").containsMatchIn(lower) ||
+                Regex("<script\\b[^>]*\\bsrc\\s*=\\s*[\"'][^\"']+\\.mjs[\"']").containsMatchIn(lower)
         }
 
         fun stablePortForPackageName(

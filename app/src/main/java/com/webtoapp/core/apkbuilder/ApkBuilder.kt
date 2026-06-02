@@ -2440,12 +2440,7 @@ builtins.__import__ = _w2a_import
 
         val permissions = linkedSetOf<String>()
 
-        // 纯 file:// 的静态本地应用(无 Service Worker / PWA / WASM)不需要本地 HTTP
-        // server,也不需要 INTERNET——彻底脱离网络。其余所有情况都注入 INTERNET。
-        // ACCESS_NETWORK_STATE 始终保留:它非敏感权限,且多处网络状态检查会无条件用到。
-        if (!config.htmlUsesFileScheme) {
-            permissions += "android.permission.INTERNET"
-        }
+        permissions += "android.permission.INTERNET"
         permissions += "android.permission.ACCESS_NETWORK_STATE"
 
         val rp = config.runtimePermissions
@@ -2776,22 +2771,31 @@ private fun WebApp.computeEffectiveTargetUrl(packageName: String, htmlUsesFileSc
     else -> url
 }
 
-/**
- * 是否以 file:// 纯本地方式加载 HTML/FRONTEND(不经本地 HTTP server、不需要 INTERNET)。
- *
- * 现在恒为 false:一律走 http://127.0.0.1 本地 server(真 origin)。loopback server
- * 完全本地、断网可用,只需 INTERNET 权限来 bind socket(非敏感权限);它提供真实的
- * http origin,localStorage / fetch / ES module / Web Worker 等才能正常工作。
- *
- * file:// 是 opaque origin,会让上述能力失效(2.0.3 自动 file:// 曾导致"本地 JS
- * 编辑器输入框失效"的回归)。因此放弃"自动判 file://";底层 file:// 路径(见
- * [com.webtoapp.ui.shell.buildPackagedHtmlFileSchemeEntryUrl] /
- * [com.webtoapp.core.webview.LocalHttpServer.siteRequiresHttpServer])保留,留待将来
- * 做成用户手动可选的"纯离线/免 INTERNET 模式",绝不自动启用。
- */
 @Suppress("UNUSED_PARAMETER")
 private fun WebApp.computeHtmlUsesFileScheme(context: android.content.Context?): Boolean {
-    return false
+    if (appType != com.webtoapp.data.model.AppType.HTML &&
+        appType != com.webtoapp.data.model.AppType.FRONTEND) {
+        return false
+    }
+    if (context == null) return false
+    if (webViewConfig.enableCrossOriginIsolation) return false
+
+    val sourceDir = resolveHtmlSourceDir(context) ?: return false
+    if (!sourceDir.exists() || !sourceDir.isDirectory) return false
+
+    return !com.webtoapp.core.webview.LocalHttpServer.siteRequiresHttpServer(sourceDir)
+}
+
+private fun WebApp.resolveHtmlSourceDir(context: android.content.Context): java.io.File? {
+    val stored = htmlConfig?.projectId
+        ?.takeIf { it.isNotBlank() }
+        ?.let { java.io.File(context.filesDir, "html_projects/$it") }
+        ?.takeIf { it.exists() && it.isDirectory }
+    if (stored != null) return stored
+    return htmlConfig?.projectDir
+        ?.takeIf { it.isNotBlank() }
+        ?.let { java.io.File(it) }
+        ?.takeIf { it.exists() && it.isDirectory }
 }
 
 private fun WebApp.buildEffectiveRuntimePermissions(): ApkRuntimePermissions {
