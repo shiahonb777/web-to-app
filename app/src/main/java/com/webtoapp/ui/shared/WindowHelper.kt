@@ -9,6 +9,7 @@ import android.webkit.WebChromeClient
 import android.widget.FrameLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsAnimationCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.webtoapp.core.logging.AppLogger
@@ -225,7 +226,6 @@ object WindowHelper {
         keyboardAdjustMode: KeyboardAdjustMode?,
         tag: String
     ) {
-        val decorView = activity.window.decorView
         val contentView = activity.findViewById<View>(android.R.id.content) ?: return
 
         val mode = keyboardAdjustMode ?: KeyboardAdjustMode.RESIZE
@@ -239,39 +239,70 @@ object WindowHelper {
                     WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED
                 )
 
-                ViewCompat.setOnApplyWindowInsetsListener(contentView) { view, windowInsets ->
-                    val imeVisible = windowInsets.isVisible(WindowInsetsCompat.Type.ime())
-                    val imeInsets = windowInsets.getInsets(WindowInsetsCompat.Type.ime())
+                var imeAnimating = false
 
-                    if (imeVisible) {
-
-                        view.setPadding(
-                            view.paddingLeft,
-                            view.paddingTop,
-                            view.paddingRight,
-                            imeInsets.bottom
+                fun applyImeBottomPadding(bottom: Int) {
+                    if (contentView.paddingBottom != bottom) {
+                        contentView.setPadding(
+                            contentView.paddingLeft,
+                            contentView.paddingTop,
+                            contentView.paddingRight,
+                            bottom
                         )
+                    }
+                }
 
-                        AppLogger.d(tag, "键盘弹出: IME bottom=${imeInsets.bottom}px")
+                ViewCompat.setWindowInsetsAnimationCallback(
+                    contentView,
+                    object : WindowInsetsAnimationCompat.Callback(
+                        WindowInsetsAnimationCompat.Callback.DISPATCH_MODE_STOP
+                    ) {
+                        override fun onPrepare(animation: WindowInsetsAnimationCompat) {
+                            if (animation.typeMask and WindowInsetsCompat.Type.ime() != 0) {
+                                imeAnimating = true
+                            }
+                        }
 
-                        view.postDelayed({
-                            checkAndScrollWebViewToFocusedInput(activity)
-                        }, 100)
-                    } else {
+                        override fun onProgress(
+                            insets: WindowInsetsCompat,
+                            runningAnimations: MutableList<WindowInsetsAnimationCompat>
+                        ): WindowInsetsCompat {
 
-                        view.setPadding(
-                            view.paddingLeft,
-                            view.paddingTop,
-                            view.paddingRight,
-                            0
-                        )
+                            applyImeBottomPadding(insets.getInsets(WindowInsetsCompat.Type.ime()).bottom)
+                            return insets
+                        }
+
+                        override fun onEnd(animation: WindowInsetsAnimationCompat) {
+                            if (animation.typeMask and WindowInsetsCompat.Type.ime() == 0) return
+                            imeAnimating = false
+
+                            val rootInsets = ViewCompat.getRootWindowInsets(contentView)
+                            val imeVisible = rootInsets?.isVisible(WindowInsetsCompat.Type.ime()) ?: false
+                            val imeBottom = rootInsets?.getInsets(WindowInsetsCompat.Type.ime())?.bottom ?: 0
+                            applyImeBottomPadding(if (imeVisible) imeBottom else 0)
+
+                            if (imeVisible) {
+                                contentView.postDelayed({
+                                    checkAndScrollWebViewToFocusedInput(activity)
+                                }, 100)
+                            }
+                        }
+                    }
+                )
+
+                ViewCompat.setOnApplyWindowInsetsListener(contentView) { _, windowInsets ->
+
+                    if (!imeAnimating) {
+                        val imeVisible = windowInsets.isVisible(WindowInsetsCompat.Type.ime())
+                        val imeBottom = windowInsets.getInsets(WindowInsetsCompat.Type.ime()).bottom
+                        applyImeBottomPadding(if (imeVisible) imeBottom else 0)
                     }
 
                     windowInsets
                 }
 
                 ViewCompat.requestApplyInsets(contentView)
-                AppLogger.d(tag, "键盘模式: RESIZE (WindowInsets 监听)")
+                AppLogger.d(tag, "键盘模式: RESIZE (IME 动画同步)")
             }
 
             KeyboardAdjustMode.NOTHING -> {
@@ -282,6 +313,7 @@ object WindowHelper {
                     WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED
                 )
 
+                ViewCompat.setWindowInsetsAnimationCallback(contentView, null)
                 ViewCompat.setOnApplyWindowInsetsListener(contentView, null)
                 contentView.setPadding(
                     contentView.paddingLeft,
