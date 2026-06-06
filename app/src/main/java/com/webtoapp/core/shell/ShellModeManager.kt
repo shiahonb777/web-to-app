@@ -903,7 +903,7 @@ data class MultiWebSiteShellConfig(
     val enabled: Boolean = true
 ) {
     fun getEffectiveUrl(localBaseUrl: String = ""): String {
-        return if ((type == "LOCAL" || (type == "EXISTING" && localFilePath.isNotBlank())) && localFilePath.isNotBlank()) {
+        return if ((type == "LOCAL" || type == "INLINE_HTML" || (type == "EXISTING" && localFilePath.isNotBlank())) && localFilePath.isNotBlank()) {
             val base = localBaseUrl.trimEnd('/')
             val path = localFilePath.trimStart('/')
             "$base/$path"

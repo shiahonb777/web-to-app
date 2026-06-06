@@ -288,7 +288,8 @@ Chrome Custom Tab with shared cookies (via `androidx.browser`).
   playback position.
 - **Multi-Web app** — sites in tabs / cards / feed / drawer layouts;
   per-site icon, theme colour, CSS selectors for content extraction;
-  configurable refresh interval.
+  configurable refresh interval; add a site as inline HTML/JS pasted
+  directly (no file needed); inject custom JS/CSS across all sites.
 - **Website Scraper** — offline pack creator that crawls the entire
   frontend (HTML / CSS / JS / images / fonts), 6 concurrent downloads,
   recursive CSS `url()` / `srcset` / `@import` resolution, absolute-to-

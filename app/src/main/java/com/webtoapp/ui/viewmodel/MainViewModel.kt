@@ -1016,16 +1016,19 @@ class MainViewModel(
         name: String,
         multiWebConfig: MultiWebConfig,
         iconUri: Uri?,
+        injectScripts: List<com.webtoapp.data.model.UserScript> = emptyList(),
         themeType: String = "AURORA"
     ) = createApp("Multi-Site", iconUri) { savedIconPath, currentThemeType, categoryId ->
         val context = getApplication<Application>()
         val localSites = multiWebConfig.sites.filter { it.type == "LOCAL" && it.localFileUri.isNotBlank() }
+        val inlineSites = multiWebConfig.sites.filter { it.type == "INLINE_HTML" && it.inlineHtml.isNotBlank() }
         val existingHtmlSites = multiWebConfig.sites.filter { it.type == "EXISTING" && it.sourceProjectId.isNotBlank() }
-        val projectId = if (localSites.isNotEmpty() && multiWebConfig.projectId.isBlank()) {
+        val hasOwnFiles = localSites.isNotEmpty() || inlineSites.isNotEmpty()
+        val projectId = if (hasOwnFiles && multiWebConfig.projectId.isBlank()) {
             HtmlStorage.generateProjectId()
-        } else if (existingHtmlSites.isNotEmpty() && localSites.isEmpty() && multiWebConfig.projectId.isBlank()) {
+        } else if (existingHtmlSites.isNotEmpty() && !hasOwnFiles && multiWebConfig.projectId.isBlank()) {
             existingHtmlSites.first().sourceProjectId
-        } else multiWebConfig.projectId.ifBlank { if (localSites.isNotEmpty()) HtmlStorage.generateProjectId() else "" }
+        } else multiWebConfig.projectId.ifBlank { if (hasOwnFiles) HtmlStorage.generateProjectId() else "" }
 
         val updatedSites = multiWebConfig.sites.map { site ->
             when {
@@ -1036,6 +1039,11 @@ class MainViewModel(
                     if (savedPath != null) {
                         site.copy(localFilePath = fileName.trimStart('/'), localFileUri = "")
                     } else site
+                }
+                site.type == "INLINE_HTML" && site.inlineHtml.isNotBlank() && projectId.isNotBlank() -> {
+                    val fileName = buildMultiWebSiteRelativePath(site)
+                    HtmlStorage.saveProcessedHtml(context, site.inlineHtml, fileName, projectId)
+                    site.copy(localFilePath = fileName.trimStart('/'))
                 }
                 site.type == "EXISTING" && site.localFilePath.isNotBlank() && projectId.isNotBlank() -> {
                     site.copy(localFilePath = buildMultiWebSiteRelativePath(site).trimStart('/'))
@@ -1054,6 +1062,7 @@ class MainViewModel(
             iconPath = savedIconPath,
             appType = AppType.MULTI_WEB,
             multiWebConfig = multiWebConfig.copy(sites = updatedSites, projectId = projectId),
+            webViewConfig = com.webtoapp.data.model.WebViewConfig(injectScripts = injectScripts),
             themeType = currentThemeType,
             categoryId = categoryId
         )
@@ -1064,14 +1073,18 @@ class MainViewModel(
         name: String,
         multiWebConfig: MultiWebConfig,
         iconUri: Uri?,
+        injectScripts: List<com.webtoapp.data.model.UserScript> = emptyList(),
         themeType: String = "AURORA"
     ) = updateApp(appId, "Multi-Site", iconUri) { existingApp, savedIconPath ->
         val context = getApplication<Application>()
         val localSites = multiWebConfig.sites.filter { it.type == "LOCAL" && it.localFileUri.isNotBlank() }
+        val inlineSites = multiWebConfig.sites.filter { it.type == "INLINE_HTML" && it.inlineHtml.isNotBlank() }
         val existingHtmlSites = multiWebConfig.sites.filter { it.type == "EXISTING" && it.sourceProjectId.isNotBlank() }
-        val projectId = multiWebConfig.projectId.ifBlank {
-            existingApp.multiWebConfig?.projectId ?: if (existingHtmlSites.isNotEmpty()) existingHtmlSites.first().sourceProjectId else ""
-        }
+        val hasOwnFiles = localSites.isNotEmpty() || inlineSites.isNotEmpty()
+        val projectId = multiWebConfig.projectId
+            .ifBlank { existingApp.multiWebConfig?.projectId ?: "" }
+            .ifBlank { if (existingHtmlSites.isNotEmpty()) existingHtmlSites.first().sourceProjectId else "" }
+            .ifBlank { if (hasOwnFiles) HtmlStorage.generateProjectId() else "" }
 
         val updatedSites = multiWebConfig.sites.map { site ->
             when {
@@ -1082,6 +1095,11 @@ class MainViewModel(
                     if (savedPath != null) {
                         site.copy(localFilePath = fileName.trimStart('/'), localFileUri = "")
                     } else site
+                }
+                site.type == "INLINE_HTML" && site.inlineHtml.isNotBlank() && projectId.isNotBlank() -> {
+                    val fileName = buildMultiWebSiteRelativePath(site)
+                    HtmlStorage.saveProcessedHtml(context, site.inlineHtml, fileName, projectId)
+                    site.copy(localFilePath = fileName.trimStart('/'))
                 }
                 site.type == "EXISTING" && site.localFilePath.isNotBlank() && projectId.isNotBlank() -> {
                     site.copy(localFilePath = buildMultiWebSiteRelativePath(site).trimStart('/'))
@@ -1099,6 +1117,7 @@ class MainViewModel(
             url = updatedSites.firstOrNull()?.getEffectiveUrl() ?: existingApp.url,
             iconPath = savedIconPath,
             multiWebConfig = multiWebConfig.copy(sites = updatedSites, projectId = projectId),
+            webViewConfig = existingApp.webViewConfig.copy(injectScripts = injectScripts),
             updatedAt = System.currentTimeMillis()
         )
     }

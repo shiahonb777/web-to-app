@@ -62,7 +62,7 @@ fun MultiWebShellMode(
     val multiWebConfig = config.multiWebConfig
     val sites = multiWebConfig.sites.filter { it.enabled && (it.url.isNotBlank() || it.localFilePath.isNotBlank()) }
 
-    val hasLocalSites = sites.any { (it.type == "LOCAL" || (it.type == "EXISTING" && it.localFilePath.isNotBlank())) && it.localFilePath.isNotBlank() }
+    val hasLocalSites = sites.any { (it.type == "LOCAL" || it.type == "INLINE_HTML" || (it.type == "EXISTING" && it.localFilePath.isNotBlank())) && it.localFilePath.isNotBlank() }
     val context = LocalContext.current
     val httpServer = remember { if (hasLocalSites) com.webtoapp.core.webview.LocalHttpServer(context) else null }
     var localBaseUrl by remember { mutableStateOf("") }

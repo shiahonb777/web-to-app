@@ -592,6 +592,42 @@ object Strings {
         AppLanguage.ARABIC -> "تطبيق موجود"
     }
 
+    val multiWebTypeInline: String get() = when (lang) {
+        AppLanguage.CHINESE -> "代码"
+        AppLanguage.ENGLISH -> "Code"
+        AppLanguage.ARABIC -> "كود"
+    }
+
+    val multiWebInlineEdit: String get() = when (lang) {
+        AppLanguage.CHINESE -> "编辑 HTML / JS 代码"
+        AppLanguage.ENGLISH -> "Edit HTML / JS code"
+        AppLanguage.ARABIC -> "تحرير كود HTML / JS"
+    }
+
+    val multiWebInlineEditChars: String get() = when (lang) {
+        AppLanguage.CHINESE -> "编辑代码（%d 字符）"
+        AppLanguage.ENGLISH -> "Edit code (%d chars)"
+        AppLanguage.ARABIC -> "تحرير الكود (%d حرف)"
+    }
+
+    val multiWebInlineHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "直接粘贴 HTML / JS / CSS，无需上传文件。打包后作为本地页面运行。"
+        AppLanguage.ENGLISH -> "Paste HTML / JS / CSS directly, no file needed. Runs as a local page in the built app."
+        AppLanguage.ARABIC -> "الصق HTML / JS / CSS مباشرة دون الحاجة إلى ملف. يعمل كصفحة محلية في التطبيق المُنشأ."
+    }
+
+    val multiWebCustomCodeSection: String get() = when (lang) {
+        AppLanguage.CHINESE -> "自定义代码注入"
+        AppLanguage.ENGLISH -> "Custom Code Injection"
+        AppLanguage.ARABIC -> "حقن كود مخصص"
+    }
+
+    val multiWebCustomCodeDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "为所有站点注入自定义 JS / CSS，在每个页面加载时运行。可用 location.host 判断作用于哪个站点。"
+        AppLanguage.ENGLISH -> "Inject custom JS / CSS into every site, run on each page load. Use location.host to target a specific site."
+        AppLanguage.ARABIC -> "حقن JS / CSS مخصص في كل المواقع، يُشغّل عند تحميل كل صفحة. استخدم location.host لاستهداف موقع معيّن."
+    }
+
     val multiWebSelectApp: String get() = when (lang) {
         AppLanguage.CHINESE -> "选择应用"
         AppLanguage.ENGLISH -> "Select App"

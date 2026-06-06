@@ -751,6 +751,7 @@ data class MultiWebSite(
     val type: String = "URL",
     val localFilePath: String = "",
     @Transient val localFileUri: String = "",
+    val inlineHtml: String = "",
     val sourceAppId: Long = 0,
     val sourceProjectId: String = "",
     val iconEmoji: String = "",
@@ -764,7 +765,7 @@ data class MultiWebSite(
 ) {
 
     fun getEffectiveUrl(localBaseUrl: String = ""): String {
-        return if ((type == "LOCAL" || (type == "EXISTING" && localFilePath.isNotBlank())) && localFilePath.isNotBlank()) {
+        return if ((type == "LOCAL" || type == "INLINE_HTML" || (type == "EXISTING" && localFilePath.isNotBlank())) && localFilePath.isNotBlank()) {
             val base = localBaseUrl.trimEnd('/')
             val path = localFilePath.trimStart('/')
             "$base/$path"

@@ -52,6 +52,7 @@ fun CreateMultiWebAppScreen(
         name: String,
         multiWebConfig: MultiWebConfig,
         iconUri: Uri?,
+        injectScripts: List<com.webtoapp.data.model.UserScript>,
         themeType: String
     ) -> Unit
 ) {
@@ -60,6 +61,7 @@ fun CreateMultiWebAppScreen(
     var appName by remember { mutableStateOf("") }
     var appIcon by remember { mutableStateOf<Uri?>(null) }
     var landscapeMode by remember { mutableStateOf(false) }
+    var injectScripts by remember { mutableStateOf<List<com.webtoapp.data.model.UserScript>>(emptyList()) }
 
     var sites by remember { mutableStateOf<List<MultiWebSite>>(emptyList()) }
 
@@ -94,6 +96,7 @@ fun CreateMultiWebAppScreen(
                     refreshInterval = config.refreshInterval
                     landscapeMode = config.landscapeMode
                 }
+                injectScripts = app.webViewConfig.injectScripts
             }
         }
     }
@@ -126,6 +129,7 @@ fun CreateMultiWebAppScreen(
                             projectId = ""
                         ),
                         appIcon,
+                        injectScripts,
                         "AURORA"
                     )
                 },
@@ -324,6 +328,23 @@ fun CreateMultiWebAppScreen(
                                 }
                             }
                         }
+                    }
+                }
+            }
+
+            WtaCreateFlowSection(title = Strings.multiWebCustomCodeSection) {
+                EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            Strings.multiWebCustomCodeDesc,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        UserScriptsSection(
+                            scripts = injectScripts,
+                            onScriptsChange = { injectScripts = it }
+                        )
                     }
                 }
             }
@@ -531,6 +552,8 @@ private fun AddSiteDialog(
     var siteUrl by remember { mutableStateOf("") }
     var localFileName by remember { mutableStateOf("") }
     var localFileUri by remember { mutableStateOf("") }
+    var inlineHtml by remember { mutableStateOf("") }
+    var showCodeEditor by remember { mutableStateOf(false) }
     var cssSelector by remember { mutableStateOf("") }
     var selectedAppIds by remember { mutableStateOf<Set<Long>>(emptySet()) }
     var filterType by remember { mutableStateOf<String?>(null) }
@@ -605,8 +628,8 @@ private fun AddSiteDialog(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                    val types = listOf("URL", "LOCAL", "EXISTING")
-                    val labels = listOf(Strings.multiWebTypeUrl, Strings.multiWebTypeLocal, Strings.multiWebTypeExisting)
+                    val types = listOf("URL", "LOCAL", "INLINE_HTML", "EXISTING")
+                    val labels = listOf(Strings.multiWebTypeUrl, Strings.multiWebTypeLocal, Strings.multiWebTypeInline, Strings.multiWebTypeExisting)
                     types.forEachIndexed { index, type ->
                         SegmentedButton(
                             selected = sourceType == type,
@@ -683,6 +706,29 @@ private fun AddSiteDialog(
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
+                } else if (sourceType == "INLINE_HTML") {
+                    PremiumTextField(
+                        value = siteName,
+                        onValueChange = { siteName = it },
+                        label = { Text(Strings.multiWebSiteName) },
+                        leadingIcon = { Icon(Icons.Outlined.Label, null) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedButton(
+                        onClick = { showCodeEditor = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Outlined.Code, null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(if (inlineHtml.isBlank()) Strings.multiWebInlineEdit else Strings.multiWebInlineEditChars.replace("%d", inlineHtml.length.toString()))
+                    }
+                    Text(
+                        Strings.multiWebInlineHint,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 } else {
                     if (eligibleApps.isNotEmpty() && availableTypes.size > 1) {
                     LazyRow(
@@ -909,6 +955,19 @@ private fun AddSiteDialog(
                         )
                         return@Button
                     }
+                    if (sourceType == "INLINE_HTML") {
+                        onSave(
+                            MultiWebSite(
+                                id = UUID.randomUUID().toString(),
+                                name = siteName.trim().ifBlank { Strings.multiWebTypeInline },
+                                type = "INLINE_HTML",
+                                inlineHtml = inlineHtml,
+                                enabled = true,
+                                sortIndex = newSortIndex
+                            )
+                        )
+                        return@Button
+                    }
                     val newSites = filteredApps.filter { it.id in selectedAppIds }.map { app ->
                         var localFilePath = ""
                         var sourceProjectId = ""
@@ -934,6 +993,7 @@ private fun AddSiteDialog(
                 enabled = when (sourceType) {
                     "URL" -> siteUrl.isNotBlank()
                     "LOCAL" -> localFileName.isNotBlank()
+                    "INLINE_HTML" -> inlineHtml.isNotBlank()
                     else -> selectedAppIds.isNotEmpty()
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = accentColor)
@@ -945,6 +1005,20 @@ private fun AddSiteDialog(
             TextButton(onClick = onDismiss) { Text(Strings.cancel) }
         }
     )
+
+    if (showCodeEditor) {
+        com.webtoapp.ui.components.WtaCodeEditorDialog(
+            language = "HTML",
+            initialContent = inlineHtml,
+            placeholder = Strings.multiWebInlineHint,
+            canSaveEmpty = true,
+            onSave = { content ->
+                inlineHtml = content
+                showCodeEditor = false
+            },
+            onDismiss = { showCodeEditor = false }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -964,6 +1038,8 @@ private fun EditSiteDialog(
     var url by remember { mutableStateOf(editingSite.url) }
     var localFilePath by remember { mutableStateOf(editingSite.localFilePath) }
     var localFileUri by remember { mutableStateOf(editingSite.localFileUri) }
+    var inlineHtml by remember { mutableStateOf(editingSite.inlineHtml) }
+    var showCodeEditor by remember { mutableStateOf(false) }
     var sourceAppId by remember { mutableStateOf(editingSite.sourceAppId) }
     var sourceProjectId by remember { mutableStateOf(editingSite.sourceProjectId) }
     var cssSelector by remember { mutableStateOf(editingSite.cssSelector) }
@@ -983,6 +1059,7 @@ private fun EditSiteDialog(
     val isValid = when (sourceType) {
         "URL" -> url.isNotBlank()
         "LOCAL" -> localFilePath.isNotBlank()
+        "INLINE_HTML" -> inlineHtml.isNotBlank()
         else -> selectedAppId > 0
     }
 
@@ -1000,8 +1077,8 @@ private fun EditSiteDialog(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                    val types = listOf("URL", "LOCAL", "EXISTING")
-                    val labels = listOf(Strings.multiWebTypeUrl, Strings.multiWebTypeLocal, Strings.multiWebTypeExisting)
+                    val types = listOf("URL", "LOCAL", "INLINE_HTML", "EXISTING")
+                    val labels = listOf(Strings.multiWebTypeUrl, Strings.multiWebTypeLocal, Strings.multiWebTypeInline, Strings.multiWebTypeExisting)
                     types.forEachIndexed { index, type ->
                         SegmentedButton(
                             selected = sourceType == type,
@@ -1056,6 +1133,29 @@ private fun EditSiteDialog(
                         Spacer(Modifier.width(8.dp))
                         Text(localFilePath.ifBlank { Strings.multiWebSelectFile })
                     }
+                } else if (sourceType == "INLINE_HTML") {
+                    PremiumTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = { Text(Strings.multiWebSiteName) },
+                        leadingIcon = { Icon(Icons.Outlined.Label, null) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedButton(
+                        onClick = { showCodeEditor = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Outlined.Code, null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(if (inlineHtml.isBlank()) Strings.multiWebInlineEdit else Strings.multiWebInlineEditChars.replace("%d", inlineHtml.length.toString()))
+                    }
+                    Text(
+                        Strings.multiWebInlineHint,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 } else if (eligibleApps.isEmpty()) {
                     Box(
                         modifier = Modifier
@@ -1179,12 +1279,14 @@ private fun EditSiteDialog(
                             id = editingSite.id,
                             name = name.trim().ifBlank {
                                 if (sourceType == "URL") guessSiteNameFromUrl(url)
+                                else if (sourceType == "INLINE_HTML") Strings.multiWebTypeInline
                                 else localFilePath.substringBeforeLast('.').ifBlank { Strings.multiWebTypeLocal }
                             },
                             url = if (sourceType == "URL") normalizeSiteUrl(url) else if (sourceType == "EXISTING") url.trim() else "",
                             type = sourceType,
                             localFilePath = if (sourceType == "LOCAL" || sourceType == "EXISTING") localFilePath.trim() else "",
                             localFileUri = if (sourceType == "LOCAL") localFileUri else "",
+                            inlineHtml = if (sourceType == "INLINE_HTML") inlineHtml else "",
                             sourceAppId = if (sourceType == "EXISTING") sourceAppId else 0L,
                             sourceProjectId = if (sourceType == "EXISTING") sourceProjectId else "",
                             cssSelector = cssSelector.trim(),
@@ -1201,6 +1303,20 @@ private fun EditSiteDialog(
             TextButton(onClick = onDismiss) { Text(Strings.cancel) }
         }
     )
+
+    if (showCodeEditor) {
+        com.webtoapp.ui.components.WtaCodeEditorDialog(
+            language = "HTML",
+            initialContent = inlineHtml,
+            placeholder = Strings.multiWebInlineHint,
+            canSaveEmpty = true,
+            onSave = { content ->
+                inlineHtml = content
+                showCodeEditor = false
+            },
+            onDismiss = { showCodeEditor = false }
+        )
+    }
 }
 
 private fun appTypeFilterInfo(typeName: String): Pair<androidx.compose.ui.graphics.vector.ImageVector, String> {
