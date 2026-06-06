@@ -503,7 +503,8 @@ class ShellActivity : AppCompatActivity() {
                 com.webtoapp.data.model.FullscreenVideoOrientation.AUTO_SENSOR_LANDSCAPE
             }
         }
-        originalOrientationBeforeFullscreen = WindowHelper.showCustomView(this, view, orientationStrategy)
+        originalOrientationBeforeFullscreen = WindowHelper.showCustomView(this, view)
+        WindowHelper.applyFullscreenVideoOrientation(this, webView, orientationStrategy)
         applyImmersiveFullscreen(true)
     }
 

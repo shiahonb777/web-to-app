@@ -613,6 +613,7 @@ class WebViewActivity : AppCompatActivity() {
 
     private fun showCustomView(view: View) {
         originalOrientationBeforeFullscreen = WindowHelper.showCustomView(this, view)
+        WindowHelper.applyFullscreenVideoOrientation(this, webView)
         applyImmersiveFullscreen(true)
     }
 

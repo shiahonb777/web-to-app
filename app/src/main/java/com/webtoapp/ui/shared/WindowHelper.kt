@@ -383,25 +383,9 @@ object WindowHelper {
 
     fun showCustomView(
         activity: Activity,
-        view: View,
-        fullscreenOrientation: com.webtoapp.data.model.FullscreenVideoOrientation =
-            com.webtoapp.data.model.FullscreenVideoOrientation.AUTO_SENSOR_LANDSCAPE
+        view: View
     ): Int {
         val originalOrientation = activity.requestedOrientation
-
-        when (fullscreenOrientation) {
-            com.webtoapp.data.model.FullscreenVideoOrientation.AUTO_SENSOR_LANDSCAPE -> {
-                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-                AppLogger.d("WindowHelper", "Fullscreen: SENSOR_LANDSCAPE (auto-rotate with device)")
-            }
-            com.webtoapp.data.model.FullscreenVideoOrientation.FORCE_LANDSCAPE -> {
-                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                AppLogger.d("WindowHelper", "Fullscreen: LANDSCAPE (forced)")
-            }
-            com.webtoapp.data.model.FullscreenVideoOrientation.KEEP_CURRENT -> {
-                AppLogger.d("WindowHelper", "Fullscreen: keeping current orientation ($originalOrientation)")
-            }
-        }
 
         val decorView = activity.window.decorView as FrameLayout
         decorView.addView(
@@ -412,6 +396,63 @@ object WindowHelper {
             )
         )
         return originalOrientation
+    }
+
+    private const val FULLSCREEN_VIDEO_DETECT_JS = """
+        (function() {
+          try {
+            var fe = document.fullscreenElement
+              || document.webkitFullscreenElement
+              || document.webkitCurrentFullScreenElement;
+            if (fe) {
+              if (fe.tagName === 'VIDEO') return 'video';
+              if (fe.querySelector && fe.querySelector('video')) return 'video';
+              return 'other';
+            }
+            var vids = document.getElementsByTagName('video');
+            for (var i = 0; i < vids.length; i++) {
+              var v = vids[i];
+              if (!v.paused && !v.ended && v.readyState > 2) return 'video';
+            }
+            return 'none';
+          } catch (e) {
+            return 'none';
+          }
+        })();
+    """
+
+    fun applyFullscreenVideoOrientation(
+        activity: Activity,
+        webView: android.webkit.WebView?,
+        fullscreenOrientation: com.webtoapp.data.model.FullscreenVideoOrientation =
+            com.webtoapp.data.model.FullscreenVideoOrientation.AUTO_SENSOR_LANDSCAPE
+    ) {
+        val targetOrientation = when (fullscreenOrientation) {
+            com.webtoapp.data.model.FullscreenVideoOrientation.AUTO_SENSOR_LANDSCAPE ->
+                ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+            com.webtoapp.data.model.FullscreenVideoOrientation.FORCE_LANDSCAPE ->
+                ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+            com.webtoapp.data.model.FullscreenVideoOrientation.KEEP_CURRENT -> {
+                AppLogger.d("WindowHelper", "Fullscreen: keeping current orientation")
+                return
+            }
+        }
+
+        if (webView == null) {
+            activity.requestedOrientation = targetOrientation
+            AppLogger.d("WindowHelper", "Fullscreen orientation applied without detection (no WebView)")
+            return
+        }
+
+        webView.evaluateJavascript(FULLSCREEN_VIDEO_DETECT_JS) { result ->
+            val isVideo = result != null && result.contains("video")
+            if (isVideo) {
+                activity.requestedOrientation = targetOrientation
+                AppLogger.d("WindowHelper", "Fullscreen video detected, orientation -> $targetOrientation")
+            } else {
+                AppLogger.d("WindowHelper", "Fullscreen content is not a video ($result), orientation kept")
+            }
+        }
     }
 
     fun hideCustomView(
