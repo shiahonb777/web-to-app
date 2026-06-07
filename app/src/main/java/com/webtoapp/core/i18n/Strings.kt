@@ -13154,6 +13154,11 @@ object Strings {
         AppLanguage.ENGLISH -> "AI Coding in progress…"
         AppLanguage.ARABIC -> "البرمجة بالذكاء الاصطناعي قيد التنفيذ…"
     }
+    val aiCodingOutputTruncated: String get() = when (lang) {
+        AppLanguage.CHINESE -> "本轮输出达到模型单次最大长度,内容可能被截断。让 AI 继续以补全剩余部分。"
+        AppLanguage.ENGLISH -> "This turn hit the model's max output length, so the content may be truncated. Ask the AI to continue to finish the rest."
+        AppLanguage.ARABIC -> "بلغ هذا الرد الحد الأقصى لطول مخرجات النموذج، لذا قد يكون المحتوى مقتطعًا. اطلب من الذكاء الاصطناعي المتابعة لإكمال الباقي."
+    }
     val aiCodingFileSaved: String get() = when (lang) {
         AppLanguage.CHINESE -> "已保存 %s"
         AppLanguage.ENGLISH -> "Saved %s"

@@ -14,6 +14,7 @@ import com.webtoapp.core.aicoding.permission.PermissionDecision
 import com.webtoapp.core.aicoding.tool.ToolContext
 import com.webtoapp.core.aicoding.tool.ToolRegistry
 import com.webtoapp.core.aicoding.tool.ToolResult
+import com.webtoapp.core.i18n.Strings
 import com.webtoapp.core.logging.AppLogger
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.SendChannel
@@ -115,6 +116,10 @@ class AgentEngine(
                 }
 
                 if (hardError != null) { send(AgentEvent.Failed(hardError!!)); return@channelFlow }
+
+                if (finishReason == FinishReason.LENGTH) {
+                    send(AgentEvent.Notice(Strings.aiCodingOutputTruncated))
+                }
 
                 val assistantToolCalls = pending.entries.map { (id, pair) ->
                     LlmToolCall(id, pair.first, pair.second.toString().ifBlank { "{}" })
