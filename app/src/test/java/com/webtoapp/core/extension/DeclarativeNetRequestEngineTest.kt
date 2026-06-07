@@ -102,6 +102,76 @@ class DeclarativeNetRequestEngineTest {
             .isEqualTo(DeclarativeNetRequestEngine.ActionType.BLOCK)
     }
 
+    @Test
+    fun `modifyHeaders rule is parsed and collected with request and response ops`() {
+        DeclarativeNetRequestEngine.loadStaticRules(
+            extensionId = "ext-h",
+            rulesetId = "headers",
+            path = "headers.json",
+            rulesJson = """
+                [{"id":1,"priority":1,"action":{"type":"modifyHeaders",
+                  "responseHeaders":[
+                    {"header":"x-frame-options","operation":"remove"},
+                    {"header":"content-security-policy","operation":"set","value":"default-src *"}
+                  ],
+                  "requestHeaders":[
+                    {"header":"referer","operation":"set","value":"https://ref.example"}
+                  ]},
+                  "condition":{"urlFilter":"target.example","resourceTypes":["main_frame","sub_frame"]}}]
+            """.trimIndent(),
+            enabled = true
+        )
+
+        assertThat(DeclarativeNetRequestEngine.hasModifyHeaderRules()).isTrue()
+        assertThat(DeclarativeNetRequestEngine.evaluate("https://target.example/page", "sub_frame")).isNull()
+
+        val mods = DeclarativeNetRequestEngine.collectHeaderModifications("https://target.example/page", "sub_frame")
+        assertThat(mods).isNotNull()
+        assertThat(mods!!.responseHeaders).hasSize(2)
+        assertThat(mods.requestHeaders).hasSize(1)
+        val removeOp = mods.responseHeaders.first { it.header == "x-frame-options" }
+        assertThat(removeOp.operation).isEqualTo("remove")
+        val setOp = mods.responseHeaders.first { it.header == "content-security-policy" }
+        assertThat(setOp.operation).isEqualTo("set")
+        assertThat(setOp.value).isEqualTo("default-src *")
+
+        assertThat(DeclarativeNetRequestEngine.collectHeaderModifications("https://other.example", "sub_frame")).isNull()
+    }
+
+    @Test
+    fun `higher priority allow rule cancels modifyHeaders`() {
+        DeclarativeNetRequestEngine.updateSessionRules(
+            "ext-h",
+            """
+                [{"id":1,"priority":1,"action":{"type":"modifyHeaders",
+                   "responseHeaders":[{"header":"x-frame-options","operation":"remove"}]},
+                   "condition":{"urlFilter":"site.example"}},
+                 {"id":2,"priority":2,"action":{"type":"allow"},
+                   "condition":{"urlFilter":"site.example"}}]
+            """.trimIndent(),
+            "[]"
+        )
+
+        assertThat(DeclarativeNetRequestEngine.collectHeaderModifications("https://site.example/x", "script")).isNull()
+    }
+
+    @Test
+    fun `modify header flag clears when rules removed`() {
+        DeclarativeNetRequestEngine.updateSessionRules(
+            "ext-h",
+            """
+                [{"id":5,"priority":1,"action":{"type":"modifyHeaders",
+                   "responseHeaders":[{"header":"x-test","operation":"remove"}]},
+                   "condition":{"urlFilter":"*"}}]
+            """.trimIndent(),
+            "[]"
+        )
+        assertThat(DeclarativeNetRequestEngine.hasModifyHeaderRules()).isTrue()
+
+        DeclarativeNetRequestEngine.updateSessionRules("ext-h", "[]", """[5]""")
+        assertThat(DeclarativeNetRequestEngine.hasModifyHeaderRules()).isFalse()
+    }
+
     private fun parseStringList(json: String): List<String> {
         return gson.fromJson(json, stringListType) ?: emptyList()
     }

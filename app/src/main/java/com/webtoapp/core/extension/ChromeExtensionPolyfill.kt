@@ -673,6 +673,41 @@ object ChromeExtensionPolyfill {
             onCommand: new ChromeEvent()
         },
 
+        idle: {
+            queryState: function(detectionIntervalInSeconds, callback) {
+                if (typeof detectionIntervalInSeconds === 'function') { detectionIntervalInSeconds('active'); return; }
+                if (typeof callback === 'function') callback('active');
+                return Promise.resolve('active');
+            },
+            setDetectionInterval: function() {},
+            getAutoLockDelay: function(callback) {
+                if (typeof callback === 'function') callback(0);
+                return Promise.resolve(0);
+            },
+            onStateChanged: new ChromeEvent()
+        },
+
+        tabGroups: {
+            TAB_GROUP_ID_NONE: -1,
+            get: function(groupId, callback) {
+                if (typeof callback === 'function') callback(null);
+                return Promise.resolve(null);
+            },
+            query: function(queryInfo, callback) {
+                if (typeof queryInfo === 'function') { queryInfo([]); return; }
+                if (typeof callback === 'function') callback([]);
+                return Promise.resolve([]);
+            },
+            update: function(groupId, updateProperties, callback) {
+                if (typeof callback === 'function') callback(null);
+                return Promise.resolve(null);
+            },
+            onCreated: new ChromeEvent(),
+            onUpdated: new ChromeEvent(),
+            onRemoved: new ChromeEvent(),
+            onMoved: new ChromeEvent()
+        },
+
         declarativeNetRequest: {
             updateDynamicRules: function(options, callback) {
                 try {

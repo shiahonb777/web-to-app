@@ -1565,6 +1565,20 @@ class WebViewManager(
                                 else -> {  }
                             }
                         }
+
+                        if (com.webtoapp.core.extension.DeclarativeNetRequestEngine.hasModifyHeaderRules() &&
+                            (it.method ?: "GET").equals("GET", ignoreCase = true)) {
+                            val headerMods = com.webtoapp.core.extension.DeclarativeNetRequestEngine.collectHeaderModifications(
+                                url = url,
+                                resourceType = resType,
+                                initiatorDomain = try { android.net.Uri.parse(currentMainFrameUrl ?: "").host ?: "" } catch (_: Exception) { "" },
+                                method = it.method ?: "GET"
+                            )
+                            if (headerMods != null) {
+                                val modResp = refetchWithHeaderModifications(url, it.requestHeaders ?: emptyMap(), headerMods)
+                                if (modResp != null) return modResp
+                            }
+                        }
                     }
 
                     if (url.startsWith("https://localhost/__ext__/")) {
@@ -2563,6 +2577,89 @@ class WebViewManager(
 
         return com.webtoapp.core.perf.NativePerfEngine.extractHost(target)?.lowercase()
             ?: runCatching { Uri.parse(target).host?.lowercase() }.getOrNull()
+    }
+
+    private fun refetchWithHeaderModifications(
+        url: String,
+        requestHeaders: Map<String, String>,
+        mods: com.webtoapp.core.extension.DeclarativeNetRequestEngine.HeaderModifications
+    ): WebResourceResponse? {
+        return try {
+            val connection = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+            connection.requestMethod = "GET"
+            connection.connectTimeout = 30000
+            connection.readTimeout = 30000
+            connection.instanceFollowRedirects = true
+
+            requestHeaders.forEach { (k, v) ->
+                val lk = k.lowercase()
+                if (lk !in SKIP_HEADERS && lk != "accept-encoding") {
+                    try { connection.setRequestProperty(k, v) } catch (_: Exception) {}
+                }
+            }
+
+            val cookies = CookieManager.getInstance().getCookie(url)
+            if (!cookies.isNullOrEmpty()) connection.setRequestProperty("Cookie", cookies)
+
+            mods.requestHeaders.forEach { op ->
+                try {
+                    when (op.operation) {
+                        "set" -> if (op.value != null) connection.setRequestProperty(op.header, op.value)
+                        "append" -> if (op.value != null) connection.addRequestProperty(op.header, op.value)
+                        "remove" -> connection.setRequestProperty(op.header, null)
+                    }
+                } catch (_: Exception) {}
+            }
+
+            val status = connection.responseCode
+            if (status <= 0) {
+                connection.disconnect()
+                return null
+            }
+            val reason = connection.responseMessage?.takeIf { it.isNotBlank() } ?: "OK"
+
+            val respHeaders = LinkedHashMap<String, String>()
+            connection.headerFields?.forEach { (key, values) ->
+                if (key == null) return@forEach
+                if (key.equals("Set-Cookie", ignoreCase = true)) return@forEach
+                respHeaders[key] = values.joinToString(", ")
+            }
+
+            connection.headerFields?.get("Set-Cookie")?.forEach { c ->
+                try { CookieManager.getInstance().setCookie(url, c) } catch (_: Exception) {}
+            }
+
+            mods.responseHeaders.forEach { op ->
+                val existingKey = respHeaders.keys.firstOrNull { it.equals(op.header, ignoreCase = true) }
+                when (op.operation) {
+                    "set" -> {
+                        if (existingKey != null) respHeaders.remove(existingKey)
+                        if (op.value != null) respHeaders[op.header] = op.value
+                    }
+                    "append" -> if (op.value != null) {
+                        if (existingKey != null) respHeaders[existingKey] = respHeaders[existingKey] + ", " + op.value
+                        else respHeaders[op.header] = op.value
+                    }
+                    "remove" -> if (existingKey != null) respHeaders.remove(existingKey)
+                }
+            }
+
+            val contentType = connection.contentType ?: "text/plain"
+            val mime = contentType.substringBefore(";").trim().ifEmpty { "text/plain" }
+            val charset = Regex("charset=([^;]+)", RegexOption.IGNORE_CASE)
+                .find(contentType)?.groupValues?.get(1)?.trim()?.ifEmpty { null } ?: "utf-8"
+
+            val bodyStream = (try {
+                if (status >= 400) connection.errorStream else connection.inputStream
+            } catch (_: Exception) { null }) ?: ByteArrayInputStream(ByteArray(0))
+
+            CookieManager.getInstance().flush()
+            AppLogger.d("WebViewManager", "DNR modifyHeaders applied via refetch: $url ($status)")
+            WebResourceResponse(mime, charset, status, reason, respHeaders, bodyStream)
+        } catch (e: Exception) {
+            AppLogger.w("WebViewManager", "modifyHeaders refetch failed: $url", e)
+            null
+        }
     }
 
     private fun loadEncryptedAsset(assetPath: String): WebResourceResponse? {

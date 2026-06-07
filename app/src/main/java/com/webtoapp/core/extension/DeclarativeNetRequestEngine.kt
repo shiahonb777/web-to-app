@@ -44,7 +44,20 @@ object DeclarativeNetRequestEngine {
         val domains: Set<String>,
         val excludedDomains: Set<String>,
         val requestMethods: Set<String>,
-        val excludedRequestMethods: Set<String>
+        val excludedRequestMethods: Set<String>,
+        val requestHeaders: List<HeaderOp> = emptyList(),
+        val responseHeaders: List<HeaderOp> = emptyList()
+    )
+
+    data class HeaderOp(
+        val header: String,
+        val operation: String,
+        val value: String?
+    )
+
+    data class HeaderModifications(
+        val requestHeaders: List<HeaderOp>,
+        val responseHeaders: List<HeaderOp>
     )
 
     data class StaticRuleset(
@@ -61,6 +74,23 @@ object DeclarativeNetRequestEngine {
     @Volatile
     var matchedCount: Long = 0
         private set
+
+    @Volatile
+    private var modifyHeaderRuleCount: Int = 0
+
+    fun hasModifyHeaderRules(): Boolean = modifyHeaderRuleCount > 0
+
+    private fun recomputeModifyHeaderFlag() {
+        var count = 0
+        for ((_, rules) in sessionRules) count += rules.count { it.action == ActionType.MODIFY_HEADERS }
+        for ((_, rules) in dynamicRules) count += rules.count { it.action == ActionType.MODIFY_HEADERS }
+        for ((_, rulesets) in staticRulesets) {
+            rulesets.values.filter { it.enabled }.forEach { ruleset ->
+                count += ruleset.rules.count { it.action == ActionType.MODIFY_HEADERS }
+            }
+        }
+        modifyHeaderRuleCount = count
+    }
 
     fun loadStaticRules(
         extensionId: String,
@@ -83,6 +113,7 @@ object DeclarativeNetRequestEngine {
                 TAG,
                 "Loaded ${rules.size} static DNR rules for $extensionId ruleset=$safeRulesetId enabled=$enabled"
             )
+            recomputeModifyHeaderFlag()
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to load static DNR rules for $extensionId ruleset=$rulesetId", e)
         }
@@ -111,6 +142,7 @@ object DeclarativeNetRequestEngine {
                 TAG,
                 "Updated static rulesets for $extensionId: enable=${enableIds.size}, disable=${disableIds.size}"
             )
+            recomputeModifyHeaderFlag()
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to update static rulesets for $extensionId", e)
         }
@@ -151,6 +183,7 @@ object DeclarativeNetRequestEngine {
                 TAG,
                 "Updated dynamic DNR rules for $extensionId: removed=${removeIds.size}, added=${addRules.size}, total=${existing.size}"
             )
+            recomputeModifyHeaderFlag()
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to update dynamic DNR rules for $extensionId", e)
         }
@@ -178,6 +211,7 @@ object DeclarativeNetRequestEngine {
                 TAG,
                 "Updated session DNR rules for $extensionId: removed=${removeIds.size}, added=${addRules.size}, total=${existing.size}"
             )
+            recomputeModifyHeaderFlag()
         } catch (e: Exception) {
             AppLogger.e(TAG, "Failed to update session DNR rules for $extensionId", e)
         }
@@ -242,10 +276,54 @@ object DeclarativeNetRequestEngine {
         val redirectUrl: String?
     )
 
+    fun collectHeaderModifications(
+        url: String,
+        resourceType: String = "",
+        initiatorDomain: String = "",
+        method: String = "GET"
+    ): HeaderModifications? {
+        if (modifyHeaderRuleCount == 0) return null
+
+        val resType = ResourceType.fromString(resourceType)
+        val allRuleSets = mutableListOf<List<DnrRule>>()
+        for ((_, rules) in sessionRules) allRuleSets.add(rules)
+        for ((_, rules) in dynamicRules) allRuleSets.add(rules)
+        for ((_, rulesets) in staticRulesets) {
+            rulesets.values.filter { it.enabled }.forEach { allRuleSets.add(it.rules) }
+        }
+
+        var maxAllowPriority = 0
+        val matchedHeaderRules = mutableListOf<DnrRule>()
+        for (ruleSet in allRuleSets) {
+            for (rule in ruleSet) {
+                if (!matchesRule(rule, url, resType, initiatorDomain, method)) continue
+                when (rule.action) {
+                    ActionType.ALLOW, ActionType.ALLOW_ALL_REQUESTS ->
+                        if (rule.priority > maxAllowPriority) maxAllowPriority = rule.priority
+                    ActionType.MODIFY_HEADERS -> matchedHeaderRules.add(rule)
+                    else -> {}
+                }
+            }
+        }
+
+        val effective = matchedHeaderRules
+            .filter { it.priority > maxAllowPriority }
+            .sortedByDescending { it.priority }
+        if (effective.isEmpty()) return null
+
+        val requestOps = effective.flatMap { it.requestHeaders }
+        val responseOps = effective.flatMap { it.responseHeaders }
+        if (requestOps.isEmpty() && responseOps.isEmpty()) return null
+
+        matchedCount++
+        return HeaderModifications(requestOps, responseOps)
+    }
+
     fun clearExtension(extensionId: String) {
         staticRulesets.remove(extensionId)
         dynamicRules.remove(extensionId)
         sessionRules.remove(extensionId)
+        recomputeModifyHeaderFlag()
     }
 
     fun clear() {
@@ -253,6 +331,7 @@ object DeclarativeNetRequestEngine {
         dynamicRules.clear()
         sessionRules.clear()
         matchedCount = 0
+        modifyHeaderRuleCount = 0
     }
 
     private fun matchesRule(
@@ -349,6 +428,11 @@ object DeclarativeNetRequestEngine {
         val requestMethods = parseStringSet(condition?.optJSONArray("requestMethods")).map { it.uppercase() }.toSet()
         val excludedRequestMethods = parseStringSet(condition?.optJSONArray("excludedRequestMethods")).map { it.uppercase() }.toSet()
 
+        val requestHeaderOps = if (actionType == ActionType.MODIFY_HEADERS)
+            parseHeaderOps(actionObj.optJSONArray("requestHeaders")) else emptyList()
+        val responseHeaderOps = if (actionType == ActionType.MODIFY_HEADERS)
+            parseHeaderOps(actionObj.optJSONArray("responseHeaders")) else emptyList()
+
         return DnrRule(
             id = id,
             priority = priority,
@@ -361,8 +445,24 @@ object DeclarativeNetRequestEngine {
             domains = domains,
             excludedDomains = excludedDomains,
             requestMethods = requestMethods,
-            excludedRequestMethods = excludedRequestMethods
+            excludedRequestMethods = excludedRequestMethods,
+            requestHeaders = requestHeaderOps,
+            responseHeaders = responseHeaderOps
         )
+    }
+
+    private fun parseHeaderOps(arr: JSONArray?): List<HeaderOp> {
+        if (arr == null || arr.length() == 0) return emptyList()
+        val ops = mutableListOf<HeaderOp>()
+        for (i in 0 until arr.length()) {
+            val obj = arr.optJSONObject(i) ?: continue
+            val header = obj.optString("header", "").trim()
+            val operation = obj.optString("operation", "").trim().lowercase()
+            if (header.isEmpty() || operation.isEmpty()) continue
+            val value = obj.optString("value", "").takeIf { it.isNotEmpty() }
+            ops.add(HeaderOp(header, operation, value))
+        }
+        return ops
     }
 
     private fun compileUrlFilter(filter: String): Pattern? {
