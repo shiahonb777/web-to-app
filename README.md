@@ -59,7 +59,7 @@ Image · Video · Gallery · Multi-Web.
 - **GitHub-backed Module Market** — install community JS/CSS modules without
   shipping an app update; the catalog lives in this repository.
 - **Bundled Chrome extension support** — runs unmodified MV3 extensions
-  inside the WebView. Ships with the BewlyCat extension as a working example.
+  inside the WebView. Load your own via the Extension Modules screen.
 - **Local server runtimes** — Node.js, PHP, Python, and Go execute on-device
   via a local HTTP server. WordPress runs against the on-device PHP runtime.
 - **Customisable WebView** — UA spoofing, 28-vector fingerprint disguise, ad
@@ -197,9 +197,9 @@ Chrome Custom Tab with shared cookies (via `androidx.browser`).
 - **11 built-in JS modules** (`BuiltInModules`): Video Downloader, Bilibili /
   Douyin / Xiaohongshu extractors, Video Enhancer, Web Analyzer, Find-in-Page,
   Dark Mode, Privacy Protection, Content Enhancer, Element Blocker.
-- **1 built-in Chrome extension** (`assets/extensions/bewlycat/`): BewlyCat
-  for Bilibili. Demonstrates the MV3 runtime working with a real-world
-  extension (loaded as ISOLATED + MAIN world scripts).
+- **MV3 Chrome extension runtime** — load unmodified Chrome MV3 extensions
+  (manifest + ISOLATED / MAIN world content scripts) via the Extension Modules
+  screen.
 - **3 module sources** (`ModuleSourceType`): plain JavaScript (`CUSTOM`),
   Greasemonkey/Tampermonkey userscripts (`USERSCRIPT`, `.user.js`), and Chrome
   MV3 extensions (`CHROME_EXTENSION`, `manifest.json`).

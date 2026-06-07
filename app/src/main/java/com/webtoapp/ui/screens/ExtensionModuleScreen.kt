@@ -84,6 +84,7 @@ fun ExtensionModuleScreen(
     var selectedCategory by remember { mutableStateOf<ModuleCategory?>(null) }
     var searchQuery by remember { mutableStateOf("") }
     var showImportDialog by remember { mutableStateOf(false) }
+    var showStoreDialog by remember { mutableStateOf(false) }
 
     val extensionFileManager = remember { ExtensionFileManager(context) }
     var showUserScriptPreview by remember { mutableStateOf<UserScriptParser.ParseResult?>(null) }
@@ -230,6 +231,16 @@ fun ExtensionModuleScreen(
         searchQuery.isBlank() ||
             module.name.contains(searchQuery, ignoreCase = true) ||
             module.description.contains(searchQuery, ignoreCase = true)
+    }.let { list ->
+
+        val seenExtIds = HashSet<String>()
+        list.filter { module ->
+            if (module.sourceType == ModuleSourceType.CHROME_EXTENSION && module.chromeExtId.isNotEmpty()) {
+                seenExtIds.add(module.chromeExtId)
+            } else {
+                true
+            }
+        }
     }
 
     LaunchedEffect(loadError) {
@@ -442,6 +453,14 @@ fun ExtensionModuleScreen(
         }
     }
 
+    if (showStoreDialog) {
+        BrowserExtensionStoreDialog(
+            extensionFileManager = extensionFileManager,
+            extensionManager = extensionManager,
+            onDismiss = { showStoreDialog = false }
+        )
+    }
+
     if (showImportDialog) {
         AlertDialog(
             onDismissRequest = { showImportDialog = false },
@@ -465,6 +484,17 @@ fun ExtensionModuleScreen(
                         onClick = {
                             showImportDialog = false
                             onNavigateToMarket()
+                        }
+                    )
+
+                    AddEntryRow(
+                        icon = Icons.Default.Extension,
+                        iconTint = MaterialTheme.colorScheme.primary,
+                        title = Strings.browserExtStoreTitle,
+                        subtitle = Strings.browserExtStoreDesc,
+                        onClick = {
+                            showImportDialog = false
+                            showStoreDialog = true
                         }
                     )
 
@@ -2210,6 +2240,199 @@ private fun AddEntryRow(
                 modifier = Modifier.size(18.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
             )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun BrowserExtensionStoreDialog(
+    extensionFileManager: ExtensionFileManager,
+    extensionManager: ExtensionManager,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val userModules by extensionManager.modules.collectAsStateWithLifecycle()
+
+    val installedNames = remember(userModules) {
+        userModules
+            .filter { it.sourceType == ModuleSourceType.CHROME_EXTENSION }
+            .map { it.name.trim() }
+            .toSet()
+    }
+
+    var installingId by remember { mutableStateOf<String?>(null) }
+    var customInput by remember { mutableStateOf("") }
+
+    fun install(storeId: String, displayName: String) {
+        if (installingId != null) return
+        installingId = storeId
+        scope.launch {
+            val result = extensionFileManager.installChromeExtensionFromStore(storeId)
+            when (result) {
+                is ExtensionFileManager.ImportResult.ChromeExtension -> {
+                    var ok = 0
+                    result.parseResult.modules.forEach { module ->
+                        extensionManager.addModule(module).onSuccess { ok++ }
+                    }
+                    if (ok > 0) {
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.msg_import_success, result.parseResult.extensionName),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        Toast.makeText(context, context.getString(R.string.msg_import_failed, context.getString(R.string.unknown_error)), Toast.LENGTH_SHORT).show()
+                    }
+                }
+                is ExtensionFileManager.ImportResult.Error -> {
+                    Toast.makeText(context, context.getString(R.string.msg_import_failed, result.message), Toast.LENGTH_LONG).show()
+                }
+                else -> {
+                    Toast.makeText(context, context.getString(R.string.msg_import_failed, context.getString(R.string.unknown_error)), Toast.LENGTH_SHORT).show()
+                }
+            }
+            installingId = null
+        }
+    }
+
+    Dialog(
+        onDismissRequest = { if (installingId == null) onDismiss() },
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth(0.95f)
+                .fillMaxHeight(0.85f),
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surface
+        ) {
+            Column {
+                TopAppBar(
+                    title = { Text(Strings.browserExtStoreTitle) },
+                    navigationIcon = {
+                        IconButton(onClick = { if (installingId == null) onDismiss() }) {
+                            Icon(Icons.Default.Close, Strings.btnCancel)
+                        }
+                    }
+                )
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    item {
+                        Text(
+                            Strings.browserExtStoreInstallByIdHint,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            PremiumTextField(
+                                value = customInput,
+                                onValueChange = { customInput = it },
+                                modifier = Modifier.weight(1f),
+                                placeholder = { Text("chromewebstore.google.com/... or id") },
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            PremiumButton(
+                                onClick = {
+                                    val id = com.webtoapp.core.extension.BrowserExtensionStore.extractStoreId(customInput)
+                                    if (id == null) {
+                                        Toast.makeText(context, context.getString(R.string.msg_import_failed, "id"), Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        install(id, id)
+                                    }
+                                },
+                                enabled = installingId == null,
+                                shape = RoundedCornerShape(WtaRadius.Button)
+                            ) {
+                                Text(Strings.install, style = MaterialTheme.typography.labelMedium)
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(0.5.dp)
+                                .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                        )
+                    }
+
+                    items(com.webtoapp.core.extension.BrowserExtensionStore.catalog, key = { it.storeId }) { entry ->
+                        val isInstalled = entry.name.trim() in installedNames
+                        val isBusy = installingId == entry.storeId
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                                .padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(RoundedCornerShape(11.dp))
+                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Outlined.Extension,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    entry.name,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    entry.description,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                    lineHeight = 16.sp
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            when {
+                                isBusy -> CircularProgressIndicator(modifier = Modifier.size(22.dp), strokeWidth = 2.dp)
+                                isInstalled -> Icon(
+                                    Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                else -> PremiumButton(
+                                    onClick = { install(entry.storeId, entry.name) },
+                                    enabled = installingId == null,
+                                    shape = RoundedCornerShape(WtaRadius.Button)
+                                ) {
+                                    Icon(Icons.Default.Download, null, Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(Strings.install, style = MaterialTheme.typography.labelMedium)
+                                }
+                            }
+                        }
+                    }
+
+                    item { Spacer(modifier = Modifier.height(24.dp)) }
+                }
+            }
         }
     }
 }

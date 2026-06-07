@@ -16358,17 +16358,6 @@ object Strings {
         AppLanguage.ARABIC -> "انقر للتحديد، انقر مرتين لحظر العناصر المزعجة"
     }
 
-    val builtinBewlyCat: String get() = when (lang) {
-        AppLanguage.CHINESE -> "BewlyCat (B站增强)"
-        AppLanguage.ENGLISH -> "BewlyCat (Bilibili Enhanced)"
-        AppLanguage.ARABIC -> "BewlyCat (تحسين Bilibili)"
-    }
-    val builtinBewlyCatDesc: String get() = when (lang) {
-        AppLanguage.CHINESE -> "为 B站提供美观的界面增强，优化首页、搜索、视频页面等"
-        AppLanguage.ENGLISH -> "Beautiful UI enhancements for Bilibili: improved homepage, search, video pages and more"
-        AppLanguage.ARABIC -> "تحسينات واجهة جميلة لـ Bilibili: الصفحة الرئيسية والبحث وصفحات الفيديو والمزيد"
-    }
-
     val triggerAuto: String get() = when (lang) {
         AppLanguage.CHINESE -> "自动执行"
         AppLanguage.ENGLISH -> "Auto Execute"
@@ -27478,6 +27467,21 @@ object Strings {
         AppLanguage.CHINESE -> "导入 Chrome 扩展"
         AppLanguage.ENGLISH -> "Import Chrome Extension"
         AppLanguage.ARABIC -> "استيراد إضافة Chrome"
+    }
+    val browserExtStoreTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "浏览器扩展商店"
+        AppLanguage.ENGLISH -> "Browser Extension Store"
+        AppLanguage.ARABIC -> "متجر إضافات المتصفح"
+    }
+    val browserExtStoreDesc: String get() = when (lang) {
+        AppLanguage.CHINESE -> "一键下载安装热门 Chrome 扩展，无需打包进应用"
+        AppLanguage.ENGLISH -> "Download and install popular Chrome extensions on demand"
+        AppLanguage.ARABIC -> "تنزيل وتثبيت إضافات Chrome الشائعة عند الطلب"
+    }
+    val browserExtStoreInstallByIdHint: String get() = when (lang) {
+        AppLanguage.CHINESE -> "或粘贴 Chrome 网上应用店链接 / 扩展 ID 安装"
+        AppLanguage.ENGLISH -> "Or paste a Chrome Web Store link / extension ID to install"
+        AppLanguage.ARABIC -> "أو الصق رابط متجر Chrome / معرف الإضافة للتثبيت"
     }
     val importChromeExtensionHint: String get() = when (lang) {
         AppLanguage.CHINESE -> "支持 .crx/.zip，当前仅导入带 content_scripts 的扩展"

@@ -97,7 +97,26 @@ fun ExtensionModuleCard(
 
     val allModules = builtInModules + userModules
 
-    val selectedModules = allModules.filter { it.id in selectedModuleIds }
+    val extSiblingsCard = allModules
+        .filter { it.sourceType == ModuleSourceType.CHROME_EXTENSION && it.chromeExtId.isNotEmpty() }
+        .groupBy { it.chromeExtId }
+        .mapValues { entry -> entry.value.map { it.id } }
+    fun siblingIdsCard(module: ExtensionModule): Set<String> =
+        if (module.sourceType == ModuleSourceType.CHROME_EXTENSION && module.chromeExtId.isNotEmpty())
+            (extSiblingsCard[module.chromeExtId] ?: listOf(module.id)).toSet()
+        else setOf(module.id)
+
+    val selectedModules = allModules.filter { it.id in selectedModuleIds }.let { list ->
+        val seen = HashSet<String>()
+        list.filter { module ->
+            if (module.sourceType == ModuleSourceType.CHROME_EXTENSION && module.chromeExtId.isNotEmpty()) {
+                seen.add(module.chromeExtId)
+            } else {
+                true
+            }
+        }
+    }
+    val selectedModulesRaw = allModules.filter { it.id in selectedModuleIds }
 
     var showModuleSelector by remember { mutableStateOf(false) }
     var showTestDialog by remember { mutableStateOf(false) }
@@ -186,7 +205,9 @@ fun ExtensionModuleCard(
                         SelectedModulesSection(
                             selectedModules = selectedModules,
                             onRemove = { id ->
-                                onModuleIdsChange(selectedModuleIds - id)
+                                val module = allModules.firstOrNull { it.id == id }
+                                val toRemove = if (module != null) siblingIdsCard(module) else setOf(id)
+                                onModuleIdsChange(selectedModuleIds - toRemove)
                             },
                             onClearAll = { onModuleIdsChange(emptySet()) },
                             onSavePreset = { showSavePresetDialog = true }
@@ -272,7 +293,7 @@ fun ExtensionModuleCard(
 
     if (showTestDialog) {
         ModuleTestDialog(
-            selectedModules = selectedModules,
+            selectedModules = selectedModulesRaw,
             onDismiss = { showTestDialog = false }
         )
     }
@@ -811,7 +832,44 @@ fun ExtensionModuleSelectorDialog(
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf<ModuleCategory?>(null) }
 
-    val filteredModules = allModules.filter { module ->
+    val extSiblings = remember(allModules) {
+        allModules
+            .filter { it.sourceType == ModuleSourceType.CHROME_EXTENSION && it.chromeExtId.isNotEmpty() }
+            .groupBy { it.chromeExtId }
+            .mapValues { entry -> entry.value.map { it.id } }
+    }
+    fun idsFor(module: ExtensionModule): List<String> =
+        if (module.sourceType == ModuleSourceType.CHROME_EXTENSION && module.chromeExtId.isNotEmpty())
+            extSiblings[module.chromeExtId] ?: listOf(module.id)
+        else listOf(module.id)
+    fun isUnitSelected(module: ExtensionModule): Boolean = idsFor(module).all { it in selectedIds }
+    fun toggleUnit(module: ExtensionModule) {
+        val ids = idsFor(module)
+        onSelectionChange(
+            if (ids.all { it in selectedIds }) selectedIds - ids.toSet()
+            else selectedIds + ids
+        )
+    }
+
+    val collapsedModules = remember(allModules) {
+        val seen = HashSet<String>()
+        allModules.filter { module ->
+            if (module.sourceType == ModuleSourceType.CHROME_EXTENSION && module.chromeExtId.isNotEmpty()) {
+                seen.add(module.chromeExtId)
+            } else {
+                true
+            }
+        }
+    }
+    val selectedUnitCount = remember(selectedIds, allModules) {
+        selectedIds.mapNotNull { id ->
+            allModules.firstOrNull { it.id == id }?.let { m ->
+                if (m.sourceType == ModuleSourceType.CHROME_EXTENSION && m.chromeExtId.isNotEmpty()) "ext:${m.chromeExtId}" else id
+            } ?: id
+        }.distinct().size
+    }
+
+    val filteredModules = collapsedModules.filter { module ->
         val matchesSearch = searchQuery.isBlank() ||
             module.name.contains(searchQuery, ignoreCase = true) ||
             module.description.contains(searchQuery, ignoreCase = true) ||
@@ -844,7 +902,7 @@ fun ExtensionModuleSelectorDialog(
                     },
                     actions = {
                         TextButton(onClick = onDismiss) {
-                            Text(Strings.doneWithCount.format(selectedIds.size))
+                            Text(Strings.doneWithCount.format(selectedUnitCount))
                         }
                     }
                 )
@@ -921,16 +979,8 @@ fun ExtensionModuleSelectorDialog(
                                 items(modules, key = { it.id }) { module ->
                                     ModuleSelectItem(
                                         module = module,
-                                        isSelected = module.id in selectedIds,
-                                        onToggle = {
-                                            onSelectionChange(
-                                                if (module.id in selectedIds) {
-                                                    selectedIds - module.id
-                                                } else {
-                                                    selectedIds + module.id
-                                                }
-                                            )
-                                        }
+                                        isSelected = isUnitSelected(module),
+                                        onToggle = { toggleUnit(module) }
                                     )
                                 }
                             }
@@ -939,16 +989,8 @@ fun ExtensionModuleSelectorDialog(
                             items(filteredModules, key = { it.id }) { module ->
                                 ModuleSelectItem(
                                     module = module,
-                                    isSelected = module.id in selectedIds,
-                                    onToggle = {
-                                        onSelectionChange(
-                                            if (module.id in selectedIds) {
-                                                selectedIds - module.id
-                                            } else {
-                                                selectedIds + module.id
-                                            }
-                                        )
-                                    }
+                                    isSelected = isUnitSelected(module),
+                                    onToggle = { toggleUnit(module) }
                                 )
                             }
                         }

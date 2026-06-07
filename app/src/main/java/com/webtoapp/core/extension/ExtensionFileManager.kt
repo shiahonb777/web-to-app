@@ -119,6 +119,67 @@ class ExtensionFileManager(private val context: Context) {
         }
     }
 
+    suspend fun installChromeExtensionFromStore(storeId: String): ImportResult = withContext(Dispatchers.IO) {
+        val cleanId = storeId.trim()
+        if (cleanId.isEmpty() || !cleanId.all { it.isLetterOrDigit() }) {
+            return@withContext ImportResult.Error("Invalid extension id")
+        }
+        val crxFile = File(tempDir, "store_${cleanId}_${System.currentTimeMillis()}.crx")
+        try {
+            if (!downloadCrxFromStore(cleanId, crxFile)) {
+                return@withContext ImportResult.Error("Failed to download extension from store")
+            }
+            importChromeExtensionFromFile(crxFile)
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to install Chrome extension from store: $cleanId", e)
+            ImportResult.Error("Install failed: ${e.message}")
+        } finally {
+            crxFile.delete()
+        }
+    }
+
+    private fun downloadCrxFromStore(storeId: String, dest: File): Boolean {
+        val prodVersions = listOf("132.0.0.0", "120.0.0.0", "124.0.0.0", "138.0.0.0")
+        for (pv in prodVersions) {
+            try {
+                val url = "https://clients2.google.com/service/update2/crx" +
+                    "?response=redirect&acceptformat=crx2,crx3&prodversion=$pv" +
+                    "&x=id%3D$storeId%26installsource%3Dondemand%26uc"
+                val request = Request.Builder()
+                    .url(url)
+                    .header("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/$pv Safari/537.36")
+                    .build()
+                httpClient.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) return@use
+                    val body = response.body ?: return@use
+                    dest.outputStream().use { out ->
+                        var total = 0L
+                        val buffer = ByteArray(64 * 1024)
+                        body.byteStream().use { input ->
+                            while (true) {
+                                val read = input.read(buffer)
+                                if (read == -1) break
+                                total += read
+                                if (total > MAX_EXTENSION_SIZE) {
+                                    AppLogger.w(TAG, "CRX exceeds max size, aborting: $storeId")
+                                    return false
+                                }
+                                out.write(buffer, 0, read)
+                            }
+                        }
+                    }
+                }
+                if (dest.exists() && dest.length() > 0 && ChromeExtensionParser.isCrxFile(dest)) {
+                    AppLogger.i(TAG, "Downloaded CRX for $storeId (${dest.length() / 1024} KB, prodversion=$pv)")
+                    return true
+                }
+            } catch (e: Exception) {
+                AppLogger.w(TAG, "CRX download attempt failed (prodversion=$pv): $storeId", e)
+            }
+        }
+        return false
+    }
+
     suspend fun importChromeExtensionFromFile(file: File): ImportResult = withContext(Dispatchers.IO) {
         try {
             val extensionId = UUID.randomUUID().toString().take(12)

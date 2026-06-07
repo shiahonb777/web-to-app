@@ -55,7 +55,7 @@ WordPress 跑在本地 PHP 之上），以及完全在设备内通过
   仅提供 arm64-v8a，其原生运行时在首次选用时下载，不打进 APK
 - **GitHub 驱动的模块市场** —— 一键安装社区模块，无需更新 App，目录就在本仓库
 - **真正的 Chrome 扩展运行时** —— 在 WebView 里直接跑未修改的 MV3 扩展，
-  内置 BewlyCat 作为示例
+  可在扩展模块界面加载你自己的扩展
 - **本地服务端运行时** —— Node.js / PHP / Python / Go 通过本地 HTTP 服务跑在
   设备上，WordPress 跑在本地 PHP 之上
 - **可定制的 WebView** —— UA 伪装、28 维度指纹伪装、广告拦截、
@@ -180,9 +180,8 @@ PayPal、Stripe、Square——外加 reCAPTCHA / hCaptcha / Cloudflare Turnstile
 
 - **11 个内置 JS 模块**（`BuiltInModules`）：视频下载、B 站 / 抖音 / 小红书
   提取器、视频增强、网页分析、页内查找、暗色模式、隐私保护、内容增强、元素拦截
-- **1 个内置 Chrome 扩展**（`assets/extensions/bewlycat/`）：BewlyCat 给 B 站
-  换皮肤，是 MV3 运行时跑真实扩展的活样板（以 ISOLATED + MAIN 两个 world 脚本
-  加载）
+- **MV3 Chrome 扩展运行时** —— 可在扩展模块界面加载未修改的 Chrome MV3 扩展
+  （manifest + ISOLATED / MAIN world 内容脚本）
 - **3 种模块来源**（`ModuleSourceType`）：纯 JavaScript（`CUSTOM`）、
   Greasemonkey/Tampermonkey 油猴脚本（`USERSCRIPT`，`.user.js`）、Chrome MV3
   扩展（`CHROME_EXTENSION`，`manifest.json`）
