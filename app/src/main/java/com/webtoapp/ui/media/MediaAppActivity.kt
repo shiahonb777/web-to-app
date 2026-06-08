@@ -6,8 +6,6 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.media.MediaPlayer
 import android.os.Bundle
-import android.view.SurfaceHolder
-import android.view.SurfaceView
 import android.view.WindowManager
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
@@ -23,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -35,6 +32,7 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.data.model.WebApp
+import com.webtoapp.ui.shared.AspectRatioSurface
 import com.webtoapp.ui.theme.WebToAppTheme
 
 class MediaAppActivity : AppCompatActivity() {
@@ -256,6 +254,8 @@ fun VideoPlayer(
     var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
     var isPlaying by remember { mutableStateOf(false) }
     var showControls by remember { mutableStateOf(true) }
+    var videoWidth by remember { mutableIntStateOf(0) }
+    var videoHeight by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(showControls) {
         if (showControls && isPlaying) {
@@ -274,53 +274,55 @@ fun VideoPlayer(
                 showControls = !showControls
             }
     ) {
-        AndroidView(
-            factory = { ctx ->
-                SurfaceView(ctx).apply {
-                    holder.addCallback(object : SurfaceHolder.Callback {
-                        override fun surfaceCreated(holder: SurfaceHolder) {
-                            try {
-                                val videoPath = mediaPath ?: "media_content.mp4"
-                                mediaPlayer = MediaPlayer().apply {
-                                    if (videoPath.startsWith("asset:///")) {
-                                        val assetPath = videoPath.removePrefix("asset:///")
-                                        val afd = ctx.assets.openFd(assetPath)
-                                        setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
-                                        afd.close()
-                                    } else {
-                                        setDataSource(videoPath)
-                                    }
-                                    setSurface(holder.surface)
+        AspectRatioSurface(
+            videoWidth = videoWidth,
+            videoHeight = videoHeight,
+            fillScreen = fillScreen,
+            modifier = Modifier.fillMaxSize(),
+            onSurfaceCreated = { holder ->
+                try {
+                    val videoPath = mediaPath ?: "media_content.mp4"
+                    mediaPlayer = MediaPlayer().apply {
+                        if (videoPath.startsWith("asset:///")) {
+                            val assetPath = videoPath.removePrefix("asset:///")
+                            val afd = context.assets.openFd(assetPath)
+                            setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                            afd.close()
+                        } else {
+                            setDataSource(videoPath)
+                        }
+                        setSurface(holder.surface)
 
-                                    val volume = if (enableAudio) 1f else 0f
-                                    setVolume(volume, volume)
+                        val volume = if (enableAudio) 1f else 0f
+                        setVolume(volume, volume)
 
-                                    isLooping = loop
+                        isLooping = loop
 
-                                    setOnPreparedListener {
-                                        if (autoPlay) {
-                                            start()
-                                            isPlaying = true
-                                        }
-                                    }
-
-                                    prepareAsync()
-                                }
-                            } catch (e: Exception) {
-                                AppLogger.e("MediaAppActivity", "Operation failed", e)
+                        setOnPreparedListener { mp ->
+                            videoWidth = mp.videoWidth
+                            videoHeight = mp.videoHeight
+                            if (autoPlay) {
+                                start()
+                                isPlaying = true
                             }
                         }
-
-                        override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}
-
-                        override fun surfaceDestroyed(holder: SurfaceHolder) {
-                            mediaPlayer?.release()
-                            mediaPlayer = null
+                        setOnVideoSizeChangedListener { _, width, height ->
+                            videoWidth = width
+                            videoHeight = height
                         }
-                    })
+
+                        prepareAsync()
+                    }
+                } catch (e: Exception) {
+                    AppLogger.e("MediaAppActivity", "Operation failed", e)
                 }
             },
-            modifier = Modifier.fillMaxSize()
+            onSurfaceDestroyed = {
+                mediaPlayer?.release()
+                mediaPlayer = null
+                videoWidth = 0
+                videoHeight = 0
+            }
         )
 
         if (showControls && !autoPlay) {

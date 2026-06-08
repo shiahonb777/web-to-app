@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.core.i18n.Strings
+import com.webtoapp.ui.shared.AspectRatioSurface
 import kotlinx.coroutines.delay
 
 @Composable
@@ -250,71 +251,78 @@ fun MediaContentDisplay(
 
             var mediaPlayer by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
             var tempVideoFile by remember { mutableStateOf<java.io.File?>(null) }
+            var videoWidth by remember { mutableIntStateOf(0) }
+            var videoHeight by remember { mutableIntStateOf(0) }
             val assetPath = "media_content.mp4"
 
-            AndroidView(
-                factory = { ctx ->
-                    android.view.SurfaceView(ctx).apply {
-                        holder.addCallback(object : android.view.SurfaceHolder.Callback {
-                            override fun surfaceCreated(holder: android.view.SurfaceHolder) {
-                                try {
+            AspectRatioSurface(
+                videoWidth = videoWidth,
+                videoHeight = videoHeight,
+            fillScreen = mediaConfig.fillScreen,
+            modifier = Modifier.fillMaxSize(),
+            onSurfaceCreated = { holder ->
+                try {
+                    val encryptedPath = "$assetPath.enc"
+                    val hasEncrypted = try {
+                        context.assets.open(encryptedPath).use { true }
+                    } catch (e: Exception) { false }
 
-                                    val encryptedPath = "$assetPath.enc"
-                                    val hasEncrypted = try {
-                                        ctx.assets.open(encryptedPath).use { true }
-                                    } catch (e: Exception) { false }
+                    if (hasEncrypted) {
+                        AppLogger.d("MediaContent", "检测到加密媒体视频")
+                        val decryptor = com.webtoapp.core.crypto.AssetDecryptor(context)
+                        val decryptedData = decryptor.loadAsset(assetPath)
+                        val tempFile = java.io.File(context.cacheDir, "media_video_${System.currentTimeMillis()}.mp4")
+                        tempFile.writeBytes(decryptedData)
+                        tempVideoFile = tempFile
 
-                                    if (hasEncrypted) {
-
-                                        AppLogger.d("MediaContent", "检测到加密媒体视频")
-                                        val decryptor = com.webtoapp.core.crypto.AssetDecryptor(ctx)
-                                        val decryptedData = decryptor.loadAsset(assetPath)
-                                        val tempFile = java.io.File(ctx.cacheDir, "media_video_${System.currentTimeMillis()}.mp4")
-                                        tempFile.writeBytes(decryptedData)
-                                        tempVideoFile = tempFile
-
-                                        mediaPlayer = android.media.MediaPlayer().apply {
-                                            setDataSource(tempFile.absolutePath)
-                                            setSurface(holder.surface)
-                                            val volume = if (mediaConfig.enableAudio) 1f else 0f
-                                            setVolume(volume, volume)
-                                            isLooping = mediaConfig.loop
-                                            setOnPreparedListener {
-                                                if (mediaConfig.autoPlay) start()
-                                            }
-                                            prepareAsync()
-                                        }
-                                    } else {
-
-                                        val afd = ctx.assets.openFd(assetPath)
-                                        mediaPlayer = android.media.MediaPlayer().apply {
-                                            setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
-                                            setSurface(holder.surface)
-                                            val volume = if (mediaConfig.enableAudio) 1f else 0f
-                                            setVolume(volume, volume)
-                                            isLooping = mediaConfig.loop
-                                            setOnPreparedListener {
-                                                if (mediaConfig.autoPlay) start()
-                                            }
-                                            prepareAsync()
-                                        }
-                                        afd.close()
-                                    }
-                                } catch (e: Exception) {
-                                    AppLogger.e("ShellActivity", "Operation failed", e)
-                                }
+                        mediaPlayer = android.media.MediaPlayer().apply {
+                            setDataSource(tempFile.absolutePath)
+                            setSurface(holder.surface)
+                            val volume = if (mediaConfig.enableAudio) 1f else 0f
+                            setVolume(volume, volume)
+                            isLooping = mediaConfig.loop
+                            setOnPreparedListener { mp ->
+                                videoWidth = mp.videoWidth
+                                videoHeight = mp.videoHeight
+                                if (mediaConfig.autoPlay) start()
                             }
-
-                            override fun surfaceChanged(holder: android.view.SurfaceHolder, format: Int, width: Int, height: Int) {}
-
-                            override fun surfaceDestroyed(holder: android.view.SurfaceHolder) {
-                                mediaPlayer?.release()
-                                mediaPlayer = null
+                            setOnVideoSizeChangedListener { _, width, height ->
+                                videoWidth = width
+                                videoHeight = height
                             }
-                        })
+                            prepareAsync()
+                        }
+                    } else {
+                        val afd = context.assets.openFd(assetPath)
+                        mediaPlayer = android.media.MediaPlayer().apply {
+                            setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                            setSurface(holder.surface)
+                            val volume = if (mediaConfig.enableAudio) 1f else 0f
+                            setVolume(volume, volume)
+                            isLooping = mediaConfig.loop
+                            setOnPreparedListener { mp ->
+                                videoWidth = mp.videoWidth
+                                videoHeight = mp.videoHeight
+                                if (mediaConfig.autoPlay) start()
+                            }
+                            setOnVideoSizeChangedListener { _, width, height ->
+                                videoWidth = width
+                                videoHeight = height
+                            }
+                            prepareAsync()
+                        }
+                        afd.close()
                     }
-                },
-                modifier = Modifier.fillMaxSize()
+                } catch (e: Exception) {
+                    AppLogger.e("ShellActivity", "Operation failed", e)
+                }
+            },
+                onSurfaceDestroyed = {
+                    mediaPlayer?.release()
+                    mediaPlayer = null
+                    videoWidth = 0
+                    videoHeight = 0
+                }
             )
 
             DisposableEffect(Unit) {

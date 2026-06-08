@@ -1,7 +1,5 @@
 package com.webtoapp.ui.gallery
 
-import android.view.SurfaceHolder
-import android.view.SurfaceView
 import androidx.compose.animation.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -31,11 +29,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.data.model.*
+import com.webtoapp.ui.shared.AspectRatioSurface
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
@@ -436,12 +434,14 @@ fun GalleryVideoPlayer(
     val context = LocalContext.current
 
     var player by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
-    var surfaceHolder by remember { mutableStateOf<SurfaceHolder?>(null) }
+    var surfaceHolder by remember { mutableStateOf<android.view.SurfaceHolder?>(null) }
     var isPrepared by remember { mutableStateOf(false) }
     var currentPosition by remember { mutableLongStateOf(0L) }
     var duration by remember { mutableLongStateOf(0L) }
     var isFastForwarding by remember { mutableStateOf(false) }
     var playbackSpeed by remember { mutableFloatStateOf(1f) }
+    var videoWidth by remember { mutableIntStateOf(0) }
+    var videoHeight by remember { mutableIntStateOf(0) }
 
     DisposableEffect(item.path) {
         val mediaPlayer = android.media.MediaPlayer().apply {
@@ -450,8 +450,14 @@ fun GalleryVideoPlayer(
                 setOnPreparedListener { mp ->
                     isPrepared = true
                     duration = mp.duration.toLong()
+                    videoWidth = mp.videoWidth
+                    videoHeight = mp.videoHeight
                     surfaceHolder?.let { mp.setDisplay(it) }
                     if (isPlaying) mp.start()
+                }
+                setOnVideoSizeChangedListener { _, width, height ->
+                    videoWidth = width
+                    videoHeight = height
                 }
                 setOnCompletionListener {
                     onVideoEnded()
@@ -473,6 +479,8 @@ fun GalleryVideoPlayer(
             }
             player = null
             isPrepared = false
+            videoWidth = 0
+            videoHeight = 0
         }
     }
 
@@ -568,22 +576,18 @@ fun GalleryVideoPlayer(
             }
     ) {
 
-        AndroidView(
-            factory = { ctx ->
-                SurfaceView(ctx).apply {
-                    holder.addCallback(object : SurfaceHolder.Callback {
-                        override fun surfaceCreated(holder: SurfaceHolder) {
-                            surfaceHolder = holder
-                            player?.setDisplay(holder)
-                        }
-                        override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}
-                        override fun surfaceDestroyed(holder: SurfaceHolder) {
-                            surfaceHolder = null
-                        }
-                    })
-                }
+        AspectRatioSurface(
+            videoWidth = videoWidth,
+            videoHeight = videoHeight,
+            fillScreen = false,
+            modifier = Modifier.fillMaxSize(),
+            onSurfaceCreated = { holder ->
+                surfaceHolder = holder
+                player?.setDisplay(holder)
             },
-            modifier = Modifier.fillMaxSize()
+            onSurfaceDestroyed = {
+                surfaceHolder = null
+            }
         )
 
         AnimatedVisibility(

@@ -23,9 +23,9 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.core.i18n.Strings
+import com.webtoapp.ui.shared.AspectRatioSurface
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -415,6 +415,8 @@ fun ShellGalleryVideoPlayer(
     var tempVideoFile by remember { mutableStateOf<java.io.File?>(null) }
     var currentPosition by remember { mutableLongStateOf(0L) }
     var duration by remember { mutableLongStateOf(0L) }
+    var videoWidth by remember { mutableIntStateOf(0) }
+    var videoHeight by remember { mutableIntStateOf(0) }
     val isEncrypted = remember(item.assetPath) { assetDecryptor.isEncrypted(item.assetPath) }
 
     DisposableEffect(item.assetPath, isEncrypted) {
@@ -428,8 +430,14 @@ fun ShellGalleryVideoPlayer(
                     mediaPlayer.setOnPreparedListener { mp ->
                         isPrepared = true
                         duration = mp.duration.toLong()
+                        videoWidth = mp.videoWidth
+                        videoHeight = mp.videoHeight
                         surfaceHolder?.let { mp.setDisplay(it) }
                         if (isPlaying) mp.start()
+                    }
+                    mediaPlayer.setOnVideoSizeChangedListener { _, width, height ->
+                        videoWidth = width
+                        videoHeight = height
                     }
                     mediaPlayer.setOnCompletionListener {
                         onVideoEnded()
@@ -498,6 +506,8 @@ fun ShellGalleryVideoPlayer(
             }
             player = null
             isPrepared = false
+            videoWidth = 0
+            videoHeight = 0
 
             tempVideoFile?.delete()
             tempVideoFile = null
@@ -563,22 +573,18 @@ fun ShellGalleryVideoPlayer(
             }
     ) {
 
-        AndroidView(
-            factory = { ctx ->
-                android.view.SurfaceView(ctx).apply {
-                    holder.addCallback(object : android.view.SurfaceHolder.Callback {
-                        override fun surfaceCreated(holder: android.view.SurfaceHolder) {
-                            surfaceHolder = holder
-                            player?.setDisplay(holder)
-                        }
-                        override fun surfaceChanged(holder: android.view.SurfaceHolder, format: Int, width: Int, height: Int) {}
-                        override fun surfaceDestroyed(holder: android.view.SurfaceHolder) {
-                            surfaceHolder = null
-                        }
-                    })
-                }
+        AspectRatioSurface(
+            videoWidth = videoWidth,
+            videoHeight = videoHeight,
+            fillScreen = false,
+            modifier = Modifier.fillMaxSize(),
+            onSurfaceCreated = { holder ->
+                surfaceHolder = holder
+                player?.setDisplay(holder)
             },
-            modifier = Modifier.fillMaxSize()
+            onSurfaceDestroyed = {
+                surfaceHolder = null
+            }
         )
 
         AnimatedVisibility(
