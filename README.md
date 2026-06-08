@@ -30,7 +30,7 @@ Turn a URL, a project folder, or a media library into an installable Android app
 ---
 
 <div align="center">
-<img src="social-preview.jpg" width="90%" alt="WebToApp: My Apps home, Create App picker, main toolbox, and per-app APK actions running on an Android phone" />
+<img src=".github/assets/social-preview.jpg" width="90%" alt="WebToApp: My Apps home, Create App picker, main toolbox, and per-app APK actions running on an Android phone" />
 </div>
 
 ---

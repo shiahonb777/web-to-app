@@ -30,7 +30,7 @@
 ---
 
 <div align="center">
-<img src="social-preview.jpg" width="90%" alt="WebToApp：我的应用首页、创建应用类型选择、主工具箱，以及单个应用的 APK 操作都运行在 Android 手机上" />
+<img src=".github/assets/social-preview.jpg" width="90%" alt="WebToApp：我的应用首页、创建应用类型选择、主工具箱，以及单个应用的 APK 操作都运行在 Android 手机上" />
 </div>
 
 ---
