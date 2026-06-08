@@ -1370,6 +1370,15 @@ data class FloatingWindowShellConfig(
     @SerializedName("lockAspectRatio")
     val lockAspectRatio: Boolean = true,
 
+    @SerializedName("aspectRatioMode")
+    val aspectRatioMode: String = "SCREEN",
+
+    @SerializedName("customAspectRatioWidth")
+    val customAspectRatioWidth: Int = 16,
+
+    @SerializedName("customAspectRatioHeight")
+    val customAspectRatioHeight: Int = 9,
+
     @SerializedName("opacity")
     val opacity: Int = 100,
 
@@ -1378,6 +1387,9 @@ data class FloatingWindowShellConfig(
 
     @SerializedName("borderStyle")
     val borderStyle: String = "SUBTLE",
+
+    @SerializedName("minimizedIconPath")
+    val minimizedIconPath: String? = null,
 
     @SerializedName("showTitleBar")
     val showTitleBar: Boolean = true,

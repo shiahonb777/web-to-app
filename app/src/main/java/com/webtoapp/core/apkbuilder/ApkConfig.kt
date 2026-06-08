@@ -194,9 +194,13 @@ data class ApkConfig(
     val floatingWindowWidthPercent: Int get() = floatingWindow.widthPercent
     val floatingWindowHeightPercent: Int get() = floatingWindow.heightPercent
     val floatingWindowLockAspectRatio: Boolean get() = floatingWindow.lockAspectRatio
+    val floatingWindowAspectRatioMode: String get() = floatingWindow.aspectRatioMode
+    val floatingWindowCustomAspectRatioWidth: Int get() = floatingWindow.customAspectRatioWidth
+    val floatingWindowCustomAspectRatioHeight: Int get() = floatingWindow.customAspectRatioHeight
     val floatingWindowOpacity: Int get() = floatingWindow.opacity
     val floatingWindowCornerRadius: Int get() = floatingWindow.cornerRadius
     val floatingWindowBorderStyle: String get() = floatingWindow.borderStyle
+    val floatingWindowMinimizedIconPath: String? get() = floatingWindow.minimizedIconPath
     val floatingWindowShowTitleBar: Boolean get() = floatingWindow.showTitleBar
     val floatingWindowAutoHideTitleBar: Boolean get() = floatingWindow.autoHideTitleBar
     val floatingWindowStartMinimized: Boolean get() = floatingWindow.startMinimized
@@ -568,9 +572,13 @@ data class FloatingWindowBlock(
     val widthPercent: Int = 80,
     val heightPercent: Int = 80,
     val lockAspectRatio: Boolean = true,
+    val aspectRatioMode: String = "SCREEN",
+    val customAspectRatioWidth: Int = 16,
+    val customAspectRatioHeight: Int = 9,
     val opacity: Int = 100,
     val cornerRadius: Int = 16,
     val borderStyle: String = "SUBTLE",
+    val minimizedIconPath: String? = null,
     val showTitleBar: Boolean = true,
     val autoHideTitleBar: Boolean = false,
     val startMinimized: Boolean = false,

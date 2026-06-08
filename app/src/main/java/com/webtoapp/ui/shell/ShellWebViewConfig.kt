@@ -184,6 +184,17 @@ fun buildWebViewConfig(config: ShellConfig): WebViewConfig {
             widthPercent = config.webViewConfig.floatingWindowConfig.widthPercent,
             heightPercent = config.webViewConfig.floatingWindowConfig.heightPercent,
             lockAspectRatio = config.webViewConfig.floatingWindowConfig.lockAspectRatio,
+            aspectRatioMode = try {
+                com.webtoapp.data.model.FloatingWindowAspectRatioMode.valueOf(config.webViewConfig.floatingWindowConfig.aspectRatioMode)
+            } catch (e: Exception) {
+                if (config.webViewConfig.floatingWindowConfig.lockAspectRatio) {
+                    com.webtoapp.data.model.FloatingWindowAspectRatioMode.SCREEN
+                } else {
+                    com.webtoapp.data.model.FloatingWindowAspectRatioMode.FREE
+                }
+            },
+            customAspectRatioWidth = config.webViewConfig.floatingWindowConfig.customAspectRatioWidth,
+            customAspectRatioHeight = config.webViewConfig.floatingWindowConfig.customAspectRatioHeight,
             opacity = config.webViewConfig.floatingWindowConfig.opacity,
             cornerRadius = config.webViewConfig.floatingWindowConfig.cornerRadius,
             borderStyle = try {
@@ -191,6 +202,7 @@ fun buildWebViewConfig(config: ShellConfig): WebViewConfig {
             } catch (e: Exception) {
                 com.webtoapp.data.model.FloatingBorderStyle.SUBTLE
             },
+            minimizedIconPath = config.webViewConfig.floatingWindowConfig.minimizedIconPath,
             showTitleBar = config.webViewConfig.floatingWindowConfig.showTitleBar,
             autoHideTitleBar = config.webViewConfig.floatingWindowConfig.autoHideTitleBar,
             startMinimized = config.webViewConfig.floatingWindowConfig.startMinimized,

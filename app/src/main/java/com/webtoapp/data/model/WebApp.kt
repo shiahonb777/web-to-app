@@ -392,9 +392,13 @@ data class FloatingWindowConfig(
     val widthPercent: Int = 80,
     val heightPercent: Int = 80,
     val lockAspectRatio: Boolean = true,
+    val aspectRatioMode: FloatingWindowAspectRatioMode = FloatingWindowAspectRatioMode.SCREEN,
+    val customAspectRatioWidth: Int = 16,
+    val customAspectRatioHeight: Int = 9,
     val opacity: Int = 100,
     val cornerRadius: Int = 16,
     val borderStyle: FloatingBorderStyle = FloatingBorderStyle.SUBTLE,
+    val minimizedIconPath: String? = null,
     val showTitleBar: Boolean = true,
     val autoHideTitleBar: Boolean = false,
     val startMinimized: Boolean = false,
@@ -409,6 +413,16 @@ enum class FloatingBorderStyle {
     SUBTLE,
     GLOW,
     ACCENT
+}
+
+enum class FloatingWindowAspectRatioMode {
+    SCREEN,
+    FREE,
+    RATIO_16_9,
+    RATIO_9_16,
+    RATIO_4_3,
+    SQUARE,
+    CUSTOM
 }
 
 enum class DnsProvider(val key: String, val dohUrl: String, val displayName: String) {

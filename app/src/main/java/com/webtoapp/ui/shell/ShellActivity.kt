@@ -547,6 +547,17 @@ class ShellActivity : AppCompatActivity() {
             widthPercent = floatingWindowConfig.widthPercent,
             heightPercent = floatingWindowConfig.heightPercent,
             lockAspectRatio = floatingWindowConfig.lockAspectRatio,
+            aspectRatioMode = try {
+                com.webtoapp.data.model.FloatingWindowAspectRatioMode.valueOf(floatingWindowConfig.aspectRatioMode)
+            } catch (e: Exception) {
+                if (floatingWindowConfig.lockAspectRatio) {
+                    com.webtoapp.data.model.FloatingWindowAspectRatioMode.SCREEN
+                } else {
+                    com.webtoapp.data.model.FloatingWindowAspectRatioMode.FREE
+                }
+            },
+            customAspectRatioWidth = floatingWindowConfig.customAspectRatioWidth,
+            customAspectRatioHeight = floatingWindowConfig.customAspectRatioHeight,
             opacity = floatingWindowConfig.opacity,
             cornerRadius = floatingWindowConfig.cornerRadius,
             borderStyle = try {
@@ -554,6 +565,7 @@ class ShellActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 com.webtoapp.data.model.FloatingBorderStyle.SUBTLE
             },
+            minimizedIconPath = floatingWindowConfig.minimizedIconPath,
             showTitleBar = floatingWindowConfig.showTitleBar,
             autoHideTitleBar = floatingWindowConfig.autoHideTitleBar,
             startMinimized = floatingWindowConfig.startMinimized,

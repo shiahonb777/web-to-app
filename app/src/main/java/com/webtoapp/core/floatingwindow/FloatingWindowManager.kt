@@ -3,7 +3,9 @@ package com.webtoapp.core.floatingwindow
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
+import android.graphics.BitmapFactory
 import android.graphics.PixelFormat
+import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -16,12 +18,15 @@ import android.view.animation.OvershootInterpolator
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.core.logging.AppLogger
 import com.webtoapp.data.model.FloatingBorderStyle
+import com.webtoapp.data.model.FloatingWindowAspectRatioMode
 import com.webtoapp.data.model.FloatingWindowConfig
+import kotlin.math.roundToInt
 
 class FloatingWindowManager(private val context: Context) {
 
@@ -44,6 +49,8 @@ class FloatingWindowManager(private val context: Context) {
         private const val AUTO_HIDE_TITLE_DELAY_MS = 3000L
 
         private const val IME_BRIDGE_NAME = "__WTA_FW_IME__"
+
+        private const val FLOATING_WINDOW_MINIMIZED_ICON_ASSET = "floating_window_minimized_icon.png"
 
         private const val IME_FOCUS_TRACKER_JS = """
             (function() {
@@ -81,6 +88,11 @@ class FloatingWindowManager(private val context: Context) {
     private data class WindowBounds(
         val x: Int,
         val y: Int,
+        val width: Int,
+        val height: Int
+    )
+
+    private data class WindowSize(
         val width: Int,
         val height: Int
     )
@@ -150,10 +162,9 @@ class FloatingWindowManager(private val context: Context) {
         val displayMetrics = context.resources.displayMetrics
         val screenWidth = displayMetrics.widthPixels
         val screenHeight = displayMetrics.heightPixels
-        val effectiveWidth = if (config.widthPercent != config.windowSizePercent) config.widthPercent else config.windowSizePercent
-        val effectiveHeight = if (config.heightPercent != config.windowSizePercent) config.heightPercent else config.windowSizePercent
-        val width = (screenWidth * effectiveWidth / 100)
-        val height = (screenHeight * effectiveHeight / 100)
+        val windowSize = calculateInitialWindowSize(config, screenWidth, screenHeight)
+        val width = windowSize.width
+        val height = windowSize.height
 
         val overlayType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
@@ -184,6 +195,7 @@ class FloatingWindowManager(private val context: Context) {
                 x = (screenWidth - width) / 2
                 y = (screenHeight - height) / 2
             }
+            clampWindowParamsToScreen(this)
             alpha = config.opacity / 100f
         }
 
@@ -204,7 +216,7 @@ class FloatingWindowManager(private val context: Context) {
 
             scheduleAutoHideTitleBar()
 
-            AppLogger.i(TAG, "悬浮窗已显示: width=${effectiveWidth}%, height=${effectiveHeight}%, opacity=${config.opacity}%")
+            AppLogger.i(TAG, "悬浮窗已显示: width=${width}px, height=${height}px, opacity=${config.opacity}%")
         } catch (e: Exception) {
             AppLogger.e(TAG, "显示悬浮窗失败", e)
         }
@@ -506,10 +518,30 @@ class FloatingWindowManager(private val context: Context) {
                     val dm = context.resources.displayMetrics
                     val minW = (dm.widthPixels * 0.25f).toInt()
                     val minH = (dm.heightPixels * 0.2f).toInt()
-                    val newW = (initialWidth + dx).coerceIn(minW, dm.widthPixels)
-                    val newH = (initialHeight + dy).coerceIn(minH, dm.heightPixels)
+                    val desiredW = initialWidth + dx
+                    val desiredH = initialHeight + dy
+                    val aspectRatio = resolveAspectRatio(config, dm.widthPixels, dm.heightPixels)
+                    val resized = if (aspectRatio != null) {
+                        calculateBoundedAspectSize(
+                            desiredW.coerceAtLeast(minW),
+                            desiredH.coerceAtLeast(minH),
+                            aspectRatio,
+                            minW,
+                            minH,
+                            dm.widthPixels,
+                            dm.heightPixels
+                        )
+                    } else {
+                        WindowSize(
+                            desiredW.coerceIn(minW, dm.widthPixels),
+                            desiredH.coerceIn(minH, dm.heightPixels)
+                        )
+                    }
+                    val newW = resized.width
+                    val newH = resized.height
                     windowParams?.width = newW
                     windowParams?.height = newH
+                    windowParams?.let { clampWindowParamsToScreen(it) }
                     try {
                         windowManager.updateViewLayout(floatingView, windowParams)
                     } catch (e: Exception) {
@@ -564,8 +596,11 @@ class FloatingWindowManager(private val context: Context) {
                     }
 
                     if (isDragging) {
-                        windowParams?.x = initialX + dx.toInt()
-                        windowParams?.y = initialY + dy.toInt()
+                        windowParams?.let { params ->
+                            params.x = initialX + dx.toInt()
+                            params.y = initialY + dy.toInt()
+                            clampWindowParamsToScreen(params)
+                        }
                         try {
                             windowManager.updateViewLayout(floatingView, windowParams)
                         } catch (e: Exception) {
@@ -624,6 +659,9 @@ class FloatingWindowManager(private val context: Context) {
             didSnap = true
         }
 
+        snapX = snapX.coerceIn(0, (screenW - winW).coerceAtLeast(0))
+        snapY = snapY.coerceIn(0, (screenH - winH).coerceAtLeast(0))
+
         if (didSnap) {
 
             val startX = params.x
@@ -638,6 +676,7 @@ class FloatingWindowManager(private val context: Context) {
                     val fraction = anim.animatedValue as Float
                     params.x = (startX + (finalX - startX) * fraction).toInt()
                     params.y = (startY + (finalY - startY) * fraction).toInt()
+                    clampWindowParamsToScreen(params)
                     try {
                         windowManager.updateViewLayout(floatingView, params)
                     } catch (_: Exception) {}
@@ -771,6 +810,7 @@ class FloatingWindowManager(private val context: Context) {
                 params.y = bounds.y
                 params.width = bounds.width
                 params.height = bounds.height
+                clampWindowParamsToScreen(params)
             }
             savedWindowBounds = null
             isFullscreen = false
@@ -818,6 +858,7 @@ class FloatingWindowManager(private val context: Context) {
             gravity = Gravity.TOP or Gravity.START
             x = windowParams?.x ?: 0
             y = windowParams?.y ?: 0
+            clampMiniParamsToScreen(this)
             alpha = 0.9f
         }
 
@@ -847,11 +888,7 @@ class FloatingWindowManager(private val context: Context) {
             contentDescription = Strings.floatingWindowRestoreWindow
         }
 
-        val icon = TextView(context).apply {
-            text = "🌐"
-            textSize = 24f
-            gravity = Gravity.CENTER
-        }
+        val icon = createMiniIconView(density)
         button.addView(icon, FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.MATCH_PARENT,
             FrameLayout.LayoutParams.MATCH_PARENT
@@ -882,8 +919,11 @@ class FloatingWindowManager(private val context: Context) {
                         isDragging = true
                     }
                     if (isDragging) {
-                        miniParams?.x = initialX + dx.toInt()
-                        miniParams?.y = initialY + dy.toInt()
+                        miniParams?.let { params ->
+                            params.x = initialX + dx.toInt()
+                            params.y = initialY + dy.toInt()
+                            clampMiniParamsToScreen(params)
+                        }
                         try {
                             windowManager.updateViewLayout(miniButton, miniParams)
                         } catch (_: Exception) {}
@@ -897,6 +937,7 @@ class FloatingWindowManager(private val context: Context) {
 
                         windowParams?.x = miniParams?.x ?: 0
                         windowParams?.y = miniParams?.y ?: 0
+                        windowParams?.let { clampWindowParamsToScreen(it) }
                         if (config.rememberPosition) {
                             savePosition()
                         }
@@ -925,6 +966,7 @@ class FloatingWindowManager(private val context: Context) {
 
         windowParams?.x = miniParams?.x ?: windowParams?.x ?: 0
         windowParams?.y = miniParams?.y ?: windowParams?.y ?: 0
+        windowParams?.let { clampWindowParamsToScreen(it) }
 
         floatingView?.visibility = View.VISIBLE
         floatingView?.scaleX = 0.1f
@@ -950,8 +992,10 @@ class FloatingWindowManager(private val context: Context) {
         config = config.copy(widthPercent = clamped, heightPercent = clamped, windowSizePercent = clamped)
 
         val displayMetrics = context.resources.displayMetrics
-        windowParams?.width = (displayMetrics.widthPixels * clamped / 100)
-        windowParams?.height = (displayMetrics.heightPixels * clamped / 100)
+        val size = calculateInitialWindowSize(config, displayMetrics.widthPixels, displayMetrics.heightPixels)
+        windowParams?.width = size.width
+        windowParams?.height = size.height
+        windowParams?.let { clampWindowParamsToScreen(it) }
 
         try {
             if (!isMinimized) {
@@ -1052,6 +1096,168 @@ class FloatingWindowManager(private val context: Context) {
             shape = android.graphics.drawable.GradientDrawable.OVAL
             setColor(0xFF2A2A4E.toInt())
             setStroke(2, 0xFF6666CC.toInt())
+        }
+    }
+
+    private fun calculateInitialWindowSize(
+        config: FloatingWindowConfig,
+        screenWidth: Int,
+        screenHeight: Int
+    ): WindowSize {
+        val widthPercent = resolveWidthPercent(config)
+        val heightPercent = resolveHeightPercent(config)
+        val maxWidth = screenWidth.coerceAtLeast(1)
+        val maxHeight = screenHeight.coerceAtLeast(1)
+        val minWidth = (maxWidth * 0.25f).toInt().coerceAtLeast(1)
+        val minHeight = (maxHeight * 0.2f).toInt().coerceAtLeast(1)
+        val desiredWidth = (maxWidth * widthPercent / 100).coerceIn(minWidth, maxWidth)
+        val desiredHeight = (maxHeight * heightPercent / 100).coerceIn(minHeight, maxHeight)
+        val aspectRatio = resolveAspectRatio(config, maxWidth, maxHeight)
+        return if (aspectRatio == null) {
+            WindowSize(desiredWidth, desiredHeight)
+        } else {
+            calculateBoundedAspectSize(desiredWidth, desiredHeight, aspectRatio, minWidth, minHeight, maxWidth, maxHeight)
+        }
+    }
+
+    private fun calculateBoundedAspectSize(
+        desiredWidth: Int,
+        desiredHeight: Int,
+        aspectRatio: Float,
+        minWidth: Int,
+        minHeight: Int,
+        maxWidth: Int,
+        maxHeight: Int
+    ): WindowSize {
+        val widthDrivenHeight = (desiredWidth / aspectRatio).roundToInt()
+        val heightDrivenWidth = (desiredHeight * aspectRatio).roundToInt()
+        var width: Int
+        var height: Int
+        if (kotlin.math.abs(widthDrivenHeight - desiredHeight) <= kotlin.math.abs(heightDrivenWidth - desiredWidth)) {
+            width = desiredWidth
+            height = widthDrivenHeight
+        } else {
+            width = heightDrivenWidth
+            height = desiredHeight
+        }
+        if (width > maxWidth) {
+            width = maxWidth
+            height = (width / aspectRatio).roundToInt()
+        }
+        if (height > maxHeight) {
+            height = maxHeight
+            width = (height * aspectRatio).roundToInt()
+        }
+        if (width < minWidth) {
+            width = minWidth
+            height = (width / aspectRatio).roundToInt()
+        }
+        if (height < minHeight) {
+            height = minHeight
+            width = (height * aspectRatio).roundToInt()
+        }
+        if (width > maxWidth) {
+            width = maxWidth
+            height = (width / aspectRatio).roundToInt()
+        }
+        if (height > maxHeight) {
+            height = maxHeight
+            width = (height * aspectRatio).roundToInt()
+        }
+        return WindowSize(
+            width.coerceIn(1, maxWidth),
+            height.coerceIn(1, maxHeight)
+        )
+    }
+
+    private fun resolveWidthPercent(config: FloatingWindowConfig): Int {
+        return if (config.widthPercent != config.windowSizePercent) {
+            config.widthPercent
+        } else {
+            config.windowSizePercent
+        }.coerceIn(30, 100)
+    }
+
+    private fun resolveHeightPercent(config: FloatingWindowConfig): Int {
+        return if (config.heightPercent != config.windowSizePercent) {
+            config.heightPercent
+        } else {
+            config.windowSizePercent
+        }.coerceIn(30, 100)
+    }
+
+    private fun resolveAspectRatio(config: FloatingWindowConfig, screenWidth: Int, screenHeight: Int): Float? {
+        val mode = if (!config.lockAspectRatio && config.aspectRatioMode == FloatingWindowAspectRatioMode.SCREEN) {
+            FloatingWindowAspectRatioMode.FREE
+        } else {
+            config.aspectRatioMode
+        }
+        return when (mode) {
+            FloatingWindowAspectRatioMode.FREE -> null
+            FloatingWindowAspectRatioMode.SCREEN -> screenWidth.toFloat() / screenHeight.coerceAtLeast(1)
+            FloatingWindowAspectRatioMode.RATIO_16_9 -> 16f / 9f
+            FloatingWindowAspectRatioMode.RATIO_9_16 -> 9f / 16f
+            FloatingWindowAspectRatioMode.RATIO_4_3 -> 4f / 3f
+            FloatingWindowAspectRatioMode.SQUARE -> 1f
+            FloatingWindowAspectRatioMode.CUSTOM -> {
+                config.customAspectRatioWidth.coerceAtLeast(1).toFloat() /
+                    config.customAspectRatioHeight.coerceAtLeast(1).toFloat()
+            }
+        }
+    }
+
+    private fun clampWindowParamsToScreen(params: WindowManager.LayoutParams) {
+        val dm = context.resources.displayMetrics
+        params.width = params.width.coerceIn(1, dm.widthPixels.coerceAtLeast(1))
+        params.height = params.height.coerceIn(1, dm.heightPixels.coerceAtLeast(1))
+        params.x = params.x.coerceIn(0, (dm.widthPixels - params.width).coerceAtLeast(0))
+        params.y = params.y.coerceIn(0, (dm.heightPixels - params.height).coerceAtLeast(0))
+    }
+
+    private fun clampMiniParamsToScreen(params: WindowManager.LayoutParams) {
+        val dm = context.resources.displayMetrics
+        params.x = params.x.coerceIn(0, (dm.widthPixels - params.width).coerceAtLeast(0))
+        params.y = params.y.coerceIn(0, (dm.heightPixels - params.height).coerceAtLeast(0))
+    }
+
+    private fun createMiniIconView(density: Float): View {
+        val bitmap = loadMinimizedIconBitmap(config.minimizedIconPath)
+        return if (bitmap != null) {
+            ImageView(context).apply {
+                setImageBitmap(bitmap)
+                scaleType = ImageView.ScaleType.CENTER_CROP
+                setPadding((6 * density).toInt(), (6 * density).toInt(), (6 * density).toInt(), (6 * density).toInt())
+                clipToOutline = true
+            }
+        } else {
+            TextView(context).apply {
+                text = "🌐"
+                textSize = 24f
+                gravity = Gravity.CENTER
+            }
+        }
+    }
+
+    private fun loadMinimizedIconBitmap(iconPath: String?): android.graphics.Bitmap? {
+        if (iconPath.isNullOrBlank()) return null
+        return try {
+            when {
+                iconPath.startsWith("content://") -> {
+                    context.contentResolver.openInputStream(Uri.parse(iconPath))?.use { stream ->
+                        BitmapFactory.decodeStream(stream)
+                    }
+                }
+                iconPath.startsWith("/") -> BitmapFactory.decodeFile(iconPath)
+                else -> {
+                    val assetPath = iconPath.removePrefix("assets/")
+                    context.assets.open(assetPath.ifBlank { FLOATING_WINDOW_MINIMIZED_ICON_ASSET }).use { stream ->
+                        BitmapFactory.decodeStream(stream)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            AppLogger.w(TAG, "加载悬浮窗最小化图标失败", e)
+            null
         }
     }
 }

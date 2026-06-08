@@ -2,6 +2,7 @@ package com.webtoapp.core.apkbuilder
 
 internal object ApkConfigJsonFactory {
     const val SCHEMA_VERSION = 1
+    const val FLOATING_WINDOW_MINIMIZED_ICON_ASSET = "floating_window_minimized_icon.png"
 
     private val configGson: com.google.gson.Gson by lazy {
         com.google.gson.GsonBuilder()
@@ -286,9 +287,15 @@ internal object ApkConfigJsonFactory {
         "widthPercent" to floatingWindow.widthPercent,
         "heightPercent" to floatingWindow.heightPercent,
         "lockAspectRatio" to floatingWindow.lockAspectRatio,
+        "aspectRatioMode" to floatingWindow.aspectRatioMode,
+        "customAspectRatioWidth" to floatingWindow.customAspectRatioWidth,
+        "customAspectRatioHeight" to floatingWindow.customAspectRatioHeight,
         "opacity" to floatingWindow.opacity,
         "cornerRadius" to floatingWindow.cornerRadius,
         "borderStyle" to floatingWindow.borderStyle,
+        "minimizedIconPath" to if (!floatingWindow.minimizedIconPath.isNullOrEmpty()) {
+            FLOATING_WINDOW_MINIMIZED_ICON_ASSET
+        } else null,
         "showTitleBar" to floatingWindow.showTitleBar,
         "autoHideTitleBar" to floatingWindow.autoHideTitleBar,
         "startMinimized" to floatingWindow.startMinimized,

@@ -44,6 +44,7 @@ class ApkBuilder(private val context: Context) {
         private val SANITIZE_FILENAME_REGEX = AppConstants.SANITIZE_FILENAME_REGEX
         private val PACKAGE_NAME_REGEX = AppConstants.PACKAGE_NAME_REGEX
         private val CHARSET_REGEX = AppConstants.CHARSET_REGEX
+        private const val FLOATING_WINDOW_MINIMIZED_ICON_ASSET = "floating_window_minimized_icon.png"
     }
 
     private val template = ApkTemplate(context)
@@ -934,6 +935,10 @@ class ApkBuilder(private val context: Context) {
                     addStatusBarBackgroundToAssets(zipOut, config.statusBarBackgroundImage!!)
                 }
 
+                if (config.floatingWindowEnabled && !config.floatingWindowMinimizedIconPath.isNullOrEmpty()) {
+                    addFloatingWindowMinimizedIconToAssets(zipOut, config.floatingWindowMinimizedIconPath!!)
+                }
+
                 if (config.bgmEnabled && bgmPlaylistPaths.isNotEmpty()) {
                     logger.log("Embedding BGM: ${bgmPlaylistPaths.size} files")
                     addBgmToAssets(zipOut, bgmPlaylistPaths, bgmLrcDataList, assetEncryptor, encryptionConfig)
@@ -1184,6 +1189,37 @@ class ApkBuilder(private val context: Context) {
             AppLogger.d("ApkBuilder", "Status bar background embedded: assets/statusbar_background.png (${imageBytes.size} bytes)")
         } catch (e: Exception) {
             AppLogger.e("ApkBuilder", "Failed to embed status bar background: ${e.message}", e)
+        }
+    }
+
+    private fun addFloatingWindowMinimizedIconToAssets(
+        zipOut: ZipOutputStream,
+        imagePath: String
+    ) {
+        AppLogger.d("ApkBuilder", "Preparing to embed floating window icon: path=$imagePath")
+
+        val imageFile = File(imagePath)
+        if (!imageFile.exists()) {
+            AppLogger.e("ApkBuilder", "Floating window icon does not exist: $imagePath")
+            return
+        }
+
+        if (!imageFile.canRead()) {
+            AppLogger.e("ApkBuilder", "Floating window icon cannot be read: $imagePath")
+            return
+        }
+
+        try {
+            val imageBytes = imageFile.readBytes()
+            if (imageBytes.isEmpty()) {
+                AppLogger.e("ApkBuilder", "Floating window icon is empty: $imagePath")
+                return
+            }
+
+            writeEntryDeflated(zipOut, "assets/$FLOATING_WINDOW_MINIMIZED_ICON_ASSET", imageBytes)
+            AppLogger.d("ApkBuilder", "Floating window icon embedded: assets/$FLOATING_WINDOW_MINIMIZED_ICON_ASSET (${imageBytes.size} bytes)")
+        } catch (e: Exception) {
+            AppLogger.e("ApkBuilder", "Failed to embed floating window icon: ${e.message}", e)
         }
     }
 
@@ -3056,9 +3092,13 @@ private fun WebApp.buildFloatingWindowBlock(): FloatingWindowBlock {
         widthPercent = fw.widthPercent,
         heightPercent = fw.heightPercent,
         lockAspectRatio = fw.lockAspectRatio,
+        aspectRatioMode = fw.aspectRatioMode.name,
+        customAspectRatioWidth = fw.customAspectRatioWidth,
+        customAspectRatioHeight = fw.customAspectRatioHeight,
         opacity = fw.opacity,
         cornerRadius = fw.cornerRadius,
         borderStyle = fw.borderStyle.name,
+        minimizedIconPath = fw.minimizedIconPath,
         showTitleBar = fw.showTitleBar,
         autoHideTitleBar = fw.autoHideTitleBar,
         startMinimized = fw.startMinimized,

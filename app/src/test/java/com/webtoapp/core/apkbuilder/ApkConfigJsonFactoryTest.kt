@@ -58,6 +58,16 @@ class ApkConfigJsonFactoryTest {
                 backgroundTypeDark = "IMAGE",
                 backgroundImageDark = "/tmp/dark background.png"
             ),
+            floatingWindow = FloatingWindowBlock(
+                enabled = true,
+                widthPercent = 72,
+                heightPercent = 58,
+                lockAspectRatio = true,
+                aspectRatioMode = "RATIO_16_9",
+                customAspectRatioWidth = 21,
+                customAspectRatioHeight = 9,
+                minimizedIconPath = "/tmp/floating icon.png"
+            ),
             bgm = BgmBlock(
                 enabled = true,
                 playlist = listOf(
@@ -82,6 +92,11 @@ class ApkConfigJsonFactoryTest {
         assertThat(webView.get("customUserAgent").asString).isEqualTo(config.customUserAgent)
         assertThat(webView.get("statusBarBackgroundImage").asString).isEqualTo("statusbar_background.png")
         assertThat(webView.get("statusBarBackgroundImageDark").asString).isEqualTo("statusbar_background_dark.png")
+        val floatingWindow = webView.getAsJsonObject("floatingWindowConfig")
+        assertThat(floatingWindow.get("aspectRatioMode").asString).isEqualTo("RATIO_16_9")
+        assertThat(floatingWindow.get("customAspectRatioWidth").asInt).isEqualTo(21)
+        assertThat(floatingWindow.get("customAspectRatioHeight").asInt).isEqualTo(9)
+        assertThat(floatingWindow.get("minimizedIconPath").asString).isEqualTo("floating_window_minimized_icon.png")
         assertThat(webView.getAsJsonArray("injectScripts")[0].asJsonObject.get("code").asString)
             .isEqualTo(config.injectScripts.single().code)
         val networkTrust = root.getAsJsonObject("networkTrustConfig")

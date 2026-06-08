@@ -20866,6 +20866,42 @@ object Strings {
         AppLanguage.ARABIC -> "قفل نسبة العرض إلى الارتفاع"
     }
 
+    val fwAspectRatio: String get() = when (lang) {
+        AppLanguage.CHINESE -> "默认比例"
+        AppLanguage.ENGLISH -> "Default Ratio"
+        AppLanguage.ARABIC -> "النسبة الافتراضية"
+    }
+
+    val fwAspectScreen: String get() = when (lang) {
+        AppLanguage.CHINESE -> "跟随屏幕"
+        AppLanguage.ENGLISH -> "Screen"
+        AppLanguage.ARABIC -> "الشاشة"
+    }
+
+    val fwAspectFree: String get() = when (lang) {
+        AppLanguage.CHINESE -> "自由"
+        AppLanguage.ENGLISH -> "Free"
+        AppLanguage.ARABIC -> "حر"
+    }
+
+    val fwAspectCustom: String get() = when (lang) {
+        AppLanguage.CHINESE -> "自定义"
+        AppLanguage.ENGLISH -> "Custom"
+        AppLanguage.ARABIC -> "مخصص"
+    }
+
+    val fwAspectWidth: String get() = when (lang) {
+        AppLanguage.CHINESE -> "比例宽"
+        AppLanguage.ENGLISH -> "Ratio Width"
+        AppLanguage.ARABIC -> "عرض النسبة"
+    }
+
+    val fwAspectHeight: String get() = when (lang) {
+        AppLanguage.CHINESE -> "比例高"
+        AppLanguage.ENGLISH -> "Ratio Height"
+        AppLanguage.ARABIC -> "ارتفاع النسبة"
+    }
+
     val fwSectionAppearance: String get() = when (lang) {
         AppLanguage.CHINESE -> "外观样式"
         AppLanguage.ENGLISH -> "Appearance"
@@ -20906,6 +20942,36 @@ object Strings {
         AppLanguage.CHINESE -> "主题色"
         AppLanguage.ENGLISH -> "Accent"
         AppLanguage.ARABIC -> "اللون المميز"
+    }
+
+    val fwMinimizedIcon: String get() = when (lang) {
+        AppLanguage.CHINESE -> "最小化图标"
+        AppLanguage.ENGLISH -> "Minimized Icon"
+        AppLanguage.ARABIC -> "أيقونة التصغير"
+    }
+
+    val fwDefaultMinimizedIcon: String get() = when (lang) {
+        AppLanguage.CHINESE -> "使用默认悬浮图标"
+        AppLanguage.ENGLISH -> "Use the default floating icon"
+        AppLanguage.ARABIC -> "استخدام الأيقونة العائمة الافتراضية"
+    }
+
+    val fwCustomMinimizedIcon: String get() = when (lang) {
+        AppLanguage.CHINESE -> "已使用自定义图片"
+        AppLanguage.ENGLISH -> "Custom image selected"
+        AppLanguage.ARABIC -> "تم اختيار صورة مخصصة"
+    }
+
+    val fwSelectMinimizedIcon: String get() = when (lang) {
+        AppLanguage.CHINESE -> "选择图片"
+        AppLanguage.ENGLISH -> "Choose Image"
+        AppLanguage.ARABIC -> "اختيار صورة"
+    }
+
+    val fwClearMinimizedIcon: String get() = when (lang) {
+        AppLanguage.CHINESE -> "恢复默认"
+        AppLanguage.ENGLISH -> "Reset"
+        AppLanguage.ARABIC -> "إعادة تعيين"
     }
 
     val fwSectionBehavior: String get() = when (lang) {
