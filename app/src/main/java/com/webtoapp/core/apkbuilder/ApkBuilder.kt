@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
-import android.graphics.RectF
 import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
@@ -2184,17 +2183,13 @@ builtins.__import__ = _w2a_import
         val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
 
-        val bgColor = getThemePrimaryColor(themeType)
+        val bgColor = 0xFF000000.toInt()
+        bitmap.eraseColor(bgColor)
 
-        val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = bgColor }
-        val radius = size * 0.22f
-        canvas.drawRoundRect(RectF(0f, 0f, size.toFloat(), size.toFloat()), radius, radius, bgPaint)
+        val initial = getDefaultIconInitial(appName)
 
-        val initial = appName.firstOrNull()?.uppercase() ?: "A"
-
-        val textColor = getThemeOnPrimaryColor(themeType)
         val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = textColor
+            color = 0xFFFFFFFF.toInt()
             textSize = size * 0.45f
             typeface = Typeface.DEFAULT_BOLD
             textAlign = Paint.Align.CENTER
@@ -2207,28 +2202,14 @@ builtins.__import__ = _w2a_import
         return bitmap
     }
 
-    private fun getThemePrimaryColor(themeType: String): Int = when (themeType) {
-        "AURORA"     -> 0xFF000000.toInt()
-        "CYBERPUNK"  -> 0xFFFF00FF.toInt()
-        "SAKURA"     -> 0xFFFFB7C5.toInt()
-        "OCEAN"      -> 0xFF0077B6.toInt()
-        "FOREST"     -> 0xFF2D6A4F.toInt()
-        "GALAXY"     -> 0xFF5C4D7D.toInt()
-        "VOLCANO"    -> 0xFFD32F2F.toInt()
-        "FROST"      -> 0xFF4FC3F7.toInt()
-        "SUNSET"     -> 0xFFE65100.toInt()
-        "MINIMAL"    -> 0xFF212121.toInt()
-        "NEON_TOKYO" -> 0xFFE91E63.toInt()
-        "LAVENDER"   -> 0xFF7E57C2.toInt()
-        else         -> 0xFF000000.toInt()
-    }
-
-    private fun getThemeOnPrimaryColor(themeType: String): Int = when (themeType) {
-        "CYBERPUNK"  -> 0xFF000000.toInt()
-        "SAKURA"     -> 0xFF4A1C2B.toInt()
-        "FROST"      -> 0xFF00344A.toInt()
-        else         -> 0xFFFFFFFF.toInt()
-    }
+    private fun getDefaultIconInitial(appName: String): String =
+        appName.trim()
+            .takeIf { it.isNotEmpty() }
+            ?.let { name ->
+                val codePoint = name.codePointAt(0)
+                String(Character.toChars(codePoint)).uppercase()
+            }
+            ?: "A"
 
     private fun addIconsToApk(zipOut: ZipOutputStream, bitmap: Bitmap) {
 

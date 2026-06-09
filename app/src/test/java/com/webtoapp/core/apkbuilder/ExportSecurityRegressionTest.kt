@@ -1,5 +1,6 @@
 package com.webtoapp.core.apkbuilder
 
+import android.graphics.Bitmap
 import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
 import com.webtoapp.data.model.Announcement
@@ -24,6 +25,7 @@ import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33])
@@ -34,6 +36,39 @@ class ExportSecurityRegressionTest {
 
     @get:Rule
     val temp = TemporaryFolder()
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    fun `default generated launcher icon uses black background and white first character`() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val builder = ApkBuilder(context)
+        val method = ApkBuilder::class.java.getDeclaredMethod(
+            "generateDefaultIcon",
+            String::class.java,
+            String::class.java
+        ).apply { isAccessible = true }
+
+        val bitmap = method.invoke(builder, "首页", "LAVENDER") as Bitmap
+
+        assertThat(bitmap.getPixel(bitmap.width / 2, 20)).isEqualTo(0xFF000000.toInt())
+        assertThat(hasWhiteIconPixel(bitmap)).isTrue()
+
+        bitmap.recycle()
+    }
+
+    @Test
+    fun `default generated launcher icon initial keeps first unicode character`() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val builder = ApkBuilder(context)
+        val method = ApkBuilder::class.java.getDeclaredMethod(
+            "getDefaultIconInitial",
+            String::class.java
+        ).apply { isAccessible = true }
+
+        assertThat(method.invoke(builder, "首页")).isEqualTo("首")
+        assertThat(method.invoke(builder, " web")).isEqualTo("W")
+        assertThat(method.invoke(builder, "")).isEqualTo("A")
+    }
 
     @Test
     fun `plain web export prefers dedicated shell template`() {
@@ -89,6 +124,24 @@ class ExportSecurityRegressionTest {
             "android.permission.INTERNET",
             "android.permission.ACCESS_NETWORK_STATE"
         ).inOrder()
+    }
+
+    private fun hasWhiteIconPixel(bitmap: Bitmap): Boolean {
+        val min = bitmap.width / 4
+        val max = bitmap.width * 3 / 4
+        for (y in min until max) {
+            for (x in min until max) {
+                val pixel = bitmap.getPixel(x, y)
+                val alpha = pixel ushr 24 and 0xFF
+                val red = pixel ushr 16 and 0xFF
+                val green = pixel ushr 8 and 0xFF
+                val blue = pixel and 0xFF
+                if (alpha > 200 && red > 220 && green > 220 && blue > 220) {
+                    return true
+                }
+            }
+        }
+        return false
     }
 
     @Test
