@@ -321,8 +321,8 @@ data class WebViewConfig(
 
     val acceptThirdPartyCookies: Boolean = false,
     val thirdPartyCookieMode: ThirdPartyCookieMode = ThirdPartyCookieMode.SAME_SITE_LAX,
-    val databaseEnabled: Boolean = false,
-    val enableCookiePersistence: Boolean = false,
+    val databaseEnabled: Boolean = true,
+    val enableCookiePersistence: Boolean = true,
 
     val enableClipboardPolyfill: Boolean = false,
     val enableNotificationPolyfill: Boolean = false,

@@ -11,6 +11,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -99,12 +100,24 @@ fun ActivationCodeCard(
     var showBatchDialog by remember { mutableStateOf(false) }
     var showBatchImportDialog by remember { mutableStateOf(false) }
     var showDeleteAllDialog by remember { mutableStateOf(false) }
+    var showRemoteGuideDialog by remember { mutableStateOf(false) }
     var showCustomTextSection by remember { mutableStateOf(
         dialogConfig.title.isNotBlank() || dialogConfig.subtitle.isNotBlank() ||
         dialogConfig.inputLabel.isNotBlank() || dialogConfig.buttonText.isNotBlank()
     ) }
     val clipboardManager = LocalClipboardManager.current
+    val snackbarHostState = remember { SnackbarHostState() }
     var showCopiedSnackbar by remember { mutableStateOf(false) }
+
+    LaunchedEffect(showCopiedSnackbar) {
+        if (showCopiedSnackbar) {
+            snackbarHostState.showSnackbar(
+                message = Strings.copiedToClipboard,
+                duration = SnackbarDuration.Short
+            )
+            showCopiedSnackbar = false
+        }
+    }
 
     EnhancedElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(
@@ -186,7 +199,8 @@ fun ActivationCodeCard(
 
                 RemoteActivationSection(
                     remoteConfig = remoteConfig,
-                    onRemoteConfigChange = onRemoteConfigChange
+                    onRemoteConfigChange = onRemoteConfigChange,
+                    onShowGuide = { showRemoteGuideDialog = true }
                 )
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
@@ -351,6 +365,10 @@ fun ActivationCodeCard(
 
                     EmptyActivationCodesState()
                 }
+                SnackbarHost(
+                    hostState = snackbarHostState,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
               }
             }
         }
@@ -420,12 +438,23 @@ fun ActivationCodeCard(
             }
         )
     }
+
+    if (showRemoteGuideDialog) {
+        RemoteActivationGuideDialog(
+            onDismiss = { showRemoteGuideDialog = false },
+            onCopy = {
+                clipboardManager.setText(AnnotatedString(it))
+                showCopiedSnackbar = true
+            }
+        )
+    }
 }
 
 @Composable
 private fun RemoteActivationSection(
     remoteConfig: com.webtoapp.data.model.RemoteActivationConfig,
-    onRemoteConfigChange: (com.webtoapp.data.model.RemoteActivationConfig) -> Unit
+    onRemoteConfigChange: (com.webtoapp.data.model.RemoteActivationConfig) -> Unit,
+    onShowGuide: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(
@@ -450,17 +479,54 @@ private fun RemoteActivationSection(
             )
         }
 
+        TextButton(
+            onClick = onShowGuide,
+            contentPadding = PaddingValues(horizontal = 0.dp, vertical = 2.dp)
+        ) {
+            Icon(
+                Icons.Outlined.Info,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(Strings.remoteActivationGuideButton)
+        }
+
         AnimatedVisibility(
             visible = remoteConfig.enabled,
             enter = CardExpandTransition,
             exit = CardCollapseTransition
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Icon(
+                            Icons.Outlined.DataObject,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Text(
+                            text = Strings.remoteActivationProtocolSummary,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
                 PremiumTextField(
                     value = remoteConfig.verifyUrl,
                     onValueChange = { onRemoteConfigChange(remoteConfig.copy(verifyUrl = it.trim())) },
                     label = { Text(Strings.remoteActivationUrlLabel) },
                     placeholder = { Text("https://") },
+                    supportingText = { Text(Strings.remoteActivationUrlSupporting) },
                     singleLine = true,
                     isError = remoteConfig.verifyUrl.isNotBlank() &&
                         !remoteConfig.verifyUrl.startsWith("https://", ignoreCase = true),
@@ -470,6 +536,7 @@ private fun RemoteActivationSection(
                     value = remoteConfig.publicKeyBase64,
                     onValueChange = { onRemoteConfigChange(remoteConfig.copy(publicKeyBase64 = it.trim())) },
                     label = { Text(Strings.remoteActivationPublicKeyLabel) },
+                    supportingText = { Text(Strings.remoteActivationPublicKeySupporting) },
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -513,6 +580,255 @@ private fun RemoteActivationSection(
         }
     }
 }
+
+@Composable
+private fun RemoteActivationGuideDialog(
+    onDismiss: () -> Unit,
+    onCopy: (String) -> Unit
+) {
+    var copiedCode by remember { mutableStateOf<String?>(null) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(Strings.close)
+            }
+        },
+        title = {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Outlined.IntegrationInstructions,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Text(Strings.remoteActivationGuideTitle)
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 560.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Text(
+                    text = Strings.remoteActivationGuideIntro,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                RemoteActivationGuideSection(
+                    title = Strings.remoteActivationGuideRequestTitle,
+                    body = Strings.remoteActivationGuideRequestBody
+                )
+                RemoteActivationCodeBlock(
+                    title = Strings.remoteActivationGuideRequestExampleTitle,
+                    code = remoteActivationRequestExample,
+                    copied = copiedCode == remoteActivationRequestExample,
+                    onCopy = {
+                        copiedCode = remoteActivationRequestExample
+                        onCopy(remoteActivationRequestExample)
+                    }
+                )
+                RemoteActivationGuideSection(
+                    title = Strings.remoteActivationGuideResponseTitle,
+                    body = Strings.remoteActivationGuideResponseBody
+                )
+                RemoteActivationCodeBlock(
+                    title = Strings.remoteActivationGuideResponseExampleTitle,
+                    code = remoteActivationResponseExample,
+                    copied = copiedCode == remoteActivationResponseExample,
+                    onCopy = {
+                        copiedCode = remoteActivationResponseExample
+                        onCopy(remoteActivationResponseExample)
+                    }
+                )
+                RemoteActivationGuideSection(
+                    title = Strings.remoteActivationGuideSignatureTitle,
+                    body = Strings.remoteActivationGuideSignatureBody
+                )
+                RemoteActivationCodeBlock(
+                    title = Strings.remoteActivationGuideSignatureExampleTitle,
+                    code = remoteActivationSignedPayloadExample,
+                    copied = copiedCode == remoteActivationSignedPayloadExample,
+                    onCopy = {
+                        copiedCode = remoteActivationSignedPayloadExample
+                        onCopy(remoteActivationSignedPayloadExample)
+                    }
+                )
+                RemoteActivationGuideSection(
+                    title = Strings.remoteActivationGuideKeysTitle,
+                    body = Strings.remoteActivationGuideKeysBody
+                )
+                RemoteActivationCodeBlock(
+                    title = Strings.remoteActivationGuidePhpExampleTitle,
+                    code = remoteActivationPhpExample,
+                    copied = copiedCode == remoteActivationPhpExample,
+                    onCopy = {
+                        copiedCode = remoteActivationPhpExample
+                        onCopy(remoteActivationPhpExample)
+                    }
+                )
+                RemoteActivationGuideSection(
+                    title = Strings.remoteActivationGuideDeployTitle,
+                    body = Strings.remoteActivationGuideDeployBody
+                )
+            }
+        }
+    )
+}
+
+@Composable
+private fun RemoteActivationGuideSection(
+    title: String,
+    body: String
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold
+        )
+        Text(
+            text = body,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun RemoteActivationCodeBlock(
+    title: String,
+    code: String,
+    copied: Boolean,
+    onCopy: () -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                TextButton(
+                    onClick = onCopy,
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+                ) {
+                    Icon(
+                        Icons.Outlined.ContentCopy,
+                        contentDescription = null,
+                        modifier = Modifier.size(15.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(if (copied) Strings.copied else Strings.copy)
+                }
+            }
+            Text(
+                text = code,
+                style = MaterialTheme.typography.bodySmall.copy(
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 12.sp,
+                    lineHeight = 17.sp
+                ),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                softWrap = false,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+            )
+        }
+    }
+}
+
+private val remoteActivationRequestExample = """
+POST /activation/verify HTTP/1.1
+Content-Type: application/json
+
+{
+  "code": "D2CD-9BA0-F334",
+  "deviceId": "device-id-from-app",
+  "packageName": "com.example.app",
+  "nonce": "client-random-nonce",
+  "ts": 1780995251386
+}
+""".trimIndent()
+
+private val remoteActivationResponseExample = """
+{
+  "ok": true,
+  "message": "OK",
+  "expiresAt": null,
+  "remainingUses": null,
+  "nonce": "client-random-nonce",
+  "sig": "base64-ecdsa-signature"
+}
+""".trimIndent()
+
+private val remoteActivationSignedPayloadExample = """
+{"ok":true,"expiresAt":0,"remainingUses":-1,"nonce":"client-random-nonce"}
+""".trimIndent()
+
+private val remoteActivationPhpExample = """
+<?php
+header('Content-Type: application/json; charset=utf-8');
+
+${'$'}privateKey = openssl_pkey_get_private(file_get_contents(__DIR__ . '/private.pem'));
+${'$'}input = json_decode(file_get_contents('php://input'), true) ?: [];
+
+${'$'}codes = [
+    'D2CD-9BA0-F334' => ['expiresAt' => null, 'remainingUses' => null],
+];
+${'$'}allowedPackages = ['com.example.app'];
+
+${'$'}code = strtoupper(trim(${'$'}input['code'] ?? ''));
+${'$'}nonce = (string)(${'$'}input['nonce'] ?? '');
+${'$'}packageName = (string)(${'$'}input['packageName'] ?? '');
+${'$'}record = ${'$'}codes[${'$'}code] ?? null;
+
+${'$'}ok = ${'$'}record !== null &&
+    ${'$'}nonce !== '' &&
+    in_array(${'$'}packageName, ${'$'}allowedPackages, true);
+${'$'}expiresAt = ${'$'}record['expiresAt'] ?? null;
+${'$'}remainingUses = ${'$'}record['remainingUses'] ?? null;
+
+if (${'$'}expiresAt !== null && ${'$'}expiresAt <= (int)(microtime(true) * 1000)) {
+    ${'$'}ok = false;
+}
+
+${'$'}signedPayload = json_encode([
+    'ok' => ${'$'}ok,
+    'expiresAt' => ${'$'}expiresAt ?? 0,
+    'remainingUses' => ${'$'}remainingUses ?? -1,
+    'nonce' => ${'$'}nonce,
+], JSON_UNESCAPED_SLASHES);
+
+openssl_sign(${'$'}signedPayload, ${'$'}signature, ${'$'}privateKey, OPENSSL_ALGO_SHA256);
+
+echo json_encode([
+    'ok' => ${'$'}ok,
+    'message' => ${'$'}ok ? 'OK' : 'Invalid or expired code',
+    'expiresAt' => ${'$'}expiresAt,
+    'remainingUses' => ${'$'}remainingUses,
+    'nonce' => ${'$'}nonce,
+    'sig' => base64_encode(${'$'}signature),
+], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+""".trimIndent()
 
 @Composable
 private fun EmptyActivationCodesState() {

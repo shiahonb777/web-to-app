@@ -1216,10 +1216,10 @@ data class WebViewShellConfig(
     val jsOpenWindowsPolicy: String = "ALLOW",
 
     @SerializedName("databaseEnabled")
-    val databaseEnabled: Boolean = false,
+    val databaseEnabled: Boolean = true,
 
     @SerializedName("enableCookiePersistence")
-    val enableCookiePersistence: Boolean = false,
+    val enableCookiePersistence: Boolean = true,
 
     @SerializedName("enablePrivateNetworkBridge")
     val enablePrivateNetworkBridge: Boolean = false,

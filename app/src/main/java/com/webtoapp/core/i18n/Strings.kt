@@ -6253,9 +6253,9 @@ object Strings {
     }
 
     val remoteActivationHint: String get() = when (lang) {
-        AppLanguage.CHINESE -> "激活码由你自己的服务器验证，可随时吊销、动态发码、集中控制次数。验证逻辑仍在客户端，决心足够的人仍可绕过——这是抬高门槛，不是防破解。"
-        AppLanguage.ENGLISH -> "Activation codes are verified by your own server, so you can revoke them, issue them dynamically, and control usage centrally. Verification still runs on the client and a determined attacker can still bypass it — this raises the bar, it is not anti-cracking."
-        AppLanguage.ARABIC -> "يتم التحقق من رموز التفعيل بواسطة خادمك الخاص، مما يتيح لك إبطالها وإصدارها ديناميكيًا والتحكم في الاستخدام مركزيًا. لا يزال التحقق يعمل على العميل ويمكن لمهاجم مصمم تجاوزه — هذا يرفع الحاجز وليس حماية ضد الكسر."
+        AppLanguage.CHINESE -> "让你自己的 HTTPS 接口验证激活码，用于吊销、动态发码、设备识别和次数控制。"
+        AppLanguage.ENGLISH -> "Verify activation codes with your own HTTPS endpoint for revocation, dynamic issuing, device checks, and usage control."
+        AppLanguage.ARABIC -> "تحقق من رموز التفعيل عبر نقطة HTTPS الخاصة بك للإبطال والإصدار الديناميكي وفحص الجهاز والتحكم في الاستخدام."
     }
 
     val remoteActivationUrlLabel: String get() = when (lang) {
@@ -6268,6 +6268,126 @@ object Strings {
         AppLanguage.CHINESE -> "验签公钥（EC P-256，Base64）"
         AppLanguage.ENGLISH -> "Signature public key (EC P-256, Base64)"
         AppLanguage.ARABIC -> "مفتاح التوقيع العام (EC P-256، Base64)"
+    }
+
+    val remoteActivationGuideButton: String get() = when (lang) {
+        AppLanguage.CHINESE -> "接口教程与示例代码"
+        AppLanguage.ENGLISH -> "Endpoint guide and sample code"
+        AppLanguage.ARABIC -> "دليل نقطة النهاية وكود مثال"
+    }
+
+    val remoteActivationProtocolSummary: String get() = when (lang) {
+        AppLanguage.CHINESE -> "客户端会 POST JSON 到你的接口，服务端返回带签名的 JSON。字段名和签名载荷必须与教程一致。"
+        AppLanguage.ENGLISH -> "The client POSTs JSON to your endpoint, then expects signed JSON back. Field names and the signed payload must match the guide."
+        AppLanguage.ARABIC -> "يرسل العميل JSON عبر POST إلى نقطة النهاية الخاصة بك ويتوقع JSON موقعًا. يجب أن تطابق أسماء الحقول وحمولة التوقيع الدليل."
+    }
+
+    val remoteActivationUrlSupporting: String get() = when (lang) {
+        AppLanguage.CHINESE -> "填写你的服务端验证地址，例如 https://example.com/activation/verify"
+        AppLanguage.ENGLISH -> "Enter your server verification URL, for example https://example.com/activation/verify"
+        AppLanguage.ARABIC -> "أدخل رابط تحقق الخادم، مثل https://example.com/activation/verify"
+    }
+
+    val remoteActivationPublicKeySupporting: String get() = when (lang) {
+        AppLanguage.CHINESE -> "这里填公钥；私钥只放在你的服务器上，用来签名响应。留空或签名不匹配会验证失败。"
+        AppLanguage.ENGLISH -> "Paste the public key here. Keep the private key only on your server to sign responses. Empty or mismatched keys fail verification."
+        AppLanguage.ARABIC -> "الصق المفتاح العام هنا. احتفظ بالمفتاح الخاص على الخادم فقط لتوقيع الاستجابات. المفتاح الفارغ أو غير المطابق يفشل التحقق."
+    }
+
+    val remoteActivationGuideTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "在线验证接口教程"
+        AppLanguage.ENGLISH -> "Online Verification Guide"
+        AppLanguage.ARABIC -> "دليل التحقق عبر الإنترنت"
+    }
+
+    val remoteActivationGuideIntro: String get() = when (lang) {
+        AppLanguage.CHINESE -> "这个功能需要你部署一个 HTTPS 接口。应用负责收集激活码和设备信息，服务器负责判断是否允许，最后用你的私钥签名结果；应用只保存公钥并验签。"
+        AppLanguage.ENGLISH -> "This feature needs an HTTPS endpoint. The app sends the code and device info, your server decides whether it is allowed, signs the result with your private key, and the app verifies it with the public key."
+        AppLanguage.ARABIC -> "تحتاج هذه الميزة إلى نقطة HTTPS. يرسل التطبيق الرمز ومعلومات الجهاز، ويقرر خادمك السماح، ثم يوقع النتيجة بالمفتاح الخاص ويتحقق التطبيق منها بالمفتاح العام."
+    }
+
+    val remoteActivationGuideRequestTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "1. 请求格式"
+        AppLanguage.ENGLISH -> "1. Request"
+        AppLanguage.ARABIC -> "1. الطلب"
+    }
+
+    val remoteActivationGuideRequestBody: String get() = when (lang) {
+        AppLanguage.CHINESE -> "应用使用 POST application/json。必须读取 code、deviceId、packageName、nonce、ts。nonce 是本次请求随机值，响应里必须原样返回。"
+        AppLanguage.ENGLISH -> "The app uses POST application/json. Read code, deviceId, packageName, nonce, and ts. nonce is a per-request random value and must be returned unchanged."
+        AppLanguage.ARABIC -> "يستخدم التطبيق POST application/json. اقرأ code و deviceId و packageName و nonce و ts. قيمة nonce عشوائية لكل طلب ويجب إرجاعها كما هي."
+    }
+
+    val remoteActivationGuideRequestExampleTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "请求示例"
+        AppLanguage.ENGLISH -> "Request example"
+        AppLanguage.ARABIC -> "مثال الطلب"
+    }
+
+    val remoteActivationGuideResponseTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "2. 返回格式"
+        AppLanguage.ENGLISH -> "2. Response"
+        AppLanguage.ARABIC -> "2. الاستجابة"
+    }
+
+    val remoteActivationGuideResponseBody: String get() = when (lang) {
+        AppLanguage.CHINESE -> "返回 JSON。ok 表示是否通过；message 会展示给用户；expiresAt 是毫秒时间戳，null 表示不过期；remainingUses 可为 null；sig 是 Base64 ECDSA 签名。"
+        AppLanguage.ENGLISH -> "Return JSON. ok means allowed; message can be shown to users; expiresAt is a millisecond timestamp or null; remainingUses can be null; sig is a Base64 ECDSA signature."
+        AppLanguage.ARABIC -> "أرجع JSON. تعني ok السماح؛ يمكن عرض message للمستخدم؛ expiresAt طابع زمني بالميلي ثانية أو null؛ يمكن أن تكون remainingUses قيمة null؛ و sig توقيع ECDSA بصيغة Base64."
+    }
+
+    val remoteActivationGuideResponseExampleTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "成功返回示例"
+        AppLanguage.ENGLISH -> "Success response"
+        AppLanguage.ARABIC -> "استجابة نجاح"
+    }
+
+    val remoteActivationGuideSignatureTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "3. 签名规则"
+        AppLanguage.ENGLISH -> "3. Signature"
+        AppLanguage.ARABIC -> "3. التوقيع"
+    }
+
+    val remoteActivationGuideSignatureBody: String get() = when (lang) {
+        AppLanguage.CHINESE -> "签名算法是 SHA256withECDSA，推荐 EC P-256。签名内容必须是下面这个 JSON 结构：ok、expiresAt、remainingUses、nonce。null 过期时间用 0，null 次数用 -1。"
+        AppLanguage.ENGLISH -> "Use SHA256withECDSA, preferably EC P-256. Sign exactly this JSON structure: ok, expiresAt, remainingUses, nonce. Use 0 for null expiry and -1 for null remaining uses."
+        AppLanguage.ARABIC -> "استخدم SHA256withECDSA ويفضل EC P-256. وقّع بنية JSON هذه تحديدًا: ok و expiresAt و remainingUses و nonce. استخدم 0 لانتهاء الصلاحية null و -1 للاستخدامات null."
+    }
+
+    val remoteActivationGuideSignatureExampleTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "签名载荷"
+        AppLanguage.ENGLISH -> "Signed payload"
+        AppLanguage.ARABIC -> "حمولة التوقيع"
+    }
+
+    val remoteActivationGuideKeysTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "4. 密钥生成"
+        AppLanguage.ENGLISH -> "4. Keys"
+        AppLanguage.ARABIC -> "4. المفاتيح"
+    }
+
+    val remoteActivationGuideKeysBody: String get() = when (lang) {
+        AppLanguage.CHINESE -> "可以用 openssl ecparam -name prime256v1 -genkey -noout -out private.pem 生成私钥，再用 openssl ec -in private.pem -pubout -out public.pem 导出公钥。把 public.pem 内容或去掉头尾后的 Base64 填到应用里。"
+        AppLanguage.ENGLISH -> "Generate a private key with openssl ecparam -name prime256v1 -genkey -noout -out private.pem, then export the public key with openssl ec -in private.pem -pubout -out public.pem. Paste public.pem or its Base64 body into the app."
+        AppLanguage.ARABIC -> "أنشئ مفتاحًا خاصًا بالأمر openssl ecparam -name prime256v1 -genkey -noout -out private.pem، ثم صدّر المفتاح العام بالأمر openssl ec -in private.pem -pubout -out public.pem. الصق public.pem أو جسم Base64 في التطبيق."
+    }
+
+    val remoteActivationGuidePhpExampleTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "最小 PHP 示例"
+        AppLanguage.ENGLISH -> "Minimal PHP example"
+        AppLanguage.ARABIC -> "مثال PHP بسيط"
+    }
+
+    val remoteActivationGuideDeployTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "5. 部署要点"
+        AppLanguage.ENGLISH -> "5. Deployment"
+        AppLanguage.ARABIC -> "5. النشر"
+    }
+
+    val remoteActivationGuideDeployBody: String get() = when (lang) {
+        AppLanguage.CHINESE -> "接口必须能被公网访问并使用 HTTPS。不要把 private.pem 放到可下载目录；按 code、deviceId、packageName 建表即可扩展吊销、设备绑定、次数扣减和到期时间。"
+        AppLanguage.ENGLISH -> "The endpoint must be public HTTPS. Never place private.pem in a downloadable directory. Store code, deviceId, and packageName in a table to support revocation, device binding, usage deduction, and expiry."
+        AppLanguage.ARABIC -> "يجب أن تكون نقطة النهاية HTTPS عامة. لا تضع private.pem في مجلد قابل للتنزيل. خزّن code و deviceId و packageName في جدول لدعم الإبطال وربط الجهاز وخصم الاستخدام والانتهاء."
     }
 
     val remoteActivationOfflineLabel: String get() = when (lang) {
@@ -9008,9 +9128,9 @@ object Strings {
     }
 
     val domStorageSettingHint: String get() = when (lang) {
-        AppLanguage.CHINESE -> "启用本地存储功能"
-        AppLanguage.ENGLISH -> "Enable local storage"
-        AppLanguage.ARABIC -> "تفعيل التخزين المحلي"
+        AppLanguage.CHINESE -> "允许网页使用 localStorage / sessionStorage 保存页面状态"
+        AppLanguage.ENGLISH -> "Allow pages to use localStorage / sessionStorage for page state"
+        AppLanguage.ARABIC -> "السماح للصفحات باستخدام localStorage / sessionStorage لحفظ حالة الصفحة"
     }
 
     val zoomSetting: String get() = when (lang) {
@@ -26122,6 +26242,42 @@ object Strings {
         AppLanguage.ARABIC -> "يتم مطابقة النطاق الرئيسي والنطاق الفرعي www تلقائيًا. أضف نطاقات إضافية هنا (واحد لكل سطر)"
     }
 
+    val oauthReturnGuideTitle: String get() = when (lang) {
+        AppLanguage.CHINESE -> "登录回跳说明"
+        AppLanguage.ENGLISH -> "Login Return Guide"
+        AppLanguage.ARABIC -> "دليل الرجوع بعد تسجيل الدخول"
+    }
+
+    val oauthReturnGuideSummary: String get() = when (lang) {
+        AppLanguage.CHINESE -> "Google 等 OAuth 登录会在系统浏览器完成。若登录后没有回到应用，需要让网站把授权结果跳回生成的 APK。"
+        AppLanguage.ENGLISH -> "OAuth providers such as Google finish sign-in in the system browser. If login does not return to the app, make your website redirect the result back to the generated APK."
+        AppLanguage.ARABIC -> "تكتمل عمليات OAuth مثل Google في متصفح النظام. إذا لم يعد تسجيل الدخول إلى التطبيق، اجعل موقعك يعيد نتيجة التفويض إلى ملف APK الناتج."
+    }
+
+    val oauthReturnGuideButton: String get() = when (lang) {
+        AppLanguage.CHINESE -> "查看接法"
+        AppLanguage.ENGLISH -> "View Setup"
+        AppLanguage.ARABIC -> "عرض الإعداد"
+    }
+
+    val oauthReturnGuideIntro: String get() = when (lang) {
+        AppLanguage.CHINESE -> "这不是用户输错配置。Google 不允许在嵌入式 WebView 里直接完成 OAuth 登录，所以生成的应用会把授权页交给系统浏览器/Custom Tabs。浏览器里的 Cookie 不会自动同步回 WebView，网站必须完成一次回跳。"
+        AppLanguage.ENGLISH -> "This is not a bad user setting. Google does not allow OAuth sign-in to complete inside embedded WebViews, so the generated app sends the authorization page to the system browser or Custom Tabs. Browser cookies are not automatically shared back to WebView, so your website must perform a return redirect."
+        AppLanguage.ARABIC -> "هذه ليست إعدادات خاطئة من المستخدم. لا تسمح Google بإكمال تسجيل دخول OAuth داخل WebView مضمّن، لذلك يرسل التطبيق الناتج صفحة التفويض إلى متصفح النظام أو Custom Tabs. لا تتم مشاركة ملفات تعريف ارتباط المتصفح تلقائيًا مع WebView، لذلك يجب أن ينفذ موقعك إعادة توجيه للرجوع."
+    }
+
+    val oauthReturnGuideReason: String get() = when (lang) {
+        AppLanguage.CHINESE -> "如果网站只在外部浏览器里完成登录，APK 内的 WebView 仍然没有自己的登录态，看起来就像“授权没生效”。正确做法是让服务端在 OAuth callback 后生成一次性 token，再重定向到应用匹配的 HTTPS 域名。"
+        AppLanguage.ENGLISH -> "If the website only signs in inside the external browser, the APK WebView still has no app-side session, which looks like authorization failed. The correct flow is to create a one-time token after the OAuth callback, then redirect to an HTTPS host matched by the app."
+        AppLanguage.ARABIC -> "إذا سجّل الموقع الدخول داخل المتصفح الخارجي فقط، فلن تحصل WebView داخل APK على جلسة خاصة بها، وسيبدو الأمر كأن التفويض فشل. التدفق الصحيح هو إنشاء رمز لمرة واحدة بعد callback الخاص بـ OAuth، ثم إعادة التوجيه إلى مضيف HTTPS يطابقه التطبيق."
+    }
+
+    val oauthReturnGuideSteps: String get() = when (lang) {
+        AppLanguage.CHINESE -> "推荐流程：\n1. 打开“链接打开”，让 APK 接收你网站的 HTTPS 域名。\n2. 在 Google Console 中配置你网站自己的 OAuth redirect URI。\n3. 服务端处理 callback，写入或生成一次性登录 token。\n4. 服务端重定向到应用域名，例如 https://example.com/app-login?token=xxx。\n5. WebView 加载该地址后，由网站设置应用内 Cookie 或本地会话。"
+        AppLanguage.ENGLISH -> "Recommended flow:\n1. Enable Deep Link so the APK can receive your HTTPS domain.\n2. Configure your website OAuth redirect URI in Google Console.\n3. Let your server handle the callback and create a one-time login token.\n4. Redirect to the app domain, for example https://example.com/app-login?token=xxx.\n5. When WebView loads that URL, your website sets the in-app cookie or local session."
+        AppLanguage.ARABIC -> "التدفق المقترح:\n1. فعّل الرابط العميق حتى يستقبل APK نطاق HTTPS الخاص بك.\n2. اضبط OAuth redirect URI الخاص بموقعك في Google Console.\n3. اجعل الخادم يعالج callback وينشئ رمز تسجيل دخول لمرة واحدة.\n4. أعد التوجيه إلى نطاق التطبيق، مثل https://example.com/app-login?token=xxx.\n5. عند تحميل WebView لهذا الرابط، يضبط موقعك ملف تعريف الارتباط أو الجلسة المحلية داخل التطبيق."
+    }
+
     val encryptLevelFast: String get() = when (lang) {
         AppLanguage.CHINESE -> "快速（较低安全性）"
         AppLanguage.ENGLISH -> "Fast (lower security)"
@@ -28485,9 +28641,9 @@ object Strings {
     }
 
     val adSdkNotIntegrated: String get() = when (lang) {
-        AppLanguage.CHINESE -> "广告 SDK 尚未集成，当前广告配置不会生效"
-        AppLanguage.ENGLISH -> "Ad SDK not integrated, current ad config will not take effect"
-        AppLanguage.ARABIC -> "لم يتم دمج SDK الإعلانات، لن يسري تكوين الإعلانات الحالي"
+        AppLanguage.CHINESE -> "内置 AdMob SDK 尚未集成。填写广告单元 ID 不会在导出的 APK 中显示广告；目前请使用网页自身广告代码或扩展模块/自定义脚本接入广告。"
+        AppLanguage.ENGLISH -> "Built-in AdMob SDK is not integrated yet. Filling ad unit IDs will not show ads in exported APKs; for now, use your website ad code, extension modules, or custom scripts."
+        AppLanguage.ARABIC -> "لم يتم دمج AdMob SDK المدمج بعد. لن يؤدي ملء معرفات الوحدات الإعلانية إلى عرض إعلانات في ملفات APK المصدرة؛ استخدم حالياً كود إعلانات الموقع أو وحدات الإضافة أو السكربتات المخصصة."
     }
 
     val storagePermissionRequiredForExport: String get() = when (lang) {
@@ -29431,9 +29587,9 @@ object Strings {
         AppLanguage.ARABIC -> "جلسة جديدة عند التشغيل"
     }
     val freshSessionModeDesc: String get() = when (lang) {
-        AppLanguage.CHINESE -> "启动生成的 APK 时清除 Cookie、站点存储和网页缓存，像第一次打开一样"
-        AppLanguage.ENGLISH -> "Clear cookies, site storage, and web cache when the generated APK launches"
-        AppLanguage.ARABIC -> "مسح ملفات تعريف الارتباط وتخزين الموقع وذاكرة الويب عند تشغيل ملف APK الناتج"
+        AppLanguage.CHINESE -> "启动生成的 APK 时清除 Cookie、站点存储和网页缓存。开启后登录状态、本地存档和离线缓存都会被重置。"
+        AppLanguage.ENGLISH -> "Clear cookies, site storage, and web cache when the generated APK launches. Login state, local saves, and offline cache will reset when enabled."
+        AppLanguage.ARABIC -> "مسح ملفات تعريف الارتباط وتخزين الموقع وذاكرة الويب عند تشغيل ملف APK الناتج. عند التفعيل ستتم إعادة ضبط حالة تسجيل الدخول والحفظ المحلي وذاكرة التخزين دون اتصال."
     }
     val pwaOfflineSubtitle: String get() = when (lang) {
         AppLanguage.CHINESE -> "注入 Service Worker 缓存层，支持离线浏览已访问页面"
@@ -34979,9 +35135,9 @@ object Strings {
         AppLanguage.ARABIC -> "ملفات تعريف الارتباط للجهات الخارجية"
     }
     val thirdPartyCookiesDesc: String get() = when (lang) {
-        AppLanguage.CHINESE -> "允许网页加载的第三方资源设置 Cookie。关闭可增强隐私，但可能导致某些登录/支付功能异常。"
-        AppLanguage.ENGLISH -> "Allow third-party resources loaded by web pages to set cookies. Disabling enhances privacy but may break some login/payment flows."
-        AppLanguage.ARABIC -> "السماح لموارد الجهات الخارجية بتعيين ملفات تعريف الارتباط. الإيقاف يعزز الخصوصية لكن قد يعطّل بعض وظائف تسجيل الدخول/الدفع."
+        AppLanguage.CHINESE -> "允许第三方登录、支付或嵌入组件写入 Cookie。关闭可增强隐私，但可能导致跨域登录/支付状态无法保持。"
+        AppLanguage.ENGLISH -> "Allow third-party login, payment, or embedded components to write cookies. Disabling improves privacy but may break cross-site login or payment sessions."
+        AppLanguage.ARABIC -> "السماح لمكونات تسجيل الدخول أو الدفع أو التضمين التابعة لجهات خارجية بكتابة ملفات تعريف الارتباط. الإيقاف يحسن الخصوصية لكنه قد يعطّل جلسات تسجيل الدخول أو الدفع عبر المواقع."
     }
 
     val kernelDisguiseTitle: String get() = when (lang) {
@@ -35111,9 +35267,9 @@ object Strings {
         AppLanguage.ARABIC -> "تخزين قاعدة البيانات"
     }
     val databaseStorageDesc: String get() = when (lang) {
-        AppLanguage.CHINESE -> "允许网页使用 IndexedDB / Web SQL 存储数据。极端隐私场景可关闭。"
-        AppLanguage.ENGLISH -> "Allow web pages to use IndexedDB / Web SQL for data storage. Disable for extreme privacy scenarios."
-        AppLanguage.ARABIC -> "السماح لصفحات الويب باستخدام IndexedDB / Web SQL لتخزين البيانات. أوقفه لسيناريوهات الخصوصية القصوى."
+        AppLanguage.CHINESE -> "允许网页使用 IndexedDB / Web SQL 保存账号状态、草稿、缓存和本地数据。大多数现代 Web 应用建议保持开启。"
+        AppLanguage.ENGLISH -> "Allow pages to use IndexedDB / Web SQL for account state, drafts, cache, and local data. Keep this on for most modern web apps."
+        AppLanguage.ARABIC -> "السماح للصفحات باستخدام IndexedDB / Web SQL لحالة الحساب والمسودات والذاكرة المؤقتة والبيانات المحلية. أبقه مفعلاً لمعظم تطبيقات الويب الحديثة."
     }
 
     val cookiePersistenceTitle: String get() = when (lang) {
@@ -35122,9 +35278,9 @@ object Strings {
         AppLanguage.ARABIC -> "استمرار ملفات تعريف الارتباط"
     }
     val cookiePersistenceDesc: String get() = when (lang) {
-        AppLanguage.CHINESE -> "页面加载后自动保存 Cookie 到磁盘。关闭后每次打开都是全新会话（不保留登录状态）。"
-        AppLanguage.ENGLISH -> "Automatically persist cookies to disk after page load. When off, every launch starts a fresh session (login state not preserved)."
-        AppLanguage.ARABIC -> "حفظ ملفات تعريف الارتباط تلقائيًا على القرص بعد تحميل الصفحة. عند الإيقاف، كل تشغيل يبدأ جلسة جديدة (لا يُحفظ تسجيل الدخول)."
+        AppLanguage.CHINESE -> "页面加载后自动把 Cookie 保存到磁盘，用于保留登录态和会话。若开启“每次打开都是新会话”，这些数据仍会在启动时清除。"
+        AppLanguage.ENGLISH -> "Persist cookies to disk after page load to keep login and session state. If Fresh Session is enabled, these values are still cleared on launch."
+        AppLanguage.ARABIC -> "حفظ ملفات تعريف الارتباط على القرص بعد تحميل الصفحة للحفاظ على تسجيل الدخول والجلسة. إذا تم تفعيل الجلسة الجديدة، فستُمسح هذه القيم عند التشغيل."
     }
 
     val privateNetworkBridgeTitle: String get() = when (lang) {
