@@ -18,6 +18,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
+typealias TaskId = String
+
 object DependencyDownloadEngine {
 
     private const val TAG = "DependencyDownloadEngine"
@@ -27,6 +29,8 @@ object DependencyDownloadEngine {
     private const val THROTTLE_MS = 500L
 
     private const val PAUSE_CHECK_MS = 200L
+
+    val DEFAULT_TASK: TaskId = "__default__"
 
     sealed class State {
         object Idle : State()
@@ -119,7 +123,7 @@ object DependencyDownloadEngine {
         return remaining / speed
     }
 
-    fun pause() {
+    fun pause(taskId: TaskId = DEFAULT_TASK) {
         if (_state.value is State.Downloading) {
             _paused.set(true)
             val dl = _state.value as? State.Downloading ?: return
@@ -132,16 +136,16 @@ object DependencyDownloadEngine {
                 progress = dl.progress,
                 startTimeMillis = dl.startTimeMillis
             )
-            AppLogger.i(TAG, "下载已暂停: ${dl.displayName}")
+            AppLogger.i(TAG, "下载已暂停 [task=$taskId]: ${dl.displayName}")
         }
     }
 
-    fun resume() {
+    fun resume(taskId: TaskId = DEFAULT_TASK) {
         _paused.set(false)
-        AppLogger.i(TAG, "下载已继续")
+        AppLogger.i(TAG, "下载已继续 [task=$taskId]")
     }
 
-    fun reset() {
+    fun reset(taskId: TaskId = DEFAULT_TASK) {
         _paused.set(false)
         _state.value = State.Idle
     }
@@ -150,7 +154,8 @@ object DependencyDownloadEngine {
         url: String,
         destFile: File,
         displayName: String,
-        context: Context? = null
+        context: Context? = null,
+        taskId: TaskId = DEFAULT_TASK,
     ): Boolean = withContext(Dispatchers.IO) {
         downloadMutex.withLock {
             val fileName = url.substringAfterLast("/")
