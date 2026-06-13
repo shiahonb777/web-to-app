@@ -160,24 +160,39 @@ object GoBuildEnvironment {
             AppLogger.i(TAG, "Go 项目带 vendor/，走离线 build 路径")
         } else if (goMod.exists()) {
 
-            onOutput("[go] go mod tidy")
-            val modResult = executeGo(
+            onOutput("[go] 1/3 解析依赖图 (go mod tidy)")
+            val tidyResult = executeGo(
                 context = context,
                 arguments = listOf("mod", "tidy"),
                 workingDir = projectDir,
                 env = env,
                 onOutput = onOutput,
             )
-            if (modResult.exitCode != 0) {
+            if (tidyResult.exitCode != 0) {
 
-                AppLogger.e(TAG, "go mod tidy failed exit=${modResult.exitCode}\n${modResult.stderr}")
-                onOutput("[go] ${Strings.goBuildStreamGoModTidyFailed.format(modResult.exitCode)}")
-                modResult.stderr.lineSequence()
+                AppLogger.e(TAG, "go mod tidy failed exit=${tidyResult.exitCode}\n${tidyResult.stderr}")
+                onOutput("[go] ${Strings.goBuildStreamGoModTidyFailed.format(tidyResult.exitCode)}")
+                tidyResult.stderr.lineSequence()
                     .filter { it.isNotBlank() }
                     .forEach { onOutput("[stderr] $it") }
 
                 onOutput("[hint] 网络受限时可在电脑上跑 `go mod vendor`，把生成的 vendor/ 一并导入项目即可离线构建")
                 return@withContext null
+            }
+            onOutput("[go] 2/3 预下载依赖 (go mod download)")
+            val downloadResult = executeGo(
+                context = context,
+                arguments = listOf("mod", "download"),
+                workingDir = projectDir,
+                env = env,
+                onOutput = onOutput,
+            )
+            if (downloadResult.exitCode != 0) {
+                AppLogger.w(
+                    TAG,
+                    "go mod download 退出码 ${downloadResult.exitCode},将交给后续 go build 重试:\n${downloadResult.stderr}"
+                )
+                onOutput("[go] (mod download 非阻塞失败,继续 build 阶段)")
             }
         } else {
             onOutput("[go] ${Strings.goBuildStreamNoGoMod}")
@@ -191,7 +206,7 @@ object GoBuildEnvironment {
         } else {
             listOf("build", "-o", output.absolutePath, "./...")
         }
-        onOutput("[go] go ${buildArgs.joinToString(" ")}")
+        onOutput("[go] 3/3 编译 (go build ${buildArgs.joinToString(" ")})")
         val buildResult = executeGo(
             context = context,
             arguments = buildArgs,
