@@ -509,6 +509,8 @@ data class WebViewBehaviorBlock(
     val nativeBridgeGeolocation: Boolean = true,
     val nativeBridgeBrightness: Boolean = true,
     val nativeBridgeNotification: Boolean = true,
+    val nativeBridgeNotificationScheduled: Boolean = true,
+    val nativeBridgeNotificationPersistent: Boolean = true,
     val nativeBridgeDownload: Boolean = true,
     val nativeBridgePrivateNetwork: Boolean = true,
     val nativeBridgeScreenWake: Boolean = true,

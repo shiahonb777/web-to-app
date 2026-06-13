@@ -255,6 +255,8 @@ class FloatingWindowService : Service() {
                             geolocation = shellConfig.webViewConfig.nativeBridgeGeolocation,
                             brightness = shellConfig.webViewConfig.nativeBridgeBrightness,
                             notification = shellConfig.webViewConfig.nativeBridgeNotification,
+                            notificationScheduled = shellConfig.webViewConfig.nativeBridgeNotificationScheduled,
+                            notificationPersistent = shellConfig.webViewConfig.nativeBridgeNotificationPersistent,
                             download = shellConfig.webViewConfig.nativeBridgeDownload,
                             privateNetwork = shellConfig.webViewConfig.nativeBridgePrivateNetwork,
                             screenWake = shellConfig.webViewConfig.nativeBridgeScreenWake,

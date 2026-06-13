@@ -1203,6 +1203,12 @@ data class WebViewShellConfig(
     @SerializedName("nativeBridgeNotification")
     val nativeBridgeNotification: Boolean = true,
 
+    @SerializedName("nativeBridgeNotificationScheduled")
+    val nativeBridgeNotificationScheduled: Boolean = true,
+
+    @SerializedName("nativeBridgeNotificationPersistent")
+    val nativeBridgeNotificationPersistent: Boolean = true,
+
     @SerializedName("nativeBridgeDownload")
     val nativeBridgeDownload: Boolean = true,
 

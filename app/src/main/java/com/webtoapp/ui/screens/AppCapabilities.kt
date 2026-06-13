@@ -134,8 +134,7 @@ fun buildAppCapabilities(editState: EditState): List<AppCapability> = listOf(
         level = WtaCapabilityLevel.Advanced,
         icon = Icons.Outlined.GppGood,
         keywords = listOf("ca", "证书", "ssl", "https", "网络", "信任", "内网", "pem", "crt"),
-        configured = editState.apkExportConfig.networkTrustConfig.customCaCertificates.isNotEmpty() ||
-            !editState.apkExportConfig.networkTrustConfig.trustUserCa
+        configured = editState.apkExportConfig.networkTrustConfig.customCaCertificates.isNotEmpty()
     ),
     AppCapability(
         id = "export",

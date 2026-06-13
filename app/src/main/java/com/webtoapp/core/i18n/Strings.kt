@@ -35513,6 +35513,8 @@ object Strings {
     val nativeBridgeCapsGeolocation: String get() = when (lang) { AppLanguage.CHINESE -> "定位"; AppLanguage.ENGLISH -> "Geolocation"; AppLanguage.ARABIC -> "الموقع الجغرافي" }
     val nativeBridgeCapsBrightness: String get() = when (lang) { AppLanguage.CHINESE -> "亮度"; AppLanguage.ENGLISH -> "Brightness"; AppLanguage.ARABIC -> "السطوع" }
     val nativeBridgeCapsNotification: String get() = when (lang) { AppLanguage.CHINESE -> "通知"; AppLanguage.ENGLISH -> "Notification"; AppLanguage.ARABIC -> "الإشعارات" }
+    val nativeBridgeCapsNotificationScheduled: String get() = when (lang) { AppLanguage.CHINESE -> "定时通知"; AppLanguage.ENGLISH -> "Scheduled Notification"; AppLanguage.ARABIC -> "إشعار مجدول" }
+    val nativeBridgeCapsNotificationPersistent: String get() = when (lang) { AppLanguage.CHINESE -> "持久通知/后台"; AppLanguage.ENGLISH -> "Persistent/Bg Notification"; AppLanguage.ARABIC -> "إشعار دائم/خلفية" }
     val nativeBridgeCapsDownload: String get() = when (lang) { AppLanguage.CHINESE -> "下载"; AppLanguage.ENGLISH -> "Download"; AppLanguage.ARABIC -> "التنزيل" }
     val nativeBridgeCapsPrivateNetwork: String get() = when (lang) { AppLanguage.CHINESE -> "私网请求"; AppLanguage.ENGLISH -> "Private Network"; AppLanguage.ARABIC -> "الشبكة الخاصة" }
     val nativeBridgeCapsScreenWake: String get() = when (lang) { AppLanguage.CHINESE -> "屏幕常亮"; AppLanguage.ENGLISH -> "Screen Wake"; AppLanguage.ARABIC -> "إيقاظ الشاشة" }

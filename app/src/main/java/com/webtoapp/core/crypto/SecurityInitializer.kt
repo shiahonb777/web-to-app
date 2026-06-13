@@ -86,8 +86,7 @@ object SecurityInitializer {
 
     private fun loadSecurityConfig(context: Context): SecurityConfig? {
         return try {
-            val inputStream = context.assets.open("encryption_meta.json")
-            inputStream.bufferedReader().use { it.readText() }
+            context.assets.open("encryption_meta.json").use {  }
             SecurityConfig()
         } catch (e: Exception) {
             AppLogger.d(TAG, "No encryption metadata found: ${e.message}")

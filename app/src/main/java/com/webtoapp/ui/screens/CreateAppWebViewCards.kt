@@ -2848,6 +2848,16 @@ fun SpecialSettingsCard(
                                     label = { Text(Strings.nativeBridgeCapsNotification) }
                                 )
                                 FilterChip(
+                                    selected = caps.notificationScheduled,
+                                    onClick = { onConfigChange(config.copy(nativeBridgeCapabilities = caps.copy(notificationScheduled = !caps.notificationScheduled))) },
+                                    label = { Text(Strings.nativeBridgeCapsNotificationScheduled) }
+                                )
+                                FilterChip(
+                                    selected = caps.notificationPersistent,
+                                    onClick = { onConfigChange(config.copy(nativeBridgeCapabilities = caps.copy(notificationPersistent = !caps.notificationPersistent))) },
+                                    label = { Text(Strings.nativeBridgeCapsNotificationPersistent) }
+                                )
+                                FilterChip(
                                     selected = caps.download,
                                     onClick = { onConfigChange(config.copy(nativeBridgeCapabilities = caps.copy(download = !caps.download))) },
                                     label = { Text(Strings.nativeBridgeCapsDownload) }

@@ -1010,7 +1010,7 @@ data class ApkExportConfig(
 
 data class NetworkTrustConfig(
     val trustSystemCa: Boolean = true,
-    val trustUserCa: Boolean = true,
+    val trustUserCa: Boolean = false,
     val customCaCertificates: List<CustomCaCertificate> = emptyList(),
     val cleartextTrafficPermitted: Boolean = true
 )
@@ -1339,6 +1339,8 @@ data class NativeBridgeCapabilities(
     val geolocation: Boolean = true,
     val brightness: Boolean = true,
     val notification: Boolean = true,
+    val notificationScheduled: Boolean = true,
+    val notificationPersistent: Boolean = true,
     val download: Boolean = true,
     val privateNetwork: Boolean = true,
     val screenWake: Boolean = true,

@@ -8,11 +8,11 @@ import org.junit.Test
 class NetworkSecurityConfigBuilderTest {
 
     @Test
-    fun `default config trusts system and user anchors`() {
+    fun `default config trusts system anchors only`() {
         val xml = NetworkSecurityConfigBuilder.build(NetworkTrustConfig())
 
         assertThat(xml).contains("""<certificates src="system" />""")
-        assertThat(xml).contains("""<certificates src="user" />""")
+        assertThat(xml).doesNotContain("""<certificates src="user" />""")
         assertThat(xml).contains("cleartextTrafficPermitted=\"true\"")
     }
 

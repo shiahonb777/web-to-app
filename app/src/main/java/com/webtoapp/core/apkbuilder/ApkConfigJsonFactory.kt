@@ -226,6 +226,8 @@ internal object ApkConfigJsonFactory {
         "nativeBridgeGeolocation" to webViewBehavior.nativeBridgeGeolocation,
         "nativeBridgeBrightness" to webViewBehavior.nativeBridgeBrightness,
         "nativeBridgeNotification" to webViewBehavior.nativeBridgeNotification,
+        "nativeBridgeNotificationScheduled" to webViewBehavior.nativeBridgeNotificationScheduled,
+        "nativeBridgeNotificationPersistent" to webViewBehavior.nativeBridgeNotificationPersistent,
         "nativeBridgeDownload" to webViewBehavior.nativeBridgeDownload,
         "nativeBridgePrivateNetwork" to webViewBehavior.nativeBridgePrivateNetwork,
         "nativeBridgeScreenWake" to webViewBehavior.nativeBridgeScreenWake,

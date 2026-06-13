@@ -880,7 +880,7 @@ if (NativeBridge.isFullscreen()) {
 
     @JavascriptInterface
     fun scheduleNotification(jsonPayload: String): Boolean {
-        if (!capabilities.notification) return false
+        if (!capabilities.notificationScheduled) return false
         return try {
             val json = org.json.JSONObject(jsonPayload)
             val title = json.optString("title").ifBlank { getAppLabel() }
@@ -929,6 +929,34 @@ if (NativeBridge.isFullscreen()) {
     }
 
     @JavascriptInterface
+    fun updateNotificationProgress(tag: String, progress: Int, max: Int): Boolean {
+        if (!capabilities.notificationPersistent) return false
+        return try {
+            val channelId = "webapp_bridge_notifications"
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val channel = NotificationChannel(
+                    channelId,
+                    "Web App Notifications",
+                    NotificationManager.IMPORTANCE_LOW
+                )
+                val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                manager.createNotificationChannel(channel)
+            }
+            val builder = NotificationCompat.Builder(context, channelId)
+                .setSmallIcon(context.applicationInfo.icon)
+                .setContentTitle(getAppLabel())
+                .setProgress(max, progress, false)
+                .setOngoing(true)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+            NotificationManagerCompat.from(context).notify(tag.hashCode(), builder.build())
+            true
+        } catch (e: Exception) {
+            AppLogger.e("NativeBridge", "Failed to update notification progress", e)
+            false
+        }
+    }
+
+    @JavascriptInterface
     fun canScheduleExactAlarms(): Boolean {
         return try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -945,6 +973,7 @@ if (NativeBridge.isFullscreen()) {
 
     @JavascriptInterface
     fun startBackgroundService(jsonPayload: String): Boolean {
+        if (!capabilities.notificationPersistent) return false
         return try {
             val json = org.json.JSONObject(jsonPayload)
             val title = json.optString("title").ifBlank { getAppLabel() }

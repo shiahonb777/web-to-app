@@ -2603,17 +2603,17 @@ builtins.__import__ = _w2a_import
             permissions += "android.permission.FOREGROUND_SERVICE"
             permissions += "android.permission.FOREGROUND_SERVICE_SPECIAL_USE"
         }
-        if (rp.foregroundService) {
+        if (config.forcedRunConfig?.enabled == true) {
 
             permissions += "android.permission.FOREGROUND_SERVICE_DATA_SYNC"
         }
-        if (rp.location || rp.foregroundService) {
+        if (rp.location) {
             permissions += "android.permission.FOREGROUND_SERVICE_LOCATION"
         }
-        if (rp.camera || rp.foregroundService) {
+        if (rp.camera) {
             permissions += "android.permission.FOREGROUND_SERVICE_CAMERA"
         }
-        if (rp.microphone || rp.foregroundService) {
+        if (rp.microphone) {
             permissions += "android.permission.FOREGROUND_SERVICE_MICROPHONE"
         }
         if (config.bgmEnabled) {
@@ -2704,7 +2704,7 @@ builtins.__import__ = _w2a_import
             components += "com.webtoapp.core.notification.NotificationPollingService"
         }
 
-        if (config.enableNativeBridge && config.webViewBehavior.nativeBridgeNotification) {
+        if (config.enableNativeBridge && config.webViewBehavior.nativeBridgeNotificationScheduled) {
             components += "com.webtoapp.core.notification.BridgeAlarmReceiver"
         }
 
@@ -3078,6 +3078,8 @@ private fun WebApp.buildWebViewBehaviorBlock(): WebViewBehaviorBlock = WebViewBe
     nativeBridgeGeolocation = webViewConfig.nativeBridgeCapabilities.geolocation,
     nativeBridgeBrightness = webViewConfig.nativeBridgeCapabilities.brightness,
     nativeBridgeNotification = webViewConfig.nativeBridgeCapabilities.notification,
+    nativeBridgeNotificationScheduled = webViewConfig.nativeBridgeCapabilities.notificationScheduled,
+    nativeBridgeNotificationPersistent = webViewConfig.nativeBridgeCapabilities.notificationPersistent,
     nativeBridgeDownload = webViewConfig.nativeBridgeCapabilities.download,
     nativeBridgePrivateNetwork = webViewConfig.nativeBridgeCapabilities.privateNetwork,
     nativeBridgeScreenWake = webViewConfig.nativeBridgeCapabilities.screenWake,

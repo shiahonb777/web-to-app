@@ -449,6 +449,8 @@ class ShellActivity : AppCompatActivity() {
                                     geolocation = config.webViewConfig.nativeBridgeGeolocation,
                                     brightness = config.webViewConfig.nativeBridgeBrightness,
                                     notification = config.webViewConfig.nativeBridgeNotification,
+                                    notificationScheduled = config.webViewConfig.nativeBridgeNotificationScheduled,
+                                    notificationPersistent = config.webViewConfig.nativeBridgeNotificationPersistent,
                                     download = config.webViewConfig.nativeBridgeDownload,
                                     privateNetwork = config.webViewConfig.nativeBridgePrivateNetwork,
                                     screenWake = config.webViewConfig.nativeBridgeScreenWake,
