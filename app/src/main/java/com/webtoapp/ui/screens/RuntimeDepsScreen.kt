@@ -757,7 +757,7 @@ private fun StatusOverviewCard(
                             .background(Color.White.copy(alpha = 0.2f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (isDownloading) {
+                        if (isDownloading && !isPaused) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(28.dp),
                                 color = Color.White,
@@ -765,7 +765,11 @@ private fun StatusOverviewCard(
                             )
                         } else {
                             Icon(
-                                imageVector = if (allReady) Icons.Filled.CheckCircle else Icons.Outlined.Speed,
+                                imageVector = when {
+                                    isPaused -> Icons.Filled.Pause
+                                    allReady -> Icons.Filled.CheckCircle
+                                    else -> Icons.Outlined.Speed
+                                },
                                 contentDescription = null,
                                 tint = Color.White,
                                 modifier = Modifier.size(28.dp)

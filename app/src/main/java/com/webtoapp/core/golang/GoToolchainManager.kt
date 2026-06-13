@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Build
 import com.webtoapp.core.download.DependencyDownloadEngine
 import com.webtoapp.core.download.DependencyDownloadNotification
+import com.webtoapp.core.i18n.AppLanguage
 import com.webtoapp.core.logging.AppLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +20,6 @@ import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
-import java.util.Locale
 
 object GoToolchainManager {
 
@@ -27,8 +27,18 @@ object GoToolchainManager {
 
     const val GO_VERSION = "1.26.3"
 
-    private const val GO_DEB_URL =
+    private const val TUNA_GO_DEB_URL =
+        "https://mirrors.tuna.tsinghua.edu.cn/termux/apt/termux-main/pool/main/g/golang/golang_3%3A1.26.3_aarch64.deb"
+
+    private const val USTC_GO_DEB_URL =
+        "https://mirrors.ustc.edu.cn/termux/apt/termux-main/pool/main/g/golang/golang_3%3A1.26.3_aarch64.deb"
+
+    private const val OFFICIAL_GO_DEB_URL =
         "https://packages.termux.dev/apt/termux-main/pool/main/g/golang/golang_3%3A1.26.3_aarch64.deb"
+
+    private val CN_GO_DEB_URLS = listOf(TUNA_GO_DEB_URL, USTC_GO_DEB_URL)
+
+    private val OFFSHORE_GO_DEB_URLS = listOf(OFFICIAL_GO_DEB_URL)
 
     private const val GO_DEB_SIZE_BYTES = 34_365_696L
 
@@ -139,7 +149,8 @@ object GoToolchainManager {
                 depsDir.mkdirs()
                 val debFile = File(depsDir, "golang-${GO_VERSION}.deb")
 
-                val ok = downloadWithRetry(GO_DEB_URL, debFile, "Go $GO_VERSION ($abi)", context)
+                val urlList = selectGoDebUrls(resolvePreferChinaMirror(context))
+                val ok = downloadWithFallback(urlList, debFile, "Go $GO_VERSION ($abi)", context)
                 syncEngineState()
                 if (!ok) {
                     AppLogger.e(TAG, "Go .deb 下载失败")
@@ -237,6 +248,57 @@ object GoToolchainManager {
                 DependencyDownloadEngine._state.value = DependencyDownloadEngine.State.Idle
             }
         }
+        return false
+    }
+
+    internal fun selectGoDebUrls(preferChinaMirror: Boolean): List<String> {
+        return if (preferChinaMirror) {
+            CN_GO_DEB_URLS + OFFSHORE_GO_DEB_URLS
+        } else {
+            OFFSHORE_GO_DEB_URLS
+        }
+    }
+
+    internal fun shouldPreferChinaMirror(appLanguage: AppLanguage): Boolean {
+        if (appLanguage == AppLanguage.CHINESE) return true
+        return runCatching {
+            val locale = java.util.Locale.getDefault()
+            locale.language.equals("zh", ignoreCase = true) ||
+                locale.country.equals("CN", ignoreCase = true) ||
+                locale.country in setOf("HK", "MO", "TW")
+        }.getOrDefault(false)
+    }
+
+    private suspend fun resolvePreferChinaMirror(context: Context): Boolean {
+        val appLang = runCatching {
+            com.webtoapp.core.i18n.LanguageManager.getInstance(context).getCurrentLanguage()
+        }.getOrNull() ?: AppLanguage.CHINESE
+        return shouldPreferChinaMirror(appLang)
+    }
+
+    private suspend fun downloadWithFallback(
+        urls: List<String>,
+        destFile: File,
+        displayName: String,
+        context: Context?,
+    ): Boolean {
+        if (urls.isEmpty()) {
+            AppLogger.e(TAG, "$displayName 没有可用的下载源")
+            return false
+        }
+        urls.forEachIndexed { index, url ->
+            AppLogger.i(TAG, "$displayName 尝试源 ${index + 1}/${urls.size}: $url")
+            val ok = downloadWithRetry(url, destFile, displayName, context)
+            if (ok) {
+                if (index > 0) {
+                    AppLogger.i(TAG, "$displayName 从备选源下载成功: $url")
+                }
+                return true
+            }
+            AppLogger.w(TAG, "$displayName 源 $url 全部重试仍失败,切换下一源")
+            DependencyDownloadEngine._state.value = DependencyDownloadEngine.State.Idle
+        }
+        AppLogger.e(TAG, "$displayName 所有源均失败,共尝试 ${urls.size} 个")
         return false
     }
 
